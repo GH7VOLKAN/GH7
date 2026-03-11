@@ -151,7 +151,7 @@ export default function SitePage() {
   );
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 px-4 lg:px-6">
       {/* ── 1. Score Header Card ──────────────────────────────────────── */}
       <div className="reveal rounded-xl border border-border bg-card p-8">
         {/* Section label */}

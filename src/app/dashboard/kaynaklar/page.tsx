@@ -9,7 +9,7 @@ export default function KaynaklarPage() {
   const actionableSources = sourceDomains.filter((s) => s.actionNote).length;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 px-4 lg:px-6">
       {/* Header Card */}
       <div className="reveal rounded-xl border border-border bg-card p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">

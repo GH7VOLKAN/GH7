@@ -10,7 +10,7 @@ const competitorCount = competitorRows.filter((r) => !r.isUser).length;
 
 export default function Rakipler() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 px-4 lg:px-6">
 
       {/* ── Header Card ─────────────────────────────────────────── */}
       <div className="reveal rounded-xl border border-border bg-card p-8">
