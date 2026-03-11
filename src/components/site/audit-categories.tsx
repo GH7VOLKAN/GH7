@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { CheckStatus } from "@/lib/types";
+import { createActionFromAuditCheck } from "@/lib/actions";
+import { toast } from "sonner";
 
 interface AuditCheck {
   id: string;
@@ -40,6 +43,7 @@ interface AuditCategory {
 
 interface AuditCategoriesProps {
   auditCategories: AuditCategory[];
+  brandId: string;
 }
 
 const statusIcon: Record<CheckStatus, string> = {
@@ -54,7 +58,24 @@ const statusLabel: Record<CheckStatus, string> = {
   partial: "Kısmî",
 };
 
-export function AuditCategories({ auditCategories }: AuditCategoriesProps) {
+export function AuditCategories({ auditCategories, brandId }: AuditCategoriesProps) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleAddAction(check: AuditCheck) {
+    startTransition(async () => {
+      const result = await createActionFromAuditCheck(brandId, {
+        label: check.label,
+        recommendation: check.recommendation ?? "",
+        raasEligible: check.raasEligible,
+      });
+      if (result.duplicate) {
+        toast.info("Bu kontrol zaten aksiyon planında.");
+      } else {
+        toast.success("Aksiyon planına eklendi.");
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4 px-4 lg:px-6">
       {auditCategories.map((cat) => {
@@ -138,9 +159,20 @@ export function AuditCategories({ auditCategories }: AuditCategoriesProps) {
                         </TableCell>
                         <TableCell className="text-right">
                           {check.raasEligible ? (
-                            <Button size="sm">Biz Uygulayalım</Button>
+                            <Button
+                              size="sm"
+                              disabled={isPending}
+                              onClick={() => handleAddAction(check)}
+                            >
+                              Biz Uygulayalım
+                            </Button>
                           ) : check.recommendation ? (
-                            <Button variant="outline" size="sm">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isPending}
+                              onClick={() => handleAddAction(check)}
+                            >
                               Aksiyona Ekle
                             </Button>
                           ) : (

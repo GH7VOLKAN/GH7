@@ -111,6 +111,35 @@ export async function completeActionTask(
   return { success: true };
 }
 
+export async function createActionFromAuditCheck(
+  brandId: string,
+  data: { label: string; recommendation: string; raasEligible: boolean },
+) {
+  await getAuthenticatedBrand(brandId);
+
+  // Avoid duplicates
+  const existing = await prisma.actionTask.findFirst({
+    where: { brandId, title: data.label, completed: false },
+  });
+  if (existing) return { success: true, duplicate: true };
+
+  await prisma.actionTask.create({
+    data: {
+      brandId,
+      title: data.label,
+      impact: "Site SEO kontrolünden tespit edildi.",
+      source: "site_audit",
+      detail: data.recommendation,
+      priority: data.raasEligible ? "high" : "medium",
+      raasEligible: data.raasEligible,
+    },
+  });
+
+  revalidatePath("/dashboard/aksiyon");
+  revalidatePath("/dashboard/site");
+  return { success: true };
+}
+
 // ─── Competitors ────────────────────────────────────────
 export async function addCompetitor(
   brandId: string,

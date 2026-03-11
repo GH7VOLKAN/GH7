@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { MoonIcon, SunIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ScanButton } from "@/components/scan/scan-button";
@@ -45,6 +48,9 @@ export function SiteHeader({
   unreadCount = 0,
 }: SiteHeaderProps) {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const title = pageTitles[pathname] ?? "Dashboard";
   const initial = userName?.charAt(0)?.toUpperCase() ?? "?";
 
@@ -72,6 +78,18 @@ export function SiteHeader({
                 unreadCount={unreadCount}
               />
             </>
+          )}
+          {mounted && (
+            <button
+              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? (
+                <SunIcon className="size-4" />
+              ) : (
+                <MoonIcon className="size-4" />
+              )}
+            </button>
           )}
           <div className="flex size-8 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background">
             {initial}

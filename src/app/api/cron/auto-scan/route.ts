@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeScan } from "@/lib/ai/scan-engine";
+import { runSiteAudit } from "@/lib/ai/site-auditor";
+import { persistAuditResults } from "@/lib/ai/audit-persister";
 
 export const maxDuration = 300; // 5 min max for Vercel Pro
 
@@ -56,6 +58,17 @@ export async function GET(request: NextRequest) {
 
       // Execute sequentially to respect rate limits
       await executeScan(scan.id, brand.id);
+
+      // Run site audit after scan if brand has domain
+      if (brand.domain) {
+        try {
+          const auditResult = await runSiteAudit(brand.domain);
+          await persistAuditResults(brand.id, auditResult);
+        } catch (auditErr) {
+          console.error(`[auto-scan] Audit failed for brand ${brand.id}:`, auditErr);
+        }
+      }
+
       triggered++;
     } catch (error) {
       console.error(
