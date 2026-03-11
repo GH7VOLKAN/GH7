@@ -108,7 +108,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               className="data-[slot=sidebar-menu-button]:!p-2 [&_svg]:!size-auto"
               render={<Link href="/dashboard/genel" />}
             >
-              <GH7Logo size="lg" />
+              <GH7Logo size="default" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
