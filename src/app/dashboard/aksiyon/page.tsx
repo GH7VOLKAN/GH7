@@ -4,6 +4,7 @@ import { useState } from "react";
 import { actionTasks, raasOffer } from "@/lib/mock-data/actions";
 import type { ActionTask } from "@/lib/mock-data/actions";
 import { getScoreColor } from "@/lib/utils";
+import { ExpandCard } from "@/components/ui/expand-card";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -19,9 +20,39 @@ const priorityColor: Record<ActionTask["priority"], string> = {
   low: "text-muted-foreground",
 };
 
-// ── Task Card ─────────────────────────────────────────────────────────────────
+// ── Task Summary (ExpandCard front) ───────────────────────────────────────────
 
-function TaskCard({
+function TaskSummary({ task }: { task: ActionTask }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`text-[10px] font-bold uppercase tracking-wider ${priorityColor[task.priority]}`}
+        >
+          {priorityLabel[task.priority]}
+        </span>
+        {task.completed && (
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+            · tamamlandı
+          </span>
+        )}
+      </div>
+      <p
+        className={`font-medium text-sm leading-snug ${
+          task.completed ? "line-through opacity-50" : ""
+        }`}
+      >
+        {task.title}
+      </p>
+      <p className="text-xs text-muted-foreground">{task.impact}</p>
+      <p className="text-xs text-muted-foreground opacity-60">{task.source}</p>
+    </div>
+  );
+}
+
+// ── Task Detail (ExpandCard expand) ───────────────────────────────────────────
+
+function TaskDetail({
   task,
   raasActive,
   onRaasToggle,
@@ -31,67 +62,40 @@ function TaskCard({
   onRaasToggle: (id: number) => void;
 }) {
   return (
-    <div
-      className={`rounded-[14px] border border-border bg-card p-5 transition-opacity ${
-        task.completed ? "opacity-50" : "opacity-100"
-      }`}
-    >
-      {/* Top row: priority badge + title */}
-      <div className="flex flex-wrap items-start gap-3">
-        {/* Priority badge */}
-        <span
-          className={`shrink-0 text-[10px] font-black uppercase tracking-[0.14em] ${
-            priorityColor[task.priority]
-          }`}
-        >
-          {priorityLabel[task.priority]}
-        </span>
-
-        {/* Title */}
-        <span
-          className={`flex-1 text-sm font-bold tracking-[-0.02em] leading-snug ${
-            task.completed ? "line-through text-muted-foreground" : ""
-          }`}
-        >
-          {task.title}
-        </span>
-      </div>
-
-      {/* Impact */}
-      <p className="mt-2 text-sm text-foreground font-medium">{task.impact}</p>
-
-      {/* Source */}
-      <p className="mt-1 text-xs text-muted-foreground">{task.source}</p>
-
-      {/* Detail */}
-      <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+    <div className="flex flex-col gap-4">
+      <p className="text-xs text-muted-foreground leading-relaxed">
         {task.detail}
       </p>
 
-      {/* RaaS toggle */}
       {task.raasEligible && !task.completed && (
-        <div className="mt-4 flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => onRaasToggle(task.id)}
-            className={`rounded-lg border px-4 py-1.5 text-xs font-bold tracking-[-0.02em] transition-all ${
+            onClick={() => !raasActive && onRaasToggle(task.id)}
+            className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-[-0.02em] transition-all ${
               raasActive
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:border-foreground hover:text-foreground"
             }`}
           >
             Biz Uygulayalım
           </button>
           <button
             onClick={() => raasActive && onRaasToggle(task.id)}
-            className={`rounded-lg border px-4 py-1.5 text-xs font-bold tracking-[-0.02em] transition-all ${
+            className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-[-0.02em] transition-all ${
               !raasActive
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:border-foreground hover:text-foreground"
             }`}
           >
             Kendiniz Uygulayın
           </button>
         </div>
+      )}
+
+      {!task.completed && (
+        <button className="self-start rounded-lg border border-border px-4 py-1.5 text-xs font-bold text-muted-foreground tracking-[-0.02em] transition-all hover:border-foreground hover:text-foreground">
+          Tamamlandı İşaretle
+        </button>
       )}
     </div>
   );
@@ -108,14 +112,12 @@ function RaasOfferCard({
   timeline,
 }: typeof raasOffer) {
   return (
-    <div className="rounded-[14px] border border-dashed border-border bg-background-secondary p-5">
-      {/* Section label */}
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+    <div className="reveal rounded-[16px] border border-dashed border-border bg-background-secondary p-6">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
         RaaS Teklifi
       </p>
 
-      {/* Summary row */}
-      <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
         {/* Selected tasks */}
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
@@ -134,9 +136,7 @@ function RaasOfferCard({
           </p>
           <div className="mt-1 flex items-end gap-1">
             <span
-              className={`text-xl font-black tracking-[-0.04em] leading-none ${getScoreColor(
-                currentScore
-              )}`}
+              className={`text-xl font-black tracking-[-0.04em] leading-none ${getScoreColor(currentScore)}`}
             >
               {currentScore}
             </span>
@@ -144,9 +144,7 @@ function RaasOfferCard({
               →
             </span>
             <span
-              className={`text-xl font-black tracking-[-0.04em] leading-none ${getScoreColor(
-                targetScore
-              )}`}
+              className={`text-xl font-black tracking-[-0.04em] leading-none ${getScoreColor(targetScore)}`}
             >
               {targetScore}
             </span>
@@ -177,11 +175,9 @@ function RaasOfferCard({
         </div>
       </div>
 
-      {/* Divider */}
       <div className="mt-5 h-px w-full bg-border" />
 
-      {/* CTA */}
-      <div className="mt-4 flex items-center justify-between gap-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground leading-relaxed">
           GH7 ekibi seçili görevleri sizin adınıza uygular. Ödemenin %70'i
           hedefe ulaşıldığında tahsil edilir.
@@ -197,7 +193,6 @@ function RaasOfferCard({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AksiyonPage() {
-  // Track which raas-eligible tasks are toggled to "Biz Uygulayalım"
   const [raasSelected, setRaasSelected] = useState<Set<number>>(
     () =>
       new Set(
@@ -225,23 +220,21 @@ export default function AksiyonPage() {
 
   const raasSelectedCount = raasSelected.size;
 
-  // Build a live offer reflecting current selections
   const liveOffer = {
     ...raasOffer,
     selectedCount: raasSelectedCount,
   };
 
   return (
-    <div className="space-y-6">
-      {/* ── Header card ───────────────────────────────────────────────── */}
-      <div className="rounded-[14px] border border-border bg-card p-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+    <div className="space-y-10">
+      {/* ── Header Card ───────────────────────────────────────────────────── */}
+      <div className="reveal rounded-[16px] border border-border bg-card p-8 transition-all duration-300 hover:-translate-y-[3px] hover:shadow-lg hover:border-muted-foreground/30">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
           AKSİYON PLANI
         </p>
-        <h1 className="mt-1 text-2xl font-light tracking-[-0.04em]">
+        <h1 className="text-2xl font-light tracking-[-0.04em]">
           {totalCount} görev · {completedCount} tamamlandı
         </h1>
-        {/* Progress bar */}
         <div className="mt-4 h-[3px] w-full overflow-hidden rounded-full bg-border">
           <div
             className="h-full rounded-full bg-foreground transition-all duration-500"
@@ -253,26 +246,34 @@ export default function AksiyonPage() {
         </p>
       </div>
 
-      {/* ── Task list ─────────────────────────────────────────────────── */}
-      <div className="space-y-4">
-        {actionTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            raasActive={raasSelected.has(task.id)}
-            onRaasToggle={handleRaasToggle}
-          />
-        ))}
+      {/* ── Task Cards ────────────────────────────────────────────────────── */}
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
+          Görevler
+        </p>
+        <div className="flex flex-col gap-[10px]">
+          {actionTasks.map((task) => (
+            <div key={task.id} className="reveal">
+              <ExpandCard
+                summary={<TaskSummary task={task} />}
+                detail={
+                  <TaskDetail
+                    task={task}
+                    raasActive={raasSelected.has(task.id)}
+                    onRaasToggle={handleRaasToggle}
+                  />
+                }
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* ── RaaS offer card (only shown when at least 1 task selected) ─ */}
-      {raasSelectedCount > 0 && (
+      {/* ── RaaS Offer Card ───────────────────────────────────────────────── */}
+      {raasSelectedCount > 0 ? (
         <RaasOfferCard {...liveOffer} />
-      )}
-
-      {/* Fallback nudge when nothing selected yet */}
-      {raasSelectedCount === 0 && (
-        <div className="rounded-[14px] border border-dashed border-border p-5 text-center">
+      ) : (
+        <div className="reveal rounded-[16px] border border-dashed border-border p-5 text-center">
           <p className="text-sm text-muted-foreground">
             Uygulanmasını istediğiniz görevler için{" "}
             <span className="font-bold text-foreground">Biz Uygulayalım</span>{" "}

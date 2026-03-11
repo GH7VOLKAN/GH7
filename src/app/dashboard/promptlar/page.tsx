@@ -5,27 +5,30 @@ import {
   suggestedPrompts,
   promptStats,
   PromptItem,
+  ModelResult,
 } from "@/lib/mock-data/prompts";
 import { platformLabels, PlatformKey } from "@/lib/types";
 import { getScoreColor } from "@/lib/utils";
+import { ExpandCard } from "@/components/ui/expand-card";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
-function SentimentBadge({
-  sentiment,
-}: {
-  sentiment: PromptItem["sentiment"];
-}) {
-  if (!sentiment) return <span className="text-sm text-muted-foreground">—</span>;
+// ─── helpers ────────────────────────────────────────────────────────────────
 
-  const colorMap = {
-    pozitif: "text-score-high",
-    nötr: "text-muted-foreground",
-    negatif: "text-score-low",
-  };
+function sentimentColor(s: PromptItem["sentiment"]): string {
+  if (s === "pozitif") return "text-score-high";
+  if (s === "negatif") return "text-score-low";
+  return "text-muted-foreground";
+}
 
+function SentimentBadge({ sentiment }: { sentiment: PromptItem["sentiment"] }) {
+  if (!sentiment) return <span className="text-muted-foreground">—</span>;
   return (
-    <span className={`text-xs font-medium ${colorMap[sentiment]}`}>
+    <span
+      className={`rounded-md border border-border px-2 py-0.5 text-[10px] font-medium ${sentimentColor(
+        sentiment
+      )}`}
+    >
       {sentiment}
     </span>
   );
@@ -33,11 +36,11 @@ function SentimentBadge({
 
 function VolumeDots({ volume }: { volume: number }) {
   return (
-    <span className="flex items-center gap-0.5">
+    <span className="flex items-center gap-[3px]">
       {Array.from({ length: 5 }).map((_, i) => (
         <span
           key={i}
-          className={`inline-block h-2 w-2 rounded-full ${
+          className={`inline-block h-[7px] w-[7px] rounded-full ${
             i < volume ? "bg-foreground" : "bg-border"
           }`}
         />
@@ -46,54 +49,56 @@ function VolumeDots({ volume }: { volume: number }) {
   );
 }
 
-function ModelResultsRow({ item }: { item: PromptItem }) {
+// Mini sparkline: 7 values rendered as proportional bars
+function TrendBars({ data }: { data: number[] }) {
+  const max = Math.max(...data, 1);
   return (
-    <div className="mt-3 grid grid-cols-4 gap-2 border-t border-border pt-3">
-      {PLATFORMS.map((platform) => {
-        const result = item.modelResults.find((r) => r.platform === platform);
-        const mentioned = result?.mentioned ?? false;
-        return (
-          <div key={platform} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-              {platformLabels[platform].name}
-            </span>
-            <div className="flex items-center gap-1">
-              <span
-                className={`text-sm font-bold ${
-                  mentioned ? "text-score-high" : "text-score-low"
-                }`}
-              >
-                {mentioned ? "✓" : "✗"}
-              </span>
-              {result?.position && (
-                <span className="text-[11px] text-muted-foreground">
-                  {result.position}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
+    <div className="flex items-end gap-[2px] h-[20px]">
+      {data.map((v, i) => (
+        <div
+          key={i}
+          className="w-[5px] rounded-sm bg-foreground/25"
+          style={{ height: `${Math.round((v / max) * 20)}px` }}
+        />
+      ))}
     </div>
   );
 }
 
-function PromptCard({ item }: { item: PromptItem }) {
+// Per-platform badge counts for the header card
+function platformMentionCounts() {
+  const counts: Record<PlatformKey, number> = {
+    chatgpt: 0,
+    claude: 0,
+    gemini: 0,
+    perplexity: 0,
+  };
+  for (const item of promptItems) {
+    for (const r of item.modelResults) {
+      if (r.mentioned) counts[r.platform]++;
+    }
+  }
+  return counts;
+}
+
+// ─── ExpandCard content builders ────────────────────────────────────────────
+
+function PromptSummary({ item }: { item: PromptItem }) {
   return (
-    <div className="rounded-[14px] border border-border bg-card p-5">
-      {/* Top row */}
+    <div className="flex flex-col gap-3">
+      {/* Row 1: prompt text (left) + metrics (right) */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        {/* Left: text + tags */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold tracking-[-0.02em] leading-snug">
-            {item.text}
+        {/* Prompt text + tags */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium leading-snug tracking-[-0.02em]">
+            &ldquo;{item.text}&rdquo;
           </p>
           {item.tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {item.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground"
+                  className="rounded-md border border-border px-2 py-0.5 text-[10px] text-muted-foreground"
                 >
                   {tag}
                 </span>
@@ -102,36 +107,33 @@ function PromptCard({ item }: { item: PromptItem }) {
           )}
         </div>
 
-        {/* Right: metrics */}
-        <div className="flex shrink-0 items-start gap-6">
-          {/* Visibility */}
+        {/* Visibility + Position */}
+        <div className="flex shrink-0 items-start gap-5">
           <div className="flex flex-col items-end">
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Görünürlük
             </span>
             <span
-              className={`text-xl font-light tracking-[-0.04em] ${getScoreColor(
+              className={`text-2xl font-light tracking-[-0.05em] ${getScoreColor(
                 item.visibility
               )}`}
             >
               %{item.visibility}
             </span>
           </div>
-
-          {/* Position */}
           <div className="flex flex-col items-end">
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Pozisyon
             </span>
-            <span className="text-xl font-light tracking-[-0.04em]">
+            <span className="text-2xl font-light tracking-[-0.05em]">
               {item.position ?? "—"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Middle row: sentiment + competitor */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-muted-foreground">
+      {/* Row 2: sentiment badge + competitor + chevron hint */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <span className="font-medium">Duygu:</span>
           <SentimentBadge sentiment={item.sentiment} />
@@ -139,22 +141,138 @@ function PromptCard({ item }: { item: PromptItem }) {
         {item.topCompetitor && (
           <div className="flex items-center gap-1.5">
             <span className="font-medium">Rakip:</span>
-            <span className="text-xs">{item.topCompetitor}</span>
+            <span>{item.topCompetitor}</span>
           </div>
         )}
+        <span className="ml-auto text-[10px] uppercase tracking-[0.14em]">
+          detay ↓
+        </span>
       </div>
-
-      {/* Per-model results */}
-      <ModelResultsRow item={item} />
     </div>
   );
 }
 
-export default function PromptlarPage() {
+function PromptDetail({ item }: { item: PromptItem }) {
   return (
-    <div className="space-y-8">
-      {/* Header card */}
-      <div className="rounded-[14px] border border-border bg-card p-8">
+    <div className="flex flex-col gap-5">
+      {/* Model results */}
+      <div>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Model Sonuçları
+        </p>
+        <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-2">
+          {PLATFORMS.map((platform) => {
+            const result: ModelResult | undefined = item.modelResults.find(
+              (r) => r.platform === platform
+            );
+            const mentioned = result?.mentioned ?? false;
+            return (
+              <div
+                key={platform}
+                className="flex items-start gap-3 rounded-[12px] border border-border bg-card p-3"
+              >
+                {/* check / cross */}
+                <span
+                  className={`mt-[1px] text-sm font-bold ${
+                    mentioned ? "text-score-high" : "text-score-low"
+                  }`}
+                >
+                  {mentioned ? "✓" : "✗"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold">
+                      {platformLabels[platform].name}
+                    </span>
+                    {result?.position && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {result.position}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    {result?.sentiment && (
+                      <span
+                        className={`text-[10px] ${sentimentColor(
+                          result.sentiment
+                        )}`}
+                      >
+                        {result.sentiment}
+                      </span>
+                    )}
+                    {result?.source && (
+                      <span className="truncate text-[10px] text-muted-foreground">
+                        {result.source}
+                      </span>
+                    )}
+                    {!mentioned && (
+                      <span className="text-[10px] text-muted-foreground">
+                        bahsedilmedi
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Competitor visibility */}
+      {item.competitorVisibility.length > 0 && (
+        <div>
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            Rakip Görünürlüğü
+          </p>
+          <div className="flex flex-col gap-2">
+            {item.competitorVisibility.map((comp) => (
+              <div key={comp.name} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium">{comp.name}</span>
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <span>{comp.avgPosition}</span>
+                    <span className={`font-bold ${getScoreColor(comp.visibility)}`}>
+                      %{comp.visibility}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-[3px] w-full overflow-hidden rounded-full bg-border">
+                  <div
+                    className="h-full rounded-full bg-foreground/50 transition-all duration-700"
+                    style={{ width: `${comp.visibility}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Trend */}
+      <div>
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          7 Günlük Trend
+        </p>
+        <div className="flex items-end gap-3">
+          <TrendBars data={item.trendData} />
+          <span className="text-[10px] text-muted-foreground">
+            {item.trendData[0]}% → {item.trendData[item.trendData.length - 1]}%
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────
+
+export default function PromptlarPage() {
+  const mentionCounts = platformMentionCounts();
+
+  return (
+    <div className="space-y-10">
+      {/* ── Header Card ── */}
+      <div className="reveal rounded-[16px] border border-border bg-card p-8 transition-all hover:-translate-y-[3px] hover:border-muted-foreground/30 hover:shadow-lg">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           PROMPTLAR
         </p>
@@ -165,53 +283,59 @@ export default function PromptlarPage() {
           {promptStats.active} aktif · {promptStats.suggested} önerilen
         </p>
 
-        {/* Platform legend */}
-        <div className="mt-6 flex flex-wrap gap-4">
+        {/* Platform mention summary badges */}
+        <div className="mt-6 flex flex-wrap gap-[10px]">
           {PLATFORMS.map((platform) => (
-            <div key={platform} className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+            <div
+              key={platform}
+              className="flex items-center gap-2 rounded-[12px] border border-border px-3 py-2"
+            >
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
                 {platformLabels[platform].name}
               </span>
-              <span className="text-xs text-score-high font-bold">✓</span>
-              <span className="text-[10px] text-muted-foreground">bahsedildi</span>
-              <span className="text-xs text-score-low font-bold">✗</span>
-              <span className="text-[10px] text-muted-foreground">bahsedilmedi</span>
+              <span className="text-xs font-bold text-score-high">
+                {mentionCounts[platform]}
+              </span>
+              <span className="text-[10px] text-muted-foreground">atıf</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Prompt list */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-medium tracking-[-0.04em] uppercase text-muted-foreground px-1">
-          Aktif Promptlar
-        </h2>
-        {promptItems.map((item) => (
-          <PromptCard key={item.id} item={item} />
-        ))}
+      {/* ── Active Prompts ── */}
+      <div>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          AKTİF PROMPTLAR
+        </p>
+        <div className="flex flex-col gap-[10px]">
+          {promptItems.map((item) => (
+            <div key={item.id} className="reveal">
+              <ExpandCard
+                summary={<PromptSummary item={item} />}
+                detail={<PromptDetail item={item} />}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Suggested prompts */}
-      <div className="rounded-[14px] border border-border bg-card p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          Önerilen Promptlar
+      {/* ── Suggested Prompts ── */}
+      <div>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          ÖNERİLEN PROMPTLAR
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Bu promptları içeriğinize ekleyerek görünürlüğünüzü artırabilirsiniz.
-        </p>
-
-        <div className="mt-4 space-y-3">
+        <div className="flex flex-col gap-[10px]">
           {suggestedPrompts.map((prompt, i) => (
             <div
               key={i}
-              className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3"
+              className="reveal flex items-center justify-between gap-4 rounded-[16px] border border-border bg-card px-5 py-4 transition-all hover:-translate-y-[3px] hover:border-muted-foreground/30 hover:shadow-lg"
             >
-              <span className="text-sm">{prompt.text}</span>
-              <div className="flex shrink-0 items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-                  Hacim
-                </span>
+              <span className="text-sm font-medium">{prompt.text}</span>
+              <div className="flex shrink-0 items-center gap-3">
                 <VolumeDots volume={prompt.volume} />
+                <button className="rounded-md border border-border px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground">
+                  Ekle
+                </button>
               </div>
             </div>
           ))}

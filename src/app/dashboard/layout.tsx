@@ -13,7 +13,7 @@ export default function DashboardLayout({
       <MobileNav />
       <div className="lg:ml-[240px]">
         <TopBar />
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">{children}</main>
+        <main className="dashboard-container mx-auto max-w-[900px] px-4 py-8 sm:px-8">{children}</main>
       </div>
     </div>
   );

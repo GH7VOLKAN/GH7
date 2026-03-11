@@ -8,11 +8,14 @@ import {
   type AuditCheck,
 } from "@/lib/mock-data/site-audit";
 import { getScoreColor } from "@/lib/utils";
+import { FlipCard } from "@/components/ui/flip-card";
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 const statusSymbol: Record<AuditCheck["status"], string> = {
   pass: "✓",
   fail: "✗",
-  partial: "◐",
+  partial: "⚠",
 };
 
 const statusClass: Record<AuditCheck["status"], string> = {
@@ -21,120 +24,186 @@ const statusClass: Record<AuditCheck["status"], string> = {
   partial: "text-score-mid",
 };
 
-function CheckRow({ check }: { check: AuditCheck }) {
-  const pct = check.maxScore > 0 ? (check.score / check.maxScore) * 100 : 0;
+const statusLabel: Record<AuditCheck["status"], string> = {
+  pass: "Geçti",
+  fail: "Başarısız",
+  partial: "Kısmî",
+};
 
-  return (
-    <div className="py-4 first:pt-0 last:pb-0">
-      {/* Top row: status + title + score */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2 min-w-0">
-          <span
-            className={`shrink-0 text-base font-bold leading-none mt-0.5 ${statusClass[check.status]}`}
-          >
-            {statusSymbol[check.status]}
-          </span>
-          <span className="text-sm font-medium tracking-[-0.02em] leading-snug">
-            {check.title}
-          </span>
-        </div>
-        <div className="shrink-0 flex items-center gap-2">
-          {check.raasEligible && (
-            <span className="text-xs px-2 py-0.5 rounded-full border border-border font-bold text-muted-foreground whitespace-nowrap">
-              Biz Uygulayalım
-            </span>
-          )}
-          <span
-            className={`text-sm font-black tracking-[-0.04em] whitespace-nowrap ${getScoreColor(pct)}`}
-          >
-            {check.score}
-            <span className="font-normal text-muted-foreground">
-              /{check.maxScore}
-            </span>
-          </span>
-        </div>
+function scoreBarBg(pct: number): string {
+  if (pct >= 60) return "bg-score-high";
+  if (pct >= 35) return "bg-score-mid";
+  return "bg-score-low";
+}
+
+// ── Check FlipCard ─────────────────────────────────────────────────────────
+
+function CheckFlipCard({ check }: { check: AuditCheck }) {
+  const pct = check.maxScore > 0 ? (check.score / check.maxScore) * 100 : 0;
+  const scoreColor = getScoreColor(pct);
+  const sym = statusSymbol[check.status];
+  const symClass = statusClass[check.status];
+
+  const front = (
+    <div className="flex flex-col gap-3 h-full">
+      {/* Title row */}
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-medium leading-snug tracking-[-0.02em]">
+          {check.title}
+        </span>
+        <span className={`shrink-0 text-base font-bold leading-none mt-0.5 ${symClass}`}>
+          {sym}
+        </span>
       </div>
 
+      {/* Score */}
+      <div className="flex items-end gap-1">
+        <span className={`text-2xl font-black tracking-[-0.05em] leading-none ${scoreColor}`}>
+          {check.score}
+        </span>
+        <span className="text-sm text-muted-foreground leading-none mb-0.5">
+          /{check.maxScore}
+        </span>
+      </div>
+
+      {/* Brief status + badge row */}
+      <div className="flex items-center justify-between gap-2 mt-auto">
+        <span className="text-xs text-muted-foreground">
+          {statusLabel[check.status]}
+          {check.fix ? " · Düzeltilebilir" : ""}
+        </span>
+        {check.raasEligible && (
+          <span className="text-[10px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full border border-border text-muted-foreground whitespace-nowrap">
+            Biz Uygulayalım
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  const back = (
+    <div className="flex flex-col gap-3 h-full">
+      {/* Back title */}
+      <p className="text-sm font-medium leading-snug tracking-[-0.02em]">
+        {check.title}
+      </p>
+
       {/* Detail */}
-      <p className="mt-1.5 ml-6 text-sm text-muted-foreground leading-relaxed">
+      <p className="text-xs text-muted-foreground leading-relaxed">
         {check.detail}
       </p>
 
       {/* Fix suggestion */}
       {check.fix && (
-        <p className="mt-1 ml-6 text-sm text-muted-foreground italic">
-          Öneri: {check.fix}
-        </p>
+        <div className="rounded-[10px] border border-border bg-muted/40 px-3 py-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1">
+            Öneri
+          </p>
+          <p className="text-xs text-foreground leading-relaxed">{check.fix}</p>
+        </div>
       )}
-    </div>
-  );
-}
 
-function CategoryCard({ category }: { category: AuditCategory }) {
-  const pct =
-    category.maxScore > 0
-      ? (category.score / category.maxScore) * 100
-      : 0;
-
-  return (
-    <div className="rounded-[14px] border border-border bg-card p-5">
-      {/* Category header */}
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-medium tracking-[-0.04em] uppercase">
-          {category.name}
-        </h3>
-        <span
-          className={`text-sm font-black tracking-[-0.04em] ${getScoreColor(pct)}`}
-        >
-          {category.score}
-          <span className="font-normal text-muted-foreground">
-            /{category.maxScore}
-          </span>
+      {/* Impact */}
+      <div className="flex items-center gap-2 mt-auto">
+        <span className={`text-xs font-bold ${statusClass[check.status]}`}>
+          {sym} {statusLabel[check.status]}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          · {check.score}/{check.maxScore} puan
         </span>
       </div>
 
-      {/* Category progress bar */}
-      <div className="mt-3 h-[3px] w-full rounded-full bg-border overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            pct >= 60
-              ? "bg-score-high"
-              : pct >= 35
-              ? "bg-score-mid"
-              : "bg-score-low"
-          }`}
-          style={{ width: `${pct}%` }}
-        />
+      {/* Action buttons */}
+      {check.raasEligible && (
+        <div className="flex gap-2">
+          <button className="flex-1 rounded-[10px] border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+            Aksiyona Ekle
+          </button>
+          <button className="flex-1 rounded-[10px] border border-border bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 transition-opacity">
+            Biz Uygulayalım
+          </button>
+        </div>
+      )}
+      {!check.raasEligible && check.fix && (
+        <button className="w-full rounded-[10px] border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+          Aksiyona Ekle
+        </button>
+      )}
+    </div>
+  );
+
+  return <FlipCard front={front} back={back} />;
+}
+
+// ── Category Section ───────────────────────────────────────────────────────
+
+function CategorySection({ category }: { category: AuditCategory }) {
+  const pct =
+    category.maxScore > 0 ? (category.score / category.maxScore) * 100 : 0;
+  const scoreColor = getScoreColor(pct);
+
+  return (
+    <div className="reveal">
+      {/* Section label */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          {category.name}
+        </p>
+        <span className={`text-[11px] font-black tracking-[-0.03em] ${scoreColor}`}>
+          {category.score}
+          <span className="font-normal text-muted-foreground">/{category.maxScore}</span>
+        </span>
       </div>
 
-      {/* Checks */}
-      <div className="mt-4 divide-y divide-border">
+      {/* Check cards — 2 cols on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-[10px]">
         {category.checks.map((check) => (
-          <CheckRow key={check.id} check={check} />
+          <CheckFlipCard key={check.id} check={check} />
         ))}
       </div>
     </div>
   );
 }
 
+// ── Page ───────────────────────────────────────────────────────────────────
+
 export default function SitePage() {
   const scorePct = siteReadinessScore;
   const targetPct = siteReadinessTarget;
 
+  const passCount = auditCategories.reduce(
+    (acc, cat) => acc + cat.checks.filter((c) => c.status === "pass").length,
+    0
+  );
+  const partialCount = auditCategories.reduce(
+    (acc, cat) => acc + cat.checks.filter((c) => c.status === "partial").length,
+    0
+  );
+  const failCount = auditCategories.reduce(
+    (acc, cat) => acc + cat.checks.filter((c) => c.status === "fail").length,
+    0
+  );
+
+  const scoreColor = getScoreColor(scorePct);
+  const barBg = scoreBarBg(scorePct);
+
   return (
-    <div className="space-y-6">
-      {/* ── 1. Header Card ──────────────────────────────────────────── */}
-      <div className="rounded-[14px] border border-border bg-card p-8">
+    <div className="space-y-10">
+      {/* ── 1. Score Header Card ──────────────────────────────────────── */}
+      <div className="reveal rounded-[16px] border border-border bg-card p-8 transition-all duration-300 hover:-translate-y-[3px] hover:shadow-lg hover:border-muted-foreground/30">
+        {/* Section label */}
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           SİTE ANALİZİ
         </p>
+
+        {/* Big score */}
         <div className="mt-3 flex items-end gap-3">
           <span
-            className={`text-5xl font-black tracking-[-0.05em] leading-none ${getScoreColor(scorePct)}`}
+            className={`text-5xl font-light tracking-[-0.04em] leading-none ${scoreColor}`}
           >
             {siteReadinessScore}
           </span>
-          <span className="mb-1 text-xl font-medium text-muted-foreground leading-none">
+          <span className="mb-1 text-xl text-muted-foreground leading-none">
             / 100
           </span>
           <span className="mb-1 text-sm text-muted-foreground leading-none">
@@ -144,13 +213,9 @@ export default function SitePage() {
         </div>
 
         {/* Progress bar with target marker */}
-        <div className="relative mt-5 h-[3px] w-full rounded-full bg-border overflow-visible">
-          {/* Filled portion */}
+        <div className="relative mt-6 h-[4px] w-full rounded-full bg-border overflow-visible">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${getScoreColor(scorePct)
-              .replace("text-score-high", "bg-score-high")
-              .replace("text-score-mid", "bg-score-mid")
-              .replace("text-score-low", "bg-score-low")}`}
+            className={`h-full rounded-full transition-all duration-700 ${barBg}`}
             style={{ width: `${scorePct}%` }}
           />
           {/* Target marker */}
@@ -158,53 +223,33 @@ export default function SitePage() {
             className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center"
             style={{ left: `${targetPct}%` }}
           >
-            <div className="h-[9px] w-[2px] rounded-full bg-foreground opacity-40" />
+            <div className="h-[10px] w-[2px] rounded-full bg-foreground/40" />
             <span className="mt-1 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
               Hedef
             </span>
           </div>
         </div>
 
-        {/* Score legend */}
+        {/* Status summary */}
         <div className="mt-6 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span>
-            <span className="font-bold text-score-high">
-              {auditCategories.reduce(
-                (acc, cat) =>
-                  acc + cat.checks.filter((c) => c.status === "pass").length,
-                0
-              )}
-            </span>{" "}
-            Geçen
+            <span className="font-bold text-score-high">{passCount}</span> Geçen
           </span>
+          <span className="text-muted-foreground/40">·</span>
           <span>
-            <span className="font-bold text-score-mid">
-              {auditCategories.reduce(
-                (acc, cat) =>
-                  acc +
-                  cat.checks.filter((c) => c.status === "partial").length,
-                0
-              )}
-            </span>{" "}
-            Kısmî
+            <span className="font-bold text-score-mid">{partialCount}</span> Kısmî
           </span>
+          <span className="text-muted-foreground/40">·</span>
           <span>
-            <span className="font-bold text-score-low">
-              {auditCategories.reduce(
-                (acc, cat) =>
-                  acc + cat.checks.filter((c) => c.status === "fail").length,
-                0
-              )}
-            </span>{" "}
-            Başarısız
+            <span className="font-bold text-score-low">{failCount}</span> Başarısız
           </span>
         </div>
       </div>
 
-      {/* ── 2. Audit Categories ─────────────────────────────────────── */}
-      <div className="space-y-4">
+      {/* ── 2. Audit Categories ───────────────────────────────────────── */}
+      <div className="space-y-10">
         {auditCategories.map((category) => (
-          <CategoryCard key={category.name} category={category} />
+          <CategorySection key={category.name} category={category} />
         ))}
       </div>
     </div>
