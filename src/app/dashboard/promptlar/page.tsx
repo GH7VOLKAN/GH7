@@ -8,27 +8,16 @@ import {
   ModelResult,
 } from "@/lib/mock-data/prompts";
 import { platformLabels, PlatformKey } from "@/lib/types";
-import { getScoreColor } from "@/lib/utils";
 import { ExpandCard } from "@/components/ui/expand-card";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-function sentimentColor(s: PromptItem["sentiment"]): string {
-  if (s === "pozitif") return "text-score-high";
-  if (s === "negatif") return "text-score-low";
-  return "text-muted-foreground";
-}
-
 function SentimentBadge({ sentiment }: { sentiment: PromptItem["sentiment"] }) {
   if (!sentiment) return <span className="text-muted-foreground">—</span>;
   return (
-    <span
-      className={`rounded-md border border-border px-2 py-0.5 text-[10px] font-medium ${sentimentColor(
-        sentiment
-      )}`}
-    >
+    <span className="rounded-md border border-border px-2 py-0.5 text-[10px] font-medium text-foreground">
       {sentiment}
     </span>
   );
@@ -113,11 +102,7 @@ function PromptSummary({ item }: { item: PromptItem }) {
             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Görünürlük
             </span>
-            <span
-              className={`text-2xl font-light tracking-[-0.05em] ${getScoreColor(
-                item.visibility
-              )}`}
-            >
+            <span className="text-2xl font-light tracking-[-0.05em] text-foreground">
               %{item.visibility}
             </span>
           </div>
@@ -125,7 +110,7 @@ function PromptSummary({ item }: { item: PromptItem }) {
             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Pozisyon
             </span>
-            <span className="text-2xl font-light tracking-[-0.05em]">
+            <span className="text-2xl font-light tracking-[-0.05em] text-foreground">
               {item.position ?? "—"}
             </span>
           </div>
@@ -169,12 +154,12 @@ function PromptDetail({ item }: { item: PromptItem }) {
             return (
               <div
                 key={platform}
-                className="flex items-start gap-3 rounded-[12px] border border-border bg-card p-3"
+                className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"
               >
                 {/* check / cross */}
                 <span
                   className={`mt-[1px] text-sm font-bold ${
-                    mentioned ? "text-score-high" : "text-score-low"
+                    mentioned ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   {mentioned ? "✓" : "✗"}
@@ -192,11 +177,7 @@ function PromptDetail({ item }: { item: PromptItem }) {
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     {result?.sentiment && (
-                      <span
-                        className={`text-[10px] ${sentimentColor(
-                          result.sentiment
-                        )}`}
-                      >
+                      <span className="text-[10px] text-muted-foreground">
                         {result.sentiment}
                       </span>
                     )}
@@ -231,14 +212,14 @@ function PromptDetail({ item }: { item: PromptItem }) {
                   <span className="font-medium">{comp.name}</span>
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <span>{comp.avgPosition}</span>
-                    <span className={`font-bold ${getScoreColor(comp.visibility)}`}>
+                    <span className="font-bold text-foreground">
                       %{comp.visibility}
                     </span>
                   </div>
                 </div>
                 <div className="h-[3px] w-full overflow-hidden rounded-full bg-border">
                   <div
-                    className="h-full rounded-full bg-foreground/50 transition-all duration-700"
+                    className="h-full rounded-full bg-foreground/25 transition-all duration-700"
                     style={{ width: `${comp.visibility}%` }}
                   />
                 </div>
@@ -272,7 +253,7 @@ export default function PromptlarPage() {
   return (
     <div className="space-y-10">
       {/* ── Header Card ── */}
-      <div className="reveal rounded-[16px] border border-border bg-card p-8 transition-all hover:-translate-y-[3px] hover:border-muted-foreground/30 hover:shadow-lg">
+      <div className="reveal rounded-xl border border-border bg-card p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           PROMPTLAR
         </p>
@@ -288,12 +269,12 @@ export default function PromptlarPage() {
           {PLATFORMS.map((platform) => (
             <div
               key={platform}
-              className="flex items-center gap-2 rounded-[12px] border border-border px-3 py-2"
+              className="flex items-center gap-2 rounded-xl border border-border px-3 py-2"
             >
               <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
                 {platformLabels[platform].name}
               </span>
-              <span className="text-xs font-bold text-score-high">
+              <span className="text-xs font-bold text-foreground">
                 {mentionCounts[platform]}
               </span>
               <span className="text-[10px] text-muted-foreground">atıf</span>
@@ -328,7 +309,7 @@ export default function PromptlarPage() {
           {suggestedPrompts.map((prompt, i) => (
             <div
               key={i}
-              className="reveal flex items-center justify-between gap-4 rounded-[16px] border border-border bg-card px-5 py-4 transition-all hover:-translate-y-[3px] hover:border-muted-foreground/30 hover:shadow-lg"
+              className="reveal flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-5 py-4"
             >
               <span className="text-sm font-medium">{prompt.text}</span>
               <div className="flex shrink-0 items-center gap-3">

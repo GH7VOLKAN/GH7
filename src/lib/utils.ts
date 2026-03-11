@@ -5,18 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function getScoreColor(score: number): string {
-  if (score >= 60) return "text-score-high";
-  if (score >= 35) return "text-score-mid";
-  return "text-score-low";
-}
-
-export function getScoreBg(score: number): string {
-  if (score >= 60) return "bg-score-high";
-  if (score >= 35) return "bg-score-mid";
-  return "bg-score-low";
-}
-
 export function formatTrend(trend: number): string {
   if (trend > 0) return `+${trend}`;
   return `${trend}`;

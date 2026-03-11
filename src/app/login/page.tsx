@@ -117,7 +117,7 @@ export default function LoginPage() {
             AI Bahsedilme Skoru
           </p>
           <div className="mx-auto mt-6 h-[3px] w-48 overflow-hidden rounded-full bg-background/20">
-            <div className="h-full w-[34%] rounded-full bg-score-low" />
+            <div className="h-full w-[34%] rounded-full bg-foreground" />
           </div>
           <p className="mt-8 text-sm leading-relaxed text-background/50">
             Markanız AI yanıtlarında yeterince görünmüyor.

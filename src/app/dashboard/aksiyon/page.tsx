@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { actionTasks, raasOffer } from "@/lib/mock-data/actions";
 import type { ActionTask } from "@/lib/mock-data/actions";
-import { getScoreColor } from "@/lib/utils";
 import { ExpandCard } from "@/components/ui/expand-card";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -14,9 +13,9 @@ const priorityLabel: Record<ActionTask["priority"], string> = {
   low: "DÜŞÜK",
 };
 
-const priorityColor: Record<ActionTask["priority"], string> = {
-  high: "text-score-low",
-  medium: "text-score-mid",
+const priorityStyle: Record<ActionTask["priority"], string> = {
+  high: "text-foreground",
+  medium: "text-muted-foreground",
   low: "text-muted-foreground",
 };
 
@@ -27,7 +26,7 @@ function TaskSummary({ task }: { task: ActionTask }) {
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
         <span
-          className={`text-[10px] font-bold uppercase tracking-wider ${priorityColor[task.priority]}`}
+          className={`text-[10px] font-bold uppercase tracking-wider ${priorityStyle[task.priority]}`}
         >
           {priorityLabel[task.priority]}
         </span>
@@ -112,7 +111,7 @@ function RaasOfferCard({
   timeline,
 }: typeof raasOffer) {
   return (
-    <div className="reveal rounded-[16px] border border-dashed border-border bg-background-secondary p-6">
+    <div className="reveal rounded-xl border border-dashed border-border bg-background-secondary p-6">
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
         RaaS Teklifi
       </p>
@@ -135,17 +134,13 @@ function RaasOfferCard({
             Skor
           </p>
           <div className="mt-1 flex items-end gap-1">
-            <span
-              className={`text-xl font-black tracking-[-0.04em] leading-none ${getScoreColor(currentScore)}`}
-            >
+            <span className="text-xl font-black tracking-[-0.04em] leading-none text-foreground">
               {currentScore}
             </span>
             <span className="mb-0.5 text-sm font-bold text-muted-foreground leading-none">
               →
             </span>
-            <span
-              className={`text-xl font-black tracking-[-0.04em] leading-none ${getScoreColor(targetScore)}`}
-            >
+            <span className="text-xl font-black tracking-[-0.04em] leading-none text-foreground">
               {targetScore}
             </span>
           </div>
@@ -228,7 +223,7 @@ export default function AksiyonPage() {
   return (
     <div className="space-y-10">
       {/* ── Header Card ───────────────────────────────────────────────────── */}
-      <div className="reveal rounded-[16px] border border-border bg-card p-8 transition-all duration-300 hover:-translate-y-[3px] hover:shadow-lg hover:border-muted-foreground/30">
+      <div className="reveal rounded-xl border border-border bg-card p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
           AKSİYON PLANI
         </p>
@@ -273,7 +268,7 @@ export default function AksiyonPage() {
       {raasSelectedCount > 0 ? (
         <RaasOfferCard {...liveOffer} />
       ) : (
-        <div className="reveal rounded-[16px] border border-dashed border-border p-5 text-center">
+        <div className="reveal rounded-xl border border-dashed border-border p-5 text-center">
           <p className="text-sm text-muted-foreground">
             Uygulanmasını istediğiniz görevler için{" "}
             <span className="font-bold text-foreground">Biz Uygulayalım</span>{" "}

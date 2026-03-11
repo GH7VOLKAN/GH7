@@ -8,17 +8,10 @@ import {
   nextScanIn,
 } from "@/lib/mock-data/overview";
 import { platformLabels, type PlatformKey } from "@/lib/types";
-import { getScoreColor, formatTrend } from "@/lib/utils";
-import { FlipCard } from "@/components/ui/flip-card";
+import { formatTrend } from "@/lib/utils";
 import { ExpandCard } from "@/components/ui/expand-card";
 
 const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
-
-const sentimentClass: Record<string, string> = {
-  pozitif: "text-score-high",
-  nötr: "text-muted-foreground",
-  negatif: "text-score-low",
-};
 
 function avg(vals: number[]): number {
   return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
@@ -28,51 +21,40 @@ export default function GenelPage() {
   return (
     <div className="space-y-10">
 
-      {/* ── 1. Dual Score Cards ──────────────────────────────────────────── */}
+      {/* ── 1. SKORLAR ─────────────────────────────────────────────────── */}
       <section>
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
           SKORLAR
         </p>
 
-        {/* score-row handles mobile horizontal scroll */}
-        <div className="score-row grid grid-cols-2 gap-[10px]">
+        <div className="grid grid-cols-2 gap-[10px]">
 
-          {/* AI Bahsedilme — flip card */}
+          {/* AI Bahsedilme */}
           <div className="reveal">
-            <FlipCard
-              front={
+            <ExpandCard
+              summary={
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                     AI BAHSEDİLME
                   </p>
                   <div className="mt-4 flex items-end gap-2">
-                    <span
-                      className={`text-4xl font-light leading-none ${getScoreColor(
-                        dualScores.mention.score
-                      )}`}
-                    >
+                    <span className="text-4xl font-light leading-none text-foreground">
                       {dualScores.mention.score}
                     </span>
                     <span className="mb-0.5 text-base font-medium text-muted-foreground leading-none">
                       /100
                     </span>
-                    <span
-                      className={`mb-0.5 text-sm font-bold leading-none ${
-                        dualScores.mention.trend >= 0
-                          ? "text-score-high"
-                          : "text-score-low"
-                      }`}
-                    >
+                    <span className="mb-0.5 text-sm font-bold leading-none text-foreground">
                       {dualScores.mention.trend >= 0 ? "↑" : "↓"}{" "}
                       {formatTrend(dualScores.mention.trend)}
                     </span>
                   </div>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    Platform dağılımı için çevirin →
+                    Platform dağılımı için genişletin ↓
                   </p>
                 </div>
               }
-              back={
+              detail={
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
                     PLATFORM DAĞILIMI
@@ -86,9 +68,7 @@ export default function GenelPage() {
                           <span className="text-xs text-muted-foreground">
                             {platformLabels[p].name}
                           </span>
-                          <span
-                            className={`text-sm font-bold ${getScoreColor(score)}`}
-                          >
+                          <span className="text-sm font-bold text-foreground">
                             {score}
                           </span>
                         </div>
@@ -100,42 +80,32 @@ export default function GenelPage() {
             />
           </div>
 
-          {/* Site Hazırlık — flip card */}
+          {/* Site Hazırlık */}
           <div className="reveal">
-            <FlipCard
-              front={
+            <ExpandCard
+              summary={
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                     SİTE HAZIRLIK
                   </p>
                   <div className="mt-4 flex items-end gap-2">
-                    <span
-                      className={`text-4xl font-light leading-none ${getScoreColor(
-                        dualScores.readiness.score
-                      )}`}
-                    >
+                    <span className="text-4xl font-light leading-none text-foreground">
                       {dualScores.readiness.score}
                     </span>
                     <span className="mb-0.5 text-base font-medium text-muted-foreground leading-none">
                       /100
                     </span>
-                    <span
-                      className={`mb-0.5 text-sm font-bold leading-none ${
-                        dualScores.readiness.trend >= 0
-                          ? "text-score-high"
-                          : "text-score-low"
-                      }`}
-                    >
+                    <span className="mb-0.5 text-sm font-bold leading-none text-foreground">
                       {dualScores.readiness.trend >= 0 ? "↑" : "↓"}{" "}
                       {formatTrend(dualScores.readiness.trend)}
                     </span>
                   </div>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    Kategori kırılımı için çevirin →
+                    Kategori kırılımı için genişletin ↓
                   </p>
                 </div>
               }
-              back={
+              detail={
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
                     KATEGORİ KIRILIMI
@@ -151,9 +121,7 @@ export default function GenelPage() {
                         <span className="text-xs text-muted-foreground">
                           {cat.label}
                         </span>
-                        <span
-                          className={`text-sm font-bold ${getScoreColor(cat.score)}`}
-                        >
+                        <span className="text-sm font-bold text-foreground">
                           {cat.score}
                         </span>
                       </div>
@@ -166,7 +134,7 @@ export default function GenelPage() {
         </div>
       </section>
 
-      {/* ── 2. Visibility Comparison — expand card ───────────────────────── */}
+      {/* ── 2. GÖRÜNÜRLÜK KARŞILAŞTIRMASI ──────────────────────────────── */}
       <section>
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
           GÖRÜNÜRLÜK KARŞILAŞTIRMASI
@@ -179,7 +147,6 @@ export default function GenelPage() {
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
                   GÖRÜNÜRLÜK KARŞILAŞTIRMASI
                 </p>
-                {/* Mini preview: brand + avg score */}
                 <div className="flex flex-wrap gap-x-5 gap-y-2">
                   {visibilityData.map((row) => {
                     const average = avg(platforms.map((p) => row.platforms[p]));
@@ -199,9 +166,7 @@ export default function GenelPage() {
                             </span>
                           )}
                         </span>
-                        <span
-                          className={`text-sm font-bold ${getScoreColor(average)}`}
-                        >
+                        <span className="text-sm font-bold text-foreground">
                           {average}
                         </span>
                       </div>
@@ -235,7 +200,7 @@ export default function GenelPage() {
                   {visibilityData.map((row) => (
                     <div
                       key={row.name}
-                      className={`grid grid-cols-5 gap-2 rounded-[12px] px-3 py-2.5 ${
+                      className={`grid grid-cols-5 gap-2 rounded-xl px-3 py-2.5 ${
                         row.isUser
                           ? "bg-secondary border border-border"
                           : ""
@@ -258,9 +223,7 @@ export default function GenelPage() {
                       {platforms.map((p) => (
                         <div
                           key={p}
-                          className={`text-right text-sm font-bold ${getScoreColor(
-                            row.platforms[p]
-                          )}`}
+                          className="text-right text-sm font-bold text-foreground"
                         >
                           {row.platforms[p]}
                         </div>
@@ -274,7 +237,7 @@ export default function GenelPage() {
         </div>
       </section>
 
-      {/* ── 3. Recent Mentions — individual expand cards ─────────────────── */}
+      {/* ── 3. SON AI BAHSEDİLMELERİ ──────────────────────────────────── */}
       <section>
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
           SON AI BAHSEDİLMELERİ
@@ -286,9 +249,8 @@ export default function GenelPage() {
               <ExpandCard
                 summary={
                   <div>
-                    {/* Meta row */}
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="text-xs font-bold uppercase tracking-[0.1em]">
+                      <span className="text-xs font-bold uppercase tracking-[0.1em] text-foreground">
                         {platformLabels[mention.platform].name}
                       </span>
                       <span className="text-xs text-muted-foreground">·</span>
@@ -299,17 +261,11 @@ export default function GenelPage() {
                       <span className="text-xs text-muted-foreground">
                         {mention.position}
                       </span>
-                      <span
-                        className={`ml-auto text-xs font-bold ${
-                          sentimentClass[mention.sentiment] ??
-                          "text-muted-foreground"
-                        }`}
-                      >
+                      <span className="ml-auto text-xs font-bold text-muted-foreground">
                         {mention.sentiment}
                       </span>
                     </div>
-                    {/* Truncated prompt */}
-                    <p className="mt-2 text-sm font-medium tracking-[-0.02em] line-clamp-1">
+                    <p className="mt-2 text-sm font-medium tracking-[-0.02em] line-clamp-1 text-foreground">
                       &ldquo;{mention.prompt}&rdquo;
                     </p>
                   </div>
@@ -319,7 +275,7 @@ export default function GenelPage() {
                     <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-2">
                       PROMPT
                     </p>
-                    <p className="text-sm font-medium tracking-[-0.02em] mb-4">
+                    <p className="text-sm font-medium tracking-[-0.02em] mb-4 text-foreground">
                       &ldquo;{mention.prompt}&rdquo;
                     </p>
                     <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-2">
@@ -332,15 +288,10 @@ export default function GenelPage() {
                       <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
                         Kaynak:
                       </span>
-                      <span className="text-xs font-bold uppercase tracking-[0.1em]">
+                      <span className="text-xs font-bold uppercase tracking-[0.1em] text-foreground">
                         {platformLabels[mention.platform].name}
                       </span>
-                      <span
-                        className={`text-xs font-bold ${
-                          sentimentClass[mention.sentiment] ??
-                          "text-muted-foreground"
-                        }`}
-                      >
+                      <span className="text-xs font-bold text-muted-foreground">
                         · {mention.sentiment}
                       </span>
                     </div>
@@ -352,7 +303,7 @@ export default function GenelPage() {
         </div>
       </section>
 
-      {/* ── 4. Priority Actions — simple clickable cards ─────────────────── */}
+      {/* ── 4. ÖNCELİKLİ AKSİYONLAR ──────────────────────────────────── */}
       <section>
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
           ÖNCELİKLİ AKSİYONLAR
@@ -362,7 +313,7 @@ export default function GenelPage() {
           {priorityActions.map((action, i) => (
             <div
               key={i}
-              className="reveal card rounded-[16px] border border-border bg-card p-5 cursor-pointer hover:-translate-y-[3px] hover:shadow-lg hover:border-muted-foreground/30 active:scale-[0.98]"
+              className="reveal rounded-xl border border-border bg-card p-5"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
@@ -370,13 +321,13 @@ export default function GenelPage() {
                     {i + 1}
                   </span>
                   <div>
-                    <p className="text-sm font-medium">{action.title}</p>
+                    <p className="text-sm font-medium text-foreground">{action.title}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {action.impact}
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
+                <span className="shrink-0 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Aksiyona Git →
                 </span>
               </div>
@@ -385,19 +336,19 @@ export default function GenelPage() {
         </div>
       </section>
 
-      {/* ── 5. Next Scan Card ────────────────────────────────────────────── */}
+      {/* ── 5. SONRAKİ TARAMA ──────────────────────────────────────────── */}
       <section>
-        <div className="reveal card rounded-[16px] border border-border bg-card p-5">
+        <div className="reveal rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 SONRAKİ TARAMA
               </p>
-              <p className="mt-1 text-lg font-light tracking-[-0.03em]">
+              <p className="mt-1 text-lg font-light tracking-[-0.03em] text-foreground">
                 {nextScanIn}
               </p>
             </div>
-            <div className="h-2 w-2 rounded-full bg-score-high animate-pulse" />
+            <div className="h-2 w-2 rounded-full bg-foreground animate-pulse" />
           </div>
         </div>
       </section>

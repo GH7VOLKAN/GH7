@@ -11,11 +11,11 @@ export default function KaynaklarPage() {
   return (
     <div className="space-y-10">
       {/* Header Card */}
-      <div className="reveal rounded-[16px] border border-border bg-card p-8">
+      <div className="reveal rounded-xl border border-border bg-card p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           KAYNAKLAR
         </p>
-        <h1 className="mt-1 text-2xl font-light tracking-[-0.04em]">
+        <h1 className="mt-1 text-2xl font-light tracking-[-0.04em] text-foreground">
           Kaynak Analizi
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -41,14 +41,14 @@ export default function KaynaklarPage() {
                 {/* Top row: domain + type badge + usage % */}
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-bold tracking-[-0.02em] truncate">
+                    <span className="text-sm font-bold tracking-[-0.02em] truncate text-foreground">
                       {source.domain}
                     </span>
                     <span className="shrink-0 border border-border rounded-md px-2 py-0.5 text-[10px] text-muted-foreground">
                       {sourceTypeLabels[source.type]}
                     </span>
                   </div>
-                  <span className="shrink-0 text-sm font-bold tabular-nums">
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-foreground">
                     %{source.usagePercent}
                   </span>
                 </div>
@@ -78,9 +78,11 @@ export default function KaynaklarPage() {
 
                 {/* Action note inline in summary */}
                 {source.actionNote && (
-                  <p className="mt-3 text-xs text-score-low">
-                    {source.actionNote}
-                  </p>
+                  <div className="mt-3 rounded-xl border border-border p-2.5">
+                    <p className="text-xs text-foreground">
+                      {source.actionNote}
+                    </p>
+                  </div>
                 )}
               </div>
             );
@@ -97,14 +99,14 @@ export default function KaynaklarPage() {
                       {source.urls!.map((url) => (
                         <div
                           key={url.path}
-                          className="rounded-[16px] border border-border bg-card p-3"
+                          className="rounded-xl border border-border bg-card p-3"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <span className="text-xs font-mono text-muted-foreground truncate">
                               {url.path}
                             </span>
                             <div className="shrink-0 flex items-center gap-3 text-xs">
-                              <span className="font-bold tabular-nums">
+                              <span className="font-bold tabular-nums text-foreground">
                                 %{url.usagePercent}
                               </span>
                               <span className="text-muted-foreground">
@@ -126,11 +128,11 @@ export default function KaynaklarPage() {
 
                 {/* Prominent action note in detail */}
                 {source.actionNote && (
-                  <div className="rounded-[16px] border border-score-low/30 bg-score-low/5 p-4">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-score-low mb-1">
+                  <div className="rounded-xl border border-foreground/20 bg-card p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-1">
                       Aksiyon Gerekiyor
                     </p>
-                    <p className="text-sm text-score-low">
+                    <p className="text-sm text-foreground">
                       {source.actionNote}
                     </p>
                   </div>

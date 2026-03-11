@@ -125,7 +125,7 @@ export default function LandingPage() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-[14px] border border-border bg-card p-6 transition-colors hover:bg-background-secondary"
+              className="rounded-xl border border-border bg-card p-6 transition-colors hover:bg-background-secondary"
             >
               <h3 className="text-sm font-bold tracking-[-0.02em]">
                 {feature.title}
@@ -181,7 +181,7 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-        <div className="rounded-[14px] border border-border bg-foreground p-8 text-center sm:p-14">
+        <div className="rounded-xl border border-border bg-foreground p-8 text-center sm:p-14">
           <h2 className="text-2xl font-light tracking-[-0.04em] text-background sm:text-3xl">
             AI yanıtlarında yerinizi alın
           </h2>

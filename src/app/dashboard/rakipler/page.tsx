@@ -2,7 +2,6 @@
 
 import { competitorRows, competitorDetail } from "@/lib/mock-data/competitors";
 import { platformLabels, type PlatformKey } from "@/lib/types";
-import { getScoreColor } from "@/lib/utils";
 import { ExpandCard } from "@/components/ui/expand-card";
 
 const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
@@ -14,7 +13,7 @@ export default function Rakipler() {
     <div className="space-y-10">
 
       {/* ── Header Card ─────────────────────────────────────────── */}
-      <div className="reveal rounded-[16px] border border-border bg-card p-8">
+      <div className="reveal rounded-xl border border-border bg-card p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           RAKİP İSTİHBARATI
         </p>
@@ -67,21 +66,11 @@ export default function Rakipler() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                       Bahsedilme
                     </span>
-                    <span
-                      className={`text-lg font-black tracking-[-0.05em] leading-none ${getScoreColor(
-                        row.mentionScore
-                      )}`}
-                    >
+                    <span className="text-lg font-black tracking-[-0.05em] leading-none text-foreground">
                       {row.mentionScore}
                     </span>
                     {mentionDiff !== null && (
-                      <span
-                        className={`text-[10px] font-bold ${
-                          mentionDiff >= 0
-                            ? "text-score-low"
-                            : "text-score-high"
-                        }`}
-                      >
+                      <span className="text-[10px] font-bold text-foreground">
                         Fark: {mentionDiff >= 0 ? "+" : ""}
                         {mentionDiff}
                       </span>
@@ -91,21 +80,11 @@ export default function Rakipler() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                       Hazırlık
                     </span>
-                    <span
-                      className={`text-lg font-black tracking-[-0.05em] leading-none ${getScoreColor(
-                        row.readinessScore
-                      )}`}
-                    >
+                    <span className="text-lg font-black tracking-[-0.05em] leading-none text-foreground">
                       {row.readinessScore}
                     </span>
                     {readinessDiff !== null && (
-                      <span
-                        className={`text-[10px] font-bold ${
-                          readinessDiff >= 0
-                            ? "text-score-low"
-                            : "text-score-high"
-                        }`}
-                      >
+                      <span className="text-[10px] font-bold text-foreground">
                         Fark: {readinessDiff >= 0 ? "+" : ""}
                         {readinessDiff}
                       </span>
@@ -126,16 +105,12 @@ export default function Rakipler() {
                     {platforms.map((p) => (
                       <div
                         key={p}
-                        className="rounded-[12px] border border-border bg-muted/20 p-3"
+                        className="rounded-xl border border-border bg-muted/20 p-3"
                       >
                         <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                           {platformLabels[p].name}
                         </p>
-                        <p
-                          className={`mt-1 text-2xl font-black tracking-[-0.05em] leading-none ${getScoreColor(
-                            row.platforms[p]
-                          )}`}
-                        >
+                        <p className="mt-1 text-2xl font-black tracking-[-0.05em] leading-none text-foreground">
                           {row.platforms[p]}
                         </p>
                       </div>
@@ -152,7 +127,7 @@ export default function Rakipler() {
                     <ul className="space-y-2">
                       {competitorDetail.readinessGaps.map((gap, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="mt-[3px] shrink-0 text-score-low">
+                          <span className="mt-[3px] shrink-0 text-muted-foreground">
                             ·
                           </span>
                           <span className="text-foreground">{gap}</span>
@@ -219,11 +194,7 @@ export default function Rakipler() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                       {competitorDetail.name}
                     </span>
-                    <span
-                      className={`text-lg font-black tracking-[-0.05em] leading-none ${getScoreColor(
-                        competitorDetail.mentionScore
-                      )}`}
-                    >
+                    <span className="text-lg font-black tracking-[-0.05em] leading-none text-foreground">
                       {competitorDetail.mentionScore}
                     </span>
                   </div>
@@ -232,11 +203,7 @@ export default function Rakipler() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                       {userRow?.name ?? "Siz"}
                     </span>
-                    <span
-                      className={`text-lg font-black tracking-[-0.05em] leading-none ${getScoreColor(
-                        competitorDetail.userMentionScore
-                      )}`}
-                    >
+                    <span className="text-lg font-black tracking-[-0.05em] leading-none text-foreground">
                       {competitorDetail.userMentionScore}
                     </span>
                   </div>
@@ -253,7 +220,7 @@ export default function Rakipler() {
                   <ul className="space-y-2">
                     {competitorDetail.readinessGaps.map((gap, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
-                        <span className="mt-[3px] shrink-0 text-score-low">
+                        <span className="mt-[3px] shrink-0 text-muted-foreground">
                           ·
                         </span>
                         <span className="text-foreground">{gap}</span>

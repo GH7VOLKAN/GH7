@@ -14,9 +14,9 @@ export function ExpandCard({ summary, detail, className, defaultOpen = false }: 
 
   return (
     <div
-      className={`card rounded-[16px] border border-border bg-card transition-all duration-300 cursor-pointer
-        ${!open ? "hover:-translate-y-[3px] hover:shadow-lg hover:border-muted-foreground/30" : "border-muted-foreground/20"}
-        active:scale-[0.98] ${className ?? ""}`}
+      className={`rounded-xl border border-border bg-card cursor-pointer transition-colors
+        ${open ? "border-foreground/15" : "hover:border-foreground/15"}
+        ${className ?? ""}`}
       onClick={() => setOpen(!open)}
     >
       <div className="p-5">
@@ -27,7 +27,7 @@ export function ExpandCard({ summary, detail, className, defaultOpen = false }: 
         style={{
           maxHeight: open ? "800px" : "0px",
           opacity: open ? 1 : 0,
-          transition: "max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease",
+          transition: "max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease",
         }}
       >
         <div className="border-t border-border px-5 pb-5 pt-4" onClick={(e) => e.stopPropagation()}>
