@@ -15,9 +15,14 @@ import { sourceDomains } from "@/lib/mock-data/sources";
 export function SourceStatsCards() {
   const totalSources = sourceDomains.length;
   const actionableSources = sourceDomains.filter((s) => s.actionNote).length;
+  const avgCitations =
+    sourceDomains.reduce((sum, s) => sum + s.avgCitations, 0) / totalSources;
+  const topSource = [...sourceDomains].sort(
+    (a, b) => b.usagePercent - a.usagePercent
+  )[0];
 
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 dark:*:data-[slot=card]:bg-card">
+    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Toplam Kaynak</CardDescription>
@@ -33,10 +38,56 @@ export function SourceStatsCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            AI yanıtlarında referans gösterilen
+            AI yanıtlarında referans
           </div>
           <div className="text-muted-foreground">
             Kaynak domainler takip ediliyor
+          </div>
+        </CardFooter>
+      </Card>
+
+      <Card className="@container/card">
+        <CardHeader>
+          <CardDescription>En Çok Referans</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            %{topSource.usagePercent}
+          </CardTitle>
+          <CardAction>
+            <Badge variant="outline">
+              <TrendingUpIcon />
+              +5
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            {topSource.domain}
+          </div>
+          <div className="text-muted-foreground">
+            En yüksek kullanım oranı
+          </div>
+        </CardFooter>
+      </Card>
+
+      <Card className="@container/card">
+        <CardHeader>
+          <CardDescription>Ort. Atıf Sayısı</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {avgCitations.toFixed(1)}
+          </CardTitle>
+          <CardAction>
+            <Badge variant="outline">
+              <TrendingUpIcon />
+              +0.3
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            Kaynak başına ortalama
+          </div>
+          <div className="text-muted-foreground">
+            AI yanıtlarında atıf oranı
           </div>
         </CardFooter>
       </Card>
@@ -48,7 +99,7 @@ export function SourceStatsCards() {
             {actionableSources}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">Kayıt / Güncelleme</Badge>
+            <Badge variant="outline">Kayıt</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -56,7 +107,7 @@ export function SourceStatsCards() {
             Eksik kayıtlar tespit edildi
           </div>
           <div className="text-muted-foreground">
-            Dizin kaydı veya güncelleme gerekiyor
+            Dizin kaydı veya güncelleme
           </div>
         </CardFooter>
       </Card>

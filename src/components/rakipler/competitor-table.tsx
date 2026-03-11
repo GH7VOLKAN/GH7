@@ -37,11 +37,13 @@ export function CompetitorTable() {
             <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead>Firma</TableHead>
-                <TableHead className="hidden sm:table-cell">Domain</TableHead>
                 <TableHead>Bahsedilme</TableHead>
                 <TableHead>Hazırlık</TableHead>
                 {platforms.map((p) => (
-                  <TableHead key={p} className="hidden lg:table-cell text-center">
+                  <TableHead
+                    key={p}
+                    className="hidden lg:table-cell text-center"
+                  >
                     {platformLabels[p].name}
                   </TableHead>
                 ))}
@@ -59,45 +61,71 @@ export function CompetitorTable() {
                 return (
                   <TableRow
                     key={row.domain}
-                    className={row.isUser ? "bg-muted/30" : ""}
+                    className={row.isUser ? "bg-primary/5" : ""}
                   >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {row.name}
-                        {row.isUser && (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            Siz
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
-                      {row.domain}
-                    </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold tabular-nums">
-                          {row.mentionScore}
-                        </span>
-                        {mentionDiff !== null && (
-                          <span className="text-xs text-muted-foreground tabular-nums">
-                            ({mentionDiff >= 0 ? "+" : ""}
-                            {mentionDiff})
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className={row.isUser ? "font-semibold" : "font-medium"}>
+                            {row.name}
                           </span>
-                        )}
+                          {row.isUser && (
+                            <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                              Siz
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {row.domain}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold tabular-nums">
-                          {row.readinessScore}
-                        </span>
-                        {readinessDiff !== null && (
-                          <span className="text-xs text-muted-foreground tabular-nums">
-                            ({readinessDiff >= 0 ? "+" : ""}
-                            {readinessDiff})
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold tabular-nums">
+                            {row.mentionScore}
                           </span>
-                        )}
+                          {mentionDiff !== null && (
+                            <Badge
+                              variant={mentionDiff > 0 ? "outline" : "secondary"}
+                              className="text-muted-foreground text-[10px] px-1.5 py-0"
+                            >
+                              {mentionDiff >= 0 ? "+" : ""}
+                              {mentionDiff}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all duration-700"
+                            style={{ width: `${row.mentionScore}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold tabular-nums">
+                            {row.readinessScore}
+                          </span>
+                          {readinessDiff !== null && (
+                            <Badge
+                              variant={readinessDiff > 0 ? "outline" : "secondary"}
+                              className="text-muted-foreground text-[10px] px-1.5 py-0"
+                            >
+                              {readinessDiff >= 0 ? "+" : ""}
+                              {readinessDiff}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all duration-700"
+                            style={{ width: `${row.readinessScore}%` }}
+                          />
+                        </div>
                       </div>
                     </TableCell>
                     {platforms.map((p) => (

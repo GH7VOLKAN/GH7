@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -39,17 +40,21 @@ export function SourceTable() {
                 <TableHead className="hidden sm:table-cell">
                   Ort. Atıf
                 </TableHead>
-                <TableHead className="hidden md:table-cell">
-                  URL Sayısı
-                </TableHead>
                 <TableHead className="text-right">Aksiyon</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sourceDomains.map((source) => (
                 <TableRow key={source.domain}>
-                  <TableCell className="font-medium">
-                    {source.domain}
+                  <TableCell>
+                    <div>
+                      <span className="font-medium">{source.domain}</span>
+                      {source.urls && source.urls.length > 0 && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {source.urls.length} URL takip ediliyor
+                        </p>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-muted-foreground">
@@ -57,13 +62,13 @@ export function SourceTable() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1.5">
                       <span className="font-semibold tabular-nums">
                         %{source.usagePercent}
                       </span>
-                      <div className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block">
+                      <div className="h-2 w-20 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-primary transition-all"
+                          className="h-full rounded-full bg-primary transition-all duration-700"
                           style={{ width: `${source.usagePercent}%` }}
                         />
                       </div>
@@ -72,14 +77,14 @@ export function SourceTable() {
                   <TableCell className="hidden sm:table-cell tabular-nums text-muted-foreground">
                     {source.avgCitations.toFixed(1)}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell tabular-nums text-muted-foreground">
-                    {source.urls?.length ?? "—"}
-                  </TableCell>
                   <TableCell className="text-right">
                     {source.actionNote ? (
-                      <Badge variant="outline" className="text-muted-foreground max-w-[200px] truncate">
-                        {source.actionNote}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <p className="text-xs text-muted-foreground text-right max-w-[180px]">
+                          {source.actionNote}
+                        </p>
+                        <Button size="sm">Kayıt Ol</Button>
+                      </div>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
