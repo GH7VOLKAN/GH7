@@ -47,7 +47,7 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <GH7Logo className="text-2xl" />
+          <GH7Logo size="lg" />
           <div className="flex items-center gap-3">
             <Link
               href="/login"
@@ -200,7 +200,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 sm:px-6">
-          <GH7Logo className="text-lg" />
+          <GH7Logo size="sm" />
           <p className="text-xs text-muted-foreground">
             2026 GH7.ai — Tüm hakları saklıdır.
           </p>

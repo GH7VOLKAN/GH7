@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GH7Logo } from "@/components/gh7-logo";
+import { GH7Icon } from "@/components/gh7-icon";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-8">
           <div>
             <Link href="/">
-              <GH7Logo className="text-3xl" />
+              <GH7Logo size="lg" />
             </Link>
             <h1 className="mt-6 text-2xl font-light tracking-[-0.04em]">
               Hesabınıza giriş yapın
@@ -107,6 +108,7 @@ export default function LoginPage() {
       {/* Right — visual panel (desktop only) */}
       <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:bg-foreground lg:p-12">
         <div className="max-w-md text-center">
+          <GH7Icon size={64} className="mx-auto mb-8 text-background/20" />
           <p className="text-5xl font-light tracking-[-0.04em] text-background">
             34
             <span className="text-background/40">/100</span>

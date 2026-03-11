@@ -1,9 +1,39 @@
-export function GH7Logo({ className }: { className?: string }) {
+export function GH7Logo({ className, size = "default" }: { className?: string; size?: "sm" | "default" | "lg" }) {
+  const heights: Record<string, number> = { sm: 20, default: 28, lg: 36 };
+  const h = heights[size];
+  // Aspect ratio from original SVG: 375 / 112.5 ≈ 3.33
+  const w = Math.round(h * 3.33);
+
   return (
-    <span
-      className={`text-xl font-black tracking-[-0.04em] ${className ?? ""}`}
-    >
-      GH7<span className="text-muted-foreground">.ai</span>
+    <span className={`inline-flex items-center gap-1 ${className ?? ""}`}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={w}
+        height={h}
+        viewBox="0 0 263 112"
+        className="flex-shrink-0"
+      >
+        {/* G letter */}
+        <g fill="currentColor">
+          <path
+            transform="translate(0.573, 98.017)"
+            d="M 87.906 -50.391 L 87.906 -30.859 C 85.582 -20.172 80.492 -12.082 72.641 -6.594 C 64.785 -1.102 56.02 1.641 46.344 1.641 C 34.207 1.641 23.867 -2.898 15.328 -11.984 C 6.785 -21.078 2.516 -32.063 2.516 -44.938 C 2.516 -58.02 6.691 -69.066 15.047 -78.078 C 23.41 -87.098 33.844 -91.609 46.344 -91.609 C 60.957 -91.609 72.52 -86.484 81.031 -76.234 L 67.625 -61.516 C 62.821 -69.223 56.129 -73.078 47.547 -73.078 C 41.223 -73.078 35.821 -70.332 31.344 -64.844 C 26.875 -59.352 24.641 -52.719 24.641 -44.938 C 24.641 -37.301 26.875 -30.773 31.344 -25.359 C 35.821 -19.941 41.223 -17.234 47.547 -17.234 C 52.785 -17.234 57.348 -18.813 61.234 -21.969 C 65.129 -25.133 67.078 -29.336 67.078 -34.578 L 46.344 -34.578 L 46.344 -50.391 Z"
+          />
+          {/* H letter */}
+          <path
+            transform="translate(90.984, 98.017)"
+            d="M 27.047 -36.094 L 27.047 0 L 6.547 0 L 6.547 -89.969 L 27.047 -89.969 L 27.047 -54.094 L 56.063 -54.094 L 56.063 -89.969 L 76.563 -89.969 L 76.563 0 L 56.063 0 L 56.063 -36.094 Z"
+          />
+        </g>
+        {/* 7 icon */}
+        <g fill="currentColor" transform="translate(0, 0)">
+          <path
+            fillRule="evenodd"
+            d="M 193.004 80.832 L 197.676 72.848 L 206.281 87.977 C 219.465 65.5 234.773 39.387 247.957 16.91 L 180.242 16.223 L 175.66 8.156 L 261.922 8.969 C 244.043 39.441 224.051 73.531 206.172 104.004 Z M 184.258 23.285 C 207.977 23.445 211.984 23.695 235.707 23.855 L 215.902 57.629 L 206.379 73.871 L 201.805 65.824 C 207.75 55.691 215.82 41.93 221.762 31.797 C 204.215 31.68 206.387 31.473 188.84 31.352 Z"
+          />
+        </g>
+      </svg>
+      <span className="text-muted-foreground font-medium text-xs tracking-[0.08em]">.ai</span>
     </span>
   );
 }

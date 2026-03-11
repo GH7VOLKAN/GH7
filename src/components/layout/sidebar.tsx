@@ -20,7 +20,7 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-[240px] lg:fixed lg:inset-y-0 lg:left-0 border-r border-border bg-background-secondary">
       <div className="flex items-center gap-2 px-6 py-5">
-        <GH7Logo className="text-xl" />
+        <GH7Logo size="default" />
       </div>
 
       <nav className="flex-1 px-3 py-2 space-y-0.5">
