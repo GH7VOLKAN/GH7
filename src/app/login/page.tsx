@@ -75,10 +75,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-8">
           <div>
             <Link href="/">
-              <div className="flex items-baseline gap-0.5">
-                <GH7Logo size="xl" />
-                <span className="text-lg font-light text-muted-foreground/60">.ai</span>
-              </div>
+              <GH7Logo size="lg" />
             </Link>
             <h1 className="mt-6 text-2xl font-light tracking-[-0.04em]">
               {mode === "login" ? "Hesabınıza giriş yapın" : "Yeni hesap oluşturun"}
