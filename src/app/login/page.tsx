@@ -31,8 +31,9 @@ export default function LoginPage() {
         setError(error.message);
         setLoading(false);
       }
-    } catch {
-      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
+    } catch (err) {
+      console.error("[auth] Google login error:", err);
+      setError(err instanceof Error ? err.message : "Bağlantı hatası. Lütfen tekrar deneyin.");
       setLoading(false);
     }
   }
@@ -70,8 +71,9 @@ export default function LoginPage() {
           return; // Don't reset loading — page will redirect
         }
       }
-    } catch {
-      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
+    } catch (err) {
+      console.error("[auth] Email auth error:", err);
+      setError(err instanceof Error ? err.message : "Bağlantı hatası. Lütfen tekrar deneyin.");
     }
     setLoading(false);
   }
