@@ -14,19 +14,25 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [registered, setRegistered] = useState(false);
 
   async function handleGoogleLogin() {
     setLoading(true);
     setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) {
-      setError(error.message);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    } catch {
+      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
       setLoading(false);
     }
   }
@@ -36,36 +42,38 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    if (mode === "register") {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
+    try {
+      const supabase = createClient();
+      if (mode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) {
+          setError(error.message);
+        } else {
+          setRegistered(true);
+        }
       } else {
-        setError(null);
-        alert("Kayıt başarılı! E-posta adresinizi doğrulayın.");
-        setLoading(false);
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          setError(error.message);
+        } else {
+          router.push("/dashboard/genel");
+          router.refresh();
+          return; // Don't reset loading — page will redirect
+        }
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({  // eslint-disable-line @typescript-eslint/no-shadow
-        email,
-        password,
-      });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-      } else {
-        router.push("/dashboard/genel");
-        router.refresh();
-      }
+    } catch {
+      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
     }
+    setLoading(false);
   }
 
   return (
@@ -88,6 +96,12 @@ export default function LoginPage() {
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
               {error}
+            </div>
+          )}
+
+          {registered && (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400">
+              Kayıt başarılı! E-posta adresinize gönderilen doğrulama linkine tıklayın.
             </div>
           )}
 
@@ -206,37 +220,66 @@ export default function LoginPage() {
 
       {/* Right — visual panel (desktop only) */}
       <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:bg-foreground lg:p-12">
-        <div className="max-w-md text-center">
-          <GH7Icon size={64} className="mx-auto mb-8 text-background/20" />
-          <p className="text-5xl font-light tracking-[-0.04em] text-background">
-            34
-            <span className="text-background/40">/100</span>
+        <div className="max-w-md">
+          <GH7Icon size={48} className="mb-10 text-background/20" />
+
+          <h2 className="text-2xl font-light tracking-[-0.04em] text-background">
+            AI yanıtlarında markanızın
+            <br />
+            görünürlüğünü ölçün
+          </h2>
+
+          <p className="mt-4 text-sm leading-relaxed text-background/50">
+            ChatGPT, Claude, Gemini ve Perplexity — kullanıcılar artık arama
+            yerine AI&apos;a soruyor. Markanız bu yanıtlarda yer alıyor mu?
           </p>
-          <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-background/50">
-            AI Bahsedilme Skoru
-          </p>
-          <div className="mx-auto mt-6 h-[3px] w-48 overflow-hidden rounded-full bg-background/20">
-            <div className="h-full w-[34%] rounded-full bg-foreground" />
-          </div>
-          <p className="mt-8 text-sm leading-relaxed text-background/50">
-            Markanız AI yanıtlarında yeterince görünmüyor.
-            GH7 ile skorunuzu artırın.
-          </p>
-          <div className="mt-8 grid grid-cols-2 gap-4">
+
+          <div className="mt-10 space-y-5">
             {[
-              { platform: "ChatGPT", score: 42 },
-              { platform: "Claude", score: 18 },
-              { platform: "Gemini", score: 35 },
-              { platform: "Perplexity", score: 28 },
-            ].map((p) => (
-              <div
-                key={p.platform}
-                className="rounded-lg border border-background/10 px-4 py-3"
-              >
-                <p className="text-xs text-background/40">{p.platform}</p>
-                <p className="mt-1 text-lg font-light text-background">
-                  {p.score}
-                  <span className="text-background/30">/100</span>
+              {
+                step: "1",
+                title: "AI Bahsedilme Taraması",
+                desc: "4 büyük AI platformunda markanızın ne sıklıkta ve hangi bağlamda bahsedildiğini analiz edin.",
+              },
+              {
+                step: "2",
+                title: "Site Hazırlık Analizi",
+                desc: "Web sitenizin yapılandırılmış veri, teknik SEO ve içerik açısından AI'a ne kadar hazır olduğunu görün.",
+              },
+              {
+                step: "3",
+                title: "Aksiyon Planı",
+                desc: "Skorunuzu artırmak için önceliklendirilmiş adımları takip edin. İsterseniz biz uygulayalım.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="flex gap-4">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-background/20 text-xs font-bold text-background/40">
+                  {item.step}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-background">
+                    {item.title}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-background/40">
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 flex items-center gap-6 border-t border-background/10 pt-8">
+            {[
+              { label: "AI Platform", value: "4" },
+              { label: "SEO Kontrol", value: "13" },
+              { label: "Ücretsiz", value: "Başla" },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <p className="text-2xl font-light text-background">
+                  {stat.value}
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-background/30">
+                  {stat.label}
                 </p>
               </div>
             ))}
