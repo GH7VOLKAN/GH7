@@ -88,10 +88,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              size="lg"
+              className="data-[slot=sidebar-menu-button]:!p-2 [&_svg]:!size-auto"
               render={<Link href="/dashboard/genel" />}
             >
-              <GH7Logo size="default" />
+              <div className="flex items-baseline gap-0.5">
+                <GH7Logo size="xl" />
+                <span className="text-base font-light text-muted-foreground/60">.ai</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

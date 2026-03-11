@@ -1,8 +1,14 @@
-export function GH7Logo({ className, size = "default" }: { className?: string; size?: "sm" | "default" | "lg" }) {
-  const heights: Record<string, number> = { sm: 20, default: 28, lg: 36 };
+export function GH7Logo({
+  className,
+  size = "default",
+}: {
+  className?: string;
+  size?: "sm" | "default" | "lg" | "xl";
+}) {
+  const heights: Record<string, number> = { sm: 22, default: 30, lg: 38, xl: 48 };
   const h = heights[size];
-  // Aspect ratio from original SVG: 375 / 112.5 ≈ 3.33
-  const w = Math.round(h * 3.33);
+  // Aspect ratio from original SVG viewBox: 263 / 112 ≈ 2.35
+  const w = Math.round(h * 2.35);
 
   return (
     <svg
