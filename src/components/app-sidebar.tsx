@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 
 import { GH7Logo } from "@/components/gh7-logo";
+import { createClient } from "@/lib/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +29,7 @@ import {
   Settings2Icon,
   SunIcon,
   MoonIcon,
+  LogOutIcon,
 } from "lucide-react";
 
 const navItems = [
@@ -79,8 +81,22 @@ function ThemeToggleButton() {
   );
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: { name: string; email: string };
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
+  const initial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -139,6 +155,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem>
                 <ThemeToggleButton />
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Çıkış Yap">
+                  <LogOutIcon />
+                  <span>Çıkış Yap</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -149,12 +171,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg">
               <div className="flex size-8 items-center justify-center rounded-lg bg-foreground text-xs font-bold text-background">
-                V
+                {initial}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">ISITMAX</span>
+                <span className="truncate font-medium">{user?.name ?? "Demo"}</span>
                 <span className="truncate text-xs text-foreground/70">
-                  isitmax.com
+                  {user?.email ?? "demo@gh7.ai"}
                 </span>
               </div>
             </SidebarMenuButton>
