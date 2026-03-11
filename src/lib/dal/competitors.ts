@@ -62,6 +62,32 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     })),
   ];
 
+  // Populate readiness gaps from audit checks that are failing/partial
+  const failingChecks = await prisma.auditCheck.findMany({
+    where: {
+      category: { brandId },
+      status: { in: ["fail", "partial"] },
+    },
+    include: { category: true },
+    orderBy: { score: "asc" },
+  });
+
+  const readinessGaps = failingChecks.map(
+    (c) => `${c.label}: ${c.recommendation ?? c.detail ?? "İyileştirme gerekli"}`
+  );
+
+  // Top source pages from source domains
+  const sources = await prisma.sourceDomain.findMany({
+    where: { brandId },
+    orderBy: { usagePercent: "desc" },
+    take: 5,
+  });
+
+  const topSourcePages = sources.map((s) => ({
+    path: s.domain,
+    promptCount: s.urls.length,
+  }));
+
   // Detail for top competitor
   const topCompetitor = competitors[0];
   const detail: CompetitorDetailData | null = topCompetitor
@@ -69,8 +95,8 @@ export const getCompetitorsData = cache(async (brandId: string) => {
         name: topCompetitor.name,
         mentionScore: topCompetitor.mentionScore,
         userMentionScore,
-        readinessGaps: [], // will be populated from audit comparison
-        topSourcePages: [],
+        readinessGaps,
+        topSourcePages,
       }
     : null;
 

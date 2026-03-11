@@ -17,24 +17,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  auditCategories,
-  type AuditCheck,
-} from "@/lib/mock-data/site-audit";
+import type { CheckStatus } from "@/lib/types";
 
-const statusIcon: Record<AuditCheck["status"], string> = {
+interface AuditCheck {
+  id: string;
+  label: string;
+  status: CheckStatus;
+  score: number;
+  maxScore: number;
+  detail: string | null;
+  recommendation: string | null;
+  raasEligible: boolean;
+}
+
+interface AuditCategory {
+  id: string;
+  name: string;
+  score: number;
+  maxScore: number;
+  checks: AuditCheck[];
+}
+
+interface AuditCategoriesProps {
+  auditCategories: AuditCategory[];
+}
+
+const statusIcon: Record<CheckStatus, string> = {
   pass: "✓",
   fail: "✗",
   partial: "~",
 };
 
-const statusLabel: Record<AuditCheck["status"], string> = {
+const statusLabel: Record<CheckStatus, string> = {
   pass: "Geçti",
   fail: "Başarısız",
   partial: "Kısmî",
 };
 
-export function AuditCategories() {
+export function AuditCategories({ auditCategories }: AuditCategoriesProps) {
   return (
     <div className="flex flex-col gap-4 px-4 lg:px-6">
       {auditCategories.map((cat) => {
@@ -42,7 +62,7 @@ export function AuditCategories() {
           cat.maxScore > 0 ? Math.round((cat.score / cat.maxScore) * 100) : 0;
 
         return (
-          <Card key={cat.name}>
+          <Card key={cat.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {cat.name}
@@ -97,10 +117,10 @@ export function AuditCategories() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <span className="font-medium">{check.title}</span>
-                            {check.fix && (
+                            <span className="font-medium">{check.label}</span>
+                            {check.recommendation && (
                               <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1 md:hidden">
-                                {check.fix}
+                                {check.recommendation}
                               </p>
                             )}
                           </div>
@@ -110,16 +130,16 @@ export function AuditCategories() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-muted-foreground">
                           <p className="line-clamp-1">{check.detail}</p>
-                          {check.fix && (
+                          {check.recommendation && (
                             <p className="mt-0.5 text-xs line-clamp-1">
-                              Öneri: {check.fix}
+                              Öneri: {check.recommendation}
                             </p>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
                           {check.raasEligible ? (
                             <Button size="sm">Biz Uygulayalım</Button>
-                          ) : check.fix ? (
+                          ) : check.recommendation ? (
                             <Button variant="outline" size="sm">
                               Aksiyona Ekle
                             </Button>

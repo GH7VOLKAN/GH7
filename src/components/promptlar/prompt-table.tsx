@@ -16,12 +16,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { promptItems } from "@/lib/mock-data/prompts";
-import { platformLabels, type PlatformKey } from "@/lib/types";
+import { platformLabels, type PlatformKey, type Sentiment } from "@/lib/types";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
-export function PromptTable() {
+interface PromptItem {
+  id: string;
+  text: string;
+  tags: string[];
+  visibility: number;
+  position: string;
+  sentiment: Sentiment;
+  topCompetitor: string;
+  modelResults: Record<PlatformKey, boolean>;
+}
+
+interface PromptTableProps {
+  promptItems: PromptItem[];
+}
+
+export function PromptTable({ promptItems }: PromptTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -93,27 +107,22 @@ export function PromptTable() {
                   <TableCell className="hidden md:table-cell text-muted-foreground">
                     {item.topCompetitor ?? "—"}
                   </TableCell>
-                  {PLATFORMS.map((p) => {
-                    const r = item.modelResults.find(
-                      (r) => r.platform === p
-                    );
-                    return (
-                      <TableCell
-                        key={p}
-                        className="hidden lg:table-cell text-center"
+                  {PLATFORMS.map((p) => (
+                    <TableCell
+                      key={p}
+                      className="hidden lg:table-cell text-center"
+                    >
+                      <span
+                        className={
+                          item.modelResults[p]
+                            ? "font-semibold text-foreground"
+                            : "text-muted-foreground"
+                        }
                       >
-                        <span
-                          className={
-                            r?.mentioned
-                              ? "font-semibold text-foreground"
-                              : "text-muted-foreground"
-                          }
-                        >
-                          {r?.mentioned ? "✓" : "✗"}
-                        </span>
-                      </TableCell>
-                    );
-                  })}
+                        {item.modelResults[p] ? "✓" : "✗"}
+                      </span>
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>

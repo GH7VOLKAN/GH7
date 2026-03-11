@@ -10,27 +10,35 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrendingUpIcon, TrendingDownIcon } from "lucide-react";
-import { dualScores } from "@/lib/mock-data/overview";
 
-export function SectionCards() {
-  const mentionTrend = dualScores.mention.trend;
-  const readinessTrend = dualScores.readiness.trend;
+interface SectionCardsProps {
+  mentionScore: number;
+  mentionTrend: number;
+  readinessScore: number;
+  readinessTrend: number;
+  activePromptCount: number;
+  totalSourceCount: number;
+}
 
+export function SectionCards({
+  mentionScore,
+  mentionTrend,
+  readinessScore,
+  readinessTrend,
+  activePromptCount,
+  totalSourceCount,
+}: SectionCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>AI Bahsedilme Skoru</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {dualScores.mention.score}/100
+            {mentionScore}/100
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {mentionTrend >= 0 ? (
-                <TrendingUpIcon />
-              ) : (
-                <TrendingDownIcon />
-              )}
+              {mentionTrend >= 0 ? <TrendingUpIcon /> : <TrendingDownIcon />}
               {mentionTrend >= 0 ? "+" : ""}
               {mentionTrend}
             </Badge>
@@ -55,15 +63,11 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Site Hazırlık Skoru</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {dualScores.readiness.score}/100
+            {readinessScore}/100
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {readinessTrend >= 0 ? (
-                <TrendingUpIcon />
-              ) : (
-                <TrendingDownIcon />
-              )}
+              {readinessTrend >= 0 ? <TrendingUpIcon /> : <TrendingDownIcon />}
               {readinessTrend >= 0 ? "+" : ""}
               {readinessTrend}
             </Badge>
@@ -88,22 +92,18 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Aktif Prompt</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            32
+            {activePromptCount}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingUpIcon />
-              +5
-            </Badge>
+            <Badge variant="outline">Takip</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Bu hafta 5 yeni prompt{" "}
-            <TrendingUpIcon className="size-4" />
+            Takip edilen promptlar
           </div>
           <div className="text-muted-foreground">
-            Takip edilen sektör promptları
+            Sektör promptları izleniyor
           </div>
         </CardFooter>
       </Card>
@@ -112,19 +112,15 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Toplam Kaynak</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            12
+            {totalSourceCount}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingUpIcon />
-              +2
-            </Badge>
+            <Badge variant="outline">Aktif</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Yeni kaynaklar eklendi{" "}
-            <TrendingUpIcon className="size-4" />
+            Kaynak domainler
           </div>
           <div className="text-muted-foreground">
             AI yanıtlarında atıf kaynakları

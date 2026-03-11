@@ -10,28 +10,38 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrendingUpIcon } from "lucide-react";
-import { promptItems, promptStats } from "@/lib/mock-data/prompts";
 import { platformLabels, type PlatformKey } from "@/lib/types";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
-function platformMentionCounts() {
-  const counts: Record<PlatformKey, number> = {
+interface PromptItem {
+  visibility: number;
+  modelResults: Record<PlatformKey, boolean>;
+}
+
+interface PromptStatsCardsProps {
+  promptItems: PromptItem[];
+  activeCount: number;
+  suggestedCount: number;
+}
+
+export function PromptStatsCards({
+  promptItems,
+  activeCount,
+  suggestedCount,
+}: PromptStatsCardsProps) {
+  const mentionCounts: Record<PlatformKey, number> = {
     chatgpt: 0,
     claude: 0,
     gemini: 0,
     perplexity: 0,
   };
   for (const item of promptItems) {
-    for (const r of item.modelResults) {
-      if (r.mentioned) counts[r.platform]++;
+    for (const p of PLATFORMS) {
+      if (item.modelResults[p]) mentionCounts[p]++;
     }
   }
-  return counts;
-}
 
-export function PromptStatsCards() {
-  const mentionCounts = platformMentionCounts();
   const avgVisibility =
     promptItems.length > 0
       ? Math.round(
@@ -48,18 +58,18 @@ export function PromptStatsCards() {
           <CardHeader>
             <CardDescription>Aktif Prompt</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {promptStats.active}
+              {activeCount}
             </CardTitle>
             <CardAction>
               <Badge variant="outline">
                 <TrendingUpIcon />
-                +5
+                Takip
               </Badge>
             </CardAction>
           </CardHeader>
           <CardFooter className="flex-col items-start gap-1.5 text-sm">
             <div className="line-clamp-1 flex gap-2 font-medium">
-              {promptStats.suggested} önerilen prompt
+              {suggestedCount} önerilen prompt
             </div>
             <div className="text-muted-foreground">
               Sektör promptları takip ediliyor
@@ -76,7 +86,7 @@ export function PromptStatsCards() {
             <CardAction>
               <Badge variant="outline">
                 <TrendingUpIcon />
-                +4
+                Analiz
               </Badge>
             </CardAction>
           </CardHeader>

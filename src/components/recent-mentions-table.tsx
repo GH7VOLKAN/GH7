@@ -16,10 +16,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { recentMentions } from "@/lib/mock-data/overview";
-import { platformLabels } from "@/lib/types";
+import { platformLabels, type PlatformKey, type Sentiment } from "@/lib/types";
 
-export function RecentMentionsTable() {
+interface RecentMention {
+  platform: PlatformKey;
+  timeAgo: string;
+  prompt: string;
+  excerpt: string;
+  position: string;
+  sentiment: Sentiment;
+}
+
+interface RecentMentionsTableProps {
+  recentMentions: RecentMention[];
+}
+
+export function RecentMentionsTable({
+  recentMentions,
+}: RecentMentionsTableProps) {
   return (
     <div className="px-4 lg:px-6">
       <Card>
@@ -69,6 +83,13 @@ export function RecentMentionsTable() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {recentMentions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      Henüz bahsedilme verisi yok. İlk tarama sonrası burada görünecek.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>

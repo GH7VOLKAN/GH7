@@ -16,13 +16,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { competitorRows } from "@/lib/mock-data/competitors";
 import { platformLabels, type PlatformKey } from "@/lib/types";
 
 const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
-const userRow = competitorRows.find((r) => r.isUser);
 
-export function CompetitorTable() {
+interface CompetitorRow {
+  id: string;
+  name: string;
+  domain: string;
+  isUser: boolean;
+  mentionScore: number;
+  readinessScore: number;
+  platforms: Record<PlatformKey, number>;
+}
+
+interface CompetitorTableProps {
+  rows: CompetitorRow[];
+}
+
+export function CompetitorTable({ rows }: CompetitorTableProps) {
+  const userRow = rows.find((r) => r.isUser);
+
   return (
     <Card>
       <CardHeader>
@@ -50,7 +64,7 @@ export function CompetitorTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {competitorRows.map((row) => {
+              {rows.map((row) => {
                 const mentionDiff = row.isUser
                   ? null
                   : row.mentionScore - (userRow?.mentionScore ?? 0);
@@ -60,7 +74,7 @@ export function CompetitorTable() {
 
                 return (
                   <TableRow
-                    key={row.domain}
+                    key={row.id}
                     className={row.isUser ? "bg-primary/5" : ""}
                   >
                     <TableCell>

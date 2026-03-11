@@ -30,20 +30,15 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 
-const chartData = [
-  { date: "2026-01-01", bahsedilme: 18, hazirlik: 32 },
-  { date: "2026-01-08", bahsedilme: 20, hazirlik: 33 },
-  { date: "2026-01-15", bahsedilme: 19, hazirlik: 35 },
-  { date: "2026-01-22", bahsedilme: 22, hazirlik: 36 },
-  { date: "2026-01-29", bahsedilme: 21, hazirlik: 38 },
-  { date: "2026-02-05", bahsedilme: 24, hazirlik: 39 },
-  { date: "2026-02-12", bahsedilme: 23, hazirlik: 41 },
-  { date: "2026-02-19", bahsedilme: 26, hazirlik: 42 },
-  { date: "2026-02-26", bahsedilme: 28, hazirlik: 44 },
-  { date: "2026-03-05", bahsedilme: 31, hazirlik: 48 },
-  { date: "2026-03-08", bahsedilme: 33, hazirlik: 50 },
-  { date: "2026-03-11", bahsedilme: 34, hazirlik: 52 },
-];
+interface ChartDataPoint {
+  date: string;
+  bahsedilme: number;
+  hazirlik: number;
+}
+
+interface ChartAreaInteractiveProps {
+  scoreHistory: ChartDataPoint[];
+}
 
 const chartConfig = {
   skorlar: {
@@ -59,7 +54,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ChartAreaInteractive() {
+export function ChartAreaInteractive({
+  scoreHistory,
+}: ChartAreaInteractiveProps) {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState("90d");
 
@@ -69,9 +66,9 @@ export function ChartAreaInteractive() {
     }
   }, [isMobile]);
 
-  const filteredData = chartData.filter((item) => {
+  const filteredData = scoreHistory.filter((item) => {
     const date = new Date(item.date);
-    const referenceDate = new Date("2026-03-11");
+    const referenceDate = new Date();
     let daysToSubtract = 90;
     if (timeRange === "30d") {
       daysToSubtract = 30;

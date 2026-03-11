@@ -17,10 +17,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { sourceDomains } from "@/lib/mock-data/sources";
-import { sourceTypeLabels } from "@/lib/types";
+import { sourceTypeLabels, type SourceType } from "@/lib/types";
 
-export function SourceTable() {
+interface SourceDomain {
+  id: string;
+  domain: string;
+  type: SourceType;
+  usagePercent: number;
+  avgCitations: number;
+  urls: string[];
+  actionNote: string | null;
+}
+
+interface SourceTableProps {
+  sourceDomains: SourceDomain[];
+}
+
+export function SourceTable({ sourceDomains }: SourceTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -45,7 +58,7 @@ export function SourceTable() {
             </TableHeader>
             <TableBody>
               {sourceDomains.map((source) => (
-                <TableRow key={source.domain}>
+                <TableRow key={source.id}>
                   <TableCell>
                     <div>
                       <span className="font-medium">{source.domain}</span>

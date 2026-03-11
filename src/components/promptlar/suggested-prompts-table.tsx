@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,9 +16,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { suggestedPrompts } from "@/lib/mock-data/prompts";
 
-export function SuggestedPromptsTable() {
+interface SuggestedPrompt {
+  id: string;
+  text: string;
+  volume: number;
+}
+
+interface SuggestedPromptsTableProps {
+  suggestedPrompts: SuggestedPrompt[];
+}
+
+export function SuggestedPromptsTable({
+  suggestedPrompts,
+}: SuggestedPromptsTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -39,8 +49,8 @@ export function SuggestedPromptsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suggestedPrompts.map((prompt, i) => (
-                <TableRow key={i}>
+              {suggestedPrompts.map((prompt) => (
+                <TableRow key={prompt.id}>
                   <TableCell className="font-medium">{prompt.text}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-0.5">

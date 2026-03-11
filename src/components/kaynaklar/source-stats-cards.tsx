@@ -10,13 +10,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrendingUpIcon } from "lucide-react";
-import { sourceDomains } from "@/lib/mock-data/sources";
 
-export function SourceStatsCards() {
+interface SourceDomain {
+  usagePercent: number;
+  avgCitations: number;
+  actionNote: string | null;
+  domain: string;
+}
+
+interface SourceStatsCardsProps {
+  sourceDomains: SourceDomain[];
+}
+
+export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
   const totalSources = sourceDomains.length;
   const actionableSources = sourceDomains.filter((s) => s.actionNote).length;
   const avgCitations =
-    sourceDomains.reduce((sum, s) => sum + s.avgCitations, 0) / totalSources;
+    totalSources > 0
+      ? sourceDomains.reduce((sum, s) => sum + s.avgCitations, 0) / totalSources
+      : 0;
   const topSource = [...sourceDomains].sort(
     (a, b) => b.usagePercent - a.usagePercent
   )[0];
@@ -32,7 +44,7 @@ export function SourceStatsCards() {
           <CardAction>
             <Badge variant="outline">
               <TrendingUpIcon />
-              +2
+              Aktif
             </Badge>
           </CardAction>
         </CardHeader>
@@ -50,18 +62,18 @@ export function SourceStatsCards() {
         <CardHeader>
           <CardDescription>En Çok Referans</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            %{topSource.usagePercent}
+            %{topSource?.usagePercent ?? 0}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <TrendingUpIcon />
-              +5
+              Lider
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            {topSource.domain}
+            {topSource?.domain ?? "—"}
           </div>
           <div className="text-muted-foreground">
             En yüksek kullanım oranı
@@ -76,10 +88,7 @@ export function SourceStatsCards() {
             {avgCitations.toFixed(1)}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <TrendingUpIcon />
-              +0.3
-            </Badge>
+            <Badge variant="outline">Ortalama</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">

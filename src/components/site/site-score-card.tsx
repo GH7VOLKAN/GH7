@@ -10,52 +10,49 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrendingUpIcon } from "lucide-react";
-import {
-  auditCategories,
-  siteReadinessScore,
-  siteReadinessTarget,
-} from "@/lib/mock-data/site-audit";
 
-export function SiteScoreCards() {
-  const passCount = auditCategories.reduce(
-    (acc, cat) => acc + cat.checks.filter((c) => c.status === "pass").length,
-    0
-  );
-  const partialCount = auditCategories.reduce(
-    (acc, cat) => acc + cat.checks.filter((c) => c.status === "partial").length,
-    0
-  );
-  const failCount = auditCategories.reduce(
-    (acc, cat) => acc + cat.checks.filter((c) => c.status === "fail").length,
-    0
-  );
-  const totalChecks = passCount + partialCount + failCount;
-  const raasCount = auditCategories.reduce(
-    (acc, cat) => acc + cat.checks.filter((c) => c.raasEligible).length,
-    0
-  );
+interface SiteScoreCardsProps {
+  totalScore: number;
+  targetScore: number;
+  passCount: number;
+  failCount: number;
+  partialCount: number;
+  totalChecks: number;
+  raasEligibleCount: number;
+  categoryCount: number;
+}
 
+export function SiteScoreCards({
+  totalScore,
+  targetScore,
+  passCount,
+  failCount,
+  partialCount,
+  totalChecks,
+  raasEligibleCount,
+  categoryCount,
+}: SiteScoreCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Site Hazırlık Skoru</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {siteReadinessScore}/100
+            {totalScore}/100
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <TrendingUpIcon />
-              +6
+              Analiz
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Hedef: {siteReadinessTarget} puan
+            Hedef: {targetScore} puan
           </div>
           <div className="text-muted-foreground">
-            {auditCategories.length} kategoride analiz
+            {categoryCount} kategoride analiz
           </div>
         </CardFooter>
       </Card>
@@ -69,7 +66,7 @@ export function SiteScoreCards() {
           <CardAction>
             <Badge variant="outline">
               <TrendingUpIcon />
-              +2
+              Durum
             </Badge>
           </CardAction>
         </CardHeader>
@@ -87,17 +84,17 @@ export function SiteScoreCards() {
         <CardHeader>
           <CardDescription>Hedefe Uzaklık</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {siteReadinessTarget - siteReadinessScore} puan
+            {targetScore - totalScore} puan
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              %{Math.round((siteReadinessScore / siteReadinessTarget) * 100)}
+              %{Math.round((totalScore / targetScore) * 100)}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            {siteReadinessScore} → {siteReadinessTarget}
+            {totalScore} → {targetScore}
           </div>
           <div className="text-muted-foreground">
             Hedef skora ulaşmak için
@@ -109,7 +106,7 @@ export function SiteScoreCards() {
         <CardHeader>
           <CardDescription>RaaS Uygun</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {raasCount}
+            {raasEligibleCount}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">Hazır</Badge>

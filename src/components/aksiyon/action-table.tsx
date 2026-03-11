@@ -18,8 +18,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ActionTask } from "@/lib/mock-data/actions";
 import type { Priority } from "@/lib/types";
+
+export interface ActionTaskItem {
+  id: string;
+  priority: Priority;
+  title: string;
+  impact: string;
+  source: string;
+  detail: string | null;
+  completed: boolean;
+  raasEligible: boolean;
+}
 
 const priorityLabel: Record<Priority, string> = {
   high: "Yüksek",
@@ -28,9 +38,9 @@ const priorityLabel: Record<Priority, string> = {
 };
 
 interface ActionTableProps {
-  tasks: ActionTask[];
-  raasSelected: Set<number>;
-  onRaasToggle: (id: number) => void;
+  tasks: ActionTaskItem[];
+  raasSelected: Set<string>;
+  onRaasToggle: (id: string) => void;
 }
 
 export function ActionTable({

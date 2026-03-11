@@ -9,7 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { RaasOffer } from "@/lib/mock-data/actions";
+
+export interface RaasOfferData {
+  selectedCount: number;
+  currentScore: number;
+  targetScore: number;
+  price: string;
+  deposit: string;
+  timeline: string;
+}
 
 export function RaasOfferCard({
   selectedCount,
@@ -18,7 +26,7 @@ export function RaasOfferCard({
   price,
   deposit,
   timeline,
-}: RaasOffer) {
+}: RaasOfferData) {
   return (
     <Card className="border-dashed">
       <CardHeader>

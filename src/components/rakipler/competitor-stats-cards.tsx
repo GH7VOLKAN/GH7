@@ -10,17 +10,33 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrendingUpIcon, TrendingDownIcon } from "lucide-react";
-import { competitorRows } from "@/lib/mock-data/competitors";
-import { dualScores } from "@/lib/mock-data/overview";
+import type { PlatformKey } from "@/lib/types";
 
-export function CompetitorStatsCards() {
-  const userRow = competitorRows.find((r) => r.isUser);
-  const competitorCount = competitorRows.filter((r) => !r.isUser).length;
-  const topCompetitor = competitorRows
+interface CompetitorRow {
+  name: string;
+  isUser: boolean;
+  mentionScore: number;
+  readinessScore: number;
+  platforms: Record<PlatformKey, number>;
+}
+
+interface CompetitorStatsCardsProps {
+  rows: CompetitorRow[];
+  userMentionScore: number;
+  userReadinessScore: number;
+}
+
+export function CompetitorStatsCards({
+  rows,
+  userMentionScore,
+  userReadinessScore,
+}: CompetitorStatsCardsProps) {
+  const competitorCount = rows.filter((r) => !r.isUser).length;
+  const topCompetitor = rows
     .filter((r) => !r.isUser)
     .sort((a, b) => b.mentionScore - a.mentionScore)[0];
   const mentionGap = topCompetitor
-    ? topCompetitor.mentionScore - (userRow?.mentionScore ?? 0)
+    ? topCompetitor.mentionScore - userMentionScore
     : 0;
 
   return (
@@ -29,12 +45,12 @@ export function CompetitorStatsCards() {
         <CardHeader>
           <CardDescription>Bahsedilme Skoru</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {userRow?.mentionScore ?? 0}/100
+            {userMentionScore}/100
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <TrendingUpIcon />
-              +{dualScores.mention.trend}
+              Siz
             </Badge>
           </CardAction>
         </CardHeader>
@@ -52,12 +68,12 @@ export function CompetitorStatsCards() {
         <CardHeader>
           <CardDescription>Hazırlık Skoru</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {userRow?.readinessScore ?? 0}/100
+            {userReadinessScore}/100
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <TrendingUpIcon />
-              +{dualScores.readiness.trend}
+              Siz
             </Badge>
           </CardAction>
         </CardHeader>
@@ -79,14 +95,14 @@ export function CompetitorStatsCards() {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingDownIcon />
-              Geride
+              {mentionGap > 0 ? <TrendingDownIcon /> : <TrendingUpIcon />}
+              {mentionGap > 0 ? "Geride" : "Önde"}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            {topCompetitor?.name} önde
+            {topCompetitor?.name ?? "—"} {mentionGap > 0 ? "önde" : "geride"}
           </div>
           <div className="text-muted-foreground">
             Bahsedilme skoru farkı
