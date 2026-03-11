@@ -10,6 +10,8 @@ export default async function AyarlarPage() {
       brandName={activeBrand?.brand?.name ?? ""}
       brandDomain={activeBrand?.brand?.domain ?? ""}
       brandSector={activeBrand?.brand?.sector ?? ""}
+      autoScan={activeBrand?.brand?.autoScan ?? true}
+      scanInterval={activeBrand?.brand?.scanInterval ?? "daily"}
     />
   );
 }

@@ -83,6 +83,31 @@ export async function executeScan(
     await updateCompetitorScores(scanId, brandId);
     await discoverSourceDomains(scanId, brandId);
 
+    // Get current score for notification
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentScore = await prisma.scoreHistory.findUnique({
+      where: { brandId_date: { brandId, date: today } },
+    });
+    const previousScore = await prisma.scoreHistory.findFirst({
+      where: { brandId, date: { lt: today } },
+      orderBy: { date: "desc" },
+    });
+
+    const score = currentScore?.mentionScore ?? 0;
+    const diff = previousScore ? score - previousScore.mentionScore : 0;
+    const diffText = diff !== 0 ? ` (${diff > 0 ? "+" : ""}${diff})` : "";
+
+    await prisma.notification.create({
+      data: {
+        brandId,
+        type: "scan_completed",
+        title: "Tarama tamamlandı",
+        message: `AI Bahsedilme Skoru: ${score}/100${diffText}`,
+        data: { scanId, score, diff },
+      },
+    });
+
     await prisma.scan.update({
       where: { id: scanId },
       data: { status: "completed", completedAt: new Date() },
@@ -90,6 +115,16 @@ export async function executeScan(
 
     console.log(`[scan-engine] Scan ${scanId} completed`);
   } catch (error) {
+    await prisma.notification.create({
+      data: {
+        brandId,
+        type: "scan_failed",
+        title: "Tarama başarısız",
+        message: "Tarama sırasında bir hata oluştu.",
+        data: { scanId },
+      },
+    });
+
     await prisma.scan.update({
       where: { id: scanId },
       data: { status: "failed", completedAt: new Date() },

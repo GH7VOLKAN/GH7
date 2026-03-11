@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2Icon, PlayIcon, CheckIcon } from "lucide-react";
+import { toast } from "sonner";
 
 interface ScanButtonProps {
   brandId: string;
@@ -51,9 +52,11 @@ export function ScanButton({
       const data = await res.json();
       if (data.status === "completed") {
         setStatus("completed");
-        setTimeout(() => window.location.reload(), 500);
+        toast.success("Tarama tamamlandı!");
+        setTimeout(() => window.location.reload(), 1000);
       } else if (data.status === "failed") {
         setStatus("failed");
+        toast.error("Tarama başarısız oldu.");
       }
     } catch {
       // Ignore poll errors

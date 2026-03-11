@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { getLastScanInfo } from "@/lib/dal/scans";
+import { getNotifications } from "@/lib/dal/notifications";
 
 // Dashboard is always dynamic — requires auth + DB
 export const dynamic = "force-dynamic";
@@ -15,7 +16,10 @@ export default async function DashboardLayout({
   const user = await getUserProfile();
   const activeBrand = await getActiveBrand();
   const brandId = activeBrand?.brand?.id;
-  const scanInfo = brandId ? await getLastScanInfo(brandId) : null;
+  const [scanInfo, notifData] = await Promise.all([
+    brandId ? getLastScanInfo(brandId) : null,
+    brandId ? getNotifications(brandId) : null,
+  ]);
 
   return (
     <SidebarProvider
@@ -41,6 +45,15 @@ export default async function DashboardLayout({
           lastScanAt={scanInfo?.lastCompletedAt}
           scanRunning={scanInfo?.isRunning}
           runningScanId={scanInfo?.runningScanId}
+          notifications={notifData?.notifications.map((n) => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            read: n.read,
+            createdAt: n.createdAt.toISOString(),
+          }))}
+          unreadCount={notifData?.unreadCount}
         />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">

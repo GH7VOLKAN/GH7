@@ -33,17 +33,20 @@ model Brand {
   name      String
   domain    String
   sector    String?
-  isDefault Boolean  @default(false) @map("is_default")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  isDefault    Boolean  @default(false) @map("is_default")
+  autoScan     Boolean  @default(true)  @map("auto_scan")
+  scanInterval String   @default("daily") @map("scan_interval") // daily, weekly, manual
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  prompts       Prompt[]
-  competitors   Competitor[]
-  scans         Scan[]
-  actionTasks   ActionTask[]
+  prompts         Prompt[]
+  competitors     Competitor[]
+  scans           Scan[]
+  actionTasks     ActionTask[]
   auditCategories AuditCategory[]
-  sourceDomains SourceDomain[]
-  scoreHistory  ScoreHistory[]
+  sourceDomains   SourceDomain[]
+  scoreHistory    ScoreHistory[]
+  notifications   Notification[]
 
   @@map("brands")
 }
@@ -196,6 +199,22 @@ model ActionTask {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("action_tasks")
+}
+
+// ─── Notifications ──────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  brandId   String   @map("brand_id")
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  type      String   // scan_completed, scan_failed, score_up, score_down
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  data      Json?    // { scanId, oldScore, newScore }
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
 }
 
 // ─── Score History ───────────────────────────────────

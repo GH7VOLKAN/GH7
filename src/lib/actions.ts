@@ -148,3 +148,50 @@ export async function removeCompetitor(
   revalidatePath("/dashboard/rakipler");
   return { success: true };
 }
+
+// ─── Notifications ─────────────────────────────────────
+export async function markNotificationRead(
+  brandId: string,
+  notificationId: string,
+) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.notification.updateMany({
+    where: { id: notificationId, brandId },
+    data: { read: true },
+  });
+
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function markAllNotificationsRead(brandId: string) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.notification.updateMany({
+    where: { brandId, read: false },
+    data: { read: true },
+  });
+
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+// ─── Scan Schedule ─────────────────────────────────────
+export async function updateScanSchedule(
+  brandId: string,
+  data: { autoScan: boolean; scanInterval: string },
+) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.brand.update({
+    where: { id: brandId },
+    data: {
+      autoScan: data.autoScan,
+      scanInterval: data.scanInterval,
+    },
+  });
+
+  revalidatePath("/dashboard/ayarlar");
+  return { success: true };
+}

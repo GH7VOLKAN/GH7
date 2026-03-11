@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateBrand } from "@/lib/actions";
+import { updateBrand, updateScanSchedule } from "@/lib/actions";
 
 interface AyarlarClientProps {
   brandId: string;
   brandName: string;
   brandDomain: string;
   brandSector: string;
+  autoScan: boolean;
+  scanInterval: string;
 }
 
 export function AyarlarClient({
@@ -15,12 +17,17 @@ export function AyarlarClient({
   brandName,
   brandDomain,
   brandSector,
+  autoScan: initialAutoScan,
+  scanInterval: initialInterval,
 }: AyarlarClientProps) {
   const [name, setName] = useState(brandName);
   const [domain, setDomain] = useState(brandDomain);
   const [sector, setSector] = useState(brandSector);
+  const [autoScan, setAutoScan] = useState(initialAutoScan);
+  const [scanInterval, setScanInterval] = useState(initialInterval);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [scheduleMsg, setScheduleMsg] = useState<string | null>(null);
 
   function handleSave() {
     startTransition(async () => {
@@ -92,6 +99,68 @@ export function AyarlarClient({
           </button>
           {message && (
             <span className="text-sm text-muted-foreground">{message}</span>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-[14px] border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-medium tracking-[-0.04em] uppercase">
+          Otomatik Tarama
+        </h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Otomatik tarama</p>
+            <p className="text-xs text-muted-foreground">
+              Taramalar belirtilen sıklıkta otomatik çalışır
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoScan}
+            onClick={() => setAutoScan(!autoScan)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${autoScan ? "bg-foreground" : "bg-muted"}`}
+          >
+            <span
+              className={`pointer-events-none inline-block size-5 rounded-full bg-background shadow-sm ring-0 transition-transform ${autoScan ? "translate-x-5" : "translate-x-0"}`}
+            />
+          </button>
+        </div>
+        {autoScan && (
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Tarama Sıklığı
+            </label>
+            <select
+              value={scanInterval}
+              onChange={(e) => setScanInterval(e.target.value)}
+              className={inputClass}
+            >
+              <option value="daily">Günlük</option>
+              <option value="weekly">Haftalık</option>
+            </select>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              startTransition(async () => {
+                try {
+                  await updateScanSchedule(brandId, { autoScan, scanInterval });
+                  setScheduleMsg("Kaydedildi");
+                  setTimeout(() => setScheduleMsg(null), 2000);
+                } catch {
+                  setScheduleMsg("Hata oluştu");
+                }
+              });
+            }}
+            disabled={isPending}
+            className="rounded-lg bg-foreground px-6 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
+          >
+            {isPending ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+          {scheduleMsg && (
+            <span className="text-sm text-muted-foreground">{scheduleMsg}</span>
           )}
         </div>
       </div>
