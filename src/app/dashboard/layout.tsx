@@ -1,7 +1,8 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getUserProfile } from "@/lib/dal/brand";
+import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
+import { getLastScanInfo } from "@/lib/dal/scans";
 
 // Dashboard is always dynamic — requires auth + DB
 export const dynamic = "force-dynamic";
@@ -12,6 +13,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getUserProfile();
+  const activeBrand = await getActiveBrand();
+  const brandId = activeBrand?.brand?.id;
+  const scanInfo = brandId ? await getLastScanInfo(brandId) : null;
 
   return (
     <SidebarProvider
@@ -31,7 +35,13 @@ export default async function DashboardLayout({
         }
       />
       <SidebarInset>
-        <SiteHeader userName={user?.fullName ?? "D"} />
+        <SiteHeader
+          userName={user?.fullName ?? "D"}
+          brandId={brandId}
+          lastScanAt={scanInfo?.lastCompletedAt}
+          scanRunning={scanInfo?.isRunning}
+          runningScanId={scanInfo?.runningScanId}
+        />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
