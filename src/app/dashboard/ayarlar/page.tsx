@@ -6,6 +6,7 @@ export default async function AyarlarPage() {
 
   return (
     <AyarlarClient
+      brandId={activeBrand?.brand?.id ?? ""}
       brandName={activeBrand?.brand?.name ?? ""}
       brandDomain={activeBrand?.brand?.domain ?? ""}
       brandSector={activeBrand?.brand?.sector ?? ""}

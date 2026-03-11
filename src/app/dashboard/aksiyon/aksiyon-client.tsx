@@ -10,6 +10,7 @@ import { ActionTable, type ActionTaskItem } from "@/components/aksiyon/action-ta
 import { RaasOfferCard } from "@/components/aksiyon/raas-offer-card";
 
 interface AksiyonClientProps {
+  brandId: string;
   actionTasks: ActionTaskItem[];
   completedCount: number;
   totalCount: number;
@@ -25,6 +26,7 @@ const RAAS_OFFER_BASE = {
 };
 
 export function AksiyonClient({
+  brandId,
   actionTasks,
   completedCount,
   totalCount,
@@ -62,6 +64,7 @@ export function AksiyonClient({
       </div>
       <div className="px-4 lg:px-6">
         <ActionTable
+          brandId={brandId}
           tasks={actionTasks}
           raasSelected={raasSelected}
           onRaasToggle={handleRaasToggle}

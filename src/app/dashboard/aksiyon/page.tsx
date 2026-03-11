@@ -18,6 +18,7 @@ export default async function AksiyonPage() {
 
   return (
     <AksiyonClient
+      brandId={brandId}
       actionTasks={data.actionTasks}
       completedCount={data.completedCount}
       totalCount={data.totalCount}

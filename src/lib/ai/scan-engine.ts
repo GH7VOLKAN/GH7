@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { getAvailableProviders } from "./provider-registry";
 import { analyzeResponse } from "./analyzer";
 import { calculateAndStoreScore } from "./score-calculator";
+import { updateCompetitorScores } from "./competitor-scorer";
+import { discoverSourceDomains } from "./source-discoverer";
 import type { AnalysisResult } from "./types";
 
 export async function executeScan(
@@ -78,6 +80,8 @@ export async function executeScan(
     }
 
     await calculateAndStoreScore(scanId, brandId);
+    await updateCompetitorScores(scanId, brandId);
+    await discoverSourceDomains(scanId, brandId);
 
     await prisma.scan.update({
       where: { id: scanId },

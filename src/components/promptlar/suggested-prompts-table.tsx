@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { addPromptFromSuggested } from "@/lib/actions";
 
 interface SuggestedPrompt {
   id: string;
@@ -25,11 +27,23 @@ interface SuggestedPrompt {
 
 interface SuggestedPromptsTableProps {
   suggestedPrompts: SuggestedPrompt[];
+  brandId: string;
 }
 
 export function SuggestedPromptsTable({
   suggestedPrompts,
+  brandId,
 }: SuggestedPromptsTableProps) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleAdd(suggestedId: string) {
+    startTransition(async () => {
+      await addPromptFromSuggested(brandId, suggestedId);
+    });
+  }
+
+  if (suggestedPrompts.length === 0) return null;
+
   return (
     <Card>
       <CardHeader>
@@ -67,8 +81,13 @@ export function SuggestedPromptsTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm">
-                      Ekle
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isPending}
+                      onClick={() => handleAdd(prompt.id)}
+                    >
+                      {isPending ? "..." : "Ekle"}
                     </Button>
                   </TableCell>
                 </TableRow>

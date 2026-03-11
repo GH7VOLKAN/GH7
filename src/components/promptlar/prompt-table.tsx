@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,7 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Trash2Icon, PlusIcon } from "lucide-react";
 import { platformLabels, type PlatformKey, type Sentiment } from "@/lib/types";
+import { addCustomPrompt, deletePrompt } from "@/lib/actions";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
@@ -33,9 +37,30 @@ interface PromptItem {
 
 interface PromptTableProps {
   promptItems: PromptItem[];
+  brandId: string;
 }
 
-export function PromptTable({ promptItems }: PromptTableProps) {
+export function PromptTable({ promptItems, brandId }: PromptTableProps) {
+  const [newText, setNewText] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  function handleAdd() {
+    if (!newText.trim()) return;
+    startTransition(async () => {
+      await addCustomPrompt(brandId, newText);
+      setNewText("");
+    });
+  }
+
+  function handleDelete(promptId: string) {
+    setDeletingId(promptId);
+    startTransition(async () => {
+      await deletePrompt(brandId, promptId);
+      setDeletingId(null);
+    });
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -46,6 +71,23 @@ export function PromptTable({ promptItems }: PromptTableProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex gap-2">
+          <input
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="Yeni prompt yazın..."
+            className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+          />
+          <Button
+            onClick={handleAdd}
+            disabled={isPending || !newText.trim()}
+            size="sm"
+          >
+            <PlusIcon className="mr-1 size-4" />
+            Ekle
+          </Button>
+        </div>
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader className="bg-muted">
@@ -68,11 +110,15 @@ export function PromptTable({ promptItems }: PromptTableProps) {
                     {platformLabels[p].name}
                   </TableHead>
                 ))}
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {promptItems.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow
+                  key={item.id}
+                  className={deletingId === item.id ? "opacity-30" : ""}
+                >
                   <TableCell className="max-w-[250px] truncate font-medium">
                     &ldquo;{item.text}&rdquo;
                   </TableCell>
@@ -123,6 +169,17 @@ export function PromptTable({ promptItems }: PromptTableProps) {
                       </span>
                     </TableCell>
                   ))}
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="size-8 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDelete(item.id)}
+                      disabled={isPending}
+                    >
+                      <Trash2Icon className="size-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

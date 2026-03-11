@@ -26,10 +26,10 @@ export default async function PromptlarPage() {
         suggestedCount={data.suggestedCount}
       />
       <div className="px-4 lg:px-6">
-        <PromptTable promptItems={data.promptItems} />
+        <PromptTable promptItems={data.promptItems} brandId={brandId} />
       </div>
       <div className="px-4 lg:px-6">
-        <SuggestedPromptsTable suggestedPrompts={data.suggested} />
+        <SuggestedPromptsTable suggestedPrompts={data.suggested} brandId={brandId} />
       </div>
     </>
   );

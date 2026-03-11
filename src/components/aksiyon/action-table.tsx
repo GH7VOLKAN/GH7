@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Priority } from "@/lib/types";
+import { completeActionTask } from "@/lib/actions";
 
 export interface ActionTaskItem {
   id: string;
@@ -38,17 +40,26 @@ const priorityLabel: Record<Priority, string> = {
 };
 
 interface ActionTableProps {
+  brandId: string;
   tasks: ActionTaskItem[];
   raasSelected: Set<string>;
   onRaasToggle: (id: string) => void;
 }
 
 export function ActionTable({
+  brandId,
   tasks,
   raasSelected,
   onRaasToggle,
 }: ActionTableProps) {
+  const [isPending, startTransition] = useTransition();
   const completedCount = tasks.filter((t) => t.completed).length;
+
+  function handleComplete(taskId: string) {
+    startTransition(async () => {
+      await completeActionTask(brandId, taskId);
+    });
+  }
 
   return (
     <Card>
@@ -104,8 +115,13 @@ export function ActionTable({
                     {task.completed ? (
                       <Badge variant="secondary">Tamamlandı</Badge>
                     ) : (
-                      <Button variant="outline" size="sm">
-                        Tamamla
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isPending}
+                        onClick={() => handleComplete(task.id)}
+                      >
+                        {isPending ? "..." : "Tamamla"}
                       </Button>
                     )}
                   </TableCell>

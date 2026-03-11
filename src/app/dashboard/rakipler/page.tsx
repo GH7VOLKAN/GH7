@@ -27,7 +27,7 @@ export default async function RakiplerPage() {
         userReadinessScore={data.userReadinessScore}
       />
       <div className="px-4 lg:px-6">
-        <CompetitorTable rows={data.rows} />
+        <CompetitorTable rows={data.rows} brandId={brandId} />
       </div>
       <div className="px-4 lg:px-6">
         <GapAnalysisCard detail={data.detail} userName={userName} />

@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,7 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import { platformLabels, type PlatformKey } from "@/lib/types";
+import { addCompetitor, removeCompetitor } from "@/lib/actions";
 
 const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
@@ -32,10 +36,32 @@ interface CompetitorRow {
 
 interface CompetitorTableProps {
   rows: CompetitorRow[];
+  brandId: string;
 }
 
-export function CompetitorTable({ rows }: CompetitorTableProps) {
+export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
   const userRow = rows.find((r) => r.isUser);
+  const [newName, setNewName] = useState("");
+  const [newDomain, setNewDomain] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  function handleAdd() {
+    if (!newName.trim()) return;
+    startTransition(async () => {
+      await addCompetitor(brandId, { name: newName, domain: newDomain });
+      setNewName("");
+      setNewDomain("");
+    });
+  }
+
+  function handleRemove(competitorId: string) {
+    setDeletingId(competitorId);
+    startTransition(async () => {
+      await removeCompetitor(brandId, competitorId);
+      setDeletingId(null);
+    });
+  }
 
   return (
     <Card>
@@ -46,6 +72,29 @@ export function CompetitorTable({ rows }: CompetitorTableProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex gap-2">
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Rakip adı"
+            className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+          />
+          <input
+            value={newDomain}
+            onChange={(e) => setNewDomain(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="domain.com"
+            className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+          />
+          <Button
+            onClick={handleAdd}
+            disabled={isPending || !newName.trim()}
+            size="sm"
+          >
+            <PlusIcon className="mr-1 size-4" />
+            Ekle
+          </Button>
+        </div>
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader className="bg-muted">
@@ -61,6 +110,7 @@ export function CompetitorTable({ rows }: CompetitorTableProps) {
                     {platformLabels[p].name}
                   </TableHead>
                 ))}
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,7 +125,7 @@ export function CompetitorTable({ rows }: CompetitorTableProps) {
                 return (
                   <TableRow
                     key={row.id}
-                    className={row.isUser ? "bg-primary/5" : ""}
+                    className={`${row.isUser ? "bg-primary/5" : ""} ${deletingId === row.id ? "opacity-30" : ""}`}
                   >
                     <TableCell>
                       <div className="flex flex-col">
@@ -150,6 +200,19 @@ export function CompetitorTable({ rows }: CompetitorTableProps) {
                         {row.platforms[p]}
                       </TableCell>
                     ))}
+                    <TableCell>
+                      {!row.isUser && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="size-8 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleRemove(row.id)}
+                          disabled={isPending}
+                        >
+                          <Trash2Icon className="size-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
