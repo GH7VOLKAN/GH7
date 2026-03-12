@@ -35,7 +35,7 @@ export function Navbar() {
             href="/login"
             className="rounded-lg bg-foreground px-6 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
           >
-            Ücretsiz Dene
+            Pro Başla
           </Link>
         </div>
       </div>

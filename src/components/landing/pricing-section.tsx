@@ -1,25 +1,38 @@
 import Link from "next/link";
 import { CheckIcon } from "lucide-react";
 
-const freePlan = [
-  "Adını yaz, sonucunu gör",
-  "4 yapay zekada test",
-  "Temel sonuç raporu",
+interface PlanFeature {
+  text: string;
+}
+
+const freePlan: PlanFeature[] = [
+  { text: "Adını yaz, sonucunu gör" },
+  { text: "4 yapay zekada tarama" },
+  { text: "Temel sonuç raporu" },
 ];
 
-const proPlan = [
-  "Her hafta otomatik kontrol",
-  "Senin yerine kimin önerildiğini gör",
-  "Ne yapman gerektiğini öğren",
-  "Değişimleri takip et",
-  "Öncelikli destek",
+const proPlan: PlanFeature[] = [
+  { text: "Her hafta otomatik kontrol" },
+  { text: "Senin yerine kimin önerildiğini gör" },
+  { text: "Ne yapman gerektiğini öğren" },
+  { text: "Haftalık değişimleri takip et" },
+  { text: "Öncelikli destek" },
 ];
 
-const bizYapalim = [
-  "Her şeyi biz yaparız",
-  "4-6 haftada tamamlanır",
-  "Sen sadece sonucu takip edersin",
+const bizYapalimPlan: PlanFeature[] = [
+  { text: "Her şeyi biz yaparız" },
+  { text: "4-6 haftada tamamlanır" },
+  { text: "Sen sadece sonucu takip edersin" },
 ];
+
+function FeatureItem({ feature }: { feature: PlanFeature }) {
+  return (
+    <li className="flex items-center gap-3 text-sm">
+      <CheckIcon className="size-4 shrink-0 text-green-500" />
+      <span>{feature.text}</span>
+    </li>
+  );
+}
 
 export function PricingSection() {
   return (
@@ -29,40 +42,40 @@ export function PricingSection() {
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Fiyatlandırma
           </p>
-          <h2 className="mt-3 text-2xl font-bold tracking-[-0.03em] sm:text-3xl lg:text-4xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
             Hemen başla, sonuçları gör
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">
-            7 gün ücretsiz dene. İstediğin zaman iptal et.
+            Ücretsiz dene. İstediğin zaman iptal et.
           </p>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-5xl gap-6 sm:grid-cols-3">
-          {/* Ücretsiz */}
-          <div className="rounded-2xl border border-border p-6 sm:p-8">
+        <div className="mx-auto mt-14 grid max-w-5xl gap-8 sm:grid-cols-3">
+          {/* Free plan */}
+          <div className="rounded-2xl border border-border p-8">
             <p className="text-sm font-bold text-muted-foreground">Ücretsiz</p>
             <p className="mt-2 text-4xl font-bold">0₺</p>
-            <p className="mt-1 text-sm text-muted-foreground">Sonsuza kadar</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sonsuza kadar
+            </p>
 
             <ul className="mt-8 space-y-4">
               {freePlan.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm">
-                  <CheckIcon className="size-4 shrink-0 text-green-500" />
-                  {f}
-                </li>
+                <FeatureItem key={f.text} feature={f} />
               ))}
             </ul>
 
             <Link
-              href="#hero"
-              className="mt-8 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              href="/login"
+              className="mt-8 flex w-full items-center justify-center rounded-lg border border-border px-8 py-3.5 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
-              Ücretsiz dene
+              Ücretsiz Dene
             </Link>
           </div>
 
-          {/* Aylık Takip — En Popüler */}
-          <div className="relative rounded-2xl border-2 border-foreground bg-foreground/[0.02] p-6 sm:p-8">
+          {/* Pro plan */}
+          <div className="relative rounded-2xl border-2 border-foreground bg-foreground/[0.02] p-8">
+            {/* Popular badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-foreground px-4 py-1 text-xs font-bold text-background">
               En Popüler
             </div>
@@ -80,26 +93,21 @@ export function PricingSection() {
 
             <ul className="mt-8 space-y-4">
               {proPlan.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm">
-                  <CheckIcon className="size-4 shrink-0 text-green-500" />
-                  {f}
-                </li>
+                <FeatureItem key={f.text} feature={f} />
               ))}
             </ul>
 
             <Link
               href="/login"
-              className="mt-8 flex w-full items-center justify-center rounded-lg bg-foreground px-6 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="mt-8 flex w-full items-center justify-center rounded-lg bg-foreground px-8 py-3.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
-              Takibi başlat
+              Takibe Başla
             </Link>
           </div>
 
-          {/* Biz Yapalım */}
-          <div className="rounded-2xl border border-border p-6 sm:p-8">
-            <p className="text-sm font-bold text-muted-foreground">
-              Biz Yapalım
-            </p>
+          {/* Biz Yapalım plan */}
+          <div className="rounded-2xl border border-border p-8">
+            <p className="text-sm font-bold text-muted-foreground">Biz Yapalım</p>
             <p className="mt-2 text-4xl font-bold">
               15.000₺
             </p>
@@ -108,19 +116,16 @@ export function PricingSection() {
             </p>
 
             <ul className="mt-8 space-y-4">
-              {bizYapalim.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm">
-                  <CheckIcon className="size-4 shrink-0 text-green-500" />
-                  {f}
-                </li>
+              {bizYapalimPlan.map((f) => (
+                <FeatureItem key={f.text} feature={f} />
               ))}
             </ul>
 
             <Link
               href="/login"
-              className="mt-8 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="mt-8 flex w-full items-center justify-center rounded-lg border border-border px-8 py-3.5 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
-              Bize ulaşın
+              Bize Ulaş
             </Link>
           </div>
         </div>

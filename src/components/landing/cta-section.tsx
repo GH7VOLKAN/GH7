@@ -10,17 +10,14 @@ export function CtaSection() {
             30 saniyede öğren. Ücretsiz.
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a
               href="#hero"
               className="inline-flex items-center justify-center rounded-lg bg-background px-8 py-3.5 text-sm font-bold text-foreground transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
-              Adını yaz, test et
+              Hemen Dene →
             </a>
           </div>
-          <p className="mt-3 text-xs text-background/40">
-            Kredi kartı gerekmez.
-          </p>
         </div>
       </div>
     </section>

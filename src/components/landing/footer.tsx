@@ -6,6 +6,8 @@ const columns = [
     links: [
       { label: "Nasıl Çalışır", href: "#nasil-calisir" },
       { label: "Fiyatlandırma", href: "#fiyatlandirma" },
+      { label: "Aylık Takip", href: "/login" },
+      { label: "Biz Yapalım", href: "/login" },
     ],
   },
   {
@@ -14,6 +16,13 @@ const columns = [
       { label: "Hakkımızda", href: "#" },
       { label: "Blog", href: "#" },
       { label: "İletişim", href: "#" },
+    ],
+  },
+  {
+    title: "Destek",
+    links: [
+      { label: "Yardım Merkezi", href: "#" },
+      { label: "SSS", href: "#" },
     ],
   },
   {
@@ -29,15 +38,16 @@ export function Footer() {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          {/* Brand */}
-          <div className="col-span-2 sm:col-span-1">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:grid-cols-5">
+          {/* Brand column */}
+          <div className="col-span-2 lg:col-span-1">
             <GH7Logo size="default" />
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Yapay zekanın seni tanımasını sağla.
+              Yapay zekalarda görünür olmanızı sağlıyoruz.
             </p>
           </div>
 
+          {/* Link columns */}
           {columns.map((col) => (
             <div key={col.title}>
               <p className="text-sm font-bold">{col.title}</p>
@@ -57,11 +67,13 @@ export function Footer() {
           ))}
         </div>
 
+        {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-xs text-muted-foreground">
             2026 GH7.ai — Tüm hakları saklıdır.
           </p>
           <div className="flex items-center gap-4">
+            {/* X / Twitter */}
             <a
               href="#"
               className="text-muted-foreground transition-colors hover:text-foreground"
@@ -71,6 +83,7 @@ export function Footer() {
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </a>
+            {/* LinkedIn */}
             <a
               href="#"
               className="text-muted-foreground transition-colors hover:text-foreground"
