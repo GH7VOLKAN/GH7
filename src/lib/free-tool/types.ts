@@ -32,5 +32,7 @@ export interface FreeToolResult {
   scoreLabel: string; // "Düşük" | "Orta" | "İyi" | "Mükemmel"
   sectorAverage: number; // sektör ortalaması
   freeInsights: string[]; // 3 ücretsiz içgörü
-  competitors: CompetitorPreview[]; // 3 rakip (blur'lu gösterilecek)
+  competitors: CompetitorPreview[]; // 3 rakip
+  whyNotFound: string[]; // neden tanınmıyor nedenleri
+  actionItems: string[]; // aksiyon planı maddeleri
 }

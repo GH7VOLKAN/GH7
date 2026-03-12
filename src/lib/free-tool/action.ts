@@ -91,38 +91,59 @@ function normalizeSentiment(
   return "nötr";
 }
 
-// ── Extract competitors from AI responses ───────────
-async function extractCompetitors(
+// ── Pro insights shape ───────────────────────────────
+interface ProInsights {
+  competitors: CompetitorPreview[];
+  whyNotFound: string[];
+  actionItems: string[];
+}
+
+// ── Extract competitors, reasons, action plan in one call ──
+async function extractProInsights(
   responses: { platform: string; content: string }[],
   input: FreeToolInput,
-): Promise<CompetitorPreview[]> {
+  platforms: PlatformResult[],
+): Promise<ProInsights> {
+  const empty: ProInsights = { competitors: [], whyNotFound: [], actionItems: [] };
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return [];
+  if (!apiKey) return empty;
 
   const combinedResponses = responses
     .filter((r) => r.content)
     .map((r) => `[${r.platform}]:\n${r.content.slice(0, 1500)}`)
     .join("\n\n---\n\n");
 
-  if (!combinedResponses) return [];
+  if (!combinedResponses) return empty;
 
   try {
     const client = new Anthropic({ apiKey });
     const isKisisel = input.mode === "kisisel";
+    const entity = isKisisel ? "kişi" : "firma";
+    const notFoundPlatforms = platforms
+      .filter((p) => !p.found)
+      .map((p) => p.label);
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
+      max_tokens: 1024,
       messages: [
         {
           role: "user",
-          content: `Aşağıdaki AI platform yanıtlarında "${input.name}" dışında bahsedilen ${isKisisel ? "profesyoneller/uzmanlar" : "firmalar/markalar"} kimler?
+          content: `Aşağıda 4 AI platformuna "${input.name}" (${input.field}, ${input.city}) hakkında sorulmuş yanıtlar var.
 
-En çok bahsedilen ilk 3 alternatifi bul ve JSON formatında döndür:
-[{"name": "İsim", "score": 70}]
+Bu yanıtları analiz edip aşağıdaki JSON'u döndür:
+{
+  "competitors": [{"name": "İsim", "score": 70}],
+  "whyNotFound": ["Neden 1", "Neden 2", "Neden 3"],
+  "actionItems": ["Aksiyon 1", "Aksiyon 2", "Aksiyon 3", "Aksiyon 4", "Aksiyon 5"]
+}
 
-score: Tahmini AI görünürlük skoru (0-100). Daha çok ve önce bahsedilen → daha yüksek skor.
-Eğer hiç alternatif bulamıyorsan boş array döndür: []
+Kurallar:
+- competitors: "${input.name}" dışında yanıtlarda bahsedilen ilk 3 alternatif ${entity}. score = tahmini AI görünürlük skoru (0-100).
+- whyNotFound: Bu ${entity}'nin ${notFoundPlatforms.length > 0 ? notFoundPlatforms.join(", ") + " tarafından" : "bazı platformlar tarafından"} neden tanınmadığına dair 3 somut neden. Örnek: "LinkedIn profili optimize edilmemiş", "Sektörel blog içeriği yok", "Google Scholar'da yayın bulunmuyor". Genel cümleler yazma, spesifik ol.
+- actionItems: AI görünürlüğünü artırmak için 5 somut aksiyon. Öncelik sırasına göre. Örnek: "Medium'da haftalık ${input.field} yazıları yayınla", "Schema.org Person markup ekle". Genel tavsiye verme, spesifik ve uygulanabilir ol.
+
+Sadece JSON döndür, başka bir şey yazma.
 
 Yanıtlar:
 ${combinedResponses}`,
@@ -135,16 +156,22 @@ ${combinedResponses}`,
       .map((b) => b.text)
       .join("");
 
-    const jsonMatch = text.match(/\[[\s\S]*?\]/);
-    if (!jsonMatch) return [];
+    // Extract JSON object from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return empty;
 
-    const parsed = JSON.parse(jsonMatch[0]) as CompetitorPreview[];
-    return parsed.slice(0, 3).map((c) => ({
-      name: c.name,
-      score: Math.min(100, Math.max(0, Math.round(c.score))),
-    }));
+    const parsed = JSON.parse(jsonMatch[0]) as ProInsights;
+
+    return {
+      competitors: (parsed.competitors ?? []).slice(0, 3).map((c) => ({
+        name: c.name,
+        score: Math.min(100, Math.max(0, Math.round(c.score))),
+      })),
+      whyNotFound: (parsed.whyNotFound ?? []).slice(0, 3),
+      actionItems: (parsed.actionItems ?? []).slice(0, 5),
+    };
   } catch {
-    return [];
+    return empty;
   }
 }
 
@@ -363,11 +390,8 @@ export async function runFreeToolQuery(
 
   const score = platforms.filter((p) => p.found).length;
 
-  // Extract competitors and generate insights in parallel
-  const [competitors, _] = await Promise.all([
-    extractCompetitors(rawResponses, input),
-    Promise.resolve(), // placeholder for future parallel work
-  ]);
+  // Extract pro insights (competitors, reasons, action items)
+  const proInsights = await extractProInsights(rawResponses, input, platforms);
 
   const freeInsights = generateInsights(
     input,
@@ -384,7 +408,9 @@ export async function runFreeToolQuery(
     scoreLabel,
     sectorAverage,
     freeInsights,
-    competitors,
+    competitors: proInsights.competitors,
+    whyNotFound: proInsights.whyNotFound,
+    actionItems: proInsights.actionItems,
   };
 
   cache.set(cacheKey, { result, ts: Date.now() });

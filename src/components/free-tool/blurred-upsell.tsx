@@ -33,58 +33,121 @@ export function BlurredUpsell({ result }: { result: FreeToolResult }) {
         Pro Analizler
       </p>
 
-      {/* 1. Competitors / Alternatives */}
+      {/* 1. Competitors — first name visible, rest blurred */}
       <LockedSection
         title={isKisisel ? "Senin Yerine Kim Öneriliyor?" : "Rakipleriniz Kimler?"}
       >
         <div className="space-y-3">
-          {result.competitors.map((comp, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground/10 text-[10px] font-bold text-muted-foreground">
-                {i + 1}
-              </span>
-              <div className="h-3.5 flex-1 rounded bg-muted-foreground/15" />
-              <span className="text-xs font-bold tabular-nums text-muted-foreground">
-                {comp.score}/100
-              </span>
-            </div>
-          ))}
+          {result.competitors.length > 0 ? (
+            result.competitors.map((comp, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground/10 text-[10px] font-bold text-muted-foreground">
+                  {i + 1}
+                </span>
+                {i === 0 ? (
+                  <p className="flex-1 text-sm font-medium">{comp.name}</p>
+                ) : (
+                  <div className="h-3.5 flex-1 rounded bg-muted-foreground/15" />
+                )}
+                <span className="text-xs font-bold tabular-nums text-muted-foreground">
+                  {comp.score}/100
+                </span>
+              </div>
+            ))
+          ) : (
+            Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground/10 text-[10px] font-bold text-muted-foreground">
+                  {i + 1}
+                </span>
+                <div className="h-3.5 flex-1 rounded bg-muted-foreground/15" />
+              </div>
+            ))
+          )}
         </div>
       </LockedSection>
 
-      {/* 2. Why not recognized */}
+      {/* 2. Why not recognized — first reason visible, rest blurred */}
       <LockedSection
         title={isKisisel ? "AI Neden Seni Tanımıyor?" : "AI Neden Bahsetmiyor?"}
       >
         <div className="space-y-2.5">
-          <div className="flex items-start gap-2">
-            <span className="mt-1 size-1.5 shrink-0 rounded-full bg-red-400" />
-            <SkeletonBar width="w-full" />
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400" />
-            <SkeletonBar width="w-5/6" />
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400" />
-            <SkeletonBar width="w-4/6" />
-          </div>
+          {result.whyNotFound.length > 0 ? (
+            <>
+              {/* First reason: visible */}
+              <div className="flex items-start gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-red-400" />
+                <p className="text-sm leading-relaxed text-foreground/80">
+                  {result.whyNotFound[0]}
+                </p>
+              </div>
+              {/* Rest: blurred skeleton */}
+              {result.whyNotFound.slice(1).map((_, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <SkeletonBar width={i === 0 ? "w-5/6" : "w-4/6"} />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <div className="flex items-start gap-2">
+                <span className="mt-1 size-1.5 shrink-0 rounded-full bg-red-400" />
+                <SkeletonBar width="w-full" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400" />
+                <SkeletonBar width="w-5/6" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-400" />
+                <SkeletonBar width="w-4/6" />
+              </div>
+            </>
+          )}
         </div>
       </LockedSection>
 
-      {/* 3. Action plan */}
+      {/* 3. Action plan — first item visible, rest blurred */}
       <LockedSection title="Kişiselleştirilmiş Aksiyon Planı">
         <div className="space-y-2.5">
-          {["w-full", "w-11/12", "w-5/6", "w-4/6", "w-3/4"].map((w, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="flex size-5 shrink-0 items-center justify-center rounded border border-muted-foreground/20">
-                <svg className="size-3 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+          {result.actionItems.length > 0 ? (
+            <>
+              {/* First action: visible */}
+              <div className="flex items-center gap-2">
+                <div className="flex size-5 shrink-0 items-center justify-center rounded border border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                  <svg className="size-3 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+                <p className="text-sm leading-relaxed text-foreground/80">
+                  {result.actionItems[0]}
+                </p>
               </div>
-              <SkeletonBar width={w} />
-            </div>
-          ))}
+              {/* Rest: skeleton */}
+              {result.actionItems.slice(1).map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex size-5 shrink-0 items-center justify-center rounded border border-muted-foreground/20">
+                    <svg className="size-3 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </div>
+                  <SkeletonBar width={["w-11/12", "w-5/6", "w-4/6", "w-3/4"][i] ?? "w-5/6"} />
+                </div>
+              ))}
+            </>
+          ) : (
+            ["w-full", "w-11/12", "w-5/6", "w-4/6", "w-3/4"].map((w, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="flex size-5 shrink-0 items-center justify-center rounded border border-muted-foreground/20">
+                  <svg className="size-3 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+                <SkeletonBar width={w} />
+              </div>
+            ))
+          )}
         </div>
       </LockedSection>
 
