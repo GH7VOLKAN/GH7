@@ -2,8 +2,8 @@ export type FreeToolMode = "kisisel" | "firma";
 
 export interface FreeToolInput {
   mode: FreeToolMode;
-  name: string; // ad-soyad or firma adı
-  field: string; // meslek or sektör
+  name: string;
+  field: string;
   city: string;
 }
 
@@ -14,15 +14,23 @@ export interface PlatformResult {
   label: string;
   found: boolean;
   excerpt: string;
+  sentiment: "pozitif" | "nötr" | "negatif";
+  position: string; // "İlk yanıtta", "2. sırada", "Detaylarda", "Bahsedilmiyor"
+  visibilityScore: number; // 0-100
+}
+
+export interface CompetitorPreview {
+  name: string;
+  score: number;
 }
 
 export interface FreeToolResult {
   input: FreeToolInput;
   platforms: PlatformResult[];
   score: number; // kaç platform buldu (0-4)
-  blurredInsights: {
-    alternativesTeaser: string;
-    whyNotTeaser: string;
-    weeklyTrackingTeaser: string;
-  };
+  overallScore: number; // 0-100 genel AI görünürlük skoru
+  scoreLabel: string; // "Düşük" | "Orta" | "İyi" | "Mükemmel"
+  sectorAverage: number; // sektör ortalaması
+  freeInsights: string[]; // 3 ücretsiz içgörü
+  competitors: CompetitorPreview[]; // 3 rakip (blur'lu gösterilecek)
 }

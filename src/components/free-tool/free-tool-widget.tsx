@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import type { FreeToolMode, FreeToolResult } from "@/lib/free-tool/types";
 import { runFreeToolQuery } from "@/lib/free-tool/action";
+import { ScoreRing } from "./score-ring";
 import { PlatformResultCard } from "./platform-result-card";
+import { FreeInsights } from "./free-insights";
 import { BlurredUpsell } from "./blurred-upsell";
 
 export function FreeToolWidget() {
@@ -91,9 +93,7 @@ export function FreeToolWidget() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={
-                mode === "kisisel" ? "Ahmet Yılmaz" : "Acme Teknoloji"
-              }
+              placeholder={mode === "kisisel" ? "Ahmet Yılmaz" : "Acme Teknoloji"}
               required
               className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
             />
@@ -159,30 +159,34 @@ export function FreeToolWidget() {
 
       {/* Results */}
       {result && (
-        <div className="mx-auto max-w-2xl">
-          {/* Score summary */}
-          <div className="mb-6 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background-secondary px-5 py-2.5">
-              <span className="text-2xl font-bold">{result.score}</span>
-              <span className="text-sm text-muted-foreground">/4 platform</span>
-              <span className="text-sm font-medium">
-                {mode === "kisisel" ? "seni tanıyor" : "markanızı tanıyor"}
-              </span>
+        <div className="mx-auto max-w-2xl space-y-8">
+          {/* Score Ring */}
+          <ScoreRing
+            score={result.overallScore}
+            label={result.scoreLabel}
+            sectorAverage={result.sectorAverage}
+          />
+
+          {/* Platform cards */}
+          <div>
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Platform Bazlı Sonuçlar
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {result.platforms.map((p) => (
+                <PlatformResultCard key={p.platform} result={p} />
+              ))}
             </div>
           </div>
 
-          {/* Platform cards */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {result.platforms.map((p) => (
-              <PlatformResultCard key={p.platform} result={p} />
-            ))}
-          </div>
+          {/* Free Insights */}
+          <FreeInsights insights={result.freeInsights} />
 
           {/* Blurred upsell */}
           <BlurredUpsell result={result} />
 
           {/* Actions */}
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <button
               type="button"
               onClick={handleReset}
@@ -195,8 +199,8 @@ export function FreeToolWidget() {
               onClick={() => {
                 const text =
                   mode === "kisisel"
-                    ? `Yapay zeka beni tanıyor mu? ${result.score}/4 platform beni tanıyor! gh7.ai'da sen de test et.`
-                    : `AI ${result.score}/4 platformda markamızı tanıyor! gh7.ai'da siz de test edin.`;
+                    ? `Yapay zeka beni tanıyor mu? AI görünürlük skorum: ${result.overallScore}/100! gh7.ai'da sen de test et.`
+                    : `AI görünürlük skorumuz: ${result.overallScore}/100! gh7.ai'da siz de test edin.`;
                 navigator.clipboard?.writeText(text);
               }}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
