@@ -8,17 +8,22 @@ export function HeroSection() {
         <div className="text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-1.5 text-xs font-medium text-muted-foreground">
             <GH7Icon size={14} className="text-foreground" />
-            AI Görünürlük Platformu #1
+            Yapay Zeka Görünürlük Aracı
           </div>
 
-          <h1 className="text-4xl font-light tracking-[-0.04em] sm:text-5xl md:text-6xl lg:text-7xl">
-            Yapay Zeka Seni
-            <span className="block font-bold">Tanıyor mu?</span>
+          <h1 className="text-3xl font-light tracking-[-0.04em] sm:text-4xl md:text-5xl lg:text-6xl">
+            Yapay zekaya soruyorlar:
+            <span className="mt-2 block text-muted-foreground/60">
+              &ldquo;İyi bir doktor öner&rdquo;
+            </span>
+            <span className="mt-2 block font-bold">Seni öneriyor mu?</span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            ChatGPT, Claude, Gemini ve Perplexity&apos;de adını veya firmanı test et.
-            <span className="font-medium text-foreground"> 30 saniyede öğren.</span>
+          <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Adını veya firmanı yaz.
+            <span className="font-medium text-foreground">
+              {" "}30 saniyede öğren. Ücretsiz.
+            </span>
           </p>
         </div>
       </section>

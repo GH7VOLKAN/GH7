@@ -3,7 +3,6 @@ import { GH7Logo } from "@/components/gh7-logo";
 
 const navLinks = [
   { label: "Nasıl Çalışır", href: "#nasil-calisir" },
-  { label: "Özellikler", href: "#ozellikler" },
   { label: "Fiyatlandırma", href: "#fiyatlandirma" },
 ];
 
@@ -36,7 +35,7 @@ export function Navbar() {
             href="/login"
             className="rounded-lg bg-foreground px-6 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
           >
-            Pro Başla
+            Ücretsiz Dene
           </Link>
         </div>
       </div>
