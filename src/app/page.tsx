@@ -1,45 +1,7 @@
 import Link from "next/link";
 import { GH7Logo } from "@/components/gh7-logo";
-
-const features = [
-  {
-    title: "AI Bahsedilme Takibi",
-    description:
-      "ChatGPT, Claude, Gemini ve Perplexity yanıtlarında markanızın ne sıklıkla ve nasıl bahsedildiğini izleyin.",
-  },
-  {
-    title: "Prompt Görünürlüğü",
-    description:
-      "Sektörünüzle ilgili promptlarda markanızın konumunu, duygu analizini ve rakiplerinizle karşılaştırmasını görün.",
-  },
-  {
-    title: "Kaynak Analizi",
-    description:
-      "AI modellerinin yanıtlarında hangi kaynakları referans gösterdiğini ve sitenizin ne kadar atıf aldığını analiz edin.",
-  },
-  {
-    title: "Rakip İstihbaratı",
-    description:
-      "Rakiplerinizin AI görünürlük skorlarını karşılaştırın, fark analiziyle nerede geride kaldığınızı keşfedin.",
-  },
-  {
-    title: "Site GEO Analizi",
-    description:
-      "Sitenizin yapılandırılmış veri, içerik ve teknik açıdan AI hazırlık seviyesini ölçün ve iyileştirin.",
-  },
-  {
-    title: "Aksiyon Planı + RaaS",
-    description:
-      "Önceliklendirilmiş görevlerle skorunuzu artırın. İsterseniz biz uygulayalım — hedefe ulaşınca ödeyin.",
-  },
-];
-
-const stats = [
-  { value: "4", label: "AI Platform" },
-  { value: "32+", label: "Aktif Prompt" },
-  { value: "7/24", label: "Tarama" },
-  { value: "%100", label: "Türkçe" },
-];
+import { GH7Icon } from "@/components/gh7-icon";
+import { FreeToolWidget } from "@/components/free-tool/free-tool-widget";
 
 export default function LandingPage() {
   return (
@@ -59,118 +21,62 @@ export default function LandingPage() {
               href="/login"
               className="rounded-lg bg-foreground px-5 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
-              Ücretsiz Dene
+              Pro
             </Link>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-        <div className="max-w-3xl">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            AI Görünürlük Yönetim Platformu
-          </p>
-          <h1 className="mt-4 text-4xl font-light tracking-[-0.04em] sm:text-5xl lg:text-6xl">
-            Markanız AI yanıtlarında
-            <span className="block font-medium">görünür mü?</span>
+      <section className="mx-auto max-w-6xl px-4 pt-16 pb-8 sm:px-6 sm:pt-24 sm:pb-12">
+        <div className="text-center">
+          <GH7Icon size={40} className="mx-auto mb-6 text-muted-foreground/30" />
+          <h1 className="text-4xl font-light tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+            Yapay Zeka Seni
+            <span className="block font-medium">Tanıyor mu?</span>
           </h1>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            ChatGPT, Claude, Gemini ve Perplexity sektörünüzle ilgili sorularda
-            markanızı öneriyorlar mı? GH7 ile AI görünürlüğünüzü ölçün,
-            rakiplerinizi izleyin ve aksiyona geçin.
+          <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
+            ChatGPT, Claude, Gemini ve Perplexity&apos;de adını veya firmanı test et.
+            <span className="font-medium text-foreground"> 30 saniyede öğren.</span>
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center rounded-lg bg-foreground px-8 py-3.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
-            >
-              Ücretsiz Başla
-            </Link>
-            <Link
-              href="/dashboard/genel"
-              className="inline-flex items-center justify-center rounded-lg border border-border px-8 py-3.5 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
-            >
-              Demo Dashboard
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Free Tool Widget */}
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <FreeToolWidget />
+      </section>
+
+      {/* How it works — brief */}
       <section className="border-y border-border bg-background-secondary">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 sm:grid-cols-4 sm:px-6">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="text-3xl font-light tracking-[-0.04em] sm:text-4xl">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          Özellikler
-        </p>
-        <h2 className="mt-3 text-2xl font-light tracking-[-0.04em] sm:text-3xl">
-          AI çağında görünürlük yönetimi
-        </h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-xl border border-border bg-card p-6 transition-colors hover:bg-background-secondary"
-            >
-              <h3 className="text-sm font-bold tracking-[-0.02em]">
-                {feature.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="border-y border-border bg-background-secondary">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="text-center text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Nasıl Çalışır
           </p>
-          <h2 className="mt-3 text-2xl font-light tracking-[-0.04em] sm:text-3xl">
-            3 adımda AI görünürlüğünüzü artırın
-          </h2>
-          <div className="mt-10 grid gap-8 sm:grid-cols-3">
+          <div className="mt-8 grid gap-8 sm:grid-cols-3">
             {[
               {
-                step: "01",
-                title: "Tarama",
-                desc: "Web sitenizi ve sektör promptlarınızı 4 AI platformunda tarayalım.",
+                step: "1",
+                title: "Test Et",
+                desc: "Adını veya firma adını gir. 4 AI platformunda anında tara.",
               },
               {
-                step: "02",
-                title: "Analiz",
-                desc: "Bahsedilme skorunuz, kaynak analiziniz ve rakip karşılaştırmanızı görün.",
+                step: "2",
+                title: "Sonuçları Gör",
+                desc: "Hangi platformlar seni tanıyor, hangileri tanımıyor — hemen öğren.",
               },
               {
-                step: "03",
-                title: "Aksiyon",
-                desc: "Öncelikli görevleri kendiniz uygulayın veya bize bırakın. Hedefe ulaşınca ödeyin.",
+                step: "3",
+                title: "Pro ile Derinleş",
+                desc: "Senin yerine kim öneriliyor? Neden tanımıyor? Haftalık takip başlat.",
               },
             ].map((item) => (
-              <div key={item.step}>
-                <span className="text-3xl font-light text-muted-foreground/30">
+              <div key={item.step} className="text-center">
+                <div className="mx-auto flex size-10 items-center justify-center rounded-full border border-border text-sm font-bold text-muted-foreground">
                   {item.step}
-                </span>
-                <h3 className="mt-2 text-sm font-bold">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                </div>
+                <h3 className="mt-3 text-sm font-bold">{item.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                   {item.desc}
                 </p>
               </div>
@@ -186,14 +92,19 @@ export default function LandingPage() {
             AI yanıtlarında yerinizi alın
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-background/60">
-            Rakipleriniz çoktan başladı. Siz de markanızın AI görünürlüğünü bugün ölçmeye başlayın.
+            Kişisel veya kurumsal — AI görünürlüğünüzü ölçün, takip edin, artırın.
           </p>
-          <Link
-            href="/login"
-            className="mt-8 inline-flex items-center justify-center rounded-lg bg-background px-8 py-3.5 text-sm font-bold text-foreground transition-transform hover:scale-[1.03] active:scale-[0.97]"
-          >
-            Ücretsiz Başla
-          </Link>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg bg-background px-8 py-3.5 text-sm font-bold text-foreground transition-transform hover:scale-[1.03] active:scale-[0.97]"
+            >
+              Pro Başla — 2.495₺/ay
+            </Link>
+          </div>
+          <p className="mt-3 text-xs text-background/40">
+            7 gün ücretsiz deneme. Kredi kartı gerekmez.
+          </p>
         </div>
       </section>
 

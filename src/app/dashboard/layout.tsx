@@ -16,6 +16,7 @@ export default async function DashboardLayout({
   const user = await getUserProfile();
   const activeBrand = await getActiveBrand();
   const brandId = activeBrand?.brand?.id;
+  const brandType = (activeBrand?.brand?.type as "firma" | "kisisel") ?? "firma";
   const [scanInfo, notifData] = await Promise.all([
     brandId ? getLastScanInfo(brandId) : null,
     brandId ? getNotifications(brandId) : null,
@@ -32,6 +33,7 @@ export default async function DashboardLayout({
     >
       <AppSidebar
         variant="inset"
+        brandType={brandType}
         user={
           user
             ? { name: user.fullName, email: user.email }
@@ -42,6 +44,7 @@ export default async function DashboardLayout({
         <SiteHeader
           userName={user?.fullName ?? "D"}
           brandId={brandId}
+          brandType={brandType}
           lastScanAt={scanInfo?.lastCompletedAt}
           scanRunning={scanInfo?.isRunning}
           runningScanId={scanInfo?.runningScanId}

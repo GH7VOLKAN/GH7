@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateBrand, updateScanSchedule } from "@/lib/actions";
+import { useRouter } from "next/navigation";
+import { updateBrand, updateBrandType, updateScanSchedule } from "@/lib/actions";
+
+type BrandType = "firma" | "kisisel";
 
 interface AyarlarClientProps {
   brandId: string;
   brandName: string;
   brandDomain: string;
   brandSector: string;
+  brandType: BrandType;
   autoScan: boolean;
   scanInterval: string;
 }
@@ -17,17 +21,21 @@ export function AyarlarClient({
   brandName,
   brandDomain,
   brandSector,
+  brandType: initialBrandType,
   autoScan: initialAutoScan,
   scanInterval: initialInterval,
 }: AyarlarClientProps) {
+  const router = useRouter();
   const [name, setName] = useState(brandName);
   const [domain, setDomain] = useState(brandDomain);
   const [sector, setSector] = useState(brandSector);
+  const [brandType, setBrandType] = useState<BrandType>(initialBrandType);
   const [autoScan, setAutoScan] = useState(initialAutoScan);
   const [scanInterval, setScanInterval] = useState(initialInterval);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [scheduleMsg, setScheduleMsg] = useState<string | null>(null);
+  const [typeMsg, setTypeMsg] = useState<string | null>(null);
 
   function handleSave() {
     startTransition(async () => {
@@ -51,8 +59,66 @@ export function AyarlarClient({
           Ayarlar
         </p>
         <h1 className="mt-2 text-2xl font-light tracking-[-0.04em]">
-          Marka Bilgileri
+          Hesap Ayarları
         </h1>
+      </div>
+
+      {/* Brand Type Selector */}
+      <div className="rounded-[14px] border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-medium tracking-[-0.04em] uppercase">
+          Hesap Türü
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Dashboard deneyiminizi hesap türünüze göre özelleştirin.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              {
+                value: "firma" as BrandType,
+                title: "Firma",
+                desc: "Kurumsal marka takibi, rakip analizi, site SEO auditi.",
+              },
+              {
+                value: "kisisel" as BrandType,
+                title: "Kişisel",
+                desc: "Kişisel tanınırlık, dijital iz takibi, senin yerine kim.",
+              },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                setBrandType(option.value);
+                startTransition(async () => {
+                  try {
+                    await updateBrandType(brandId, option.value);
+                    setTypeMsg("Kaydedildi");
+                    router.refresh();
+                    setTimeout(() => setTypeMsg(null), 2000);
+                  } catch {
+                    setTypeMsg("Hata oluştu");
+                  }
+                });
+              }}
+              disabled={isPending}
+              className={`rounded-xl border-[1.5px] p-4 text-left transition-all ${
+                brandType === option.value
+                  ? "border-foreground bg-foreground/5"
+                  : "border-border hover:border-foreground/30"
+              }`}
+            >
+              <p className="text-sm font-bold">{option.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {option.desc}
+              </p>
+            </button>
+          ))}
+        </div>
+        {typeMsg && (
+          <span className="text-sm text-muted-foreground">{typeMsg}</span>
+        )}
       </div>
 
       <div className="rounded-[14px] border border-border bg-card p-5 space-y-4">

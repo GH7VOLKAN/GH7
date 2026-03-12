@@ -206,6 +206,22 @@ export async function markAllNotificationsRead(brandId: string) {
   return { success: true };
 }
 
+// ─── Brand Type ───────────────────────────────────────
+export async function updateBrandType(
+  brandId: string,
+  type: "firma" | "kisisel",
+) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.brand.update({
+    where: { id: brandId },
+    data: { type },
+  });
+
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
 // ─── Scan Schedule ─────────────────────────────────────
 export async function updateScanSchedule(
   brandId: string,

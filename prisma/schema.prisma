@@ -33,6 +33,7 @@ model Brand {
   name      String
   domain    String
   sector    String?
+  type         String   @default("firma") @map("brand_type") // firma, kisisel
   isDefault    Boolean  @default(false) @map("is_default")
   autoScan     Boolean  @default(true)  @map("auto_scan")
   scanInterval String   @default("daily") @map("scan_interval") // daily, weekly, manual

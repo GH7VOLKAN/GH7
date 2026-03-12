@@ -9,12 +9,24 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ScanButton } from "@/components/scan/scan-button";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 
-const pageTitles: Record<string, string> = {
+type BrandType = "firma" | "kisisel";
+
+const firmaPageTitles: Record<string, string> = {
   "/dashboard/genel": "Genel Bakış",
   "/dashboard/promptlar": "Promptlar",
   "/dashboard/kaynaklar": "Kaynaklar",
   "/dashboard/rakipler": "Rakipler",
   "/dashboard/site": "Site Analizi",
+  "/dashboard/aksiyon": "Aksiyon Planı",
+  "/dashboard/ayarlar": "Ayarlar",
+};
+
+const kisiselPageTitles: Record<string, string> = {
+  "/dashboard/genel": "Genel Bakış",
+  "/dashboard/promptlar": "Promptlar",
+  "/dashboard/kaynaklar": "Dijital İz",
+  "/dashboard/rakipler": "Senin Yerine Kim",
+  "/dashboard/site": "Kişisel Audit",
   "/dashboard/aksiyon": "Aksiyon Planı",
   "/dashboard/ayarlar": "Ayarlar",
 };
@@ -31,6 +43,7 @@ interface NotificationItem {
 interface SiteHeaderProps {
   userName?: string;
   brandId?: string;
+  brandType?: BrandType;
   lastScanAt?: string | null;
   scanRunning?: boolean;
   runningScanId?: string | null;
@@ -41,6 +54,7 @@ interface SiteHeaderProps {
 export function SiteHeader({
   userName,
   brandId,
+  brandType = "firma",
   lastScanAt,
   scanRunning,
   runningScanId,
@@ -51,7 +65,8 @@ export function SiteHeader({
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const title = pageTitles[pathname] ?? "Dashboard";
+  const titles = brandType === "kisisel" ? kisiselPageTitles : firmaPageTitles;
+  const title = titles[pathname] ?? "Dashboard";
   const initial = userName?.charAt(0)?.toUpperCase() ?? "?";
 
   return (

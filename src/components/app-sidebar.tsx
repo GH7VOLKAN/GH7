@@ -32,38 +32,42 @@ import {
   LogOutIcon,
 } from "lucide-react";
 
-const navItems = [
-  {
-    title: "Genel Bakış",
-    href: "/dashboard/genel",
-    icon: <LayoutDashboardIcon />,
-  },
-  {
-    title: "Promptlar",
-    href: "/dashboard/promptlar",
-    icon: <MessageSquareTextIcon />,
-  },
-  {
-    title: "Kaynaklar",
-    href: "/dashboard/kaynaklar",
-    icon: <LinkIcon />,
-  },
-  {
-    title: "Rakipler",
-    href: "/dashboard/rakipler",
-    icon: <UsersIcon />,
-  },
-  {
-    title: "Site Analizi",
-    href: "/dashboard/site",
-    icon: <GlobeIcon />,
-  },
-  {
-    title: "Aksiyon Planı",
-    href: "/dashboard/aksiyon",
-    icon: <ListChecksIcon />,
-  },
-];
+type BrandType = "firma" | "kisisel";
+
+function getNavItems(brandType: BrandType) {
+  return [
+    {
+      title: "Genel Bakış",
+      href: "/dashboard/genel",
+      icon: <LayoutDashboardIcon />,
+    },
+    {
+      title: "Promptlar",
+      href: "/dashboard/promptlar",
+      icon: <MessageSquareTextIcon />,
+    },
+    {
+      title: brandType === "kisisel" ? "Dijital İz" : "Kaynaklar",
+      href: "/dashboard/kaynaklar",
+      icon: <LinkIcon />,
+    },
+    {
+      title: brandType === "kisisel" ? "Senin Yerine Kim" : "Rakipler",
+      href: "/dashboard/rakipler",
+      icon: <UsersIcon />,
+    },
+    {
+      title: brandType === "kisisel" ? "Kişisel Audit" : "Site Analizi",
+      href: "/dashboard/site",
+      icon: <GlobeIcon />,
+    },
+    {
+      title: "Aksiyon Planı",
+      href: "/dashboard/aksiyon",
+      icon: <ListChecksIcon />,
+    },
+  ];
+}
 
 function ThemeToggleButton() {
   const { theme, setTheme } = useTheme();
@@ -83,11 +87,13 @@ function ThemeToggleButton() {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user?: { name: string; email: string };
+  brandType?: BrandType;
 }
 
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
+export function AppSidebar({ user, brandType = "firma", ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const navItems = getNavItems(brandType);
 
   async function handleLogout() {
     const supabase = createClient();
