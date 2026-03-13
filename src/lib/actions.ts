@@ -36,12 +36,16 @@ export async function createBrand(data: {
   if (!data.name.trim()) throw new Error("Marka adı gerekli");
   if (!data.domain.trim()) throw new Error("Domain gerekli");
 
+  const brandName = data.name.trim();
+  const sectorName = data.sector.trim() || null;
+  const isFirma = data.type === "firma";
+
   const brand = await prisma.brand.create({
     data: {
       profileId: user.id,
-      name: data.name.trim(),
+      name: brandName,
       domain: data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, ""),
-      sector: data.sector.trim() || null,
+      sector: sectorName,
       type: data.type,
       isDefault: true,
       autoScan: true,
@@ -49,8 +53,90 @@ export async function createBrand(data: {
     },
   });
 
+  // Generate default prompts based on brand name, sector, and type
+  const defaultPrompts = generateDefaultPrompts(brandName, sectorName, isFirma);
+
+  await prisma.prompt.createMany({
+    data: defaultPrompts.map((p) => ({
+      brandId: brand.id,
+      text: p.text,
+      tags: p.tags,
+      isActive: true,
+    })),
+  });
+
+  // Generate suggested prompts
+  const suggestedPrompts = generateSuggestedPrompts(brandName, sectorName, isFirma);
+
+  if (suggestedPrompts.length > 0) {
+    await prisma.suggestedPrompt.createMany({
+      data: suggestedPrompts.map((s) => ({
+        brandId: brand.id,
+        text: s.text,
+        volume: s.volume,
+      })),
+    });
+  }
+
   revalidatePath("/dashboard", "layout");
   return { success: true, brandId: brand.id };
+}
+
+function generateDefaultPrompts(
+  brandName: string,
+  sector: string | null,
+  isFirma: boolean,
+): { text: string; tags: string[] }[] {
+  if (isFirma) {
+    const base = [
+      { text: `${brandName} hakkinda ne biliyorsun?`, tags: ["marka", "taninirlik"] },
+      { text: `${brandName} nasil bir firma?`, tags: ["marka", "genel"] },
+      { text: `En iyi ${sector || brandName} firmalari hangileri?`, tags: ["marka", "karsilastirma"] },
+      { text: `${brandName} guvenilir mi?`, tags: ["marka", "guven"] },
+      { text: `${brandName} musteri yorumlari nasil?`, tags: ["marka", "yorum"] },
+    ];
+
+    if (sector) {
+      base.push(
+        { text: `${sector} sektorunde en iyi firmalar`, tags: ["sektor", "karsilastirma"] },
+        { text: `${sector} fiyatlari 2026`, tags: ["sektor", "fiyat"] },
+        { text: `${sector} tavsiyeleri`, tags: ["sektor", "tavsiye"] },
+      );
+    }
+
+    return base;
+  }
+
+  // Kisisel marka
+  return [
+    { text: `${brandName} kimdir?`, tags: ["kisisel", "taninirlik"] },
+    { text: `${brandName} hakkinda ne biliyorsun?`, tags: ["kisisel", "genel"] },
+    { text: `${brandName} ne is yapar?`, tags: ["kisisel", "uzmanlik"] },
+    { text: `${brandName} nerede calisir?`, tags: ["kisisel", "kariyer"] },
+    { text: `${brandName} basarilari nelerdir?`, tags: ["kisisel", "basari"] },
+  ];
+}
+
+function generateSuggestedPrompts(
+  brandName: string,
+  sector: string | null,
+  isFirma: boolean,
+): { text: string; volume: number }[] {
+  if (!sector) return [];
+
+  if (isFirma) {
+    return [
+      { text: `${sector} nasil secilir?`, volume: 4 },
+      { text: `${sector} avantajlari dezavantajlari`, volume: 3 },
+      { text: `${sector} maliyeti ne kadar?`, volume: 3 },
+      { text: `${brandName} ile rakipleri arasindaki farklar`, volume: 2 },
+    ];
+  }
+
+  return [
+    { text: `${sector} alaninda en iyi uzmanlar`, volume: 3 },
+    { text: `${brandName} ile ilgili haberler`, volume: 2 },
+  ];
 }
 
 // ─── Settings ───────────────────────────────────────────
