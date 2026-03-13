@@ -30,6 +30,14 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // If OAuth code lands on root, redirect to /auth/callback
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   // Refresh session — DO NOT remove this
   const {
     data: { user },
