@@ -16,6 +16,11 @@ import { passwordResetTemplate } from "./templates/password-reset";
 import { adminMessageTemplate } from "./templates/admin-message";
 import { agencyPackageTemplate } from "./templates/agency-package";
 import { proFeatureTemplate } from "./templates/pro-feature";
+import { ticketCreatedTemplate } from "./templates/ticket-created";
+import { ticketReplyTemplate } from "./templates/ticket-reply";
+import { ticketResolvedTemplate } from "./templates/ticket-resolved";
+import { ticketEscalatedTemplate } from "./templates/ticket-escalated";
+import { ticketFeedbackTemplate } from "./templates/ticket-feedback";
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -258,5 +263,75 @@ export async function sendProFeatureEmail(
     to: email,
     subject: `Yeni Özellik: ${data.featureTitle}`,
     html: proFeatureTemplate(data),
+  });
+}
+
+// ─── Ticket Created ──────────────────────────────────
+
+export async function sendTicketCreatedEmail(
+  email: string,
+  data: { ticketId: string; subject: string; message: string; category?: string }
+) {
+  return getResend().emails.send({
+    from: `GH7 Destek <${FROM}>`,
+    to: email,
+    subject: `[#${data.ticketId}] ${data.subject}`,
+    html: ticketCreatedTemplate(data),
+  });
+}
+
+// ─── Ticket Reply ────────────────────────────────────
+
+export async function sendTicketReplyEmail(
+  email: string,
+  data: { ticketId: string; subject: string; agentName: string; reply: string }
+) {
+  return getResend().emails.send({
+    from: `GH7 Destek <${FROM}>`,
+    to: email,
+    subject: `Re: [#${data.ticketId}] ${data.subject}`,
+    html: ticketReplyTemplate(data),
+  });
+}
+
+// ─── Ticket Resolved ─────────────────────────────────
+
+export async function sendTicketResolvedEmail(
+  email: string,
+  data: { ticketId: string; subject: string; resolution?: string }
+) {
+  return getResend().emails.send({
+    from: `GH7 Destek <${FROM}>`,
+    to: email,
+    subject: `Çözüldü: [#${data.ticketId}] ${data.subject}`,
+    html: ticketResolvedTemplate(data),
+  });
+}
+
+// ─── Ticket Escalated ────────────────────────────────
+
+export async function sendTicketEscalatedEmail(
+  email: string,
+  data: { ticketId: string; subject: string; reason?: string }
+) {
+  return getResend().emails.send({
+    from: `GH7 Destek <${FROM}>`,
+    to: email,
+    subject: `Güncelleme: [#${data.ticketId}] ${data.subject}`,
+    html: ticketEscalatedTemplate(data),
+  });
+}
+
+// ─── Ticket Feedback ─────────────────────────────────
+
+export async function sendTicketFeedbackEmail(
+  email: string,
+  data: { userName?: string }
+) {
+  return getResend().emails.send({
+    from: `GH7 Destek <${FROM}>`,
+    to: email,
+    subject: "Destek Deneyiminizi Değerlendirin",
+    html: ticketFeedbackTemplate(data),
   });
 }

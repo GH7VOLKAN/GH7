@@ -21,15 +21,10 @@ export function emailLayout(title: string, body: string): string {
 
           <!-- Header -->
           <tr>
-            <td style="background-color:#09090b;padding:28px 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td>
-                    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">GH7</span>
-                    <span style="font-size:10px;color:rgba(255,255,255,0.35);margin-left:8px;">.ai</span>
-                  </td>
-                </tr>
-              </table>
+            <td style="background-color:#09090b;padding:24px 32px;">
+              <a href="${APP_URL}" style="text-decoration:none;">
+                <img src="${APP_URL}/logo-light.svg" alt="GH7.ai" width="120" height="36" style="display:block;border:0;outline:none;" />
+              </a>
             </td>
           </tr>
 

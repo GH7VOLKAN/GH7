@@ -23,6 +23,11 @@ import { passwordResetTemplate } from "@/lib/email/templates/password-reset";
 import { adminMessageTemplate } from "@/lib/email/templates/admin-message";
 import { agencyPackageTemplate } from "@/lib/email/templates/agency-package";
 import { proFeatureTemplate } from "@/lib/email/templates/pro-feature";
+import { ticketCreatedTemplate } from "@/lib/email/templates/ticket-created";
+import { ticketReplyTemplate } from "@/lib/email/templates/ticket-reply";
+import { ticketResolvedTemplate } from "@/lib/email/templates/ticket-resolved";
+import { ticketEscalatedTemplate } from "@/lib/email/templates/ticket-escalated";
+import { ticketFeedbackTemplate } from "@/lib/email/templates/ticket-feedback";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.gh7.ai";
 
@@ -95,6 +100,36 @@ const TEMPLATES: Record<string, () => string> = {
     }),
   "agency-package": () =>
     agencyPackageTemplate({ contactName: "Volkan", brandCount: 3 }),
+
+  // ── Destek / Ticket ──
+  "ticket-created": () =>
+    ticketCreatedTemplate({
+      ticketId: "GH7-1042",
+      subject: "Tarama sonuçları yüklenmiyor",
+      message: "Dashboard'da tarama başlattım ama sonuçlar 30 dakikadır yüklenmiyor. Sayfa yenilemek de işe yaramadı.",
+      category: "Teknik Sorun",
+    }),
+  "ticket-reply": () =>
+    ticketReplyTemplate({
+      ticketId: "GH7-1042",
+      subject: "Tarama sonuçları yüklenmiyor",
+      agentName: "Elif",
+      reply: "Merhaba,<br><br>Tarama sistemimizdeki geçici bir yoğunluktan dolayı gecikme yaşandığını tespit ettik. Sorunu çözdük ve taramanızı yeniden başlattık.<br><br>Sonuçlarınız birkaç dakika içinde görünecektir. Sorun devam ederse lütfen bize bildirin.",
+    }),
+  "ticket-resolved": () =>
+    ticketResolvedTemplate({
+      ticketId: "GH7-1042",
+      subject: "Tarama sonuçları yüklenmiyor",
+      resolution: "Sunucu tarafındaki kuyruk yoğunluğu giderildi. Tarama yeniden çalıştırıldı ve sonuçlar başarıyla yüklendi.",
+    }),
+  "ticket-escalated": () =>
+    ticketEscalatedTemplate({
+      ticketId: "GH7-1042",
+      subject: "Tarama sonuçları yüklenmiyor",
+      reason: "48 saat içinde çözüme ulaşılamadı",
+    }),
+  "ticket-feedback": () =>
+    ticketFeedbackTemplate({ userName: "Volkan" }),
 };
 
 // Template categories for the list page
@@ -163,6 +198,18 @@ const CATEGORIES = [
     items: [
       { key: "admin-message", title: "Admin Mesajı", desc: "GH7 ekibinden özel mesaj — duyuru, güncelleme" },
       { key: "agency-package", title: "Ajans Çözüm Paketi", desc: "Çoklu marka yönetimi — ajans tanıtım emaili" },
+    ],
+  },
+  {
+    title: "Destek & Ticket",
+    badge: "Destek",
+    badgeColor: "#10b981",
+    items: [
+      { key: "ticket-created", title: "Talep Oluşturuldu", desc: "Yeni destek talebi onayı" },
+      { key: "ticket-reply", title: "Destek Yanıtı", desc: "Ekipten gelen yanıt bildirimi" },
+      { key: "ticket-resolved", title: "Talep Çözüldü", desc: "Çözüm notu + memnuniyet anketi" },
+      { key: "ticket-escalated", title: "Talep Yükseltildi", desc: "Kıdemli ekibe yönlendirme bildirimi" },
+      { key: "ticket-feedback", title: "Destek Değerlendirmesi", desc: "Deneyim puanlama anketi" },
     ],
   },
 ];
