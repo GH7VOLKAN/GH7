@@ -20,6 +20,39 @@ async function getAuthenticatedBrand(brandId: string) {
   return { user, brand };
 }
 
+// ─── Brand Creation ─────────────────────────────────────
+export async function createBrand(data: {
+  name: string;
+  domain: string;
+  sector: string;
+  type: "firma" | "kisisel";
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  if (!data.name.trim()) throw new Error("Marka adı gerekli");
+  if (!data.domain.trim()) throw new Error("Domain gerekli");
+
+  const brand = await prisma.brand.create({
+    data: {
+      profileId: user.id,
+      name: data.name.trim(),
+      domain: data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, ""),
+      sector: data.sector.trim() || null,
+      type: data.type,
+      isDefault: true,
+      autoScan: true,
+      scanInterval: "daily",
+    },
+  });
+
+  revalidatePath("/dashboard", "layout");
+  return { success: true, brandId: brand.id };
+}
+
 // ─── Settings ───────────────────────────────────────────
 export async function updateBrand(
   brandId: string,

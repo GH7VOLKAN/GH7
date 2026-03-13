@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { getLastScanInfo } from "@/lib/dal/scans";
 import { getNotifications } from "@/lib/dal/notifications";
+import { redirect } from "next/navigation";
 
 // Dashboard is always dynamic — requires auth + DB
 export const dynamic = "force-dynamic";
@@ -17,6 +18,12 @@ export default async function DashboardLayout({
   const activeBrand = await getActiveBrand();
   const brandId = activeBrand?.brand?.id;
   const brandType = (activeBrand?.brand?.type as "firma" | "kisisel") ?? "firma";
+
+  // Redirect to onboarding if user has no brand yet
+  if (!brandId && activeBrand?.profile) {
+    redirect("/onboard");
+  }
+
   const [scanInfo, notifData] = await Promise.all([
     brandId ? getLastScanInfo(brandId) : null,
     brandId ? getNotifications(brandId) : null,
