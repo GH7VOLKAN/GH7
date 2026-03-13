@@ -13,6 +13,8 @@ export default async function AyarlarPage() {
       brandType={(activeBrand?.brand?.type as "firma" | "kisisel") ?? "firma"}
       autoScan={activeBrand?.brand?.autoScan ?? true}
       scanInterval={activeBrand?.brand?.scanInterval ?? "daily"}
+      phone={activeBrand?.profile?.phone ?? ""}
+      smsEnabled={activeBrand?.profile?.smsEnabled ?? false}
     />
   );
 }

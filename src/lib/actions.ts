@@ -240,3 +240,26 @@ export async function updateScanSchedule(
   revalidatePath("/dashboard/ayarlar");
   return { success: true };
 }
+
+// ─── Notification Preferences ───────────────────────────
+export async function updateNotificationPreferences(data: {
+  phone: string;
+  smsEnabled: boolean;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  await prisma.profile.update({
+    where: { id: user.id },
+    data: {
+      phone: data.phone.trim() || null,
+      smsEnabled: data.smsEnabled,
+    },
+  });
+
+  revalidatePath("/dashboard/ayarlar");
+  return { success: true };
+}

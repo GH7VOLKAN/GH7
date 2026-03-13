@@ -14,12 +14,14 @@ datasource db {
 // ─── User & Brand ────────────────────────────────────
 
 model Profile {
-  id        String   @id // matches Supabase auth.users.id
-  email     String   @unique
-  fullName  String?  @map("full_name")
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         String   @id // matches Supabase auth.users.id
+  email      String   @unique
+  fullName   String?  @map("full_name")
+  avatarUrl  String?  @map("avatar_url")
+  phone      String?
+  smsEnabled Boolean  @default(false) @map("sms_enabled")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   brands Brand[]
 
@@ -216,6 +218,20 @@ model Notification {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("notifications")
+}
+
+// ─── Verification Codes ─────────────────────────────
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String   @map("code_hash")
+  tokenHash String   @map("token_hash")
+  attempts  Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("verification_codes")
 }
 
 // ─── Score History ───────────────────────────────────

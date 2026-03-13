@@ -4,6 +4,7 @@ import { analyzeResponse } from "./analyzer";
 import { calculateAndStoreScore } from "./score-calculator";
 import { updateCompetitorScores } from "./competitor-scorer";
 import { discoverSourceDomains } from "./source-discoverer";
+import { sendNotification } from "@/lib/notifications/send";
 import type { AnalysisResult } from "./types";
 
 export async function executeScan(
@@ -98,13 +99,18 @@ export async function executeScan(
     const diff = previousScore ? score - previousScore.mentionScore : 0;
     const diffText = diff !== 0 ? ` (${diff > 0 ? "+" : ""}${diff})` : "";
 
-    await prisma.notification.create({
+    // Send notification through all channels (in-app + email + SMS)
+    const notificationType = diff > 0 ? "score_up" : diff < 0 ? "score_down" : "scan_completed";
+    await sendNotification({
+      brandId,
+      type: notificationType,
+      title: "Tarama tamamlandı",
+      message: `Görünürlük Puanı: ${score}/100${diffText}`,
       data: {
-        brandId,
-        type: "scan_completed",
-        title: "Tarama tamamlandı",
-        message: `AI Bahsedilme Skoru: ${score}/100${diffText}`,
-        data: { scanId, score, diff },
+        scanId,
+        score,
+        diff,
+        ...(previousScore ? { oldScore: previousScore.mentionScore, newScore: score } : {}),
       },
     });
 
@@ -115,14 +121,12 @@ export async function executeScan(
 
     console.log(`[scan-engine] Scan ${scanId} completed`);
   } catch (error) {
-    await prisma.notification.create({
-      data: {
-        brandId,
-        type: "scan_failed",
-        title: "Tarama başarısız",
-        message: "Tarama sırasında bir hata oluştu.",
-        data: { scanId },
-      },
+    await sendNotification({
+      brandId,
+      type: "scan_failed",
+      title: "Tarama başarısız",
+      message: "Tarama sırasında bir hata oluştu.",
+      data: { scanId },
     });
 
     await prisma.scan.update({

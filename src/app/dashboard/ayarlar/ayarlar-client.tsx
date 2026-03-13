@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateBrand, updateBrandType, updateScanSchedule } from "@/lib/actions";
+import { updateBrand, updateBrandType, updateScanSchedule, updateNotificationPreferences } from "@/lib/actions";
 
 type BrandType = "firma" | "kisisel";
 
@@ -14,6 +14,8 @@ interface AyarlarClientProps {
   brandType: BrandType;
   autoScan: boolean;
   scanInterval: string;
+  phone: string;
+  smsEnabled: boolean;
 }
 
 export function AyarlarClient({
@@ -24,6 +26,8 @@ export function AyarlarClient({
   brandType: initialBrandType,
   autoScan: initialAutoScan,
   scanInterval: initialInterval,
+  phone: initialPhone,
+  smsEnabled: initialSmsEnabled,
 }: AyarlarClientProps) {
   const router = useRouter();
   const [name, setName] = useState(brandName);
@@ -32,10 +36,13 @@ export function AyarlarClient({
   const [brandType, setBrandType] = useState<BrandType>(initialBrandType);
   const [autoScan, setAutoScan] = useState(initialAutoScan);
   const [scanInterval, setScanInterval] = useState(initialInterval);
+  const [phone, setPhone] = useState(initialPhone);
+  const [smsEnabled, setSmsEnabled] = useState(initialSmsEnabled);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [scheduleMsg, setScheduleMsg] = useState<string | null>(null);
   const [typeMsg, setTypeMsg] = useState<string | null>(null);
+  const [notifMsg, setNotifMsg] = useState<string | null>(null);
 
   function handleSave() {
     startTransition(async () => {
@@ -227,6 +234,78 @@ export function AyarlarClient({
           </button>
           {scheduleMsg && (
             <span className="text-sm text-muted-foreground">{scheduleMsg}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Notification Preferences */}
+      <div className="rounded-[14px] border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-medium tracking-[-0.04em] uppercase">
+          Bildirim Tercihleri
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Tarama sonuçları ve skor değişimleri için bildirim ayarlarınızı yönetin.
+        </p>
+
+        {/* SMS Toggle */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">SMS Bildirimleri</p>
+            <p className="text-xs text-muted-foreground">
+              Tarama sonuçlarını telefonunuza da gönderin (Pro)
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={smsEnabled}
+            onClick={() => setSmsEnabled(!smsEnabled)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${smsEnabled ? "bg-foreground" : "bg-muted"}`}
+          >
+            <span
+              className={`pointer-events-none inline-block size-5 rounded-full bg-background shadow-sm ring-0 transition-transform ${smsEnabled ? "translate-x-5" : "translate-x-0"}`}
+            />
+          </button>
+        </div>
+
+        {smsEnabled && (
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Telefon Numarası
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+90 5XX XXX XX XX"
+              className={inputClass}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              startTransition(async () => {
+                try {
+                  await updateNotificationPreferences({
+                    phone,
+                    smsEnabled,
+                  });
+                  setNotifMsg("Kaydedildi");
+                  setTimeout(() => setNotifMsg(null), 2000);
+                } catch {
+                  setNotifMsg("Hata oluştu");
+                }
+              });
+            }}
+            disabled={isPending}
+            className="rounded-lg bg-foreground px-6 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
+          >
+            {isPending ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+          {notifMsg && (
+            <span className="text-sm text-muted-foreground">{notifMsg}</span>
           )}
         </div>
       </div>
