@@ -30,7 +30,7 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
-    maxPrompts: 5,
+    maxPrompts: 10,
     manualPromptAdd: false,
     scanFrequency: "once",
     competitorView: false,

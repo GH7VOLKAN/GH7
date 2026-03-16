@@ -18,6 +18,9 @@ export interface PromptItemData {
   tags: string[];
   source: string;
   category: string | null;
+  businessArea: string | null;
+  searchIntent: string | null;
+  salesPotential: string | null;
   visibility: number;
   position: string;
   sentiment: Sentiment;
@@ -84,16 +87,33 @@ export const getPromptsData = cache(async (brandId: string) => {
       }
     }
 
+    // Find top competitor for this prompt (from scan results)
+    const allCompetitors: string[] = [];
+    for (const r of p.results) {
+      const comps = Array.isArray(r.competitors) ? (r.competitors as string[]) : [];
+      allCompetitors.push(...comps);
+    }
+    const compCounts: Record<string, number> = {};
+    for (const c of allCompetitors) {
+      compCounts[c] = (compCounts[c] ?? 0) + 1;
+    }
+    const sortedComps = Object.entries(compCounts).sort((a, b) => b[1] - a[1]);
+    const topComp = sortedComps[0];
+    const topCompetitor = topComp ? `${topComp[0]} (${topComp[1]}/4 platformda)` : "—";
+
     return {
       id: p.id,
       text: p.text,
       tags: p.tags,
       source: p.source,
       category: p.category,
+      businessArea: p.businessArea ?? null,
+      searchIntent: p.searchIntent ?? null,
+      salesPotential: p.salesPotential ?? null,
       visibility: Math.round((mentionCount / 4) * 100),
       position: bestPosition,
       sentiment,
-      topCompetitor: "—",
+      topCompetitor,
       modelResults,
       platformResults,
       createdAt: p.createdAt.toISOString(),

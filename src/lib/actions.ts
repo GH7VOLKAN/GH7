@@ -137,6 +137,27 @@ export async function createBrand(data: {
     },
   });
 
+  // Sync competitors to Competitor table (onboarding'den gelen rakipleri tabloya yaz)
+  if (finalCompetitors.length > 0) {
+    try {
+      const competitorData = finalCompetitors.map((name, idx) => ({
+        brandId: brand.id,
+        name,
+        domain: data.competitorDomains?.[idx] ?? "",
+        mentionScore: 0,
+        readinessScore: 0,
+        platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0 },
+        source: "onboarding",
+        reason: "Onboarding analizi sırasında tespit edildi",
+        products: [] as string[],
+        relevance: "direct",
+      }));
+      await prisma.competitor.createMany({ data: competitorData });
+    } catch (compErr) {
+      console.error("[createBrand] Competitor sync failed (non-fatal):", compErr);
+    }
+  }
+
   // Smart prompt generation using Sonar + Claude
   const promptCount = limits.maxPrompts;
 
@@ -168,6 +189,7 @@ export async function createBrand(data: {
           isActive: true,
           businessArea: p.businessArea || null,
           searchIntent: p.searchIntent || null,
+          salesPotential: p.salesPotential || null,
         })),
       });
     } else {

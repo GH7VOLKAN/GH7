@@ -1,6 +1,7 @@
 import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { PlatformBreakdownCard } from "@/components/platform-breakdown-card";
+import { CompetitorRankingCard } from "@/components/competitor-ranking-card";
 import { RecentMentionsTable } from "@/components/recent-mentions-table";
 import { MonthlyReportCard } from "@/components/monthly-report-card";
 import { BlurredSection } from "@/components/ui/blurred-section";
@@ -46,25 +47,36 @@ export default async function GenelPage() {
 
   return (
     <>
+      {/* Üst: 2 büyük metrik — mention rate + senin yerine kim */}
       <SectionCards
         mentionScore={data.mentionScore}
         mentionTrend={data.mentionTrend}
-        readinessScore={data.readinessScore}
-        readinessTrend={data.readinessTrend}
-        activePromptCount={data.activePromptCount}
-        totalSourceCount={data.totalSourceCount}
         totalMentionCount={data.totalMentionCount}
         totalResultCount={data.totalResultCount}
         lastScanTimeAgo={data.lastScanTimeAgo}
         topCompetitorName={data.topCompetitorName}
         topCompetitorGap={data.topCompetitorGap}
       />
+
+      {/* Platform kartları — renkli, mention rate */}
       <div className="px-4 lg:px-6">
         <PlatformBreakdownCard
           platforms={data.platformStats}
           weeklyRate={data.weeklyMentionRate}
         />
       </div>
+
+      {/* Senin Yerine Kim (özet) — bar chart + platform bazlı sıralama */}
+      {data.competitorRanking.length > 0 && (
+        <div className="px-4 lg:px-6">
+          <CompetitorRankingCard
+            ranking={data.competitorRanking}
+            totalResults={data.totalResultCount}
+          />
+        </div>
+      )}
+
+      {/* Trend grafik (Pro+) */}
       <BlurredSection
         isLocked={trendLocked}
         title="Trend Grafigi"
@@ -74,12 +86,16 @@ export default async function GenelPage() {
           <ChartAreaInteractive scoreHistory={chartData} />
         </div>
       </BlurredSection>
+
+      {/* Son bahsedilmeler */}
       <RecentMentionsTable
         recentMentions={data.recentMentions}
         lastScanTimeAgo={data.lastScanTimeAgo}
         totalMentionCount={data.totalMentionCount}
         totalResultCount={data.totalResultCount}
       />
+
+      {/* Aylık rapor */}
       <div className="px-4 lg:px-6">
         <MonthlyReportCard brandId={brandId} plan={plan} />
       </div>

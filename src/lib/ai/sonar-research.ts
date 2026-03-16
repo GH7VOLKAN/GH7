@@ -105,11 +105,11 @@ export async function researchBusinessAreaQuestions(
     ? serviceRegions.join(", ")
     : city;
 
-  // Sorgu A: Recommendation-seeking
-  const queryA = `${businessArea} alanında yapay zekaya "${city}'de en iyi ${businessArea} firmasi/uzmani kim?" veya "${businessArea} tavsiye" gibi oneri soruları sorulduğunda hangi sorular soruluyor? Bu alandaki gerçek müşterilerin yapay zekaya soracağı 10 farklı öneri/tavsiye sorusu ver. Türkçe olsun.`;
+  // Sorgu A: Recommendation-seeking (Spec E.2 birebir)
+  const queryA = `Birisi ${businessArea} hizmeti almak istiyor ve yapay zekaya soruyor. Özellikle firma önerisi isteyen, teklif almak isteyen, güvenilir firma arayan 10 soru yaz.`;
 
-  // Sorgu B: Location + trust
-  const queryB = `${regionText} bölgesinde ${businessArea} hizmeti arayan birinin güven ve lokasyon bazlı soruları nelerdir? "Yakınımda", "güvenilir", "en iyi", "uygun fiyatlı" gibi sorular. 10 farklı soru ver. Türkçe olsun.`;
+  // Sorgu B: Location + trust (Spec E.2 birebir)
+  const queryB = `Türkiye'de ${businessArea} arayan biri yapay zekaya ne sorar? Firma önerisi, marka karşılaştırma, en iyi firma sorguları. 10 soru yaz.`;
 
   console.log(`[sonar-research] Running 2 queries for business area "${businessArea}" in "${city}"...`);
 

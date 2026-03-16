@@ -46,7 +46,6 @@ type BrandType = "firma" | "kisisel";
 const FREE_LOCKED_PATHS = new Set([
   "/dashboard/rakipler",
   "/dashboard/site",
-  "/dashboard/aksiyon",
 ]);
 
 function getNavItems(brandType: BrandType) {
@@ -77,8 +76,8 @@ function getNavItems(brandType: BrandType) {
       icon: <GlobeIcon />,
     },
     {
-      title: "Aksiyon Plani",
-      href: "/dashboard/aksiyon",
+      title: "Gelisim Plani",
+      href: "/dashboard/gelisim",
       icon: <ListChecksIcon />,
     },
   ];

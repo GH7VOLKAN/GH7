@@ -4,15 +4,63 @@ export async function updateCompetitorScores(
   scanId: string,
   brandId: string,
 ): Promise<void> {
-  const competitors = await prisma.competitor.findMany({
+  let competitors = await prisma.competitor.findMany({
     where: { brandId },
   });
-  if (competitors.length === 0) return;
 
   const results = await prisma.promptResult.findMany({
     where: { scanId },
-    select: { platform: true, excerpt: true },
+    select: { platform: true, excerpt: true, competitors: true },
   });
+
+  // Auto-discover new competitors from scan results
+  const brand = await prisma.brand.findUnique({ where: { id: brandId }, select: { name: true } });
+  const brandNameLower = brand?.name.toLowerCase() ?? "";
+  const existingNames = new Set(competitors.map((c) => c.name.toLowerCase()));
+
+  const newCompNames = new Map<string, number>(); // name → mention count
+  for (const r of results) {
+    const comps = Array.isArray(r.competitors) ? (r.competitors as string[]) : [];
+    for (const name of comps) {
+      const trimmed = name.trim();
+      if (!trimmed || trimmed.toLowerCase() === brandNameLower) continue;
+      if (existingNames.has(trimmed.toLowerCase())) continue;
+      newCompNames.set(trimmed, (newCompNames.get(trimmed) ?? 0) + 1);
+    }
+  }
+
+  // Add competitors that appear in 2+ results (to avoid noise)
+  const toAdd = [...newCompNames.entries()]
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  if (toAdd.length > 0) {
+    try {
+      await prisma.competitor.createMany({
+        data: toAdd.map(([name]) => ({
+          brandId,
+          name,
+          domain: "",
+          mentionScore: 0,
+          readinessScore: 0,
+          platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0 },
+          source: "scan_discovered",
+          reason: "Tarama sonuçlarında otomatik tespit edildi",
+          products: [],
+          relevance: "direct",
+        })),
+        skipDuplicates: true,
+      });
+      console.log(`[competitor-scorer] Auto-discovered ${toAdd.length} new competitors`);
+      // Refresh competitor list
+      competitors = await prisma.competitor.findMany({ where: { brandId } });
+    } catch (err) {
+      console.error("[competitor-scorer] Auto-discovery failed:", err);
+    }
+  }
+
+  if (competitors.length === 0) return;
 
   for (const comp of competitors) {
     const platformCounts: Record<string, { mentioned: number; total: number }> =

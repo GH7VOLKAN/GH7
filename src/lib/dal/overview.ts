@@ -26,6 +26,14 @@ export interface WeeklyMentionRate {
   perPlatform: Record<PlatformKey, { mentioned: number; total: number }>;
 }
 
+export interface CompetitorRankEntry {
+  name: string;
+  mentionCount: number;
+  totalResults: number;
+  isUser: boolean;
+  perPlatform: Record<PlatformKey, { mentioned: number; total: number }>;
+}
+
 export interface DashboardOverview {
   mentionScore: number;
   mentionTrend: number;
@@ -49,6 +57,8 @@ export interface DashboardOverview {
   scoreHistory: { date: string; mentionScore: number; readinessScore: number }[];
   topCompetitorName: string | null;
   topCompetitorGap: number;
+  /** Senin Yerine Kim — rakip sıralama (ScanResult.competitors'dan) */
+  competitorRanking: CompetitorRankEntry[];
 }
 
 export const getOverviewData = cache(async (brandId: string): Promise<DashboardOverview> => {
@@ -245,6 +255,86 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
   const topCompetitorName = topCompetitor?.name ?? null;
   const topCompetitorGap = topCompetitor ? topCompetitor.mentionScore - mentionScore : 0;
 
+  // ── Senin Yerine Kim — Competitor ranking from ScanResult.competitors ──
+  let competitorRanking: CompetitorRankEntry[] = [];
+  if (latestScan) {
+    const allScanResults = await prisma.promptResult.findMany({
+      where: { scanId: latestScan.id },
+      select: { platform: true, mentioned: true, competitors: true },
+    });
+
+    // Count how many times each competitor name appears across all results
+    const compCounts: Record<string, { total: number; perPlatform: Record<PlatformKey, { mentioned: number; total: number }> }> = {};
+    for (const r of allScanResults) {
+      const comps = Array.isArray(r.competitors) ? (r.competitors as string[]) : [];
+      for (const name of comps) {
+        const key = name.trim();
+        if (!key) continue;
+        if (!compCounts[key]) {
+          compCounts[key] = {
+            total: 0,
+            perPlatform: {
+              chatgpt: { mentioned: 0, total: 0 },
+              claude: { mentioned: 0, total: 0 },
+              gemini: { mentioned: 0, total: 0 },
+              perplexity: { mentioned: 0, total: 0 },
+            },
+          };
+        }
+        compCounts[key].total++;
+        const plat = r.platform as PlatformKey;
+        if (compCounts[key].perPlatform[plat]) {
+          compCounts[key].perPlatform[plat].mentioned++;
+        }
+      }
+    }
+
+    // Build ranking array: competitors + brand itself
+    const brandEntry: CompetitorRankEntry = {
+      name: brand?.name ?? "Siz",
+      mentionCount: totalMentionCount,
+      totalResults: totalResultCount,
+      isUser: true,
+      perPlatform: {
+        chatgpt: platformStats.find((p) => p.platform === "chatgpt") ?? { mentioned: 0, total: 0 } as never,
+        claude: platformStats.find((p) => p.platform === "claude") ?? { mentioned: 0, total: 0 } as never,
+        gemini: platformStats.find((p) => p.platform === "gemini") ?? { mentioned: 0, total: 0 } as never,
+        perplexity: platformStats.find((p) => p.platform === "perplexity") ?? { mentioned: 0, total: 0 } as never,
+      },
+    };
+
+    // Fix platform stat mapping for brand
+    for (const ps of platformStats) {
+      brandEntry.perPlatform[ps.platform] = { mentioned: ps.mentioned, total: ps.total };
+    }
+
+    const compEntries: CompetitorRankEntry[] = Object.entries(compCounts)
+      .map(([name, data]) => ({
+        name,
+        mentionCount: data.total,
+        totalResults: totalResultCount,
+        isUser: false,
+        perPlatform: data.perPlatform,
+      }))
+      .sort((a, b) => b.mentionCount - a.mentionCount);
+
+    // Merge: insert brand at correct position and take top 5
+    const merged = [...compEntries];
+    // Find where brand should be inserted
+    const brandPos = merged.findIndex((c) => c.mentionCount <= totalMentionCount);
+    if (brandPos === -1) {
+      merged.push(brandEntry);
+    } else {
+      merged.splice(brandPos, 0, brandEntry);
+    }
+    competitorRanking = merged.slice(0, 5);
+
+    // If brand is not in top 5, add it anyway
+    if (!competitorRanking.some((c) => c.isUser)) {
+      competitorRanking.push(brandEntry);
+    }
+  }
+
   return {
     mentionScore,
     mentionTrend,
@@ -264,6 +354,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     scoreHistory,
     topCompetitorName,
     topCompetitorGap,
+    competitorRanking,
   };
 });
 
