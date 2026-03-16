@@ -34,6 +34,7 @@ export default function OnboardPage() {
   // Kisisel fields
   const [profession, setProfession] = useState("");
   const [specialties, setSpecialties] = useState(["", "", ""]);
+  const [linkedinUrl, setLinkedinUrl] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -81,6 +82,7 @@ export default function OnboardPage() {
           profession: brandType === "kisisel" ? profession || undefined : undefined,
           specialties: brandType === "kisisel" ? specialties.filter((s) => s.trim()) : undefined,
           competitorNames: brandType === "firma" ? competitors.filter((c) => c.trim()) : undefined,
+          linkedinUrl: brandType === "kisisel" && linkedinUrl.trim() ? linkedinUrl.trim() : undefined,
         });
         clearTimeout(timer1);
         clearTimeout(timer2);
@@ -376,6 +378,18 @@ export default function OnboardPage() {
             {/* Kisisel: Specialties */}
             {brandType === "kisisel" && (
               <>
+                <div>
+                  <label className="text-sm font-medium">
+                    LinkedIn Profili <span className="font-normal text-muted-foreground">(isteğe bağlı)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    placeholder="örneğin: linkedin.com/in/volkansimsirkaya"
+                    className={`mt-2 ${inputClass}`}
+                  />
+                </div>
                 <div>
                   <label className="text-sm font-medium">
                     Sektör <span className="font-normal text-muted-foreground">(isteğe bağlı)</span>

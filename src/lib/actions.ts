@@ -39,6 +39,7 @@ export async function createBrand(data: {
   profession?: string;
   specialties?: string[];
   competitorNames?: string[];
+  linkedinUrl?: string;
 }) {
   const supabase = await createClient();
   const {
@@ -60,25 +61,64 @@ export async function createBrand(data: {
   const profession = data.profession?.trim() || null;
   const specialties = data.specialties?.filter((s) => s.trim()) ?? [];
   const competitorNames = data.competitorNames?.filter((c) => c.trim()) ?? [];
+  const cleanDomain = data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
+
+  // V3: Domain-based Sonar analysis for onboarding (firma only, paid plans)
+  let sonarOnboarding: {
+    businessCategories: string[];
+    competitors: string[];
+    strengths: string[];
+    weaknesses: string[];
+    serviceRegions: string[];
+    sector: string | null;
+    rawAnalysis: Record<string, string>;
+  } | null = null;
+
+  if (data.type === "firma" && cleanDomain) {
+    try {
+      const { researchOnboardingDomain } = await import("@/lib/ai/sonar-research");
+      sonarOnboarding = await researchOnboardingDomain(brandName, cleanDomain);
+    } catch (err) {
+      console.error("[createBrand] Sonar onboarding failed (non-fatal):", err);
+    }
+  }
+
+  const finalSector = sectorName || sonarOnboarding?.sector || null;
+  const finalCompetitors = competitorNames.length > 0
+    ? competitorNames
+    : sonarOnboarding?.competitors ?? [];
+  const businessCategories = sonarOnboarding?.businessCategories ?? [];
+  const serviceRegions = sonarOnboarding?.serviceRegions ?? [];
+  const strengths = sonarOnboarding?.strengths ?? [];
+  const weaknesses = sonarOnboarding?.weaknesses ?? [];
 
   const brand = await prisma.brand.create({
     data: {
       profileId: user.id,
       name: brandName,
-      domain: data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, ""),
-      sector: sectorName,
+      domain: cleanDomain,
+      sector: finalSector,
       city: cityName,
       profession,
       specialties,
-      competitorNames,
+      competitorNames: finalCompetitors,
       type: data.type,
       isDefault: true,
       autoScan: true,
       scanInterval: "thrice_weekly",
+      // V3 fields
+      businessCategories,
+      serviceRegions,
+      strengths,
+      weaknesses,
+      sonarAnalysis: sonarOnboarding?.rawAnalysis
+        ? JSON.parse(JSON.stringify(sonarOnboarding.rawAnalysis))
+        : undefined,
+      linkedinUrl: data.linkedinUrl?.trim() || null,
     },
   });
 
-  // Smart prompt generation using DataForSEO + Sonar + Claude
+  // Smart prompt generation using Sonar + Claude
   const promptCount = limits.maxPrompts;
 
   try {
@@ -86,12 +126,14 @@ export async function createBrand(data: {
       {
         name: brandName,
         domain: brand.domain,
-        sector: sectorName,
+        sector: finalSector,
         city: cityName,
         type: data.type,
         profession,
         specialties,
-        competitorNames,
+        competitorNames: finalCompetitors,
+        businessCategories,
+        serviceRegions,
       },
       promptCount,
     );
@@ -105,6 +147,8 @@ export async function createBrand(data: {
           source: p.source,
           category: p.category,
           isActive: true,
+          businessArea: p.businessArea || null,
+          searchIntent: p.searchIntent || null,
         })),
       });
     } else {

@@ -29,7 +29,6 @@ import {
   Trash2Icon,
   PlusIcon,
   SparklesIcon,
-  DatabaseIcon,
   SearchIcon,
   UserIcon,
   ExternalLinkIcon,
@@ -65,11 +64,6 @@ const sourceLabels: Record<string, { label: string; color: string; icon: typeof 
     label: "Otomatik",
     color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
     icon: SparklesIcon,
-  },
-  dataforseo: {
-    label: "Arama Verisi",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    icon: DatabaseIcon,
   },
   sonar: {
     label: "Perplexity Sonar",

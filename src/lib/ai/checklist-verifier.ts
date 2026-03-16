@@ -149,23 +149,33 @@ function buildVerificationPrompt(
 ): string {
   const entity = type === "kisisel" ? brandName : `${brandName} (${domain})`;
 
-  // Her madde için özel doğrulama sorusu
+  // Her madde için özel doğrulama sorusu (V3: 22 madde)
   const verificationQuestions: Record<string, string> = {
+    // Layer 1: Buluyor mu?
     "1.1": `"${entity}" Google'da aratınca ilk sayfada çıkıyor mu? Web sitesi, sosyal medya profilleri görünüyor mu?`,
-    "1.2": `"${domain}" web sitesinde yapılandırılmış veri (Schema.org markup, JSON-LD) kullanılıyor mu?`,
-    "1.3": `"${entity}" LinkedIn'de aktif bir profili/sayfası var mı? Düzenli paylaşım yapılıyor mu?`,
-    "1.4": `"${domain}" web sitesinde blog veya içerik bölümü var mı? Son 3 ayda yeni içerik yayınlanmış mı?`,
+    "1.2": `"${entity}" LinkedIn'de aktif bir profili/sayfası var mı? Düzenli paylaşım yapılıyor mu?`,
+    "1.3": `"${domain}" web sitesi mevcut mu, aktif mi ve güncel mi?`,
+    "1.4": `"${entity}" Google Business Profile'da kayıtlı mı? Profil bilgileri tam mı?`,
     "1.5": `"${entity}" sektörel dizinlerde (sektörel rehberler, dizinler) kayıtlı mı?`,
-    "2.1": `"${domain}" web sitesinde SSL sertifikası, hızlı yüklenme süresi ve mobil uyumluluk mevcut mu?`,
-    "2.2": `"${entity}" hakkında müşteri yorumları, değerlendirmeler var mı? Google Reviews, Trustpilot vb.`,
-    "2.3": `"${entity}" sektöründe otorite gösteren içerikler (araştırma, vaka çalışması, whitepaper) yayınlanmış mı?`,
-    "2.4": `"${domain}" web sitesinde güvenilirlik işaretleri (hakkımızda sayfası, iletişim bilgileri, sertifikalar) var mı?`,
-    "2.5": `"${entity}" hakkında diğer güvenilir kaynaklarda (haber siteleri, sektörel yayınlar) bahsediliyor mu?`,
-    "3.1": `"${entity}" rakiplerine kıyasla daha fazla mı yoksa daha az mı bahsediliyor online ortamda?`,
-    "3.2": `"${domain}" web sitesinde llms.txt dosyası veya yapay zeka botlarına özel erişim ayarları var mı?`,
-    "3.3": `"${entity}" sosyal medyada ve online platformlarda düzenli olarak sektörel içerik paylaşıyor mu?`,
-    "3.4": `"${entity}" sektöründe öncü olarak kabul ediliyor mu? Etkinliklerde konuşmacı, panelist olarak yer alıyor mu?`,
-    "3.5": `"${entity}" markalı içerik ve düşünce liderliği stratejisi uyguluyor mu?`,
+    "1.6": `"${domain}" web sitesinde yapılandırılmış veri (Schema.org markup, JSON-LD) kullanılıyor mu?`,
+    "1.7": `"${domain}" web sitesinde blog veya içerik bölümü var mı? Son 3 ayda yeni içerik yayınlanmış mı?`,
+    // Layer 2: Güveniyor mu?
+    "2.1": `"${entity}" hakkında haber, blog yazısı, röportaj gibi üçüncü parti içerikler var mı?`,
+    "2.2": `"${entity}" sektöründe özgün istatistik, rapor veya veri yayınlamış mı?`,
+    "2.3": `"${domain}" web sitesindeki içerikler güncel mi? Son 6 ayda güncelleme yapılmış mı?`,
+    "2.4": `"${domain}" web sitesinde FAQ veya soru-cevap formatında içerikler var mı?`,
+    "2.5": `"${domain}" web sitesi yapay zeka botları (GPTBot, ClaudeBot) tarafından erişilebilir mi? robots.txt izin veriyor mu?`,
+    "2.6": `"${entity}" hakkında müşteri yorumları var mı? Google Reviews, Trustpilot vb.`,
+    "2.7": `"${domain}" web sitesinde güvenilirlik işaretleri (hakkımızda, iletişim, sertifikalar) var mı?`,
+    "2.8": `"${entity}" hakkında güvenilir kaynaklarda (haber, sektörel yayın) bahsediliyor mu?`,
+    // Layer 3: Öneriyor mu?
+    "3.1": `"${entity}" ChatGPT, Claude, Gemini ve Perplexity'de sorgulandığında bahsediliyor mu?`,
+    "3.2": `"${entity}" rakiplerine kıyasla daha çok mu kaynağı var?`,
+    "3.3": `"${entity}" yapay zeka cevaplarında kaynak olarak gösteriliyor mu (citation)?`,
+    "3.4": `"${entity}" sektöründe otorite/uzman olarak kabul ediliyor mu?`,
+    "3.5": `"${entity}" farklı soru tiplerinde (tavsiye, karşılaştırma, fiyat, lokasyon) yapay zekada çıkıyor mu?`,
+    "3.6": `"${domain}" web sitesinde llms.txt dosyası var mı?`,
+    "3.7": `"${entity}" rakiplerine kıyasla yapay zekada daha sık mı bahsediliyor?`,
   };
 
   const question =

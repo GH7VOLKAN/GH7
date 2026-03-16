@@ -50,6 +50,13 @@ model Brand {
   specialties String[] // uzmanlik alanlari
   competitorNames String[] @map("competitor_names") // onboarding'de girilen rakip adlari
   type         String   @default("firma") @map("brand_type") // firma, kisisel
+  // V3 spec — Profile-centric fields
+  businessCategories String[] @map("business_categories") // faaliyet alanlari (Sonar'dan)
+  serviceRegions     String[] @map("service_regions")     // hizmet bolgeleri
+  strengths          String[] // guclu yonler (Sonar analiz)
+  weaknesses         String[] // zayif yonler (Sonar analiz)
+  sonarAnalysis      Json?    @map("sonar_analysis")      // onboarding Sonar ham verisi
+  linkedinUrl        String?  @map("linkedin_url")        // kisisel marka LinkedIn URL
   isDefault    Boolean  @default(false) @map("is_default")
   autoScan     Boolean  @default(true)  @map("auto_scan")
   scanInterval String   @default("thrice_weekly") @map("scan_interval") // daily, thrice_weekly, manual
@@ -79,11 +86,14 @@ model Prompt {
   brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
   text      String
   tags      String[]
-  source    String   @default("ai_generated") // ai_generated, dataforseo, sonar, user_added
+  source    String   @default("ai_generated") // ai_generated, sonar, user_added
   category  String?  // lokasyon, urun, karsilastirma, oneri, fiyat, yorum, genel, uzmanlik, itibar
   isActive  Boolean  @default(true) @map("is_active")
   salesPotential String? @map("sales_potential") // HIGH, MEDIUM, LOW
   lastScanAt     DateTime? @map("last_scan_at")
+  // V3 spec — per-business-area tagging
+  businessArea  String?  @map("business_area")  // faaliyet alani etiketi
+  searchIntent  String?  @map("search_intent")  // recommendation, comparison, indirect
   createdAt DateTime @default(now()) @map("created_at")
 
   results PromptResult[]

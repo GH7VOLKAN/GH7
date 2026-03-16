@@ -1,5 +1,6 @@
 /**
  * GH7.ai — Plan Limitleri ve Yardimci Fonksiyonlar
+ * V3 Spec Section I — DataForSEO kullanılmıyor
  */
 
 export type PlanType = "free" | "pro" | "business" | "agency";
@@ -19,7 +20,6 @@ export interface PlanLimits {
   smsEnabled: boolean;
   maxBrands: number;
   maxCompetitors: number;
-  useDataForSEO: boolean;
   useSonarResearch: boolean;
   checklistLayer3: boolean;  // Gelişim Planı Katman 3
   mentionRate: boolean;       // Mention rate görünümü
@@ -44,7 +44,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     smsEnabled: false,
     maxBrands: 1,
     maxCompetitors: 0,
-    useDataForSEO: false,
     useSonarResearch: false,
     checklistLayer3: false,
     mentionRate: false,
@@ -67,7 +66,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     smsEnabled: true,
     maxBrands: 3,
     maxCompetitors: 10,
-    useDataForSEO: true,
     useSonarResearch: true,
     checklistLayer3: true,
     mentionRate: true,
@@ -90,7 +88,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     smsEnabled: true,
     maxBrands: 10,
     maxCompetitors: 25,
-    useDataForSEO: true,
     useSonarResearch: true,
     checklistLayer3: true,
     mentionRate: true,
@@ -113,7 +110,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     smsEnabled: true,
     maxBrands: 50,
     maxCompetitors: 50,
-    useDataForSEO: true,
     useSonarResearch: true,
     checklistLayer3: true,
     mentionRate: true,

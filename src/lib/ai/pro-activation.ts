@@ -82,6 +82,8 @@ export async function triggerProActivation(brandId: string): Promise<void> {
           profession: brand.profession,
           specialties: brand.specialties,
           competitorNames: brand.competitorNames,
+          businessCategories: brand.businessCategories,
+          serviceRegions: brand.serviceRegions,
         },
         targetCount,
       );
@@ -95,6 +97,8 @@ export async function triggerProActivation(brandId: string): Promise<void> {
             source: p.source,
             category: p.category,
             isActive: true,
+            businessArea: p.businessArea || null,
+            searchIntent: p.searchIntent || null,
           })),
         });
         progress.push({ step: "prompts", success: true, detail: `${smartPrompts.length} prompt uretildi` });

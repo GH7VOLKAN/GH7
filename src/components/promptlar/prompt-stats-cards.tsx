@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TrendingUpIcon, LayersIcon, SparklesIcon, DatabaseIcon, SearchIcon, UserIcon } from "lucide-react";
+import { TrendingUpIcon, LayersIcon, SparklesIcon, SearchIcon, UserIcon } from "lucide-react";
 import { platformLabels, type PlatformKey } from "@/lib/types";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
@@ -21,7 +21,6 @@ interface PromptItem {
 
 const sourceIcons: Record<string, typeof SparklesIcon> = {
   ai_generated: SparklesIcon,
-  dataforseo: DatabaseIcon,
   sonar: SearchIcon,
   manual: UserIcon,
   user_added: UserIcon,
@@ -29,7 +28,6 @@ const sourceIcons: Record<string, typeof SparklesIcon> = {
 
 const sourceNames: Record<string, string> = {
   ai_generated: "Otomatik",
-  dataforseo: "Otomatik",
   sonar: "Otomatik",
   manual: "Manuel",
   user_added: "Manuel",
