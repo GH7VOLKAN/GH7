@@ -191,7 +191,7 @@ export default function OnboardPage() {
         active: loadingStep === 1,
       },
       {
-        label: "Akıllı promptlar üretiliyor",
+        label: "Akıllı sorular üretiliyor",
         done: loadingStep > 2,
         active: loadingStep === 2,
       },

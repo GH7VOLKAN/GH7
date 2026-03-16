@@ -76,7 +76,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
     {
       icon: PlayIcon,
       title: "Taramayı Başlatın",
-      desc: `${activePromptCount} prompt, 4 platformda test edilecek`,
+      desc: `${activePromptCount} soru, 4 platformda test edilecek`,
       active: status === "idle",
       done: status === "running" || status === "completed",
     },

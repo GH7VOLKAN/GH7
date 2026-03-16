@@ -115,7 +115,7 @@ export function PromptStatsCards({
               })}
             </div>
             <div className="text-muted-foreground">
-              {suggestedCount > 0 ? `${suggestedCount} önerilen prompt bekliyor` : "Sektör promptları takip ediliyor"}
+              {suggestedCount > 0 ? `${suggestedCount} önerilen soru bekliyor` : "Sektör soruları takip ediliyor"}
             </div>
           </CardFooter>
         </Card>
