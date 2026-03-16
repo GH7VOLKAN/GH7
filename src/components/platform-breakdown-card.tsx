@@ -15,8 +15,15 @@ interface PlatformStat {
   total: number;
 }
 
+interface WeeklyRate {
+  totalScans: number;
+  mentionedInScans: number;
+  perPlatform: Record<PlatformKey, { mentioned: number; total: number }>;
+}
+
 interface PlatformBreakdownCardProps {
   platforms: PlatformStat[];
+  weeklyRate?: WeeklyRate;
 }
 
 const PLATFORM_CONFIG: Record<
@@ -49,13 +56,17 @@ const PLATFORM_CONFIG: Record<
   },
 };
 
-export function PlatformBreakdownCard({ platforms }: PlatformBreakdownCardProps) {
+export function PlatformBreakdownCard({ platforms, weeklyRate }: PlatformBreakdownCardProps) {
+  const hasWeeklyData = weeklyRate && weeklyRate.totalScans > 1;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Yapay Zekalar Sizi Ne Kadar Taniyor?</CardTitle>
         <CardDescription>
-          Her yapay zekanin sizi ne siklikta onerdigi
+          {hasWeeklyData
+            ? `Bu hafta ${weeklyRate.totalScans} taramanin ${weeklyRate.mentionedInScans} tanesinde sizi onerdiler`
+            : "Her yapay zekanin sizi ne siklikta onerdigi"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -63,6 +74,7 @@ export function PlatformBreakdownCard({ platforms }: PlatformBreakdownCardProps)
           {platforms.map((p) => {
             const config = PLATFORM_CONFIG[p.platform];
             const pct = p.total > 0 ? Math.round((p.mentioned / p.total) * 100) : 0;
+            const weeklyPlatform = weeklyRate?.perPlatform[p.platform];
 
             return (
               <div
@@ -77,7 +89,6 @@ export function PlatformBreakdownCard({ platforms }: PlatformBreakdownCardProps)
                 {/* Score ring */}
                 <div className="relative flex size-16 items-center justify-center">
                   <svg className="size-16" viewBox="0 0 64 64">
-                    {/* Background circle */}
                     <circle
                       cx="32"
                       cy="32"
@@ -87,7 +98,6 @@ export function PlatformBreakdownCard({ platforms }: PlatformBreakdownCardProps)
                       strokeWidth="4"
                       className="text-black/5 dark:text-white/10"
                     />
-                    {/* Progress circle */}
                     <circle
                       cx="32"
                       cy="32"
@@ -107,17 +117,29 @@ export function PlatformBreakdownCard({ platforms }: PlatformBreakdownCardProps)
                 </div>
 
                 {/* Mention rate text */}
-                <p className="text-center text-[10px] leading-tight text-muted-foreground">
-                  {p.total > 0 ? (
-                    <>
-                      {p.total} sorunun{" "}
-                      <strong className="text-foreground">{p.mentioned}</strong>
-                      &apos;{p.mentioned > 1 ? "i" : ""}nde oneriyor
-                    </>
-                  ) : (
-                    "Henuz taranmadi"
+                <div className="flex flex-col items-center gap-0.5">
+                  <p className="text-center text-[10px] leading-tight text-muted-foreground">
+                    {p.total > 0 ? (
+                      <>
+                        {p.total} sorunun{" "}
+                        <strong className="text-foreground">{p.mentioned}</strong>
+                        &apos;{p.mentioned > 1 ? "i" : ""}nde oneriyor
+                      </>
+                    ) : (
+                      "Henuz taranmadi"
+                    )}
+                  </p>
+                  {/* Weekly mention rate badge */}
+                  {hasWeeklyData && weeklyPlatform && weeklyPlatform.total > 0 && (
+                    <p className="text-center text-[9px] font-medium text-muted-foreground/70">
+                      {weeklyPlatform.total} denemede{" "}
+                      <span className={weeklyPlatform.mentioned > 0 ? "text-foreground" : ""}>
+                        {weeklyPlatform.mentioned}
+                      </span>
+                      &apos;{weeklyPlatform.mentioned > 1 ? "i" : ""}nde
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
             );
           })}

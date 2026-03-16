@@ -20,6 +20,12 @@ export interface PlatformStat {
   total: number;
 }
 
+export interface WeeklyMentionRate {
+  totalScans: number; // how many scans this week (up to 3)
+  mentionedInScans: number; // how many scans brand was mentioned at all
+  perPlatform: Record<PlatformKey, { mentioned: number; total: number }>;
+}
+
 export interface DashboardOverview {
   mentionScore: number;
   mentionTrend: number;
@@ -33,6 +39,7 @@ export interface DashboardOverview {
   totalResultCount: number;
   recentMentions: RecentMention[];
   platformStats: PlatformStat[];
+  weeklyMentionRate: WeeklyMentionRate;
   visibilityData: {
     name: string;
     isUser: boolean;
@@ -130,6 +137,65 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     }));
   }
 
+  // Weekly mention rate — last 3 completed scans (this week)
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - 7);
+  const recentScans = await prisma.scan.findMany({
+    where: { brandId, status: "completed", completedAt: { gte: weekStart } },
+    orderBy: { completedAt: "desc" },
+    take: 3,
+    select: { id: true },
+  });
+
+  let weeklyMentionRate: WeeklyMentionRate = {
+    totalScans: recentScans.length,
+    mentionedInScans: 0,
+    perPlatform: {
+      chatgpt: { mentioned: 0, total: recentScans.length },
+      claude: { mentioned: 0, total: recentScans.length },
+      gemini: { mentioned: 0, total: recentScans.length },
+      perplexity: { mentioned: 0, total: recentScans.length },
+    },
+  };
+
+  if (recentScans.length > 0) {
+    const weekResults = await prisma.promptResult.findMany({
+      where: { scanId: { in: recentScans.map((s) => s.id) } },
+      select: { scanId: true, platform: true, mentioned: true },
+    });
+
+    // Per-scan: did brand get mentioned at all?
+    const scanMentioned = new Set<string>();
+    // Per-platform per-scan: was brand mentioned on this platform in this scan?
+    const platScanMentioned: Record<PlatformKey, Set<string>> = {
+      chatgpt: new Set(),
+      claude: new Set(),
+      gemini: new Set(),
+      perplexity: new Set(),
+    };
+
+    for (const r of weekResults) {
+      if (r.mentioned) {
+        scanMentioned.add(r.scanId);
+        const p = r.platform as PlatformKey;
+        if (platScanMentioned[p]) {
+          platScanMentioned[p].add(r.scanId);
+        }
+      }
+    }
+
+    weeklyMentionRate = {
+      totalScans: recentScans.length,
+      mentionedInScans: scanMentioned.size,
+      perPlatform: {
+        chatgpt: { mentioned: platScanMentioned.chatgpt.size, total: recentScans.length },
+        claude: { mentioned: platScanMentioned.claude.size, total: recentScans.length },
+        gemini: { mentioned: platScanMentioned.gemini.size, total: recentScans.length },
+        perplexity: { mentioned: platScanMentioned.perplexity.size, total: recentScans.length },
+      },
+    };
+  }
+
   // Competitor visibility data
   const brand = await prisma.brand.findUnique({ where: { id: brandId } });
   const competitors = await prisma.competitor.findMany({ where: { brandId } });
@@ -192,6 +258,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     totalResultCount,
     recentMentions,
     platformStats,
+    weeklyMentionRate,
     visibilityData,
     priorityActions,
     scoreHistory,

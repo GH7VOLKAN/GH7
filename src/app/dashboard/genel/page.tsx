@@ -59,7 +59,10 @@ export default async function GenelPage() {
         topCompetitorGap={data.topCompetitorGap}
       />
       <div className="px-4 lg:px-6">
-        <PlatformBreakdownCard platforms={data.platformStats} />
+        <PlatformBreakdownCard
+          platforms={data.platformStats}
+          weeklyRate={data.weeklyMentionRate}
+        />
       </div>
       <BlurredSection
         isLocked={trendLocked}

@@ -211,6 +211,30 @@ export function AppSidebar({
                     </span>
                   </SidebarMenuBadge>
 
+                  {/* Mini 4-week progress bars */}
+                  {!gelisimOpen && hasChecklist && (
+                    <div className="flex items-center gap-1 px-3 py-1.5">
+                      {["H1", "H2", "H3", "H4"].map((label, i) => {
+                        // Simulate weekly progress: each week adds ~25% of remaining
+                        const weekPct = Math.min(
+                          100,
+                          Math.round((completedCount / Math.max(totalCount, 1)) * 100 * ((i + 1) / 4)),
+                        );
+                        return (
+                          <div key={label} className="flex flex-1 flex-col items-center gap-0.5">
+                            <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-primary transition-all duration-500"
+                                style={{ width: `${weekPct}%` }}
+                              />
+                            </div>
+                            <span className="text-[8px] text-muted-foreground/60">{label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   {/* Tree layers */}
                   {gelisimOpen && (
                     <SidebarMenuSub>
