@@ -50,10 +50,10 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            AI referans gösterdiği siteler
+            Yapay zekanin referans gosterdigi siteler
           </div>
           <div className="text-muted-foreground">
-            AI yanıtlarında markanızla birlikte referans gösterilen domain sayısı
+            Yapay zeka yanitlarinda markanızla birlikte referans gösterilen domain sayısı
           </div>
         </CardFooter>
       </Card>
@@ -76,7 +76,7 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
             {topSource?.domain ?? "—"}
           </div>
           <div className="text-muted-foreground">
-            AI yanıtlarında en sık kaynak gösterilen domain ve kullanım yüzdesi
+            Yapay zeka yanitlarinda en sık kaynak gösterilen domain ve kullanım yüzdesi
           </div>
         </CardFooter>
       </Card>
@@ -99,7 +99,7 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
             Kaynak başına ortalama atıf
           </div>
           <div className="text-muted-foreground">
-            Her kaynak domainin AI yanıtlarında ortalama kaç kez atıf aldığı
+            Her kaynak domainin yapay zeka yanitlarinda ortalama kaç kez atıf aldığı
           </div>
         </CardFooter>
       </Card>

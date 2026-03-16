@@ -43,7 +43,7 @@ export function SourceTable({ sourceDomains }: SourceTableProps) {
         <CardContent className="py-12 text-center">
           <GlobeIcon className="mx-auto size-8 text-muted-foreground/40 mb-3" />
           <p className="text-sm text-muted-foreground">
-            Henuz kaynak domain verisi yok. Tarama sonrasi AI&apos;nin referans gosterdigi kaynaklar burada gorunecek.
+            Henuz kaynak domain verisi yok. Tarama sonrasi yapay zekanin referans gosterdigi kaynaklar burada gorunecek.
           </p>
         </CardContent>
       </Card>
@@ -55,7 +55,7 @@ export function SourceTable({ sourceDomains }: SourceTableProps) {
       <CardHeader>
         <CardTitle>Kaynak Domainler</CardTitle>
         <CardDescription>
-          AI modellerinin yanitlarinda referans gosterdigi kaynaklar — satira tiklayarak URL&apos;leri gorun
+          Yapay zekalarin yanitlarinda referans gosterdigi kaynaklar — satira tiklayarak URL&apos;leri gorun
         </CardDescription>
       </CardHeader>
       <CardContent>

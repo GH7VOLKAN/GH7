@@ -35,7 +35,7 @@ export function PlanSelector({ currentPlan, onSelect }: PlanSelectorProps) {
       <div className="text-center">
         <h2 className="text-xl font-bold tracking-[-0.04em]">Plan Seçin</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          AI görünürlük takibinizi güçlendirin
+          Yapay zeka gorunurluk takibinizi güçlendirin
         </p>
       </div>
 

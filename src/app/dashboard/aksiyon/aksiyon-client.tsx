@@ -49,7 +49,7 @@ const RAAS_OFFER_BASE = {
 const SOLUTION_PACKAGES = [
   {
     tier: "baslangic",
-    title: "Başlangıç",
+    title: "Baslangic",
     price: "5.000₺",
     duration: "1-2 hafta",
     color: "blue",
@@ -70,30 +70,31 @@ const SOLUTION_PACKAGES = [
     color: "purple",
     popular: true,
     features: [
-      "Başlangıç paketindeki tüm özellikler",
-      "AI için içerik stratejisi",
-      "Kaynak domain optimizasyonu",
-      "SSS ve bilgi tabanı oluşturma",
-      "Rakip gap analizi raporu",
-      "2 aylık performans takibi",
+      "Baslangic paketindeki tum ozellikler",
+      "Yapay zeka icin icerik stratejisi",
+      "Kaynak optimizasyonu",
+      "SSS ve bilgi tabani olusturma",
+      "Rakip analizi raporu",
+      "2 aylik performans takibi",
     ],
     cta: "Teklif Al",
   },
   {
-    tier: "kurumsal",
-    title: "Kurumsal",
-    price: "18.000₺",
-    duration: "6-8 hafta",
+    tier: "hepsini_biz",
+    title: "Hepsini Biz Yapalim",
+    price: "15.000₺",
+    duration: "4-6 hafta",
     color: "amber",
+    popular: false,
     features: [
-      "Profesyonel paketindeki tüm özellikler",
-      "Tam AI görünürlük yönetimi",
-      "Wikipedia & bilgi grafiği çalışması",
-      "Aylık raporlama ve optimizasyon",
-      "Özel danışman atanması",
-      "6 aylık performans garantisi",
+      "Profesyonel paketindeki tum ozellikler",
+      "Tam yapay zeka gorunurluk yonetimi",
+      "Wikipedia ve bilgi grafigi calismasi",
+      "Aylik raporlama ve optimizasyon",
+      "Ozel danisman atanmasi",
+      "6 aylik performans garantisi",
     ],
-    cta: "Teklif Al",
+    cta: "Hemen Baslat",
   },
 ];
 
@@ -145,7 +146,7 @@ export function AksiyonClient({
       <div className="px-4 lg:px-6">
         <div className="mb-4">
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            AI Durum Raporu
+            Yapay Zeka Durum Raporu
           </p>
           <h2 className="mt-1 text-lg font-light tracking-[-0.04em]">
             Mevcut durumunuzun özeti
@@ -230,7 +231,7 @@ export function AksiyonClient({
               <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
                 {situation.auditScore !== null
                   ? <>{situation.auditPassCount} kontrol başarılı, <strong>{situation.auditFailCount} kontrol başarısız</strong>.</>
-                  : "Site analizi çalıştırarak AI hazırlık puanınızı öğrenin."}
+                  : "Site kontrolu calistirarak hazirlik puaninizi ogrenin."}
               </p>
             </CardContent>
           </Card>
@@ -267,10 +268,10 @@ export function AksiyonClient({
             Profesyonel Çözümler
           </p>
           <h2 className="mt-1 text-lg font-light tracking-[-0.04em]">
-            AI görünürlüğünüzü hızla artırın
+            Yapay zeka gorunurlugunuzu hizla artirin
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Uzman ekibimiz markanızın AI platformlarındaki görünürlüğünü optimize eder.
+            Uzman ekibimiz markanizin yapay zekalardaki gorunurlugunu optimize eder.
           </p>
         </div>
 
@@ -286,7 +287,7 @@ export function AksiyonClient({
             const iconMap = {
               baslangic: ZapIcon,
               profesyonel: RocketIcon,
-              kurumsal: CrownIcon,
+              hepsini_biz: CrownIcon,
             };
             const Icon = iconMap[pkg.tier as keyof typeof iconMap] ?? ZapIcon;
 

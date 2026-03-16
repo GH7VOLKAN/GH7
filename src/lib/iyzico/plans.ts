@@ -14,36 +14,36 @@ export interface PlanPrice {
 }
 
 export const PLAN_PRICES: Record<Exclude<PlanType, "free">, PlanPrice> = {
-  pro: { monthly: 499, yearly: 4790 },
-  business: { monthly: 1499, yearly: 14390 },
-  agency: { monthly: 4999, yearly: 47990 },
+  pro: { monthly: 2495, yearly: 23950 },
+  business: { monthly: 7495, yearly: 71950 },
+  agency: { monthly: 19995, yearly: 191950 },
 };
 
 export const PLAN_FEATURES: Record<Exclude<PlanType, "free">, string[]> = {
   pro: [
-    "50 AI prompt",
-    "4 platform tarama",
+    "50 takip edilen soru",
+    "4 yapay zekada tarama",
     "Rakip analizi",
-    "Site / dijital varlık auditi",
-    "AI aksiyon planı",
+    "Site kontrolu",
+    "Aksiyon plani",
     "Trend grafikleri",
-    "SMS bildirimleri",
+    "Bildirimler",
     "3 marka",
   ],
   business: [
-    "200 AI prompt",
-    "Tüm Pro özellikleri",
+    "200 takip edilen soru",
+    "Tum Pro ozellikleri",
     "10 marka",
     "25 rakip",
-    "Öncelikli destek",
+    "Oncelikli destek",
   ],
   agency: [
-    "500 AI prompt",
-    "Tüm Business özellikleri",
+    "500 takip edilen soru",
+    "Tum Business ozellikleri",
     "50 marka",
     "50 rakip",
-    "Günlük tarama",
-    "API erişimi",
+    "Gunluk tarama",
+    "Entegrasyon erisimi",
   ],
 };
 

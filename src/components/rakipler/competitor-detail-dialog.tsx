@@ -66,7 +66,7 @@ export function CompetitorDetailDialog({
             )}
           </DialogTitle>
           <DialogDescription>
-            Rakip detayları ve AI platformlarındaki karşılaştırma
+            Rakip detayları ve yapay zekalardaki karşılaştırma
           </DialogDescription>
         </DialogHeader>
 

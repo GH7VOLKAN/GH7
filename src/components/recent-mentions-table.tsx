@@ -186,7 +186,7 @@ export function RecentMentionsTable({
               {selected.excerpt && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Bahsedilme (AI Yanitindan)
+                    Bahsedilme (Yapay Zeka Yanitindan)
                   </p>
                   <p className="text-sm bg-primary/5 rounded-lg px-3 py-2 leading-relaxed border border-primary/10">
                     {selected.excerpt}

@@ -165,7 +165,7 @@ export function PromptTable({ promptItems, brandId }: PromptTableProps) {
         <CardHeader>
           <CardTitle>Aktif Sorular</CardTitle>
           <CardDescription>
-            Takip edilen {promptItems.length} soru — satira tiklayarak detaylari ve AI platformlarindaki sonuclari gorun
+            Takip edilen {promptItems.length} soru — satira tiklayarak detaylari ve yapay zekalardaki sonuclari gorun
           </CardDescription>
         </CardHeader>
         <CardContent>

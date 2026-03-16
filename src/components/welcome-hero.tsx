@@ -107,7 +107,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
         </h1>
         <p className="mx-auto mt-4 max-w-md text-base text-muted-foreground">
           <span className="font-medium text-foreground">{brandName}</span> için{" "}
-          {activePromptCount} prompt hazır. 4 AI platformunda markanızın ne kadar
+          {activePromptCount} soru hazir. 4 yapay zekada markanızın ne kadar
           tanındığını öğrenin.
         </p>
 

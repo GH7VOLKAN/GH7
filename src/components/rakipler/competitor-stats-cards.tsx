@@ -66,7 +66,7 @@ export function CompetitorStatsCards({
             {totalMentions}/{totalResults} soruda bahsedildiniz
           </div>
           <div className="text-muted-foreground">
-            4 AI platformunda toplam bahsedilme oranınız
+            4 yapay zekada toplam bahsedilme oranınız
           </div>
         </CardFooter>
       </Card>
@@ -139,7 +139,7 @@ export function CompetitorStatsCards({
             {aiDiscoveredCount > 0 && (
               <Badge variant="outline" className="text-muted-foreground gap-1">
                 <SparklesIcon className="size-3" />
-                AI: {aiDiscoveredCount}
+                Otomatik: {aiDiscoveredCount}
               </Badge>
             )}
             {manualCount > 0 && (
