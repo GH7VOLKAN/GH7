@@ -227,11 +227,11 @@ export async function researchSectorQuestions(
  * 4. Hizmet bölgesi + hedef kitle
  */
 /**
- * V3 Onboarding — Domain bazlı 4 Sonar sorgusu
- * Sorgu 1: "{domain} ne yapıyor? Faaliyet alanları, ürünler, hizmetler?"
- * Sorgu 2: "{domain} hangi konularda öne çıkıyor?"
- * Sorgu 3: "{domain} rakipleri kim? 10 firma listele."
- * Sorgu 4: "{domain} sektöründe öne çıkan diğer firmalar?"
+ * V3 Onboarding — Domain bazlı 4 Sonar sorgusu (Spec E.0 birebir)
+ * Sorgu 1 (firma analizi): firma adı, faaliyet alanları, ürün/hizmet, bölgeler, sektör, hedef kitle
+ * Sorgu 2 (öne çıkan alanlar): Google'da hangi konularda öne çıkıyor, güçlü/zayıf yönler
+ * Sorgu 3a (doğrudan rakipler): 10 firma ve web siteleri
+ * Sorgu 3b (sektörel rakipler): sektördeki diğer öne çıkan firmalar (domain hariç)
  */
 export async function researchOnboardingDomain(
   domain: string,
@@ -246,14 +246,14 @@ export async function researchOnboardingDomain(
   rawAnalysis: Record<string, string>;
 }> {
   const queries = [
-    // Sorgu 1: Ne yapıyor?
-    `${domain} ne yapıyor? Bu web sitesinin ana faaliyet alanları, ürünleri ve hizmetleri nelerdir? Firma adını ve sektörünü de belirt. Kısa ve net listele.`,
-    // Sorgu 2: Hangi konularda öne çıkıyor?
-    `${domain} hangi konularda öne çıkıyor? Güçlü yönleri neler? Zayıf yönleri veya geliştirmesi gereken alanları neler? Kısa maddeler halinde.`,
-    // Sorgu 3: Rakipler — 10 firma
-    `${domain} ile aynı sektörde faaliyet gösteren rakip firmalar kimler? 10 firma ve varsa web sitesi adreslerini listele. Format: "Firma Adı - domain.com"`,
-    // Sorgu 4: Sektördeki diğer öne çıkanlar
-    `${domain} sektöründe Türkiye'de öne çıkan diğer firmalar hangileri? Hangi şehirlerde/bölgelerde bu sektör yoğun? Kısa cevap.`,
+    // Sorgu 1 (firma analizi) — Spec E.0
+    `${domain} web sitesini analiz et. Bu firma ne yapıyor? Firma adı, faaliyet alanları, ürün/hizmet kategorileri, hizmet verdiği bölgeler, sektör, hedef kitle kim?`,
+    // Sorgu 2 (öne çıkan alanlar) — Spec E.0
+    `${domain} Google'da hangi konularda öne çıkıyor? En çok trafik alan sayfaları, güçlü olduğu alanlar, zayıf olduğu alanlar neler?`,
+    // Sorgu 3a (doğrudan rakipler) — Spec E.0
+    `${domain}'un Türkiye'deki doğrudan rakipleri kimler? Aynı sektörde benzer ürün/hizmet sunan firmalar. 10 firma ve web siteleri listele.`,
+    // Sorgu 3b (sektörel rakipler) — Spec E.0
+    `${domain} sektöründe Türkiye'de öne çıkan firmalar ve web siteleri hangileri? ${domain} hariç.`,
   ];
 
   console.log(`[sonar-research] Running 4 onboarding queries for domain: ${domain}...`);
@@ -278,11 +278,25 @@ export async function researchOnboardingDomain(
   const strengths = extractStrengths(fulfilled[1]);
   const weaknesses = extractWeaknesses(fulfilled[1]);
 
-  // Parse Sorgu 3: rakipler (isim + domain)
-  const competitorEntries = extractCompetitorsWithDomains(fulfilled[2]).slice(0, 10);
+  // Parse Sorgu 3a + 3b: rakipler (birleştir, deduplicate, max 10)
+  const competitors3a = extractCompetitorsWithDomains(fulfilled[2]);
+  const competitors3b = extractCompetitorsWithDomains(fulfilled[3]);
+  const allCompetitors = [...competitors3a];
+  for (const c of competitors3b) {
+    if (!allCompetitors.some((existing) => existing.name.toLowerCase() === c.name.toLowerCase())) {
+      allCompetitors.push(c);
+    }
+  }
+  const competitorEntries = allCompetitors.slice(0, 10);
 
-  // Parse Sorgu 4: bölgeler
-  const serviceRegions = extractListItems(fulfilled[3]).slice(0, 5);
+  // Parse bölgeler (Sorgu 1'den — faaliyet bölgeleri)
+  const regionText = fulfilled[0] + " " + fulfilled[3];
+  const serviceRegions = extractListItems(regionText).filter((item) => {
+    const lower = item.toLowerCase();
+    return lower.includes("türkiye") || lower.includes("istanbul") || lower.includes("ankara") ||
+      lower.includes("izmir") || lower.includes("bölge") || lower.includes("il") ||
+      lower.includes("geneli") || lower.length < 30;
+  }).slice(0, 5);
 
   // Sector detection
   const combinedText = (fulfilled[0] + " " + fulfilled[3]).toLowerCase();
@@ -323,10 +337,112 @@ export async function researchOnboardingDomain(
     serviceRegions,
     sector,
     rawAnalysis: {
-      whatDoes: fulfilled[0],
-      standout: fulfilled[1],
-      competitors: fulfilled[2],
-      regionsSector: fulfilled[3],
+      firmaAnalizi: fulfilled[0],
+      oneCikanAlanlar: fulfilled[1],
+      dogrudan_rakipler: fulfilled[2],
+      sektorel_rakipler: fulfilled[3],
+    },
+  };
+}
+
+/**
+ * V3 Onboarding — Kişisel marka Sonar analizi (Spec E.0)
+ * LinkedIn URL veya manuel giriş → Sonar ile uzmanlıklar + rakipler bulunur
+ */
+export async function researchOnboardingPersonal(input: {
+  linkedinUrl?: string;
+  name?: string;
+  profession?: string;
+  city?: string;
+}): Promise<{
+  name: string | null;
+  profession: string | null;
+  city: string | null;
+  specialties: string[];
+  competitors: Array<{ name: string }>;
+  strengths: string[];
+  weaknesses: string[];
+  rawAnalysis: Record<string, string>;
+}> {
+  const queries: string[] = [];
+
+  if (input.linkedinUrl) {
+    // LinkedIn URL varsa — profil taranır
+    const url = input.linkedinUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    queries.push(
+      // Sorgu 1: LinkedIn profil analizi
+      `${url} LinkedIn profilini analiz et. Bu kişinin adı, mesleği, uzmanlık alanları, şehri, eğitimi ve deneyimi nedir? Detaylı bilgi ver.`,
+      // Sorgu 2: Dijital varlık
+      `${url} sahibi hakkında internette ne bilgi var? Web sitesi, Google Business profili, sektörel dizinlerde kaydı, haberler veya röportajlar var mı?`,
+      // Sorgu 3: Rakipler (aynı alanda öne çıkan kişiler)
+      `${url} profilindeki kişiyle aynı meslek ve şehirde çalışan, yapay zeka tarafından önerilme ihtimali yüksek 10 kişi kim? İsimlerini listele.`,
+    );
+  } else {
+    // Manuel giriş — ad + meslek + şehir
+    const desc = [input.name, input.profession, input.city].filter(Boolean).join(" ");
+    queries.push(
+      // Sorgu 1: Kişi hakkında genel bilgi
+      `${desc} hakkında ne biliyorsun? Bu kişinin uzmanlık alanları, deneyimi, eğitimi nedir? Detaylı bilgi ver.`,
+      // Sorgu 2: Dijital varlık
+      `${desc} — bu kişinin web sitesi, LinkedIn profili, Google Business profili, sektörel dizinlerde kaydı, haber veya röportajları var mı?`,
+      // Sorgu 3: Senin yerine kim (rakipler)
+      `${input.profession || "uzman"} ${input.city || "Türkiye"} alanında yapay zekanın önerebileceği en bilinen 10 kişi kim? İsimlerini listele.`,
+    );
+  }
+
+  console.log(`[sonar-research] Running ${queries.length} personal onboarding queries...`);
+
+  const results = await Promise.allSettled(queries.map((q) => querySonar(q)));
+  const fulfilled = results.map((r) => r.status === "fulfilled" ? r.value : "");
+
+  const successCount = results.filter((r) => r.status === "fulfilled").length;
+  console.log(`[sonar-research] Personal onboarding: Got ${successCount}/${queries.length} results`);
+
+  // Parse results
+  const specialties = extractListItems(fulfilled[0]).filter((item) => {
+    const lower = item.toLowerCase();
+    return !lower.includes("eğitim") && !lower.includes("üniversite") && item.length < 50;
+  }).slice(0, 5);
+
+  const strengths = extractStrengths(fulfilled[1]);
+  const weaknesses = extractWeaknesses(fulfilled[1]);
+  const competitorNames = extractListItems(fulfilled[2]).slice(0, 10);
+  const competitors = competitorNames.map((name) => ({ name }));
+
+  // Extract name/profession/city from Sonar if LinkedIn was used
+  let parsedName: string | null = input.name || null;
+  let parsedProfession: string | null = input.profession || null;
+  let parsedCity: string | null = input.city || null;
+
+  if (input.linkedinUrl && fulfilled[0]) {
+    // Try to extract from first response
+    const text = fulfilled[0];
+    if (!parsedName) {
+      const nameMatch = text.match(/(?:adı|ismi|Ad Soyad)[:\s]+([A-ZÇĞIİÖŞÜa-zçğıiöşü\s.]+?)(?:\s*[,.\n])/);
+      if (nameMatch?.[1]) parsedName = nameMatch[1].trim();
+    }
+    if (!parsedProfession) {
+      const profMatch = text.match(/(?:mesleği|uzmanlığı|meslek)[:\s]+([^\n,.]+)/i);
+      if (profMatch?.[1]) parsedProfession = profMatch[1].trim();
+    }
+    if (!parsedCity) {
+      const cityMatch = text.match(/(?:şehir|konum|lokasyon|yaşadığı)[:\s]+([^\n,.]+)/i);
+      if (cityMatch?.[1]) parsedCity = cityMatch[1].trim();
+    }
+  }
+
+  return {
+    name: parsedName,
+    profession: parsedProfession,
+    city: parsedCity,
+    specialties,
+    competitors,
+    strengths,
+    weaknesses,
+    rawAnalysis: {
+      profilAnalizi: fulfilled[0],
+      dijitalVarlik: fulfilled[1],
+      rakipler: fulfilled[2],
     },
   };
 }
