@@ -52,15 +52,22 @@ function checkJsonLd(
   label: string,
   raasEligible: boolean,
 ): AuditCheckResult {
+  const typeLabels: Record<string, string> = {
+    Product: "ürün tanıtım",
+    Organization: "kurum tanıtım",
+    FAQPage: "sıkça sorulan sorular",
+    BreadcrumbList: "sayfa yol haritası",
+  };
+  const turkishType = typeLabels[type] ?? type;
   const regex = new RegExp(`"@type"\\s*:\\s*"${type}"`, "i");
   if (regex.test(html)) {
-    return check(label, "pass", `${type} schema bulundu.`, null, raasEligible);
+    return check(label, "pass", `${label} verisi bulundu.`, null, raasEligible);
   }
   return check(
     label,
     "fail",
-    `${type} schema bulunamadı.`,
-    `Sayfanıza ${type} yapılandırılmış veri (JSON-LD) ekleyin.`,
+    `${label} verisi bulunamadı.`,
+    `Sayfanıza ${turkishType} bilgisi ekleyin — yapay zekalar bu bilgileri kullanarak sizi daha iyi tanır.`,
     raasEligible,
   );
 }
@@ -69,10 +76,10 @@ function checkStructuredData(html: string): AuditCategoryResult {
   return {
     name: "Yapılandırılmış Veri",
     checks: [
-      checkJsonLd(html, "Product", "Product Schema", true),
-      checkJsonLd(html, "Organization", "Organization Schema", false),
-      checkJsonLd(html, "FAQPage", "FAQ Schema", true),
-      checkJsonLd(html, "BreadcrumbList", "Breadcrumb Schema", true),
+      checkJsonLd(html, "Product", "Ürün Tanıtım Bilgisi", true),
+      checkJsonLd(html, "Organization", "Kurum Tanıtım Bilgisi", false),
+      checkJsonLd(html, "FAQPage", "Sıkça Sorulan Sorular Bilgisi", true),
+      checkJsonLd(html, "BreadcrumbList", "Sayfa Yol Haritası", true),
     ],
   };
 }
@@ -544,10 +551,10 @@ export async function runSiteAudit(domain: string): Promise<AuditResult> {
         {
           name: "Yapılandırılmış Veri",
           checks: [
-            failCheck("Product Schema", true),
-            failCheck("Organization Schema"),
-            failCheck("FAQ Schema", true),
-            failCheck("Breadcrumb Schema", true),
+            failCheck("Ürün Tanıtım Bilgisi", true),
+            failCheck("Kurum Tanıtım Bilgisi"),
+            failCheck("Sıkça Sorulan Sorular Bilgisi", true),
+            failCheck("Sayfa Yol Haritası", true),
           ],
         },
         {
