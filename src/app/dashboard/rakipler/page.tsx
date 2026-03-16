@@ -1,5 +1,6 @@
 import { CompetitorStatsCards } from "@/components/rakipler/competitor-stats-cards";
 import { CompetitorTable } from "@/components/rakipler/competitor-table";
+import { EmptyAreasCard } from "@/components/rakipler/empty-areas-card";
 import { GapAnalysisCard } from "@/components/rakipler/gap-analysis-card";
 import { ShareOfVoiceCard } from "@/components/rakipler/share-of-voice-card";
 import { BlurredSection } from "@/components/ui/blurred-section";
@@ -47,6 +48,9 @@ export default async function RakiplerPage() {
       </div>
       <div className="px-4 lg:px-6">
         <GapAnalysisCard detail={data.detail} userName={userName} />
+      </div>
+      <div className="px-4 lg:px-6">
+        <EmptyAreasCard opportunities={data.emptyAreaOpportunities} />
       </div>
     </BlurredSection>
   );

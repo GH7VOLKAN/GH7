@@ -33,6 +33,12 @@ export interface CompetitorPromptAppearance {
   userMentionedToo: boolean;
 }
 
+export interface EmptyAreaOpportunity {
+  promptText: string;
+  platforms: string[];
+  topMention: string | null;
+}
+
 export interface CompetitorDeepDetail {
   promptAppearances: CompetitorPromptAppearance[];
   sharedSources: string[];
@@ -241,6 +247,66 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     }
   }
 
+  // --- Empty Area Opportunities ---
+  // Prompts where brand is NOT mentioned AND no competitor appears more than once
+  let emptyAreaOpportunities: EmptyAreaOpportunity[] = [];
+
+  if (latestScan) {
+    const allResultsWithPrompt = await prisma.promptResult.findMany({
+      where: { scanId: latestScan.id },
+      select: {
+        mentioned: true,
+        competitors: true,
+        platform: true,
+        prompt: { select: { text: true } },
+      },
+    });
+
+    // Group results by prompt text
+    const promptMap = new Map<
+      string,
+      { platforms: string[]; mentioned: boolean; competitorCounts: Map<string, number> }
+    >();
+
+    for (const r of allResultsWithPrompt) {
+      const key = r.prompt.text;
+      let entry = promptMap.get(key);
+      if (!entry) {
+        entry = { platforms: [], mentioned: false, competitorCounts: new Map() };
+        promptMap.set(key, entry);
+      }
+      entry.platforms.push(r.platform);
+      if (r.mentioned) entry.mentioned = true;
+      for (const comp of r.competitors) {
+        entry.competitorCounts.set(comp, (entry.competitorCounts.get(comp) ?? 0) + 1);
+      }
+    }
+
+    for (const [promptText, entry] of promptMap) {
+      // Skip if brand is mentioned in any platform for this prompt
+      if (entry.mentioned) continue;
+
+      // Check: no competitor appears more than once (no one dominates)
+      const maxCount = Math.max(0, ...entry.competitorCounts.values());
+      if (maxCount > 1) continue;
+
+      // This is an empty area — find top mention (if any single mention exists)
+      let topMention: string | null = null;
+      if (entry.competitorCounts.size > 0) {
+        topMention = [...entry.competitorCounts.entries()][0][0];
+      }
+
+      emptyAreaOpportunities.push({
+        promptText,
+        platforms: [...new Set(entry.platforms)],
+        topMention,
+      });
+    }
+
+    // Limit to top 10
+    emptyAreaOpportunities = emptyAreaOpportunities.slice(0, 10);
+  }
+
   return {
     rows,
     detail,
@@ -251,6 +317,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     totalResults: totalPrompts,
     totalMentions,
     shareOfVoice,
+    emptyAreaOpportunities,
   };
 });
 
