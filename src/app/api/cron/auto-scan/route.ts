@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const scan = await prisma.scan.create({
-        data: { brandId: brand.id, status: "pending" },
+        data: { brandId: brand.id, status: "pending", type: "scheduled" },
       });
 
       // Execute sequentially to respect rate limits

@@ -67,7 +67,7 @@ const sourceLabels: Record<string, { label: string; color: string; icon: typeof 
     icon: SparklesIcon,
   },
   dataforseo: {
-    label: "DataForSEO",
+    label: "Arama Verisi",
     color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     icon: DatabaseIcon,
   },

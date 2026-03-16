@@ -160,7 +160,7 @@ Bu yanıtları analiz edip aşağıdaki JSON'u döndür:
 Kurallar:
 - competitors: "${input.name}" dışında yanıtlarda bahsedilen TÜM alternatif ${entity}leri listele (en fazla 10). Her biri için hangi platformlarda bahsedildiğini de belirt. score = tahmini AI görünürlük skoru (0-100). En çok bahsedilenden en az bahsedilene sırala.
 - whyNotFound: Bu ${entity}'nin ${notFoundPlatforms.length > 0 ? notFoundPlatforms.join(", ") + " tarafından" : "bazı platformlar tarafından"} neden tanınmadığına dair 3 somut neden. Örnek: "LinkedIn profili optimize edilmemiş", "Sektörel blog içeriği yok", "Google Scholar'da yayın bulunmuyor". Genel cümleler yazma, spesifik ol.
-- actionItems: AI görünürlüğünü artırmak için 5 somut aksiyon. Öncelik sırasına göre. Örnek: "Medium'da haftalık ${input.field} yazıları yayınla", "Schema.org Person markup ekle". Genel tavsiye verme, spesifik ve uygulanabilir ol.
+- actionItems: AI görünürlüğünü artırmak için 5 somut aksiyon. Öncelik sırasına göre. Örnek: "Medium'da haftalık ${input.field} yazıları yayınla", "Web sitene yapay zekaların seni tanıması için gerekli tanıtım bilgilerini ekle". Genel tavsiye verme, spesifik ve uygulanabilir ol. TEKNİK jargon KULLANMA (SEO, Schema, markup gibi terimler yasak).
 
 Sadece JSON döndür, başka bir şey yazma.
 

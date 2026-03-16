@@ -92,10 +92,10 @@ const TEMPLATES: Record<string, () => string> = {
   // ── Admin & Ajans ──
   "admin-message": () =>
     adminMessageTemplate({
-      subject: "Yeni Özellik: Prompt Kütüphanesi",
+      subject: "Yeni Özellik: Hazır Soru Kütüphanesi",
       message:
-        "Merhaba,<br><br>Yapay zekaların sizi daha iyi tanıması için kullanabileceğiniz hazır prompt şablonlarını yayınladık. Prompt Kütüphanesi ile ChatGPT, Gemini, Claude ve Perplexity'de kullanabileceğiniz onlarca hazır komut sizi bekliyor.<br><br>GH7 Ekibi",
-      ctaText: "Prompt Kütüphanesini Keşfet",
+        "Merhaba,<br><br>Yapay zekaların sizi daha iyi tanıması için kullanabileceğiniz hazır soru şablonlarını yayınladık. Soru Kütüphanesi ile ChatGPT, Gemini, Claude ve Perplexity'de kullanabileceğiniz onlarca hazır soru sizi bekliyor.<br><br>GH7 Ekibi",
+      ctaText: "Soru Kütüphanesini Keşfet",
       ctaUrl: `${APP_URL}/dashboard/promptlar`,
     }),
   "agency-package": () =>
@@ -106,7 +106,7 @@ const TEMPLATES: Record<string, () => string> = {
     ticketCreatedTemplate({
       ticketId: "GH7-1042",
       subject: "Tarama sonuçları yüklenmiyor",
-      message: "Dashboard'da tarama başlattım ama sonuçlar 30 dakikadır yüklenmiyor. Sayfa yenilemek de işe yaramadı.",
+      message: "Tarama başlattım ama sonuçlar 30 dakikadır yüklenmiyor. Sayfa yenilemek de işe yaramadı.",
       category: "Teknik Sorun",
     }),
   "ticket-reply": () =>

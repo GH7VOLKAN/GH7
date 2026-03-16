@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   }
 
   const scan = await prisma.scan.create({
-    data: { brandId, status: "pending" },
+    data: { brandId, status: "pending", type: "manual" },
   });
 
   // Use after() to keep the serverless function alive after responding

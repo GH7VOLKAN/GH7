@@ -115,7 +115,7 @@ export async function triggerProActivation(brandId: string): Promise<void> {
     console.log("[pro-activation] Step 2: Starting first scan...");
 
     const scan = await prisma.scan.create({
-      data: { brandId, status: "pending" },
+      data: { brandId, status: "pending", type: "manual" },
     });
     scanId = scan.id;
 
