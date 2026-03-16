@@ -8,7 +8,7 @@ export class AnthropicProvider implements AIProvider {
 
   constructor() {
     const key = process.env.ANTHROPIC_API_KEY;
-    this.client = key ? new Anthropic({ apiKey: key }) : null;
+    this.client = key ? new Anthropic({ apiKey: key, timeout: 30_000 }) : null;
   }
 
   isAvailable(): boolean {
@@ -22,8 +22,9 @@ export class AnthropicProvider implements AIProvider {
 
     try {
       const response = await this.client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 2048,
+        temperature: 0.7,
         messages: [{ role: "user", content: promptText }],
       });
 

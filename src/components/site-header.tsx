@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
-import { MoonIcon, SunIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ScanButton } from "@/components/scan/scan-button";
@@ -12,22 +9,24 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 type BrandType = "firma" | "kisisel";
 
 const firmaPageTitles: Record<string, string> = {
-  "/dashboard/genel": "Genel Bakış",
-  "/dashboard/promptlar": "Promptlar",
+  "/dashboard/genel": "Genel Bakis",
+  "/dashboard/promptlar": "Sorular",
   "/dashboard/kaynaklar": "Kaynaklar",
   "/dashboard/rakipler": "Rakipler",
-  "/dashboard/site": "Site Analizi",
-  "/dashboard/aksiyon": "Aksiyon Planı",
+  "/dashboard/site": "Site Kontrolu",
+  "/dashboard/aksiyon": "Aksiyon Plani",
+  "/dashboard/gelisim": "Gelisim Plani",
   "/dashboard/ayarlar": "Ayarlar",
 };
 
 const kisiselPageTitles: Record<string, string> = {
-  "/dashboard/genel": "Genel Bakış",
-  "/dashboard/promptlar": "Promptlar",
-  "/dashboard/kaynaklar": "Dijital İz",
+  "/dashboard/genel": "Genel Bakis",
+  "/dashboard/promptlar": "Sorular",
+  "/dashboard/kaynaklar": "Dijital Iz",
   "/dashboard/rakipler": "Senin Yerine Kim",
-  "/dashboard/site": "Kişisel Audit",
-  "/dashboard/aksiyon": "Aksiyon Planı",
+  "/dashboard/site": "Dijital Kontrol",
+  "/dashboard/aksiyon": "Aksiyon Plani",
+  "/dashboard/gelisim": "Gelisim Plani",
   "/dashboard/ayarlar": "Ayarlar",
 };
 
@@ -62,11 +61,8 @@ export function SiteHeader({
   unreadCount = 0,
 }: SiteHeaderProps) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
   const titles = brandType === "kisisel" ? kisiselPageTitles : firmaPageTitles;
-  const title = titles[pathname] ?? "Dashboard";
+  const title = titles[pathname] ?? "Genel Bakis";
   const initial = userName?.charAt(0)?.toUpperCase() ?? "?";
 
   return (
@@ -93,18 +89,6 @@ export function SiteHeader({
                 unreadCount={unreadCount}
               />
             </>
-          )}
-          {mounted && (
-            <button
-              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? (
-                <SunIcon className="size-4" />
-              ) : (
-                <MoonIcon className="size-4" />
-              )}
-            </button>
           )}
           <div className="flex size-8 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background">
             {initial}

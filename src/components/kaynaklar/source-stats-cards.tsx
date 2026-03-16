@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TrendingUpIcon } from "lucide-react";
+import { GlobeIcon, TrophyIcon, BookOpenIcon, AlertTriangleIcon } from "lucide-react";
 
 interface SourceDomain {
   usagePercent: number;
@@ -43,17 +43,17 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon />
+              <GlobeIcon className="size-3" />
               Aktif
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            AI yanıtlarında referans
+            AI referans gösterdiği siteler
           </div>
           <div className="text-muted-foreground">
-            Kaynak domainler takip ediliyor
+            AI yanıtlarında markanızla birlikte referans gösterilen domain sayısı
           </div>
         </CardFooter>
       </Card>
@@ -66,7 +66,7 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon />
+              <TrophyIcon className="size-3" />
               Lider
             </Badge>
           </CardAction>
@@ -76,7 +76,7 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
             {topSource?.domain ?? "—"}
           </div>
           <div className="text-muted-foreground">
-            En yüksek kullanım oranı
+            AI yanıtlarında en sık kaynak gösterilen domain ve kullanım yüzdesi
           </div>
         </CardFooter>
       </Card>
@@ -88,15 +88,18 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
             {avgCitations.toFixed(1)}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">Ortalama</Badge>
+            <Badge variant="outline">
+              <BookOpenIcon className="size-3" />
+              Ortalama
+            </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Kaynak başına ortalama
+            Kaynak başına ortalama atıf
           </div>
           <div className="text-muted-foreground">
-            AI yanıtlarında atıf oranı
+            Her kaynak domainin AI yanıtlarında ortalama kaç kez atıf aldığı
           </div>
         </CardFooter>
       </Card>
@@ -108,15 +111,20 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
             {actionableSources}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">Kayıt</Badge>
+            <Badge variant="outline">
+              <AlertTriangleIcon className="size-3" />
+              Dikkat
+            </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Eksik kayıtlar tespit edildi
+            {actionableSources > 0
+              ? `${actionableSources} kaynakta eksiklik`
+              : "Tüm kaynaklar güncel"}
           </div>
           <div className="text-muted-foreground">
-            Dizin kaydı veya güncelleme
+            Dizin kaydı, profil güncellemesi veya içerik eklenmesi gereken kaynaklar
           </div>
         </CardFooter>
       </Card>

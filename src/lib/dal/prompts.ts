@@ -2,26 +2,53 @@ import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey, Sentiment } from "@/lib/types";
 
+export interface PlatformResult {
+  platform: PlatformKey;
+  mentioned: boolean;
+  position: string | null;
+  sentiment: Sentiment | null;
+  excerpt: string | null;
+  fullResponse: string | null;
+  citations: string[];
+}
+
 export interface PromptItemData {
   id: string;
   text: string;
   tags: string[];
+  source: string;
+  category: string | null;
   visibility: number;
   position: string;
   sentiment: Sentiment;
   topCompetitor: string;
   modelResults: Record<PlatformKey, boolean>;
+  platformResults: PlatformResult[];
+  createdAt: string;
 }
 
 export const getPromptsData = cache(async (brandId: string) => {
+  // Get latest completed scan for this brand
+  const latestScan = await prisma.scan.findFirst({
+    where: { brandId, status: "completed" },
+    orderBy: { completedAt: "desc" },
+    select: { id: true },
+  });
+
   const prompts = await prisma.prompt.findMany({
     where: { brandId, isActive: true },
     include: {
-      results: {
-        orderBy: { createdAt: "desc" },
-        take: 4, // one per platform from latest scan
-      },
+      results: latestScan
+        ? {
+            where: { scanId: latestScan.id },
+            orderBy: { createdAt: "desc" },
+          }
+        : {
+            orderBy: { createdAt: "desc" },
+            take: 4,
+          },
     },
+    orderBy: { createdAt: "desc" },
   });
 
   const promptItems: PromptItemData[] = prompts.map((p) => {
@@ -31,12 +58,24 @@ export const getPromptsData = cache(async (brandId: string) => {
       gemini: false,
       perplexity: false,
     };
+    const platformResults: PlatformResult[] = [];
     let bestPosition = "—";
     let sentiment: Sentiment = "nötr";
     let mentionCount = 0;
 
     for (const r of p.results) {
       const plat = r.platform as PlatformKey;
+      const result: PlatformResult = {
+        platform: plat,
+        mentioned: r.mentioned,
+        position: r.position,
+        sentiment: (r.sentiment as Sentiment) ?? null,
+        excerpt: r.excerpt,
+        fullResponse: r.fullResponse ?? null,
+        citations: Array.isArray(r.citations) ? (r.citations as string[]) : [],
+      };
+      platformResults.push(result);
+
       if (r.mentioned) {
         modelResults[plat] = true;
         mentionCount++;
@@ -49,11 +88,15 @@ export const getPromptsData = cache(async (brandId: string) => {
       id: p.id,
       text: p.text,
       tags: p.tags,
+      source: p.source,
+      category: p.category,
       visibility: Math.round((mentionCount / 4) * 100),
       position: bestPosition,
       sentiment,
       topCompetitor: "—",
       modelResults,
+      platformResults,
+      createdAt: p.createdAt.toISOString(),
     };
   });
 
@@ -65,5 +108,25 @@ export const getPromptsData = cache(async (brandId: string) => {
   const activeCount = prompts.length;
   const suggestedCount = suggested.length;
 
-  return { promptItems, suggested, activeCount, suggestedCount };
+  // Category breakdown
+  const categoryBreakdown: Record<string, number> = {};
+  for (const p of prompts) {
+    const cat = p.category ?? "genel";
+    categoryBreakdown[cat] = (categoryBreakdown[cat] ?? 0) + 1;
+  }
+
+  // Source breakdown
+  const sourceBreakdown: Record<string, number> = {};
+  for (const p of prompts) {
+    sourceBreakdown[p.source] = (sourceBreakdown[p.source] ?? 0) + 1;
+  }
+
+  return {
+    promptItems,
+    suggested,
+    activeCount,
+    suggestedCount,
+    categoryBreakdown,
+    sourceBreakdown,
+  };
 });

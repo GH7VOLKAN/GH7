@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { getLastScanInfo } from "@/lib/dal/scans";
 import { getNotifications } from "@/lib/dal/notifications";
+import { getChecklistSummary } from "@/lib/dal/checklist";
 import { redirect } from "next/navigation";
 
 // Dashboard is always dynamic — requires auth + DB
@@ -18,15 +19,17 @@ export default async function DashboardLayout({
   const activeBrand = await getActiveBrand();
   const brandId = activeBrand?.brand?.id;
   const brandType = (activeBrand?.brand?.type as "firma" | "kisisel") ?? "firma";
+  const plan = activeBrand?.plan ?? "free";
 
   // Redirect to onboarding if user has no brand yet
   if (!brandId && activeBrand?.profile) {
     redirect("/onboard");
   }
 
-  const [scanInfo, notifData] = await Promise.all([
+  const [scanInfo, notifData, checklistSummary] = await Promise.all([
     brandId ? getLastScanInfo(brandId) : null,
     brandId ? getNotifications(brandId) : null,
+    brandId ? getChecklistSummary(brandId) : null,
   ]);
 
   return (
@@ -41,9 +44,11 @@ export default async function DashboardLayout({
       <AppSidebar
         variant="inset"
         brandType={brandType}
+        plan={plan}
+        checklistSummary={checklistSummary}
         user={
           user
-            ? { name: user.fullName, email: user.email }
+            ? { name: user.fullName, email: user.email, avatarUrl: user.avatarUrl }
             : { name: "Demo", email: "demo@gh7.ai" }
         }
       />

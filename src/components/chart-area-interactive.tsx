@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -45,12 +45,12 @@ const chartConfig = {
     label: "Skorlar",
   },
   bahsedilme: {
-    label: "AI Bahsedilme",
-    color: "var(--primary)",
+    label: "Gorunurluk",
+    color: "hsl(142, 71%, 45%)",
   },
   hazirlik: {
-    label: "Site Hazırlık",
-    color: "var(--primary)",
+    label: "Site Hazirlik",
+    color: "hsl(221, 83%, 53%)",
   },
 } satisfies ChartConfig;
 
@@ -83,12 +83,12 @@ export function ChartAreaInteractive({
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Skor Trendi</CardTitle>
+        <CardTitle>Haftalik Gelisim</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            AI Bahsedilme ve Site Hazırlık skorlarının haftalık trendi
+            Yapay zekadaki gorunurlugunuz ve site hazirliginiz nasil degisiyor
           </span>
-          <span className="@[540px]/card:hidden">Haftalık trend</span>
+          <span className="@[540px]/card:hidden">Haftalik gelisim</span>
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -144,24 +144,24 @@ export function ChartAreaInteractive({
                 <stop
                   offset="5%"
                   stopColor="var(--color-bahsedilme)"
-                  stopOpacity={1.0}
+                  stopOpacity={0.3}
                 />
                 <stop
                   offset="95%"
                   stopColor="var(--color-bahsedilme)"
-                  stopOpacity={0.1}
+                  stopOpacity={0.05}
                 />
               </linearGradient>
               <linearGradient id="fillHazirlik" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="var(--color-hazirlik)"
-                  stopOpacity={0.8}
+                  stopOpacity={0.3}
                 />
                 <stop
                   offset="95%"
                   stopColor="var(--color-hazirlik)"
-                  stopOpacity={0.1}
+                  stopOpacity={0.05}
                 />
               </linearGradient>
             </defs>
@@ -180,6 +180,14 @@ export function ChartAreaInteractive({
                 });
               }}
             />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              domain={[0, 100]}
+              tickFormatter={(value) => `${value}`}
+              width={30}
+            />
             <ChartTooltip
               cursor={false}
               content={
@@ -195,18 +203,18 @@ export function ChartAreaInteractive({
               }
             />
             <Area
-              dataKey="hazirlik"
-              type="natural"
-              fill="url(#fillHazirlik)"
-              stroke="var(--color-hazirlik)"
-              stackId="a"
-            />
-            <Area
               dataKey="bahsedilme"
-              type="natural"
+              type="monotone"
               fill="url(#fillBahsedilme)"
               stroke="var(--color-bahsedilme)"
-              stackId="a"
+              strokeWidth={2}
+            />
+            <Area
+              dataKey="hazirlik"
+              type="monotone"
+              fill="url(#fillHazirlik)"
+              stroke="var(--color-hazirlik)"
+              strokeWidth={2}
             />
           </AreaChart>
         </ChartContainer>

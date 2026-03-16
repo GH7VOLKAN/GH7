@@ -21,8 +21,21 @@ export class GoogleProvider implements AIProvider {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const result = await model.generateContent(promptText);
+      const model = this.genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+      });
+
+      // Wrap with timeout since Google SDK doesn't have built-in timeout
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Gemini API timeout (30s)")), 30_000)
+      );
+
+      const result = await Promise.race([
+        model.generateContent(promptText),
+        timeoutPromise,
+      ]);
+
       const content = result.response.text();
 
       return { platform: "gemini", content };

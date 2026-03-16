@@ -1,6 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import {
+  MessageSquareTextIcon,
+  RotateCcwIcon,
+  ShareIcon,
+  CheckCircle2Icon,
+  XCircleIcon,
+  ZapIcon,
+  RepeatIcon,
+  UsersIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import type { FreeToolMode, FreeToolResult } from "@/lib/free-tool/types";
 import { runFreeToolQuery } from "@/lib/free-tool/action";
 import { ScoreRing } from "./score-ring";
@@ -32,7 +43,7 @@ export function FreeToolWidget() {
         setResult(res);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Bir hata oluştu. Tekrar deneyin."
+          err instanceof Error ? err.message : "Bir hata oluştu. Tekrar deneyin.",
         );
       }
     });
@@ -45,6 +56,9 @@ export function FreeToolWidget() {
     setCity("");
     setError(null);
   }
+
+  const foundCount = result?.platforms.filter((p) => p.found).length ?? 0;
+  const totalCount = result?.platforms.length ?? 0;
 
   return (
     <div>
@@ -93,7 +107,9 @@ export function FreeToolWidget() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={mode === "kisisel" ? "Ahmet Yılmaz" : "Acme Teknoloji"}
+              placeholder={
+                mode === "kisisel" ? "Ahmet Yılmaz" : "Acme Teknoloji"
+              }
               required
               className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
             />
@@ -144,9 +160,24 @@ export function FreeToolWidget() {
           >
             {isPending ? (
               <span className="flex items-center justify-center gap-2">
-                <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                <svg
+                  className="size-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
                 AI platformları taranıyor...
               </span>
@@ -159,13 +190,47 @@ export function FreeToolWidget() {
 
       {/* Results */}
       {result && (
-        <div className="mx-auto max-w-2xl space-y-8">
+        <div className="mx-auto max-w-3xl space-y-10">
           {/* Score Ring */}
           <ScoreRing
             score={result.overallScore}
             label={result.scoreLabel}
             sectorAverage={result.sectorAverage}
           />
+
+          {/* Quick summary */}
+          <div className="mx-auto flex max-w-md items-center justify-center gap-6 rounded-xl border border-border bg-card px-6 py-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2Icon className="size-4 text-emerald-500" />
+              <span className="text-sm">
+                <span className="font-bold">{foundCount}</span>{" "}
+                <span className="text-muted-foreground">platform tanıyor</span>
+              </span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-2">
+              <XCircleIcon className="size-4 text-red-400" />
+              <span className="text-sm">
+                <span className="font-bold">{totalCount - foundCount}</span>{" "}
+                <span className="text-muted-foreground">tanımıyor</span>
+              </span>
+            </div>
+          </div>
+
+          {/* What we asked */}
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <MessageSquareTextIcon className="size-4 text-muted-foreground" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                AI Platformlarına Sorduğumuz Soru
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-card px-5 py-4">
+              <p className="text-sm italic leading-relaxed text-foreground/70">
+                &ldquo;{result.promptUsed}&rdquo;
+              </p>
+            </div>
+          </div>
 
           {/* Platform cards */}
           <div>
@@ -182,6 +247,53 @@ export function FreeToolWidget() {
           {/* Free Insights */}
           <FreeInsights insights={result.freeInsights} />
 
+          {/* Pro comparison banner */}
+          <div className="rounded-xl border border-dashed border-foreground/15 bg-foreground/[0.02] p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/5">
+                <ZapIcon className="size-4 text-foreground/60" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">
+                  Bu ücretsiz test, 1 prompt ile anlık bir görüntüdür
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                  Pro ile aynı analiz çok daha kapsamlı yapılır:
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <div className="flex items-center gap-2 text-[13px] text-foreground/70">
+                    <RepeatIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>
+                      <span className="font-medium">200 farklı prompt</span> ile
+                      derinlemesine analiz
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[13px] text-foreground/70">
+                    <TrendingUpIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>
+                      <span className="font-medium">Haftada 3</span> otomatik
+                      tarama
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[13px] text-foreground/70">
+                    <UsersIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>
+                      <span className="font-medium">Rakiplerinizin</span> de
+                      aynı detayda analizi
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[13px] text-foreground/70">
+                    <ZapIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>
+                      Kaynak analizi, SEO önerileri,{" "}
+                      <span className="font-medium">aksiyon planı</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Blurred upsell */}
           <BlurredUpsell result={result} />
 
@@ -190,8 +302,9 @@ export function FreeToolWidget() {
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
+              <RotateCcwIcon className="size-4" />
               Tekrar Dene
             </button>
             <button
@@ -205,9 +318,7 @@ export function FreeToolWidget() {
               }}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-              </svg>
+              <ShareIcon className="size-4" />
               Sonucu Paylaş
             </button>
           </div>

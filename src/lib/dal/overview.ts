@@ -2,6 +2,18 @@ import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey, Sentiment } from "@/lib/types";
 
+export interface RecentMention {
+  id: string;
+  platform: PlatformKey;
+  timeAgo: string;
+  prompt: string;
+  excerpt: string;
+  position: string;
+  sentiment: Sentiment;
+  citations: string[];
+  scanDate: string;
+}
+
 export interface DashboardOverview {
   mentionScore: number;
   mentionTrend: number;
@@ -9,14 +21,11 @@ export interface DashboardOverview {
   readinessTrend: number;
   activePromptCount: number;
   totalSourceCount: number;
-  recentMentions: {
-    platform: PlatformKey;
-    timeAgo: string;
-    prompt: string;
-    excerpt: string;
-    position: string;
-    sentiment: Sentiment;
-  }[];
+  lastScanDate: string | null;
+  lastScanTimeAgo: string | null;
+  totalMentionCount: number;
+  totalResultCount: number;
+  recentMentions: RecentMention[];
   visibilityData: {
     name: string;
     isUser: boolean;
@@ -24,6 +33,8 @@ export interface DashboardOverview {
   }[];
   priorityActions: { title: string; impact: string }[];
   scoreHistory: { date: string; mentionScore: number; readinessScore: number }[];
+  topCompetitorName: string | null;
+  topCompetitorGap: number;
 }
 
 export const getOverviewData = cache(async (brandId: string): Promise<DashboardOverview> => {
@@ -58,21 +69,38 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     orderBy: { completedAt: "desc" },
   });
 
-  let recentMentions: DashboardOverview["recentMentions"] = [];
+  const lastScanDate = latestScan?.completedAt?.toISOString() ?? null;
+  const lastScanTimeAgo = latestScan?.completedAt ? getTimeAgo(latestScan.completedAt) : null;
+
+  let recentMentions: RecentMention[] = [];
+  let totalMentionCount = 0;
+  let totalResultCount = 0;
+
   if (latestScan) {
+    const allResults = await prisma.promptResult.findMany({
+      where: { scanId: latestScan.id },
+    });
+    totalResultCount = allResults.length;
+    totalMentionCount = allResults.filter((r) => r.mentioned).length;
+
     const results = await prisma.promptResult.findMany({
       where: { scanId: latestScan.id, mentioned: true },
       include: { prompt: true },
       orderBy: { createdAt: "desc" },
-      take: 5,
+      take: 10,
     });
+    const scanDate = latestScan.completedAt?.toISOString().split("T")[0] ?? "";
+
     recentMentions = results.map((r) => ({
+      id: r.id,
       platform: r.platform as PlatformKey,
       timeAgo: getTimeAgo(r.createdAt),
       prompt: r.prompt.text,
       excerpt: r.excerpt ?? "",
       position: r.position ?? "bahsediliyor",
       sentiment: (r.sentiment ?? "nötr") as Sentiment,
+      citations: Array.isArray(r.citations) ? (r.citations as string[]) : [],
+      scanDate,
     }));
   }
 
@@ -120,6 +148,11 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     readinessScore: h.readinessScore,
   }));
 
+  // Top competitor for overview cards
+  const topCompetitor = competitors.sort((a, b) => b.mentionScore - a.mentionScore)[0] ?? null;
+  const topCompetitorName = topCompetitor?.name ?? null;
+  const topCompetitorGap = topCompetitor ? topCompetitor.mentionScore - mentionScore : 0;
+
   return {
     mentionScore,
     mentionTrend,
@@ -127,10 +160,16 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     readinessTrend,
     activePromptCount,
     totalSourceCount,
+    lastScanDate,
+    lastScanTimeAgo,
+    totalMentionCount,
+    totalResultCount,
     recentMentions,
     visibilityData,
     priorityActions,
     scoreHistory,
+    topCompetitorName,
+    topCompetitorGap,
   };
 });
 
@@ -138,7 +177,7 @@ function getTimeAgo(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return `${diffMin} dakika önce`;
+  if (diffMin < 60) return `${diffMin} dk önce`;
   const diffHr = Math.floor(diffMin / 60);
   if (diffHr < 24) return `${diffHr} saat önce`;
   const diffDay = Math.floor(diffHr / 24);

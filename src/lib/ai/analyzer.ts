@@ -1,6 +1,98 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AnalysisResult } from "./types";
 
+// Reuse Anthropic client across analysis calls
+let _analyzerClient: Anthropic | null = null;
+function getAnalyzerClient(apiKey: string): Anthropic {
+  if (!_analyzerClient) {
+    _analyzerClient = new Anthropic({ apiKey, timeout: 15_000 });
+  }
+  return _analyzerClient;
+}
+
+// ── Turkish character normalization ──────────────────
+// Fixes: "Isıtmax" vs "ISITMAX" — Turkish ı/i and İ/I don't match with simple toLowerCase()
+function normalizeTurkish(text: string): string {
+  return text
+    .replace(/İ/g, "I")
+    .replace(/ı/g, "i")
+    .replace(/Ş/g, "S")
+    .replace(/ş/g, "s")
+    .replace(/Ğ/g, "G")
+    .replace(/ğ/g, "g")
+    .replace(/Ü/g, "U")
+    .replace(/ü/g, "u")
+    .replace(/Ö/g, "O")
+    .replace(/ö/g, "o")
+    .replace(/Ç/g, "C")
+    .replace(/ç/g, "c")
+    .toLowerCase();
+}
+
+// ── Regex-based position detection ───────────────────
+// Detects numbered lists (1. Brand, 2. Brand) and bold headers (**Brand**)
+// More reliable than LLM for position detection
+function detectPositionFromText(
+  rawText: string,
+  brandName: string,
+): string | null {
+  const normBrand = normalizeTurkish(brandName);
+  const lines = rawText.split("\n");
+
+  // Pattern 1: Numbered list — "1. Brand", "1) Brand", "1- Brand"
+  for (const line of lines) {
+    const normLine = normalizeTurkish(line);
+    if (!normLine.includes(normBrand)) continue;
+
+    const numMatch = line.trim().match(/^(\d+)\s*[.):\-–]\s/);
+    if (numMatch) {
+      const n = parseInt(numMatch[1]);
+      if (n === 1) return "1. sıra";
+      if (n === 2) return "2. sıra";
+      if (n === 3) return "3. sıra";
+      return "bahsediliyor";
+    }
+  }
+
+  // Pattern 2: Bold headers — **Brand** or **Brand:** in a list
+  const boldPattern = /\*\*([^*]+)\*\*/g;
+  const boldItems: string[] = [];
+  let match;
+  while ((match = boldPattern.exec(rawText)) !== null) {
+    boldItems.push(match[1]);
+  }
+
+  for (let i = 0; i < boldItems.length; i++) {
+    if (normalizeTurkish(boldItems[i]).includes(normBrand)) {
+      if (i === 0) return "1. sıra";
+      if (i === 1) return "2. sıra";
+      if (i === 2) return "3. sıra";
+      return "bahsediliyor";
+    }
+  }
+
+  // Pattern 3: Comma-separated list after keywords
+  // "öne çıkan firmalar: Brand1, Brand2, Brand3"
+  const listKeywords =
+    /(?:şunlardır|bunlardır|firmalar|şirketler|isimler|önerilerim|tavsiyelerim|arasında)\s*[:\s]+/gi;
+  let keyMatch;
+  while ((keyMatch = listKeywords.exec(rawText)) !== null) {
+    const afterKeyword = rawText.slice(keyMatch.index! + keyMatch[0].length);
+    // Get the first sentence/clause
+    const clause = afterKeyword.split(/[.!?\n]/)[0] ?? "";
+    const items = clause.split(/[,;]/);
+    for (let i = 0; i < items.length && i < 3; i++) {
+      if (normalizeTurkish(items[i]).includes(normBrand)) {
+        if (i === 0) return "1. sıra";
+        if (i === 1) return "2. sıra";
+        if (i === 2) return "3. sıra";
+      }
+    }
+  }
+
+  return null;
+}
+
 const SYSTEM_PROMPT = `Sen bir marka bahsedilme analizcisisin. Bir AI platformunun verdiği yanıtı analiz edip markanın nasıl bahsedildiğini belirle.
 
 JSON formatında yanıt ver (başka bir şey yazma):
@@ -13,23 +105,25 @@ JSON formatında yanıt ver (başka bir şey yazma):
 }
 
 Kurallar:
-- "1. sıra": Marka ilk önerilen veya ilk bahsedilen
-- "2. sıra": İkinci sırada
-- "3. sıra": Üçüncü sırada
-- "bahsediliyor": Sıralı listede değil ama bahsediliyor
+- "1. sıra": Marka yanıtta İLK önerilen, ilk listelenen veya ilk bahsedilen ise. Numaralı liste (1., 2., 3.) veya sıralı bahsetme fark etmez — ilk sırada ise "1. sıra".
+- "2. sıra": Yanıtta İKİNCİ sırada önerilen veya bahsedilen
+- "3. sıra": Yanıtta ÜÇÜNCÜ sırada önerilen veya bahsedilen
+- "bahsediliyor": Listede sırası belirlenemiyorsa ama bir şekilde bahsediliyor
 - position null: Hiç bahsedilmiyorsa
-- citations: Yanıtta URL varsa listele, yoksa boş array`;
+- citations: Yanıtta URL varsa listele, yoksa boş array
+- ÖNEMLİ: Marka adı büyük-küçük harf veya Türkçe karakter farkıyla yazılmış olabilir (ör: "Isıtmax" = "ISITMAX"). Bu durumlar "bahsediliyor" sayılır.
+- ÖNEMLİ: Listeleme formatı farklı olabilir: numaralı (1. Marka), madde işaretli (• Marka), kalın (Marka:), virgülle ayrılmış (Marka1, Marka2). Hepsinde sırayı belirle.`;
 
 export async function analyzeResponse(
   rawResponse: string,
   brandName: string,
   _promptText: string,
 ): Promise<AnalysisResult> {
-  // Stage 1: Quick regex pre-check
-  const lowerResponse = rawResponse.toLowerCase();
-  const lowerBrand = brandName.toLowerCase();
+  // Stage 1: Quick regex pre-check with Turkish normalization
+  const normalizedResponse = normalizeTurkish(rawResponse);
+  const normalizedBrand = normalizeTurkish(brandName);
 
-  if (!lowerResponse.includes(lowerBrand)) {
+  if (!normalizedResponse.includes(normalizedBrand)) {
     return {
       mentioned: false,
       position: null,
@@ -39,14 +133,16 @@ export async function analyzeResponse(
     };
   }
 
+  // Stage 1.5: Regex-based position detection (more reliable than LLM for this)
+  const regexPosition = detectPositionFromText(rawResponse, brandName);
+
   // Stage 2: Use Claude Haiku for detailed analysis
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    // Fallback: brand name found but no API key for analysis
     const excerpt = extractExcerpt(rawResponse, brandName);
     return {
       mentioned: true,
-      position: "bahsediliyor",
+      position: regexPosition ?? "bahsediliyor",
       sentiment: "nötr",
       excerpt,
       citations: extractUrls(rawResponse),
@@ -54,7 +150,7 @@ export async function analyzeResponse(
   }
 
   try {
-    const client = new Anthropic({ apiKey });
+    const client = getAnalyzerClient(apiKey);
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 512,
@@ -74,11 +170,22 @@ export async function analyzeResponse(
 
     const parsed = JSON.parse(text) as AnalysisResult;
 
+    // Use regex position if Haiku defaults to "bahsediliyor" but regex found a clear position
+    let finalPosition = parsed.position ?? "bahsediliyor";
+    if (
+      (finalPosition === "bahsediliyor" || finalPosition === null) &&
+      regexPosition
+    ) {
+      finalPosition = regexPosition;
+    }
+
     return {
       mentioned: parsed.mentioned ?? true,
-      position: parsed.position ?? "bahsediliyor",
+      position: finalPosition,
       sentiment: parsed.sentiment ?? "nötr",
-      excerpt: parsed.excerpt?.slice(0, 200) ?? extractExcerpt(rawResponse, brandName),
+      excerpt:
+        parsed.excerpt?.slice(0, 200) ??
+        extractExcerpt(rawResponse, brandName),
       citations: [
         ...new Set([
           ...(parsed.citations ?? []),
@@ -90,7 +197,7 @@ export async function analyzeResponse(
     // Fallback if analysis fails
     return {
       mentioned: true,
-      position: "bahsediliyor",
+      position: regexPosition ?? "bahsediliyor",
       sentiment: "nötr",
       excerpt: extractExcerpt(rawResponse, brandName),
       citations: extractUrls(rawResponse),
@@ -99,11 +206,18 @@ export async function analyzeResponse(
 }
 
 function extractExcerpt(text: string, brandName: string): string {
-  const idx = text.toLowerCase().indexOf(brandName.toLowerCase());
-  if (idx === -1) return text.slice(0, 200);
-  const start = Math.max(0, idx - 50);
-  const end = Math.min(text.length, idx + brandName.length + 150);
-  return (start > 0 ? "..." : "") + text.slice(start, end) + (end < text.length ? "..." : "");
+  // Use Turkish-normalized search to find the brand mention
+  const normalizedText = normalizeTurkish(text);
+  const normalizedName = normalizeTurkish(brandName);
+  const idx = normalizedText.indexOf(normalizedName);
+  if (idx === -1) return text.slice(0, 400);
+  const start = Math.max(0, idx - 60);
+  const end = Math.min(text.length, idx + brandName.length + 300);
+  return (
+    (start > 0 ? "..." : "") +
+    text.slice(start, end) +
+    (end < text.length ? "..." : "")
+  );
 }
 
 function extractUrls(text: string): string[] {

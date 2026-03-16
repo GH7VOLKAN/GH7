@@ -3,6 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
+import { generateSmartPrompts } from "@/lib/ai/prompt-generator";
+import { runSiteAudit } from "@/lib/ai/site-auditor";
+import { runPersonalAudit } from "@/lib/ai/personal-auditor";
+import { persistAuditResults } from "@/lib/ai/audit-persister";
+import { generateActionPlan } from "@/lib/ai/action-plan-generator";
+import { getPlanLimits, isPro } from "@/lib/plans";
+import { CHECKLIST_DEFAULTS } from "@/lib/checklist-defaults";
 
 // ─── Auth helper ────────────────────────────────────────
 async function getAuthenticatedBrand(brandId: string) {
@@ -26,6 +33,10 @@ export async function createBrand(data: {
   domain: string;
   sector: string;
   type: "firma" | "kisisel";
+  city?: string;
+  profession?: string;
+  specialties?: string[];
+  competitorNames?: string[];
 }) {
   const supabase = await createClient();
   const {
@@ -36,9 +47,17 @@ export async function createBrand(data: {
   if (!data.name.trim()) throw new Error("Marka adı gerekli");
   if (!data.domain.trim()) throw new Error("Domain gerekli");
 
+  // Get user's plan for prompt limits
+  const profile = await prisma.profile.findUnique({ where: { id: user.id } });
+  const plan = profile?.plan ?? "free";
+  const limits = getPlanLimits(plan);
+
   const brandName = data.name.trim();
   const sectorName = data.sector.trim() || null;
-  const isFirma = data.type === "firma";
+  const cityName = data.city?.trim() || null;
+  const profession = data.profession?.trim() || null;
+  const specialties = data.specialties?.filter((s) => s.trim()) ?? [];
+  const competitorNames = data.competitorNames?.filter((c) => c.trim()) ?? [];
 
   const brand = await prisma.brand.create({
     data: {
@@ -46,97 +65,177 @@ export async function createBrand(data: {
       name: brandName,
       domain: data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, ""),
       sector: sectorName,
+      city: cityName,
+      profession,
+      specialties,
+      competitorNames,
       type: data.type,
       isDefault: true,
       autoScan: true,
-      scanInterval: "daily",
+      scanInterval: "thrice_weekly",
     },
   });
 
-  // Generate default prompts based on brand name, sector, and type
-  const defaultPrompts = generateDefaultPrompts(brandName, sectorName, isFirma);
+  // Smart prompt generation using DataForSEO + Sonar + Claude
+  const promptCount = limits.maxPrompts;
 
-  await prisma.prompt.createMany({
-    data: defaultPrompts.map((p) => ({
-      brandId: brand.id,
-      text: p.text,
-      tags: p.tags,
-      isActive: true,
-    })),
-  });
+  try {
+    const smartPrompts = await generateSmartPrompts(
+      {
+        name: brandName,
+        domain: brand.domain,
+        sector: sectorName,
+        city: cityName,
+        type: data.type,
+        profession,
+        specialties,
+        competitorNames,
+      },
+      promptCount,
+    );
 
-  // Generate suggested prompts
-  const suggestedPrompts = generateSuggestedPrompts(brandName, sectorName, isFirma);
-
-  if (suggestedPrompts.length > 0) {
-    await prisma.suggestedPrompt.createMany({
-      data: suggestedPrompts.map((s) => ({
+    if (smartPrompts.length > 0) {
+      await prisma.prompt.createMany({
+        data: smartPrompts.map((p) => ({
+          brandId: brand.id,
+          text: p.text,
+          tags: p.tags,
+          source: p.source,
+          category: p.category,
+          isActive: true,
+        })),
+      });
+    } else {
+      // Fallback: generate basic prompts if smart generation fails
+      const fallbackPrompts = generateFallbackPrompts(brandName, sectorName, data.type === "firma", promptCount);
+      await prisma.prompt.createMany({
+        data: fallbackPrompts.map((p) => ({
+          brandId: brand.id,
+          text: p.text,
+          tags: p.tags,
+          source: "ai_generated",
+          isActive: true,
+        })),
+      });
+    }
+  } catch (err) {
+    console.error("[createBrand] Smart prompt generation failed, using fallback:", err);
+    const fallbackPrompts = generateFallbackPrompts(brandName, sectorName, data.type === "firma", promptCount);
+    await prisma.prompt.createMany({
+      data: fallbackPrompts.map((p) => ({
         brandId: brand.id,
-        text: s.text,
-        volume: s.volume,
+        text: p.text,
+        tags: p.tags,
+        source: "ai_generated",
+        isActive: true,
       })),
     });
+  }
+
+  // Checklist items seed (Gelişim Planı)
+  try {
+    const isFree = plan === "free";
+    await prisma.checklistItem.createMany({
+      data: CHECKLIST_DEFAULTS.map((d) => ({
+        brandId: brand.id,
+        layer: d.layer,
+        itemNumber: d.itemNumber,
+        simpleTitle: d.simpleTitle,
+        simpleDescription: d.simpleDescription,
+        status: isFree && d.layer === 3 ? "locked" : "missing",
+        difficulty: d.difficulty,
+        impact: d.impact,
+        estimatedTime: d.estimatedTime,
+        technicalDetail: JSON.parse(JSON.stringify(d.technicalDetail)),
+        selfServiceSteps: d.selfServiceSteps,
+        canAgencyDo: d.canAgencyDo,
+        agencyPrice: d.agencyPrice,
+      })),
+    });
+  } catch (checklistErr) {
+    console.error("[createBrand] Checklist seed failed (non-fatal):", checklistErr);
+  }
+
+  // Pro+ kullanicilar icin audit + action plan (non-fatal, background)
+  if (isPro(plan)) {
+    // Fire and forget — onboarding'i yavaslamamasi icin
+    (async () => {
+      try {
+        const auditResult = data.type === "kisisel"
+          ? await runPersonalAudit({
+              name: brandName,
+              domain: brand.domain,
+              profession,
+              city: cityName,
+              sector: sectorName,
+              specialties,
+            })
+          : await runSiteAudit(brand.domain);
+
+        await persistAuditResults(brand.id, auditResult);
+
+        await generateActionPlan(
+          {
+            id: brand.id,
+            name: brandName,
+            domain: brand.domain,
+            type: data.type,
+            sector: sectorName,
+            city: cityName,
+            profession,
+            specialties,
+          },
+          auditResult,
+          0, // initial mentionScore = 0
+        );
+      } catch (auditErr) {
+        console.error("[createBrand] Audit/action plan failed (non-fatal):", auditErr);
+      }
+    })();
   }
 
   revalidatePath("/dashboard", "layout");
   return { success: true, brandId: brand.id };
 }
 
-function generateDefaultPrompts(
+function generateFallbackPrompts(
   brandName: string,
   sector: string | null,
   isFirma: boolean,
+  maxCount: number,
 ): { text: string; tags: string[] }[] {
   if (isFirma) {
     const base = [
-      { text: `${brandName} hakkinda ne biliyorsun?`, tags: ["marka", "taninirlik"] },
-      { text: `${brandName} nasil bir firma?`, tags: ["marka", "genel"] },
-      { text: `En iyi ${sector || brandName} firmalari hangileri?`, tags: ["marka", "karsilastirma"] },
-      { text: `${brandName} guvenilir mi?`, tags: ["marka", "guven"] },
-      { text: `${brandName} musteri yorumlari nasil?`, tags: ["marka", "yorum"] },
+      { text: `${brandName} hakkında ne biliyorsun?`, tags: ["marka", "tanınırlık"] },
+      { text: `${brandName} nasıl bir firma?`, tags: ["marka", "genel"] },
+      { text: `En iyi ${sector || brandName} firmaları hangileri?`, tags: ["marka", "karşılaştırma"] },
+      { text: `${brandName} güvenilir mi?`, tags: ["marka", "güven"] },
+      { text: `${brandName} müşteri yorumları nasıl?`, tags: ["marka", "yorum"] },
+      { text: `${brandName} marka analizi`, tags: ["marka", "analiz"] },
     ];
 
     if (sector) {
       base.push(
-        { text: `${sector} sektorunde en iyi firmalar`, tags: ["sektor", "karsilastirma"] },
-        { text: `${sector} fiyatlari 2026`, tags: ["sektor", "fiyat"] },
-        { text: `${sector} tavsiyeleri`, tags: ["sektor", "tavsiye"] },
+        { text: `${sector} sektöründe en iyi firmalar`, tags: ["sektör", "karşılaştırma"] },
+        { text: `${sector} fiyatları 2026`, tags: ["sektör", "fiyat"] },
+        { text: `${sector} tavsiyeleri`, tags: ["sektör", "tavsiye"] },
+        { text: `${brandName} ${sector} hizmetleri`, tags: ["marka", "ürün"] },
       );
     }
 
-    return base;
+    return base.slice(0, maxCount);
   }
 
-  // Kisisel marka
-  return [
-    { text: `${brandName} kimdir?`, tags: ["kisisel", "taninirlik"] },
-    { text: `${brandName} hakkinda ne biliyorsun?`, tags: ["kisisel", "genel"] },
-    { text: `${brandName} ne is yapar?`, tags: ["kisisel", "uzmanlik"] },
-    { text: `${brandName} nerede calisir?`, tags: ["kisisel", "kariyer"] },
-    { text: `${brandName} basarilari nelerdir?`, tags: ["kisisel", "basari"] },
+  // Kişisel marka
+  const personal = [
+    { text: `${brandName} kimdir?`, tags: ["kişisel", "tanınırlık"] },
+    { text: `${brandName} hakkında ne biliyorsun?`, tags: ["kişisel", "genel"] },
+    { text: `${brandName} ne iş yapar?`, tags: ["kişisel", "uzmanlık"] },
+    { text: `${brandName} nerede çalışır?`, tags: ["kişisel", "kariyer"] },
+    { text: `${brandName} başarıları nelerdir?`, tags: ["kişisel", "başarı"] },
   ];
-}
 
-function generateSuggestedPrompts(
-  brandName: string,
-  sector: string | null,
-  isFirma: boolean,
-): { text: string; volume: number }[] {
-  if (!sector) return [];
-
-  if (isFirma) {
-    return [
-      { text: `${sector} nasil secilir?`, volume: 4 },
-      { text: `${sector} avantajlari dezavantajlari`, volume: 3 },
-      { text: `${sector} maliyeti ne kadar?`, volume: 3 },
-      { text: `${brandName} ile rakipleri arasindaki farklar`, volume: 2 },
-    ];
-  }
-
-  return [
-    { text: `${sector} alaninda en iyi uzmanlar`, volume: 3 },
-    { text: `${brandName} ile ilgili haberler`, volume: 2 },
-  ];
+  return personal.slice(0, maxCount);
 }
 
 // ─── Settings ───────────────────────────────────────────
@@ -262,7 +361,7 @@ export async function createActionFromAuditCheck(
 // ─── Competitors ────────────────────────────────────────
 export async function addCompetitor(
   brandId: string,
-  data: { name: string; domain: string },
+  data: { name: string; domain: string; reason?: string },
 ) {
   await getAuthenticatedBrand(brandId);
 
@@ -276,6 +375,10 @@ export async function addCompetitor(
       mentionScore: 0,
       readinessScore: 0,
       platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0 },
+      source: "manual",
+      reason: data.reason?.trim() ?? null,
+      products: [],
+      relevance: "direct",
     },
   });
 
@@ -360,6 +463,77 @@ export async function updateScanSchedule(
   return { success: true };
 }
 
+// ─── Brand Management ──────────────────────────────────
+export async function deleteBrand(brandId: string) {
+  const { user } = await getAuthenticatedBrand(brandId);
+
+  const brandCount = await prisma.brand.count({
+    where: { profileId: user.id },
+  });
+  if (brandCount <= 1) {
+    throw new Error("Son markanızı silemezsiniz");
+  }
+
+  const brand = await prisma.brand.findUnique({ where: { id: brandId } });
+  if (brand?.isDefault) {
+    const other = await prisma.brand.findFirst({
+      where: { profileId: user.id, id: { not: brandId } },
+    });
+    if (other) {
+      await prisma.brand.update({
+        where: { id: other.id },
+        data: { isDefault: true },
+      });
+    }
+  }
+
+  await prisma.brand.delete({ where: { id: brandId } });
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function setDefaultBrand(brandId: string) {
+  const { user } = await getAuthenticatedBrand(brandId);
+
+  await prisma.brand.updateMany({
+    where: { profileId: user.id },
+    data: { isDefault: false },
+  });
+
+  await prisma.brand.update({
+    where: { id: brandId },
+    data: { isDefault: true },
+  });
+
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function activateTestPlan(plan: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const validPlans = ["pro", "business", "agency"] as const;
+  if (!validPlans.includes(plan as (typeof validPlans)[number])) {
+    throw new Error("Invalid plan");
+  }
+
+  try {
+    const { activatePlan } = await import("@/lib/iyzico/activate-plan");
+    await activatePlan(user.id, plan as "pro" | "business" | "agency", "yearly");
+    console.log(`[activateTestPlan] SUCCESS: ${user.id} → ${plan}`);
+  } catch (err) {
+    console.error(`[activateTestPlan] FAILED:`, err);
+    throw err;
+  }
+
+  revalidatePath("/dashboard", "layout");
+  return { success: true, plan };
+}
+
 // ─── Notification Preferences ───────────────────────────
 export async function updateNotificationPreferences(data: {
   phone: string;
@@ -380,5 +554,71 @@ export async function updateNotificationPreferences(data: {
   });
 
   revalidatePath("/dashboard/ayarlar");
+  return { success: true };
+}
+
+// ─── Checklist (Gelişim Planı) ──────────────────────────
+
+export async function seedChecklistItems(brandId: string, plan: string = "free") {
+  const { brand } = await getAuthenticatedBrand(brandId);
+
+  // Check if already seeded
+  const existing = await prisma.checklistItem.count({ where: { brandId } });
+  if (existing > 0) return { success: true, alreadySeeded: true };
+
+  const isFree = plan === "free";
+
+  await prisma.checklistItem.createMany({
+    data: CHECKLIST_DEFAULTS.map((d) => ({
+      brandId: brand.id,
+      layer: d.layer,
+      itemNumber: d.itemNumber,
+      simpleTitle: d.simpleTitle,
+      simpleDescription: d.simpleDescription,
+      status: isFree && d.layer === 3 ? "locked" : "missing",
+      difficulty: d.difficulty,
+      impact: d.impact,
+      estimatedTime: d.estimatedTime,
+      technicalDetail: JSON.parse(JSON.stringify(d.technicalDetail)),
+      selfServiceSteps: d.selfServiceSteps,
+      canAgencyDo: d.canAgencyDo,
+      agencyPrice: d.agencyPrice,
+    })),
+  });
+
+  revalidatePath("/dashboard/gelisim");
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function markChecklistItemDone(
+  brandId: string,
+  itemId: string,
+) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.checklistItem.updateMany({
+    where: { id: itemId, brandId },
+    data: { status: "complete", userMarkedDone: true },
+  });
+
+  revalidatePath("/dashboard/gelisim");
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function resetChecklistItemStatus(
+  brandId: string,
+  itemId: string,
+) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.checklistItem.updateMany({
+    where: { id: itemId, brandId },
+    data: { status: "missing", userMarkedDone: false, verifiedByAI: false },
+  });
+
+  revalidatePath("/dashboard/gelisim");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }

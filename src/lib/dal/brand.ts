@@ -39,8 +39,8 @@ export const getActiveBrand = cache(async () => {
   }
 
   return brand
-    ? { profile, brand }
-    : { profile, brand: null };
+    ? { profile, brand, plan: profile.plan ?? "free" }
+    : { profile, brand: null, plan: profile.plan ?? "free" };
 });
 
 /**

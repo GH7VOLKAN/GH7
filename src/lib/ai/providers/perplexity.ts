@@ -38,7 +38,9 @@ export class PerplexityProvider implements AIProvider {
           model: "sonar",
           messages: [{ role: "user", content: promptText }],
           max_tokens: 2048,
+          temperature: 0.7,
         }),
+        signal: AbortSignal.timeout(30_000),
       });
 
       if (!res.ok) {

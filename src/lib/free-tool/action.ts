@@ -91,6 +91,22 @@ function normalizeSentiment(
   return "nötr";
 }
 
+// ── Strip markdown from text ────────────────────────
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1") // **bold** → bold
+    .replace(/\*([^*]+)\*/g, "$1") // *italic* → italic
+    .replace(/#{1,6}\s+/g, "") // ## headers
+    .replace(/\[(\d+)\]/g, "") // [1] citation refs
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) → text
+    .replace(/`([^`]+)`/g, "$1") // `code` → code
+    .replace(/---+/g, "") // horizontal rules
+    .replace(/^\s*[-*+]\s+/gm, "• ") // list items
+    .replace(/^\s*\d+\.\s+/gm, "") // numbered list prefixes
+    .replace(/\n{3,}/g, "\n\n") // multiple newlines
+    .trim();
+}
+
 // ── Pro insights shape ───────────────────────────────
 interface ProInsights {
   competitors: CompetitorPreview[];
@@ -110,7 +126,7 @@ async function extractProInsights(
 
   const combinedResponses = responses
     .filter((r) => r.content)
-    .map((r) => `[${r.platform}]:\n${r.content.slice(0, 1500)}`)
+    .map((r) => `[${r.platform}]:\n${r.content.slice(0, 2000)}`)
     .join("\n\n---\n\n");
 
   if (!combinedResponses) return empty;
@@ -125,7 +141,7 @@ async function extractProInsights(
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [
         {
           role: "user",
@@ -133,13 +149,13 @@ async function extractProInsights(
 
 Bu yanıtları analiz edip aşağıdaki JSON'u döndür:
 {
-  "competitors": [{"name": "İsim", "score": 70}],
+  "competitors": [{"name": "İsim", "score": 70, "platforms": ["ChatGPT", "Claude"]}],
   "whyNotFound": ["Neden 1", "Neden 2", "Neden 3"],
   "actionItems": ["Aksiyon 1", "Aksiyon 2", "Aksiyon 3", "Aksiyon 4", "Aksiyon 5"]
 }
 
 Kurallar:
-- competitors: "${input.name}" dışında yanıtlarda bahsedilen ilk 3 alternatif ${entity}. score = tahmini AI görünürlük skoru (0-100).
+- competitors: "${input.name}" dışında yanıtlarda bahsedilen TÜM alternatif ${entity}leri listele (en fazla 10). Her biri için hangi platformlarda bahsedildiğini de belirt. score = tahmini AI görünürlük skoru (0-100). En çok bahsedilenden en az bahsedilene sırala.
 - whyNotFound: Bu ${entity}'nin ${notFoundPlatforms.length > 0 ? notFoundPlatforms.join(", ") + " tarafından" : "bazı platformlar tarafından"} neden tanınmadığına dair 3 somut neden. Örnek: "LinkedIn profili optimize edilmemiş", "Sektörel blog içeriği yok", "Google Scholar'da yayın bulunmuyor". Genel cümleler yazma, spesifik ol.
 - actionItems: AI görünürlüğünü artırmak için 5 somut aksiyon. Öncelik sırasına göre. Örnek: "Medium'da haftalık ${input.field} yazıları yayınla", "Schema.org Person markup ekle". Genel tavsiye verme, spesifik ve uygulanabilir ol.
 
@@ -163,9 +179,10 @@ ${combinedResponses}`,
     const parsed = JSON.parse(jsonMatch[0]) as ProInsights;
 
     return {
-      competitors: (parsed.competitors ?? []).slice(0, 3).map((c) => ({
+      competitors: (parsed.competitors ?? []).slice(0, 10).map((c) => ({
         name: c.name,
         score: Math.min(100, Math.max(0, Math.round(c.score))),
+        platforms: c.platforms ?? [],
       })),
       whyNotFound: (parsed.whyNotFound ?? []).slice(0, 3),
       actionItems: (parsed.actionItems ?? []).slice(0, 5),
@@ -276,11 +293,31 @@ export async function runFreeToolQuery(
     throw new Error("Hiçbir AI platformu yapılandırılmamış.");
   }
 
-  // Query all platforms in parallel
+  // Query all platforms in parallel with retry for failures
   const rawResults = await Promise.allSettled(
     providers.map(async (provider) => {
-      const response = await provider.sendPrompt(prompt);
-      return { platform: provider.platform, response };
+      try {
+        const response = await provider.sendPrompt(prompt);
+        if (!response.error && response.content) {
+          return { platform: provider.platform, response };
+        }
+        // Retry once after 2s delay
+        await new Promise((r) => setTimeout(r, 2000));
+        const retryResponse = await provider.sendPrompt(prompt);
+        return { platform: provider.platform, response: retryResponse };
+      } catch {
+        // Retry once on exception
+        try {
+          await new Promise((r) => setTimeout(r, 2000));
+          const retryResponse = await provider.sendPrompt(prompt);
+          return { platform: provider.platform, response: retryResponse };
+        } catch {
+          return {
+            platform: provider.platform,
+            response: { error: true, content: null },
+          };
+        }
+      }
     }),
   );
 
@@ -299,9 +336,12 @@ export async function runFreeToolQuery(
         label: platformLabels[platform],
         found: false,
         excerpt: `${platformLabels[platform]} şu an bu sorguya yanıt veremedi. Platform geçici olarak kullanılamıyor olabilir.`,
+        fullResponse: "",
         sentiment: "nötr",
         position: "Bahsedilmiyor",
+        positionRaw: null,
         visibilityScore: 0,
+        citations: [],
       });
       continue;
     }
@@ -321,14 +361,25 @@ export async function runFreeToolQuery(
       analysis.sentiment,
     );
 
+    // Clean excerpt: strip markdown formatting
+    const cleanExcerpt = stripMarkdown(
+      analysis.excerpt ?? response.content.slice(0, 400),
+    );
+
+    // Full cleaned response for evidence display (up to 1500 chars)
+    const fullResponse = stripMarkdown(response.content).slice(0, 1500);
+
     platforms.push({
       platform,
       label: platformLabels[platform],
       found: analysis.mentioned,
-      excerpt: analysis.excerpt ?? response.content.slice(0, 200),
+      excerpt: cleanExcerpt,
+      fullResponse,
       sentiment,
       position: positionToLabel(analysis.position),
+      positionRaw: analysis.position,
       visibilityScore,
+      citations: analysis.citations ?? [],
     });
   }
 
@@ -346,9 +397,12 @@ export async function runFreeToolQuery(
         label: platformLabels[pid],
         found: false,
         excerpt: "Bu platform için API anahtarı yapılandırılmamış.",
+        fullResponse: "",
         sentiment: "nötr",
         position: "Bahsedilmiyor",
+        positionRaw: null,
         visibilityScore: 0,
+        citations: [],
       });
     }
   }
@@ -403,6 +457,7 @@ export async function runFreeToolQuery(
   const result: FreeToolResult = {
     input,
     platforms,
+    promptUsed: prompt,
     score,
     overallScore,
     scoreLabel,

@@ -12,9 +12,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "GH7.ai - AI Görünürlük Yönetim Platformu",
+  title: "GH7.ai — Yapay Zeka Seni Taniyor mu?",
   description:
-    "Markanızın yapay zeka platformlarındaki görünürlüğünü ölçün, analiz edin, iyileştirin.",
+    "Yapay zekalarin sizi ne kadar tanidiginizi ogrenin. 4 yapay zekada gorunurlugunuzu takip edin.",
 };
 
 export default function RootLayout({

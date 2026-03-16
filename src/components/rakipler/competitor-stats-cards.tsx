@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TrendingUpIcon, TrendingDownIcon } from "lucide-react";
+import { TrendingUpIcon, TrendingDownIcon, ShieldIcon, SwordsIcon, UsersIcon, SparklesIcon } from "lucide-react";
 import type { PlatformKey } from "@/lib/types";
 
 interface CompetitorRow {
@@ -18,23 +18,30 @@ interface CompetitorRow {
   mentionScore: number;
   readinessScore: number;
   platforms: Record<PlatformKey, number>;
+  source: string;
 }
 
 interface CompetitorStatsCardsProps {
   rows: CompetitorRow[];
   userMentionScore: number;
   userReadinessScore: number;
+  totalResults: number;
+  totalMentions: number;
+  aiDiscoveredCount: number;
+  manualCount: number;
 }
 
 export function CompetitorStatsCards({
   rows,
   userMentionScore,
   userReadinessScore,
+  totalResults,
+  totalMentions,
+  aiDiscoveredCount,
+  manualCount,
 }: CompetitorStatsCardsProps) {
-  const competitorCount = rows.filter((r) => !r.isUser).length;
-  const topCompetitor = rows
-    .filter((r) => !r.isUser)
-    .sort((a, b) => b.mentionScore - a.mentionScore)[0];
+  const competitorRows = rows.filter((r) => !r.isUser);
+  const topCompetitor = competitorRows.sort((a, b) => b.mentionScore - a.mentionScore)[0];
   const mentionGap = topCompetitor
     ? topCompetitor.mentionScore - userMentionScore
     : 0;
@@ -49,17 +56,17 @@ export function CompetitorStatsCards({
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon />
+              <SwordsIcon className="size-3" />
               Siz
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            4 AI platformunda
+            {totalMentions}/{totalResults} soruda bahsedildiniz
           </div>
           <div className="text-muted-foreground">
-            Sizin bahsedilme skoru
+            4 AI platformunda toplam bahsedilme oranınız
           </div>
         </CardFooter>
       </Card>
@@ -72,17 +79,17 @@ export function CompetitorStatsCards({
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon />
+              <ShieldIcon className="size-3" />
               Siz
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Teknik ve içerik hazırlığı
+            Teknik altyapı değerlendirmesi
           </div>
           <div className="text-muted-foreground">
-            Yapılandırılmış veri, platform, içerik
+            Yapılandırılmış veri, meta etiketler ve schema.org kontrolü
           </div>
         </CardFooter>
       </Card>
@@ -95,37 +102,54 @@ export function CompetitorStatsCards({
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              {mentionGap > 0 ? <TrendingDownIcon /> : <TrendingUpIcon />}
+              {mentionGap > 0 ? <TrendingDownIcon className="size-3" /> : <TrendingUpIcon className="size-3" />}
               {mentionGap > 0 ? "Geride" : "Önde"}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            {topCompetitor?.name ?? "—"} {mentionGap > 0 ? "önde" : "geride"}
+            {topCompetitor?.name ?? "Rakip yok"} {mentionGap > 0 ? "önde" : mentionGap < 0 ? "geride" : "eşit"}
           </div>
           <div className="text-muted-foreground">
-            Bahsedilme skoru farkı
+            {mentionGap > 0
+              ? "Rakibiniz AI platformlarında sizden daha sık bahsediliyor"
+              : mentionGap < 0
+                ? "AI platformlarında rakibinizden daha sık bahsediliyorsunuz"
+                : "En güçlü rakibinizle aynı düzeydesiniz"}
           </div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Takip Edilen</CardDescription>
+          <CardDescription>Takip Edilen Rakip</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {competitorCount}
+            {competitorRows.length}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">Aktif</Badge>
+            <Badge variant="outline">
+              <UsersIcon className="size-3" />
+              Aktif
+            </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Rakip takip ediliyor
+          <div className="flex flex-wrap gap-1.5">
+            {aiDiscoveredCount > 0 && (
+              <Badge variant="outline" className="text-muted-foreground gap-1">
+                <SparklesIcon className="size-3" />
+                AI: {aiDiscoveredCount}
+              </Badge>
+            )}
+            {manualCount > 0 && (
+              <Badge variant="outline" className="text-muted-foreground gap-1">
+                Manuel: {manualCount}
+              </Badge>
+            )}
           </div>
           <div className="text-muted-foreground">
-            Sektör karşılaştırması
+            Perplexity Sonar + Claude ile keşfedilen ve manuel eklenen rakipler
           </div>
         </CardFooter>
       </Card>

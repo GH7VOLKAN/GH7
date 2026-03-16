@@ -8,7 +8,7 @@ export class OpenAIProvider implements AIProvider {
 
   constructor() {
     const key = process.env.OPENAI_API_KEY;
-    this.client = key ? new OpenAI({ apiKey: key }) : null;
+    this.client = key ? new OpenAI({ apiKey: key, timeout: 30_000 }) : null;
   }
 
   isAvailable(): boolean {
@@ -24,6 +24,7 @@ export class OpenAIProvider implements AIProvider {
       const response = await this.client.chat.completions.create({
         model: "gpt-4o-mini",
         max_tokens: 2048,
+        temperature: 0.7,
         messages: [{ role: "user", content: promptText }],
       });
 

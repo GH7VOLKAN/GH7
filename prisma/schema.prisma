@@ -20,10 +20,17 @@ model Profile {
   avatarUrl  String?  @map("avatar_url")
   phone      String?
   smsEnabled Boolean  @default(false) @map("sms_enabled")
+  plan          String   @default("free") // free, pro, business, agency
+  planStartDate DateTime? @map("plan_start_date")
+  planEndDate   DateTime? @map("plan_end_date")
+  iyzicoCustomerRef    String?  @map("iyzico_customer_ref")
+  iyzicoSubscriptionRef String? @map("iyzico_subscription_ref")
+  gracePeriodEnd       DateTime? @map("grace_period_end")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  brands Brand[]
+  brands   Brand[]
+  payments Payment[]
 
   @@map("profiles")
 }
@@ -35,10 +42,14 @@ model Brand {
   name      String
   domain    String
   sector    String?
+  city      String?
+  profession  String?  // kisisel markalar icin meslek
+  specialties String[] // uzmanlik alanlari
+  competitorNames String[] @map("competitor_names") // onboarding'de girilen rakip adlari
   type         String   @default("firma") @map("brand_type") // firma, kisisel
   isDefault    Boolean  @default(false) @map("is_default")
   autoScan     Boolean  @default(true)  @map("auto_scan")
-  scanInterval String   @default("daily") @map("scan_interval") // daily, weekly, manual
+  scanInterval String   @default("thrice_weekly") @map("scan_interval") // daily, thrice_weekly, manual
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -50,6 +61,7 @@ model Brand {
   sourceDomains   SourceDomain[]
   scoreHistory    ScoreHistory[]
   notifications   Notification[]
+  checklistItems  ChecklistItem[]
 
   @@map("brands")
 }
@@ -62,6 +74,8 @@ model Prompt {
   brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
   text      String
   tags      String[]
+  source    String   @default("ai_generated") // ai_generated, dataforseo, sonar, user_added
+  category  String?  // lokasyon, urun, karsilastirma, oneri, fiyat, yorum, genel, uzmanlik, itibar
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -105,9 +119,10 @@ model PromptResult {
   mentioned  Boolean  @default(false)
   position   String?  // "1. sıra", "2. sıra", "bahsediliyor", null
   sentiment  String?  // pozitif, nötr, negatif
-  excerpt    String?
-  citations  Json?    // string[] of cited URLs
-  createdAt  DateTime @default(now()) @map("created_at")
+  excerpt      String?
+  fullResponse String?  @map("full_response")
+  citations    Json?    // string[] of cited URLs
+  createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("prompt_results")
 }
@@ -124,6 +139,13 @@ model Competitor {
   readinessScore Int    @default(0) @map("readiness_score")
   // per-platform scores stored as JSON
   platforms      Json?  // { chatgpt: 65, claude: 52, gemini: 58, perplexity: 61 }
+
+  // AI discovery metadata
+  reason       String?            // Why this is a competitor (AI explanation)
+  products     String[]           // Their product/service lines
+  relevance    String  @default("direct") // "direct" | "indirect"
+  source       String  @default("manual") // "manual" | "ai_discovered"
+  discoveredAt DateTime? @map("discovered_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -193,10 +215,17 @@ model ActionTask {
   priority     String  // high, medium, low
   title        String
   impact       String
-  source       String
+  source       String  // site_audit, ai_action_plan
   detail       String?
   completed    Boolean @default(false)
   raasEligible Boolean @default(false) @map("raas_eligible")
+
+  // AI-generated action plan fields (Claude Opus)
+  description      String?
+  difficulty       String?  // EASY, MEDIUM, HARD
+  estimatedTime    String?  @map("estimated_time")
+  canWeDoIt        Boolean  @default(false) @map("can_we_do_it")
+  selfServiceSteps Json?    @map("self_service_steps") // string[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -232,6 +261,53 @@ model VerificationCode {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("verification_codes")
+}
+
+// ─── Payments ───────────────────────────────────────
+
+model Payment {
+  id              String   @id @default(cuid())
+  profileId       String   @map("profile_id")
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  plan            String   // pro, business, agency
+  amount          Float
+  currency        String   @default("TRY")
+  status          String   // pending, success, failed, refunded
+  iyzicoPaymentId String?  @map("iyzico_payment_id")
+  iyzicoToken     String?  @map("iyzico_token")
+  period          String   @default("monthly") // monthly, yearly
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+// ─── Checklist (Gelişim Planı) ───────────────────────
+
+model ChecklistItem {
+  id                String   @id @default(cuid())
+  brandId           String   @map("brand_id")
+  brand             Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  layer             Int      // 1, 2, 3
+  itemNumber        String   @map("item_number") // "1.1", "2.3"
+  simpleTitle       String   @map("simple_title")
+  simpleDescription String   @map("simple_description")
+  competitorNote    String?  @map("competitor_note")
+  status            String   @default("missing") // complete, warning, missing, locked
+  userMarkedDone    Boolean  @default(false) @map("user_marked_done")
+  verifiedByAI      Boolean  @default(false) @map("verified_by_ai")
+  difficulty        String   @default("MEDIUM") // EASY, MEDIUM, HARD
+  impact            String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  estimatedTime     String?  @map("estimated_time")
+  technicalDetail   Json?    @map("technical_detail")
+  selfServiceSteps  Json?    @map("self_service_steps") // string[]
+  canAgencyDo       Boolean  @default(false) @map("can_agency_do")
+  agencyPrice       String?  @map("agency_price")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@unique([brandId, itemNumber])
+  @@map("checklist_items")
 }
 
 // ─── Score History ───────────────────────────────────
