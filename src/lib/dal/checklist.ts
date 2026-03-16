@@ -36,6 +36,7 @@ export interface ChecklistItemFull {
   verifiedByAI: boolean;
   difficulty: string;
   impact: string;
+  feasibilityScore: number; // 1-5: 1=çok zor, 5=çok kolay
   estimatedTime: string | null;
   technicalDetail: TechnicalDetail | null;
   selfServiceSteps: string[];
@@ -134,6 +135,7 @@ export const getChecklistData = cache(
         verifiedByAI: item.verifiedByAI,
         difficulty: item.difficulty,
         impact: item.impact,
+        feasibilityScore: (item as Record<string, unknown>).feasibilityScore as number ?? 3,
         estimatedTime: item.estimatedTime,
         technicalDetail: item.technicalDetail as TechnicalDetail | null,
         selfServiceSteps: (item.selfServiceSteps as string[]) ?? [],

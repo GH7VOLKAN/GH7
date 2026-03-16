@@ -91,7 +91,7 @@ SADECE JSON döndür — başka hiçbir şey yazma:
 
   try {
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-20250514",
       max_tokens: 2048,
       temperature: 0.7,
       messages: [{ role: "user", content: prompt }],

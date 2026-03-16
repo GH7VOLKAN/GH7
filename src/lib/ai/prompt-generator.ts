@@ -14,8 +14,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import {
   researchDigitalFootprint,
   researchSectorBehavior,
+  researchSectorQuestions,
   type DigitalFootprint,
   type SectorBehavior,
+  type SonarResearchResult,
 } from "./sonar-research";
 
 // ─── Types ─────────────────────────────────────────────
@@ -90,22 +92,19 @@ async function generateFirmaPrompts(
   brand: BrandInfo,
   count: number,
 ): Promise<GeneratedPrompt[]> {
-  // 1. Perplexity Sonar ile sektor arastirmasi
-  let behavior: SectorBehavior | null = null;
+  // 1. Perplexity Sonar ile 5 paralel sektor arastirmasi (spec E.2)
+  let sonarResult: SonarResearchResult | null = null;
   if (brand.sector && brand.city) {
     try {
-      behavior = await researchSectorBehavior(
-        brand.sector,
-        brand.city,
-      );
+      sonarResult = await researchSectorQuestions(brand.sector, brand.city);
     } catch {
       // Sonar basarisiz olursa devam et
     }
   }
 
-  const sonarContext = behavior?.raw
-    ? `\n\nPERPLEXITY SONAR ARASTIRMASI (sektorel arama davranisi):
-${behavior.raw.slice(0, 2000)}`
+  const sonarContext = sonarResult?.raw
+    ? `\n\nPERPLEXITY SONAR ARASTIRMASI (5 sorgu, ~${sonarResult.allQuestions.length} ham soru):
+${sonarResult.raw.slice(0, 4000)}`
     : "";
 
   const systemPrompt = `Sen GH7.ai prompt stratejistisin.
@@ -136,7 +135,7 @@ HIGH potansiyelli promptlar listenin basinda olsun.
 JSON formatinda dondur — baska hicbir sey yazma:
 [{"text": "prompt metni", "category": "kategori"}]`;
 
-  return callClaude(systemPrompt, brand.name, count, behavior?.raw ? "sonar" : "ai_generated", "sonnet");
+  return callClaude(systemPrompt, brand.name, count, sonarResult?.raw ? "sonar" : "ai_generated", "sonnet");
 }
 
 // ─── Kisisel Marka Pipeline ────────────────────────────
@@ -145,21 +144,21 @@ async function generateKisiselPrompts(
   brand: BrandInfo,
   count: number,
 ): Promise<GeneratedPrompt[]> {
-  // 1. Perplexity Sonar ile arastirma
+  // 1. Perplexity Sonar ile 5 paralel arastirma (spec E.2) + dijital ayak izi
   let footprint: DigitalFootprint | null = null;
-  let behavior: SectorBehavior | null = null;
+  let sonarResult: SonarResearchResult | null = null;
 
   if (brand.profession && brand.city) {
-    [footprint, behavior] = await Promise.all([
+    [footprint, sonarResult] = await Promise.all([
       researchDigitalFootprint(brand.name, brand.profession, brand.city).catch(() => null),
-      researchSectorBehavior(brand.profession, brand.city).catch(() => null),
+      researchSectorQuestions(brand.profession, brand.city).catch(() => null),
     ]);
   }
 
   const sonarContext =
-    footprint?.raw || behavior?.raw
-      ? `\n\nPERPLEXITY SONAR VERISI (sektorel arama davranisi):
-${behavior?.raw ? behavior.raw.slice(0, 1500) : "veri yok"}`
+    footprint?.raw || sonarResult?.raw
+      ? `\n\nPERPLEXITY SONAR VERISI (5 sorgu, ~${sonarResult?.allQuestions.length ?? 0} ham soru):
+${sonarResult?.raw ? sonarResult.raw.slice(0, 4000) : "veri yok"}`
       : "";
 
   const systemPrompt = `Sen GH7.ai prompt stratejistisin.
@@ -195,7 +194,7 @@ JSON formatinda dondur — baska hicbir sey yazma:
     systemPrompt,
     brand.name,
     count,
-    footprint?.raw || behavior?.raw ? "sonar" : "ai_generated",
+    footprint?.raw || sonarResult?.raw ? "sonar" : "ai_generated",
     "sonnet",
   );
 }

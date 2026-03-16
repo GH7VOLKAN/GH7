@@ -143,6 +143,12 @@ export async function executeScan(
                 }
               }
 
+              // Hafta numarası ve gün hesapla (mention rate takibi için)
+              const now = new Date();
+              const startOfYear = new Date(now.getFullYear(), 0, 1);
+              const scanWeek = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+              const scanDay = now.getUTCDay() || 7; // 1=Pzt ... 7=Paz
+
               await prisma.promptResult.create({
                 data: {
                   scanId,
@@ -154,6 +160,8 @@ export async function executeScan(
                   excerpt: analysis.excerpt,
                   fullResponse: aiResponse.error ? null : aiResponse.content.slice(0, 3000),
                   citations: analysis.citations,
+                  scanWeek,
+                  scanDay,
                 },
               });
 

@@ -21,6 +21,11 @@ export interface PlanLimits {
   maxCompetitors: number;
   useDataForSEO: boolean;
   useSonarResearch: boolean;
+  checklistLayer3: boolean;  // Gelişim Planı Katman 3
+  mentionRate: boolean;       // Mention rate görünümü
+  citationView: boolean;      // Citation kaynakları görünümü
+  shareOfVoice: boolean;      // Share of voice görünümü
+  exportPDF: boolean;         // PDF export
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
@@ -41,6 +46,11 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxCompetitors: 0,
     useDataForSEO: false,
     useSonarResearch: false,
+    checklistLayer3: false,
+    mentionRate: false,
+    citationView: false,
+    shareOfVoice: false,
+    exportPDF: false,
   },
   pro: {
     maxPrompts: 50,
@@ -59,6 +69,11 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxCompetitors: 10,
     useDataForSEO: true,
     useSonarResearch: true,
+    checklistLayer3: true,
+    mentionRate: true,
+    citationView: true,
+    shareOfVoice: true,
+    exportPDF: true,
   },
   business: {
     maxPrompts: 200,
@@ -77,6 +92,11 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxCompetitors: 25,
     useDataForSEO: true,
     useSonarResearch: true,
+    checklistLayer3: true,
+    mentionRate: true,
+    citationView: true,
+    shareOfVoice: true,
+    exportPDF: true,
   },
   agency: {
     maxPrompts: 500,
@@ -95,6 +115,11 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxCompetitors: 50,
     useDataForSEO: true,
     useSonarResearch: true,
+    checklistLayer3: true,
+    mentionRate: true,
+    citationView: true,
+    shareOfVoice: true,
+    exportPDF: true,
   },
 };
 

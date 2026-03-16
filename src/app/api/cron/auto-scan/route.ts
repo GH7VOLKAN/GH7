@@ -7,6 +7,7 @@ import { persistAuditResults } from "@/lib/ai/audit-persister";
 import { generateActionPlan } from "@/lib/ai/action-plan-generator";
 import { checkPromptFreshness } from "@/lib/ai/prompt-freshness";
 import { verifyChecklistItems } from "@/lib/ai/checklist-verifier";
+import { deepCompetitorResearch, generateMonthlyReport } from "@/lib/ai/monthly-report";
 import { isPro, getPlanLimits } from "@/lib/plans";
 import { processExpiredPlans } from "@/lib/iyzico/activate-plan";
 
@@ -199,6 +200,92 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // ── Monthly: Derin rakip araştırması + Aylık GEO Durum Raporu (ayın 1'i) ──
+  let monthlyReportResults = { generated: 0, failed: 0 };
+  if (dayOfMonth === 1) {
+    for (const brand of brands) {
+      const plan = brand.profile?.plan ?? "free";
+      if (!isPro(plan)) continue;
+
+      try {
+        // Get competitors from DB
+        const competitors = await prisma.competitor.findMany({
+          where: { brandId: brand.id },
+          select: { name: true, domain: true },
+          take: 10,
+        });
+
+        if (competitors.length === 0) continue;
+
+        // Run deep competitor research via Sonar (2 queries per competitor)
+        const competitorResearch = await deepCompetitorResearch(
+          brand.id,
+          competitors,
+          brand.sector ?? "",
+          brand.city ?? "",
+        );
+
+        // Get mention data (latest scores)
+        const latestScore = await prisma.scoreHistory.findFirst({
+          where: { brandId: brand.id },
+          orderBy: { date: "desc" },
+        });
+        const mentionData = {
+          mentionScore: latestScore?.mentionScore ?? 0,
+          readinessScore: latestScore?.readinessScore ?? 0,
+        };
+
+        // Get checklist progress
+        const checklistItems = await prisma.checklistItem.findMany({
+          where: { brandId: brand.id },
+          select: { status: true },
+        });
+        const checklistProgress = {
+          completed: checklistItems.filter((i) => i.status === "complete").length,
+          total: checklistItems.length,
+        };
+
+        // Generate monthly report with Opus
+        const report = await generateMonthlyReport(
+          {
+            id: brand.id,
+            name: brand.name,
+            domain: brand.domain,
+            type: brand.type,
+            sector: brand.sector,
+            city: brand.city,
+          },
+          competitorResearch,
+          mentionData,
+          checklistProgress,
+        );
+
+        // Save as notification with type "monthly_report"
+        await prisma.notification.create({
+          data: {
+            brandId: brand.id,
+            type: "monthly_report",
+            title: "Aylık GEO Durum Raporu",
+            message: report,
+            data: {
+              month: new Date(now).toISOString().slice(0, 7),
+              competitorCount: competitorResearch.length,
+              mentionScore: mentionData.mentionScore,
+              readinessScore: mentionData.readinessScore,
+              checklistProgress,
+            },
+          },
+        });
+
+        monthlyReportResults.generated++;
+        console.log(`[auto-scan] Monthly report generated for ${brand.id}`);
+      } catch (err) {
+        monthlyReportResults.failed++;
+        console.error(`[auto-scan] Monthly report failed for ${brand.id}:`, err);
+      }
+    }
+  }
+
   // Process expired plans and grace periods
   let planResults = { checked: 0, graceStarted: 0, deactivated: 0 };
   try {
@@ -216,6 +303,7 @@ export async function GET(request: NextRequest) {
     scansTriggered: triggered,
     checklistVerification: checklistResults,
     promptFreshness: freshnessResults,
+    monthlyReport: monthlyReportResults,
     planExpiry: planResults,
   });
 }

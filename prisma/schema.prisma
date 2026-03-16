@@ -82,6 +82,8 @@ model Prompt {
   source    String   @default("ai_generated") // ai_generated, dataforseo, sonar, user_added
   category  String?  // lokasyon, urun, karsilastirma, oneri, fiyat, yorum, genel, uzmanlik, itibar
   isActive  Boolean  @default(true) @map("is_active")
+  salesPotential String? @map("sales_potential") // HIGH, MEDIUM, LOW
+  lastScanAt     DateTime? @map("last_scan_at")
   createdAt DateTime @default(now()) @map("created_at")
 
   results PromptResult[]
@@ -128,6 +130,8 @@ model PromptResult {
   fullResponse String?  @map("full_response")
   citations    Json?    // string[] of cited URLs
   createdAt    DateTime @default(now()) @map("created_at")
+  scanWeek  Int? @map("scan_week")
+  scanDay   Int? @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
 
   @@map("prompt_results")
 }
@@ -303,6 +307,7 @@ model ChecklistItem {
   verifiedByAI      Boolean  @default(false) @map("verified_by_ai")
   difficulty        String   @default("MEDIUM") // EASY, MEDIUM, HARD
   impact            String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  feasibilityScore  Int      @default(3) @map("feasibility_score") // 1-5
   estimatedTime     String?  @map("estimated_time")
   technicalDetail   Json?    @map("technical_detail")
   selfServiceSteps  Json?    @map("self_service_steps") // string[]

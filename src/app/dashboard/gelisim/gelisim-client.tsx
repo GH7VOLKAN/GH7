@@ -209,6 +209,9 @@ function ChecklistItemCard({
             <span className={`text-[10px] font-medium ${impact.color}`}>
               {impact.label}
             </span>
+            <span className="text-[10px] text-muted-foreground" title={`Yapılabilirlik: ${item.feasibilityScore}/5`}>
+              {"●".repeat(item.feasibilityScore)}{"○".repeat(5 - item.feasibilityScore)}
+            </span>
             {item.estimatedTime && (
               <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <ClockIcon className="size-2.5" />
@@ -329,6 +332,7 @@ export function GelisimClient({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [expandedItem, setExpandedItem] = React.useState<string | null>(null);
+  const [sortMode, setSortMode] = React.useState<"default" | "easy" | "impact">("default");
   const [seeding, setSeeding] = React.useState(false);
   const isFree = plan === "free";
 
@@ -425,6 +429,24 @@ export function GelisimClient({
         </div>
       </div>
 
+      {/* Sort toggle */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Sırala:</span>
+        {(["default", "easy", "impact"] as const).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setSortMode(mode)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              sortMode === mode
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {mode === "default" ? "Varsayılan" : mode === "easy" ? "Kolay olanlar önce" : "Etkili olanlar önce"}
+          </button>
+        ))}
+      </div>
+
       {/* Layer sections */}
       {data.layers.map((layer) => {
         const LayerIcon = LAYER_ICONS[layer.layer] ?? SearchIcon;
@@ -471,7 +493,14 @@ export function GelisimClient({
 
             {/* Items */}
             <div className="p-5 space-y-3">
-              {layer.items.map((item) => (
+              {[...layer.items].sort((a, b) => {
+                if (sortMode === "easy") return b.feasibilityScore - a.feasibilityScore;
+                if (sortMode === "impact") {
+                  const impactOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+                  return (impactOrder[b.impact] ?? 0) - (impactOrder[a.impact] ?? 0);
+                }
+                return 0; // default: itemNumber order
+              }).map((item) => (
                 <ChecklistItemCard
                   key={item.id}
                   item={item}

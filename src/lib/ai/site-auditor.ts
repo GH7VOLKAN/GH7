@@ -442,6 +442,94 @@ async function checkAIAccess(
   return { name: "Yapay Zeka Erişimi", checks };
 }
 
+/**
+ * Google PageSpeed Insights API (ücretsiz) — performans + SEO skorları.
+ */
+async function checkPerformance(domain: string): Promise<AuditCategoryResult> {
+  const checks: AuditCheckResult[] = [];
+
+  try {
+    const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
+    const keyParam = apiKey ? `&key=${apiKey}` : "";
+    const url = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=https://${domain}&strategy=mobile&category=performance&category=seo${keyParam}`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    if (!res.ok) throw new Error(`PageSpeed HTTP ${res.status}`);
+
+    const data = await res.json();
+    const lighthouse = data.lighthouseResult;
+
+    // Performance score
+    const perfScore = Math.round((lighthouse?.categories?.performance?.score ?? 0) * 100);
+    checks.push(
+      check(
+        "Sayfa Performansı",
+        perfScore >= 70 ? "pass" : perfScore >= 40 ? "partial" : "fail",
+        `Mobil performans puanı: ${perfScore}/100.`,
+        perfScore < 70 ? "Sayfanızın yüklenme hızını artırın. Görselleri sıkıştırın ve gereksiz kodları temizleyin." : null,
+        true,
+      ),
+    );
+
+    // SEO score
+    const seoScore = Math.round((lighthouse?.categories?.seo?.score ?? 0) * 100);
+    checks.push(
+      check(
+        "Teknik Erişilebilirlik",
+        seoScore >= 80 ? "pass" : seoScore >= 50 ? "partial" : "fail",
+        `Teknik erişilebilirlik puanı: ${seoScore}/100.`,
+        seoScore < 80 ? "Sayfanızın arama motorları ve yapay zekalar tarafından okunabilirliğini artırın." : null,
+      ),
+    );
+
+    // LCP (Largest Contentful Paint)
+    const lcpMs = lighthouse?.audits?.["largest-contentful-paint"]?.numericValue ?? 0;
+    const lcpSec = (lcpMs / 1000).toFixed(1);
+    checks.push(
+      check(
+        "Sayfa Açılış Hızı",
+        lcpMs <= 2500 ? "pass" : lcpMs <= 4000 ? "partial" : "fail",
+        `Sayfanız ${lcpSec} saniyede açılıyor.`,
+        lcpMs > 2500 ? "Sayfanızın 2.5 saniye altında açılmasını hedefleyin." : null,
+      ),
+    );
+
+    // CLS (Cumulative Layout Shift)
+    const cls = lighthouse?.audits?.["cumulative-layout-shift"]?.numericValue ?? 0;
+    checks.push(
+      check(
+        "Görsel Kararlılık",
+        cls <= 0.1 ? "pass" : cls <= 0.25 ? "partial" : "fail",
+        `Sayfa kayma puanı: ${cls.toFixed(3)} (ideal: 0.1 altı).`,
+        cls > 0.1 ? "Sayfadaki görseller ve reklamlar yer değiştirmeye neden oluyor. Boyutlarını belirtin." : null,
+      ),
+    );
+
+    // Mobile usability
+    const mobileOk = lighthouse?.categories?.performance?.score >= 0.5;
+    checks.push(
+      check(
+        "Mobil Uyumluluk",
+        mobileOk ? "pass" : "partial",
+        mobileOk ? "Site mobil cihazlarda iyi çalışıyor." : "Mobil uyumluluk iyileştirilebilir.",
+        mobileOk ? null : "Sitenizin mobil deneyimini iyileştirin.",
+      ),
+    );
+  } catch (err) {
+    console.error("[site-auditor] PageSpeed check failed:", err);
+    checks.push(
+      check(
+        "Sayfa Performansı",
+        "partial",
+        "Performans testi şu an yapılamadı.",
+        "Bir sonraki kontrolde tekrar denenecek.",
+      ),
+    );
+  }
+
+  return { name: "Performans", checks };
+}
+
 export async function runSiteAudit(domain: string): Promise<AuditResult> {
   // Fetch homepage
   const homeRes = await safeFetch(`https://${domain}`);
@@ -494,14 +582,31 @@ export async function runSiteAudit(domain: string): Promise<AuditResult> {
             failCheck("Open Graph Etiketleri"),
           ],
         },
+        {
+          name: "Performans",
+          checks: [
+            failCheck("Sayfa Performansı", true),
+            failCheck("Teknik Erişilebilirlik"),
+            failCheck("Sayfa Açılış Hızı"),
+            failCheck("Görsel Kararlılık"),
+            failCheck("Mobil Uyumluluk"),
+          ],
+        },
       ],
     };
   }
 
   const html = homeRes.text;
 
-  const technicalResult = await checkTechnical(domain, html);
-  const aiAccess = await checkAIAccess(domain, html, technicalResult.robotsText);
+  // Run all checks in parallel for speed
+  const [technicalResult, aiAccess, performance] = await Promise.all([
+    checkTechnical(domain, html),
+    checkAIAccess(domain, html, ""), // robotsText will be filled after
+    checkPerformance(domain),
+  ]);
+
+  // Re-run AI access with actual robotsText
+  const aiAccessFinal = await checkAIAccess(domain, html, technicalResult.robotsText);
 
   return {
     categories: [
@@ -509,7 +614,8 @@ export async function runSiteAudit(domain: string): Promise<AuditResult> {
       checkContent(html),
       technicalResult.category,
       checkExternalPlatforms(html),
-      aiAccess,
+      aiAccessFinal,
+      performance,
     ],
   };
 }

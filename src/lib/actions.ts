@@ -666,6 +666,7 @@ export async function seedChecklistItems(brandId: string, plan: string = "free")
       status: isFree && d.layer === 3 ? "locked" : "missing",
       difficulty: d.difficulty,
       impact: d.impact,
+      feasibilityScore: d.feasibilityScore,
       estimatedTime: d.estimatedTime,
       technicalDetail: JSON.parse(JSON.stringify(d.technicalDetail)),
       selfServiceSteps: d.selfServiceSteps,

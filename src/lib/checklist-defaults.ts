@@ -27,6 +27,7 @@ export interface ChecklistDefault {
   simpleDescription: string;
   difficulty: "EASY" | "MEDIUM" | "HARD";
   impact: "LOW" | "MEDIUM" | "HIGH";
+  feasibilityScore: number; // 1-5: 1=çok zor (ajans şart), 3=orta, 5=30 dakikada yapılır
   estimatedTime: string;
   selfServiceSteps: string[];
   technicalDetail: TechnicalDetail;
@@ -48,7 +49,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Google'da görünüyor musun?",
     simpleDescription:
       "Marka adını Google'a yazdığında ilk sayfada çıkıyor musun? Yapay zekalar bilgi toplarken en çok Google sonuçlarından beslenirler. Burada yoksan, yapay zeka için de yoksun.",
-    difficulty: "EASY",
+difficulty: "EASY",
+    feasibilityScore: 5,
     impact: "HIGH",
     estimatedTime: "1-2 hafta",
     selfServiceSteps: [
@@ -79,7 +81,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "LinkedIn profilin güncel mi?",
     simpleDescription:
       "LinkedIn, Yapay zekaların kişisel ve kurumsal bilgiler için en çok referans aldığı platformlardan biri. Profilin tam ve güncel değilse yapay zeka seni tanıyamaz.",
-    difficulty: "EASY",
+difficulty: "EASY",
+    feasibilityScore: 5,
     impact: "HIGH",
     estimatedTime: "1-2 saat",
     selfServiceSteps: [
@@ -110,7 +113,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Kişisel web siten / kurumsal siten var mı?",
     simpleDescription:
       "Yapay zekanın en çok güvendiği kaynak, senin kontrol ettiğin bir web sitesi. Kurulursa tüm platformlarda çıkma şansın katlanarak artar.",
-    difficulty: "HARD",
+difficulty: "HARD",
+    feasibilityScore: 1,
     impact: "HIGH",
     estimatedTime: "2-4 hafta",
     selfServiceSteps: [
@@ -142,7 +146,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Google Business profilin var mı?",
     simpleDescription:
       "Yapay zekaya 'yakınımdaki en iyi X' diye sorulduğunda Google Business verileri doğrudan kullanılıyor. Profilin yoksa lokasyon bazlı sorularda hiç çıkmıyorsun.",
-    difficulty: "EASY",
+difficulty: "EASY",
+    feasibilityScore: 5,
     impact: "HIGH",
     estimatedTime: "1-3 gün",
     selfServiceSteps: [
@@ -174,7 +179,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Sektörel dizinlerde yer alıyor musun?",
     simpleDescription:
       "Sektör dizinleri ve listeleme siteleri Yapay zekaların güvendiği kaynaklardır. Ne kadar çok farklı dizinde tutarlı bilginle varsan, Yapay zekaya o kadar güvenilir görünürsün.",
-    difficulty: "MEDIUM",
+difficulty: "MEDIUM",
+    feasibilityScore: 3,
     impact: "MEDIUM",
     estimatedTime: "1-2 hafta",
     selfServiceSteps: [
@@ -207,7 +213,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Hakkında haber veya yazı var mı?",
     simpleDescription:
       "Yapay zekalar 'güvenilir kaynak' olarak üçüncü parti içeriklere bakar. Hakkında yazılmış haber, blog yazısı veya röportaj yoksa, yapay zeka sana güvenemiyor.",
-    difficulty: "MEDIUM",
+difficulty: "MEDIUM",
+    feasibilityScore: 3,
     impact: "HIGH",
     estimatedTime: "2-4 hafta",
     selfServiceSteps: [
@@ -239,7 +246,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "İstatistik ve veri paylaşıyor musun?",
     simpleDescription:
       "Yapay zekalar sayısal verilere bayılır. Sektöründe özgün bir istatistik, anket sonucu veya rapor yayınlarsan, yapay zeka seni kaynak olarak göstermeye başlar.",
-    difficulty: "MEDIUM",
+difficulty: "MEDIUM",
+    feasibilityScore: 3,
     impact: "HIGH",
     estimatedTime: "2-3 hafta",
     selfServiceSteps: [
@@ -270,7 +278,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "İçeriğin güncel mi?",
     simpleDescription:
       "Yapay zekalar güncel içeriklere öncelik verir. Son 6 ayda güncellenmemiş sayfaların yapay zeka sonuçlarında gösterilme şansı çok düşer. Eski içerik = görünmez içerik.",
-    difficulty: "EASY",
+difficulty: "EASY",
+    feasibilityScore: 5,
     impact: "MEDIUM",
     estimatedTime: "Sürekli",
     selfServiceSteps: [
@@ -301,7 +310,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Sorulara cevap veriyor musun?",
     simpleDescription:
       "Yapay zekalar kullanıcı sorularına cevap arar. Sitende FAQ sayfası, 'nasıl yapılır' rehberleri varsa, yapay zeka seni doğrudan cevap kaynağı olarak kullanır.",
-    difficulty: "MEDIUM",
+difficulty: "MEDIUM",
+    feasibilityScore: 3,
     impact: "MEDIUM",
     estimatedTime: "1-2 hafta",
     selfServiceSteps: [
@@ -332,7 +342,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Yapay zeka botları siteni okuyabiliyor mu?",
     simpleDescription:
       "Web siten varsa bile, Yapay zeka botlarının siteyi okuyabilmesi gerekiyor. robots.txt'te izin yoksa veya siten çok yavaşsa, yapay zeka içeriğini hiç görmüyor.",
-    difficulty: "HARD",
+difficulty: "HARD",
+    feasibilityScore: 1,
     impact: "HIGH",
     estimatedTime: "1-3 gün",
     selfServiceSteps: [
@@ -366,7 +377,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Birden fazla platformda bahsediliyor musun?",
     simpleDescription:
       "ChatGPT, Claude, Gemini, Perplexity — ne kadar çok platformda bahsedilirsen, o kadar güçlü bir yapay zeka varlığın olur. Tek platformda olmak yetmez.",
-    difficulty: "MEDIUM",
+difficulty: "MEDIUM",
+    feasibilityScore: 3,
     impact: "HIGH",
     estimatedTime: "1-3 ay",
     selfServiceSteps: [
@@ -398,7 +410,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Rakiplerinden daha çok kaynağın var mı?",
     simpleDescription:
       "Yapay zeka karşılaştırmalı sorularda kaynak sayısına bakar. Rakibinin 15 kaynağı varsa senin de en az o kadar olmalı. Yoksa yapay zeka rakibini öneriyor, seni değil.",
-    difficulty: "HARD",
+difficulty: "HARD",
+    feasibilityScore: 1,
     impact: "HIGH",
     estimatedTime: "2-6 ay",
     selfServiceSteps: [
@@ -429,7 +442,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Kaynak olarak gösteriliyor musun?",
     simpleDescription:
       "Yapay zekalar cevap verirken kaynak gösterir. Senin siten bir kaynaksa, bu en üst düzey güven demek. Perplexity'de link olarak çıkmak, altın değerinde.",
-    difficulty: "HARD",
+difficulty: "HARD",
+    feasibilityScore: 1,
     impact: "HIGH",
     estimatedTime: "3-6 ay",
     selfServiceSteps: [
@@ -460,7 +474,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Otorite olarak tanınıyor musun?",
     simpleDescription:
       "Yapay zekalar bazı markaları sektörlerinde otorite olarak kabul eder ve varsayılan öneri olarak sunar. Bu seviye, uzun vadeli ve stratejik çalışma gerektirir.",
-    difficulty: "HARD",
+difficulty: "HARD",
+    feasibilityScore: 1,
     impact: "HIGH",
     estimatedTime: "6-12 ay",
     selfServiceSteps: [
@@ -492,7 +507,8 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     simpleTitle: "Farklı soru tiplerinde çıkıyor musun?",
     simpleDescription:
       "Sadece 'X kim' sorgularında değil; karşılaştırma, tavsiye, fiyat, lokasyon gibi farklı soru tiplerinde de yapay zeka tarafından bahsedilmek tam kapsamlı varlık demek.",
-    difficulty: "MEDIUM",
+difficulty: "MEDIUM",
+    feasibilityScore: 3,
     impact: "MEDIUM",
     estimatedTime: "2-4 ay",
     selfServiceSteps: [
