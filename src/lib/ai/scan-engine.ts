@@ -12,9 +12,14 @@ import type { AnalysisResult, AIResponse } from "./types";
 // Process prompts in parallel batches for speed
 const PROMPT_BATCH_SIZE = 5;
 
+// In-memory fallback cache (1 hour TTL) — used when Redis is unavailable
+const memCache = new Map<string, { data: AIResponse; expiresAt: number }>();
+const MEM_TTL = 60 * 60 * 1000; // 1 hour
+
 /**
- * Cached AI call — SHA256 key, 7-day TTL, cross-user safe.
+ * Cached AI call — SHA256 key, 7-day Redis TTL + 1-hour in-memory fallback.
  * Same prompt+platform always returns cached response if available.
+ * Cross-user safe: brandless prompts mean same key = same result.
  */
 async function cachedSendPrompt(
   provider: AIProvider,
@@ -22,18 +27,25 @@ async function cachedSendPrompt(
 ): Promise<AIResponse> {
   const cacheKey = makeCacheKey("ai", provider.platform, promptText);
 
-  // Check cache first
-  const cached = await cacheGet<AIResponse>(cacheKey);
-  if (cached && !cached.error) {
-    return cached;
+  // 1. Check Redis cache first
+  const redisCached = await cacheGet<AIResponse>(cacheKey);
+  if (redisCached && !redisCached.error) {
+    return redisCached;
   }
 
-  // Make actual API call
+  // 2. Check in-memory fallback
+  const memEntry = memCache.get(cacheKey);
+  if (memEntry && memEntry.expiresAt > Date.now()) {
+    return memEntry.data;
+  }
+
+  // 3. Make actual API call
   const response = await provider.sendPrompt(promptText);
 
-  // Cache successful responses (7-day TTL)
+  // 4. Cache successful responses in both layers
   if (!response.error) {
-    await cacheSet(cacheKey, response);
+    await cacheSet(cacheKey, response); // Redis: 7-day TTL
+    memCache.set(cacheKey, { data: response, expiresAt: Date.now() + MEM_TTL }); // Memory: 1hr
   }
 
   return response;
