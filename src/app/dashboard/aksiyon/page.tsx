@@ -28,7 +28,7 @@ export default async function AksiyonPage() {
     <BlurredSection
       isLocked={actionLocked}
       title="Aksiyon Plani"
-      description="AI gorunurluk aksiyon planlarinizi gormek icin Pro plana gecin."
+      description="Yapay zeka gorunurluk aksiyon planlarinizi gormek icin Pro plana gecin."
     >
       <AksiyonClient
         brandId={brandId}

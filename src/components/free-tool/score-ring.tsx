@@ -76,7 +76,7 @@ export function ScoreRing({
           {label}
         </p>
         <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          AI Görünürlük Skoru
+          Yapay Zeka Gorunurluk Puani
         </p>
       </div>
 

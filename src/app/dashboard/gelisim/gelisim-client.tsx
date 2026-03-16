@@ -348,7 +348,7 @@ export function GelisimClient({
           </div>
           <h2 className="text-lg font-bold">Gelisim Planini Baslat</h2>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            AI gorunurlugunu adim adim artirmak icin kisisellestirilmis gelisim
+            Yapay zeka gorunurlugunu adim adim artirmak icin kisisellestirilmis gelisim
             planini olustur. 15 kontrol noktasi ile nerelerde guclu, nerelerde
             zayif oldugunu gor.
           </p>
@@ -384,7 +384,7 @@ export function GelisimClient({
       <div>
         <h1 className="text-xl font-bold tracking-tight">Gelisim Plani</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          AI gorunurlugunu 3 katmanda artirmak icin kontrol listesi.
+          Yapay zeka gorunurlugunu 3 katmanda artirmak icin kontrol listesi.
         </p>
       </div>
 
@@ -496,7 +496,7 @@ export function GelisimClient({
             <BlurredSection
               key={layer.layer}
               isLocked={true}
-              title="AI Seni Oneriyor mu?"
+              title="Yapay Zeka Seni Oneriyor mu?"
               description="Katman 3 kontrol noktalarini gormek ve tamamlamak icin Pro plana gecin."
             >
               {layerContent}
@@ -512,7 +512,7 @@ export function GelisimClient({
         <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-8 text-center">
           <p className="text-lg font-bold">Tum Kontrol Noktalarini Ac</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Katman 3 (Oneri) kontrol noktalarini tamamlayarak AI gorunurlugunu
+            Katman 3 (Oneri) kontrol noktalarini tamamlayarak Yapay zeka gorunurlugunu
             maksimuma cikar.
           </p>
           <Link

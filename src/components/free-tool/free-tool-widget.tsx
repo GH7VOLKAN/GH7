@@ -222,7 +222,7 @@ export function FreeToolWidget() {
             <div className="mb-3 flex items-center gap-2">
               <MessageSquareTextIcon className="size-4 text-muted-foreground" />
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                AI Platformlarına Sorduğumuz Soru
+                Yapay Zekalara Sordugumuz Soru
               </p>
             </div>
             <div className="rounded-xl border border-border bg-card px-5 py-4">
@@ -312,8 +312,8 @@ export function FreeToolWidget() {
               onClick={() => {
                 const text =
                   mode === "kisisel"
-                    ? `Yapay zeka beni tanıyor mu? AI görünürlük skorum: ${result.overallScore}/100! gh7.ai'da sen de test et.`
-                    : `AI görünürlük skorumuz: ${result.overallScore}/100! gh7.ai'da siz de test edin.`;
+                    ? `Yapay zeka beni tanıyor mu? Yapay zeka gorunurluk puanim: ${result.overallScore}/100! gh7.ai'da sen de test et.`
+                    : `Yapay zeka gorunurluk puanimiz: ${result.overallScore}/100! gh7.ai'da siz de test edin.`;
                 navigator.clipboard?.writeText(text);
               }}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"

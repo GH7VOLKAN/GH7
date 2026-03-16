@@ -138,7 +138,7 @@ export default function OnboardPage() {
                   Firma / Kurum
                 </h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Şirket, marka veya kurum için AI görünürlük takibi ve rakip analizi
+                  Şirket, marka veya kurum için yapay zeka gorunurluk takibi ve rakip analizi
                 </p>
                 <ArrowRightIcon className="absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/30 transition-all group-hover:right-3 group-hover:text-foreground" />
               </button>
@@ -220,7 +220,7 @@ export default function OnboardPage() {
               Hazırlanıyor
             </h1>
             <p className="mt-3 text-base text-muted-foreground">
-              <span className="font-medium text-foreground">{name}</span> için AI görünürlük altyapısı kuruluyor
+              <span className="font-medium text-foreground">{name}</span> için yapay zeka gorunurluk altyapisi kuruluyor
             </p>
 
             {/* Steps */}
@@ -292,7 +292,7 @@ export default function OnboardPage() {
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
             {brandType === "firma"
-              ? "Firmanız hakkında bilgi verin, size özel AI promptları üretelim."
+              ? "Firmanız hakkında bilgi verin, size özel yapay zeka sorulari üretelim."
               : "Kendiniz hakkında bilgi verin, dijital görünürlüğünüzü ölçelim."}
           </p>
 
@@ -421,7 +421,7 @@ export default function OnboardPage() {
             </button>
 
             <p className="text-center text-xs text-muted-foreground/60">
-              AI destekli prompt üretimi yaklaşık 10-30 saniye sürebilir
+              Yapay zeka destekli soru uretimi yaklaşık 10-30 saniye sürebilir
             </p>
           </form>
         </div>

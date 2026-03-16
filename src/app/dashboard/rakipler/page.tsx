@@ -28,7 +28,7 @@ export default async function RakiplerPage() {
     <BlurredSection
       isLocked={competitorLocked}
       title="Rakip Analizi"
-      description="Rakiplerinizin AI gorunurlugunu karsilastirmak icin Pro plana gecin."
+      description="Rakiplerinizin yapay zeka gorunurlugunu karsilastirmak icin Pro plana gecin."
     >
       <CompetitorStatsCards
         rows={data.rows}

@@ -26,7 +26,7 @@ export default async function SitePage() {
   const pageTitle = brandType === "kisisel" ? "Dijital Varlık Analizi" : "Site Analizi";
   const lockDescription = brandType === "kisisel"
     ? "Dijital varlık analizinizi görmek için Pro plana geçin."
-    : "Sitenizin AI hazirlik analizini gormek icin Pro plana gecin.";
+    : "Sitenizin yapay zeka hazirlik analizini gormek icin Pro plana gecin.";
 
   return (
     <BlurredSection
