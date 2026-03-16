@@ -149,7 +149,7 @@ const CATEGORIES = [
     badge: "Bildirim",
     badgeColor: "#3b82f6",
     items: [
-      { key: "scan-complete", title: "Tarama Tamamlandı", desc: "AI taraması bittiğinde skor ile bildirim" },
+      { key: "scan-complete", title: "Tarama Tamamlandı", desc: "Yapay zeka taraması bittiğinde skor ile bildirim" },
       { key: "score-change", title: "Skor Değişimi", desc: "Puan yükseldiğinde veya düştüğünde bildirim" },
       { key: "weekly-report", title: "Haftalık Rapor", desc: "Haftanın özeti — puan, değişim, en iyi platform" },
     ],

@@ -274,6 +274,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
       <CompetitorDetailDialog
         competitor={selected}
         userRow={userRow}
+        brandId={brandId}
         onClose={() => setSelected(null)}
       />
     </>

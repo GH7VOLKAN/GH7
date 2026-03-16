@@ -9,9 +9,13 @@ export interface PlanLimits {
   manualPromptAdd: boolean;
   scanFrequency: "once" | "thrice_weekly" | "daily";
   competitorView: boolean;
+  competitorAnalysis: boolean; // "Neden Önde?" Opus analizi
   auditView: boolean;
   actionPlanView: boolean;
   trendView: boolean;
+  weeklyReport: boolean;
+  promptFreshness: boolean; // aylık soru güncellik kontrolü
+  checklistAutoVerify: boolean; // haftalık gelişim planı doğrulama
   smsEnabled: boolean;
   maxBrands: number;
   maxCompetitors: number;
@@ -25,9 +29,13 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     manualPromptAdd: false,
     scanFrequency: "once",
     competitorView: false,
+    competitorAnalysis: false,
     auditView: false,
     actionPlanView: false,
     trendView: false,
+    weeklyReport: false,
+    promptFreshness: false,
+    checklistAutoVerify: false,
     smsEnabled: false,
     maxBrands: 1,
     maxCompetitors: 0,
@@ -39,9 +47,13 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     manualPromptAdd: true,
     scanFrequency: "thrice_weekly",
     competitorView: true,
+    competitorAnalysis: true,
     auditView: true,
     actionPlanView: true,
     trendView: true,
+    weeklyReport: true,
+    promptFreshness: true,
+    checklistAutoVerify: true,
     smsEnabled: true,
     maxBrands: 3,
     maxCompetitors: 10,
@@ -53,9 +65,13 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     manualPromptAdd: true,
     scanFrequency: "thrice_weekly",
     competitorView: true,
+    competitorAnalysis: true,
     auditView: true,
     actionPlanView: true,
     trendView: true,
+    weeklyReport: true,
+    promptFreshness: true,
+    checklistAutoVerify: true,
     smsEnabled: true,
     maxBrands: 10,
     maxCompetitors: 25,
@@ -67,9 +83,13 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     manualPromptAdd: true,
     scanFrequency: "daily",
     competitorView: true,
+    competitorAnalysis: true,
     auditView: true,
     actionPlanView: true,
     trendView: true,
+    weeklyReport: true,
+    promptFreshness: true,
+    checklistAutoVerify: true,
     smsEnabled: true,
     maxBrands: 50,
     maxCompetitors: 50,

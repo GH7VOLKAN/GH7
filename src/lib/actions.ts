@@ -8,6 +8,8 @@ import { runSiteAudit } from "@/lib/ai/site-auditor";
 import { runPersonalAudit } from "@/lib/ai/personal-auditor";
 import { persistAuditResults } from "@/lib/ai/audit-persister";
 import { generateActionPlan } from "@/lib/ai/action-plan-generator";
+import { analyzeWhyCompetitorAhead, type CompetitorAnalysis } from "@/lib/ai/competitor-analyzer";
+import { getCompetitorDeepDetail } from "@/lib/dal/competitors";
 import { getPlanLimits, isPro } from "@/lib/plans";
 import { CHECKLIST_DEFAULTS } from "@/lib/checklist-defaults";
 
@@ -398,6 +400,45 @@ export async function removeCompetitor(
 
   revalidatePath("/dashboard/rakipler");
   return { success: true };
+}
+
+// ─── Competitor Analysis (Neden Önde?) ──────────────────
+export async function getCompetitorAnalysis(
+  brandId: string,
+  competitorId: string,
+): Promise<CompetitorAnalysis> {
+  const { brand } = await getAuthenticatedBrand(brandId);
+
+  const competitor = await prisma.competitor.findFirst({
+    where: { id: competitorId, brandId },
+  });
+  if (!competitor) throw new Error("Competitor not found");
+
+  // Get latest user mention score
+  const latestScore = await prisma.scoreHistory.findFirst({
+    where: { brandId },
+    orderBy: { date: "desc" },
+  });
+  const userMentionScore = latestScore?.mentionScore ?? 0;
+
+  // Get deep detail for prompt appearances and sources
+  const deepDetail = await getCompetitorDeepDetail(brandId, competitor.name);
+
+  // Call AI analyzer
+  const analysis = await analyzeWhyCompetitorAhead(
+    brand.name,
+    competitor.name,
+    userMentionScore,
+    competitor.mentionScore,
+    deepDetail.promptAppearances.map((a) => ({
+      promptText: a.promptText,
+      platform: a.platform,
+      excerpt: a.excerpt,
+    })),
+    deepDetail.competitorOnlySources,
+  );
+
+  return analysis;
 }
 
 // ─── Notifications ─────────────────────────────────────

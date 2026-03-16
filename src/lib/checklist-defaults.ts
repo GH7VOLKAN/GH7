@@ -35,9 +35,9 @@ export interface ChecklistDefault {
 }
 
 export const LAYER_NAMES: Record<number, string> = {
-  1: "AI Seni Buluyor mu?",
-  2: "AI Sana Güveniyor mu?",
-  3: "AI Seni Öneriyor mu?",
+  1: "Yapay Zeka Seni Buluyor mu?",
+  2: "Yapay Zeka Sana Güveniyor mu?",
+  3: "Yapay Zeka Seni Öneriyor mu?",
 };
 
 export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
@@ -47,7 +47,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "1.1",
     simpleTitle: "Google'da görünüyor musun?",
     simpleDescription:
-      "Marka adını Google'a yazdığında ilk sayfada çıkıyor musun? AI modelleri bilgi toplarken en çok Google sonuçlarından beslenirler. Burada yoksan, AI için de yoksun.",
+      "Marka adını Google'a yazdığında ilk sayfada çıkıyor musun? Yapay zekalar bilgi toplarken en çok Google sonuçlarından beslenirler. Burada yoksan, yapay zeka için de yoksun.",
     difficulty: "EASY",
     impact: "HIGH",
     estimatedTime: "1-2 hafta",
@@ -67,7 +67,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Core Web Vitals kontrolü — LCP < 2.5s, FID < 100ms, CLS < 0.1",
       ],
       researchNote:
-        "Google arama sonuçları, ChatGPT ve Gemini'nin eğitim verisinin en büyük kaynağı. İlk sayfada görünmeyen markaların AI'da bahsedilme oranı %85 daha düşük.",
+        "Google arama sonuçları, ChatGPT ve Gemini'nin eğitim verisinin en büyük kaynağı. İlk sayfada görünmeyen markaların yapay zekada bahsedilme oranı %85 daha düşük.",
       researchSource: "Aggarwal et al., KDD 2024 — DOI: 10.1145/3637528.3671900",
     },
     canAgencyDo: true,
@@ -78,7 +78,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "1.2",
     simpleTitle: "LinkedIn profilin güncel mi?",
     simpleDescription:
-      "LinkedIn, AI'ların kişisel ve kurumsal bilgiler için en çok referans aldığı platformlardan biri. Profilin tam ve güncel değilse AI seni tanıyamaz.",
+      "LinkedIn, Yapay zekaların kişisel ve kurumsal bilgiler için en çok referans aldığı platformlardan biri. Profilin tam ve güncel değilse yapay zeka seni tanıyamaz.",
     difficulty: "EASY",
     impact: "HIGH",
     estimatedTime: "1-2 saat",
@@ -123,14 +123,14 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
       scope: [
         "Organization & LocalBusiness Schema markup (JSON-LD) implementasyonu",
         "FAQ Schema ile sık sorulan sorular yapılandırılmış veri olarak işaretlenir",
-        "llms.txt dosyası oluşturulur — AI crawler'lara site haritası sağlar",
-        "Sayfa hızı optimizasyonu (Core Web Vitals) — AI botlar yavaş siteleri atlar",
-        "Sitemap.xml güncellenir, robots.txt'te AI crawler'lara (GPTBot, ClaudeBot, PerplexityBot) erişim izni verilir",
-        "Canonical URL yapısı düzenlenir — duplicate content AI'yı karıştırmaz",
+        "llms.txt dosyası oluşturulur — yapay zeka tarayıcı'lara site haritası sağlar",
+        "Sayfa hızı optimizasyonu (Core Web Vitals) — yapay zeka botları yavaş siteleri atlar",
+        "Sitemap.xml güncellenir, robots.txt'te yapay zeka tarayıcı'lara (GPTBot, ClaudeBot, PerplexityBot) erişim izni verilir",
+        "Canonical URL yapısı düzenlenir — duplicate content yapay zekayı karıştırmaz",
         "Alt text, meta description, Open Graph tag'leri optimize edilir",
       ],
       researchNote:
-        "Bu optimizasyonlar AI görünürlüğünü %40'a kadar artırabiliyor. Yapılandırılmış veri kullanan siteler, AI cevaplarında 2.7x daha sık kaynak gösteriliyor.",
+        "Bu optimizasyonlar yapay zeka görünürlüğünü %40'a kadar artırabiliyor. Yapılandırılmış veri kullanan siteler, yapay zeka cevaplarında 2.7x daha sık kaynak gösteriliyor.",
       researchSource: "Aggarwal et al., KDD 2024 — DOI: 10.1145/3637528.3671900",
     },
     canAgencyDo: true,
@@ -141,7 +141,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "1.4",
     simpleTitle: "Google Business profilin var mı?",
     simpleDescription:
-      "AI'ya 'yakınımdaki en iyi X' diye sorulduğunda Google Business verileri doğrudan kullanılıyor. Profilin yoksa lokasyon bazlı sorularda hiç çıkmıyorsun.",
+      "Yapay zekaya 'yakınımdaki en iyi X' diye sorulduğunda Google Business verileri doğrudan kullanılıyor. Profilin yoksa lokasyon bazlı sorularda hiç çıkmıyorsun.",
     difficulty: "EASY",
     impact: "HIGH",
     estimatedTime: "1-3 gün",
@@ -162,7 +162,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "UTM parametreli website linki — trafik takibi",
       ],
       researchNote:
-        "Lokasyon bazlı AI sorgularında Google Business verileri %65 oranında doğrudan kaynak. 10+ yorumlu işletmeler 4.1x daha sık AI tarafından öneriliyor.",
+        "Lokasyon bazlı yapay zeka sorgularında Google Business verileri %65 oranında doğrudan kaynak. 10+ yorumlu işletmeler 4.1x daha sık yapay zeka tarafından öneriliyor.",
       researchSource: "BrightLocal Local Consumer Review Survey 2024",
     },
     canAgencyDo: true,
@@ -173,7 +173,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "1.5",
     simpleTitle: "Sektörel dizinlerde yer alıyor musun?",
     simpleDescription:
-      "Sektör dizinleri ve listeleme siteleri AI'ların güvendiği kaynaklardır. Ne kadar çok farklı dizinde tutarlı bilginle varsan, AI'ya o kadar güvenilir görünürsün.",
+      "Sektör dizinleri ve listeleme siteleri Yapay zekaların güvendiği kaynaklardır. Ne kadar çok farklı dizinde tutarlı bilginle varsan, Yapay zekaya o kadar güvenilir görünürsün.",
     difficulty: "MEDIUM",
     impact: "MEDIUM",
     estimatedTime: "1-2 hafta",
@@ -188,12 +188,12 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "NAP (Name, Address, Phone) tutarlılığı — tüm platformlarda birebir aynı format",
         "Minimum 5 yüksek otorite dizinde profil (sektöre göre: Yelp, Foursquare, sektörel rehberler)",
         "Her dizin profilinde web sitesi backlink'i — domain authority artışı",
-        "Profil açıklamalarında sektör anahtar kelimeleri — AI'ların entity matching'i için",
+        "Profil açıklamalarında sektör anahtar kelimeleri — Yapay zekaların entity matching'i için",
         "Aggregator servisleri (Yext, BrightLocal) ile toplu dağıtım opsiyonu",
         "Düzenli citation audit — tutarsızlıkları tespit ve düzelt",
       ],
       researchNote:
-        "Çoklu kaynak tutarlılığı AI'ların entity resolution güven skorunu doğrudan etkiler. 5+ tutarlı citation'ı olan markalar, AI cevaplarında %35 daha sık yer alıyor.",
+        "Çoklu kaynak tutarlılığı Yapay zekaların entity resolution güven skorunu doğrudan etkiler. 5+ tutarlı citation'ı olan markalar, yapay zeka cevaplarında %35 daha sık yer alıyor.",
       researchSource: "Moz Local Search Ranking Factors 2024",
     },
     canAgencyDo: true,
@@ -206,7 +206,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "2.1",
     simpleTitle: "Hakkında haber veya yazı var mı?",
     simpleDescription:
-      "AI'lar 'güvenilir kaynak' olarak üçüncü parti içeriklere bakar. Hakkında yazılmış haber, blog yazısı veya röportaj yoksa, AI sana güvenemiyor.",
+      "Yapay zekalar 'güvenilir kaynak' olarak üçüncü parti içeriklere bakar. Hakkında yazılmış haber, blog yazısı veya röportaj yoksa, yapay zeka sana güvenemiyor.",
     difficulty: "MEDIUM",
     impact: "HIGH",
     estimatedTime: "2-4 hafta",
@@ -227,7 +227,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Mention monitoring — Google Alerts + Brand24 ile marka bahsi takibi",
       ],
       researchNote:
-        "AI modelleri 'X hakkında ne biliyorsun' sorgularında, 3+ bağımsız kaynaktan doğrulanan bilgilere %72 daha fazla güveniyor. Üçüncü parti kaynak yoksa AI 'bilmiyorum' deme olasılığı %60.",
+        "Yapay zekalar 'X hakkında ne biliyorsun' sorgularında, 3+ bağımsız kaynaktan doğrulanan bilgilere %72 daha fazla güveniyor. Üçüncü parti kaynak yoksa yapay zeka 'bilmiyorum' deme olasılığı %60.",
       researchSource: "Liu et al., ACL 2024 — 'Source Attribution in Large Language Models'",
     },
     canAgencyDo: true,
@@ -238,7 +238,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "2.2",
     simpleTitle: "İstatistik ve veri paylaşıyor musun?",
     simpleDescription:
-      "AI modelleri sayısal verilere bayılır. Sektöründe özgün bir istatistik, anket sonucu veya rapor yayınlarsan, AI seni kaynak olarak göstermeye başlar.",
+      "Yapay zekalar sayısal verilere bayılır. Sektöründe özgün bir istatistik, anket sonucu veya rapor yayınlarsan, yapay zeka seni kaynak olarak göstermeye başlar.",
     difficulty: "MEDIUM",
     impact: "HIGH",
     estimatedTime: "2-3 hafta",
@@ -251,14 +251,14 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     technicalDetail: {
       scope: [
         "Özgün veri üretimi — anket, müşteri verileri (anonim), sektör analizi",
-        "Dataset Schema markup — AI'ların veriyi tanıması için yapılandırılmış format",
+        "Dataset Schema markup — Yapay zekaların veriyi tanıması için yapılandırılmış format",
         "İnfografik + embed kodu — paylaşılabilirlik ve backlink potansiyeli",
-        "Düzenli güncelleme takvimi — eski veri AI tarafından düşük önceliklendirilir",
+        "Düzenli güncelleme takvimi — eski veri yapay zeka tarafından düşük önceliklendirilir",
         "Veri sayfası SEO — '[Sektör] istatistikleri 2026' anahtar kelimesi hedefle",
         "Press release ile veri duyurusu — medya ilgisi çekme",
       ],
       researchNote:
-        "İstatistik içeren sayfalar, AI cevaplarında citation olarak gösterilme olasılığı 5.3x daha yüksek. Özgün veri üreten siteler, 'kaynak göster' sorgularında dominant pozisyonda.",
+        "İstatistik içeren sayfalar, yapay zeka cevaplarında citation olarak gösterilme olasılığı 5.3x daha yüksek. Özgün veri üreten siteler, 'kaynak göster' sorgularında dominant pozisyonda.",
       researchSource: "Ahrefs Content Study 2024 — 'Data-Driven Content & AI Citations'",
     },
     canAgencyDo: true,
@@ -269,7 +269,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "2.3",
     simpleTitle: "İçeriğin güncel mi?",
     simpleDescription:
-      "AI modelleri güncel içeriklere öncelik verir. Son 6 ayda güncellenmemiş sayfaların AI sonuçlarında gösterilme şansı çok düşer. Eski içerik = görünmez içerik.",
+      "Yapay zekalar güncel içeriklere öncelik verir. Son 6 ayda güncellenmemiş sayfaların yapay zeka sonuçlarında gösterilme şansı çok düşer. Eski içerik = görünmez içerik.",
     difficulty: "EASY",
     impact: "MEDIUM",
     estimatedTime: "Sürekli",
@@ -283,13 +283,13 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
       scope: [
         "Content audit — tüm URL'lerin son güncelleme tarihi taranır",
         "Sitemap.xml <lastmod> alanı doğru tarihi yansıtmalı",
-        "dateModified Schema.org markup — sayfanın güncellenme tarihi AI'ya bildirilir",
+        "dateModified Schema.org markup — sayfanın güncellenme tarihi Yapay zekaya bildirilir",
         "Evergreen content stratejisi — zamansız içerikleri periyodik güncelle",
         "301 redirect planı — eski URL'leri güncel sayfalara yönlendir",
         "İçerik decay analizi — trafik düşen sayfaları öncelikli güncelle",
       ],
       researchNote:
-        "6 aydan eski güncellenmeyen içerikler, AI sıralamalarında ortalama %45 gerileme gösteriyor. dateModified markup kullanan sayfalar, AI tarafından %28 daha güncel değerlendiriliyor.",
+        "6 aydan eski güncellenmeyen içerikler, yapay zeka sıralamalarında ortalama %45 gerileme gösteriyor. dateModified markup kullanan sayfalar, yapay zeka tarafından %28 daha güncel değerlendiriliyor.",
       researchSource: "Semrush State of Content Marketing 2024",
     },
     canAgencyDo: true,
@@ -300,7 +300,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "2.4",
     simpleTitle: "Sorulara cevap veriyor musun?",
     simpleDescription:
-      "AI'lar kullanıcı sorularına cevap arar. Sitende FAQ sayfası, 'nasıl yapılır' rehberleri varsa, AI seni doğrudan cevap kaynağı olarak kullanır.",
+      "Yapay zekalar kullanıcı sorularına cevap arar. Sitende FAQ sayfası, 'nasıl yapılır' rehberleri varsa, yapay zeka seni doğrudan cevap kaynağı olarak kullanır.",
     difficulty: "MEDIUM",
     impact: "MEDIUM",
     estimatedTime: "1-2 hafta",
@@ -317,10 +317,10 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Question+Answer format — H2 soru, altında detaylı cevap",
         "People Also Ask optimizasyonu — Google'ın soru kutularını hedefle",
         "Internal linking — ilgili soru sayfaları birbirine bağlanır",
-        "Cevap kutucuğu formatı — ilk 2 cümlede direkt cevap (AI snippet-friendly)",
+        "Cevap kutucuğu formatı — ilk 2 cümlede direkt cevap (yapay zeka snippet-friendly)",
       ],
       researchNote:
-        "FAQ Schema kullanan sayfalar, AI'ların 'direct answer' kaynağı olma olasılığı 3.8x daha yüksek. Soru-cevap formatındaki içerikler, Perplexity tarafından %58 daha sık cite ediliyor.",
+        "FAQ Schema kullanan sayfalar, Yapay zekaların 'direct answer' kaynağı olma olasılığı 3.8x daha yüksek. Soru-cevap formatındaki içerikler, Perplexity tarafından %58 daha sık cite ediliyor.",
       researchSource: "Schema.org Adoption Study, SEMrush 2024",
     },
     canAgencyDo: true,
@@ -329,14 +329,14 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
   {
     layer: 2,
     itemNumber: "2.5",
-    simpleTitle: "AI botları siteni okuyabiliyor mu?",
+    simpleTitle: "Yapay zeka botları siteni okuyabiliyor mu?",
     simpleDescription:
-      "Web siten varsa bile, AI botlarının siteyi okuyabilmesi gerekiyor. robots.txt'te izin yoksa veya siten çok yavaşsa, AI içeriğini hiç görmüyor.",
+      "Web siten varsa bile, Yapay zeka botlarının siteyi okuyabilmesi gerekiyor. robots.txt'te izin yoksa veya siten çok yavaşsa, yapay zeka içeriğini hiç görmüyor.",
     difficulty: "HARD",
     impact: "HIGH",
     estimatedTime: "1-3 gün",
     selfServiceSteps: [
-      "robots.txt dosyanı kontrol et — AI botları engellenmiş mi?",
+      "robots.txt dosyanı kontrol et — Yapay zeka botları engellenmiş mi?",
       "GPTBot, ClaudeBot, PerplexityBot user-agent'larına izin ver",
       "Sayfa yükleme hızını kontrol et — 3 saniyenin altına düşür",
       "JavaScript-only içerik varsa SSR/SSG'ye geç — botlar JS render edemez",
@@ -344,15 +344,15 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     technicalDetail: {
       scope: [
         "robots.txt güncelleme — GPTBot, CCBot (Claude), PerplexityBot, Google-Extended izinleri",
-        "llms.txt dosyası oluşturma — AI crawler'lara özel site haritası ve bağlam",
-        "Server-side rendering (SSR) veya static generation — JS-dependent içerik AI botlara görünmez",
-        "Core Web Vitals optimizasyonu — LCP < 2.5s (AI botlar timeout yapar)",
+        "llms.txt dosyası oluşturma — yapay zeka tarayıcı'lara özel site haritası ve bağlam",
+        "Server-side rendering (SSR) veya static generation — JS-dependent içerik yapay zeka botlarıa görünmez",
+        "Core Web Vitals optimizasyonu — LCP < 2.5s (yapay zeka botları timeout yapar)",
         "Crawl budget optimizasyonu — önemli sayfaların öncelikli taranması",
-        "AI crawler log analizi — hangi botlar ne sıklıkla geliyor takibi",
+        "yapay zeka tarayıcı log analizi — hangi botlar ne sıklıkla geliyor takibi",
         "CDN + edge caching — bot erişim hızını artırma",
       ],
       researchNote:
-        "Web sitelerinin %41'i farkında olmadan AI crawler'ları engelliyor. llms.txt kullanan siteler, AI index'lenme hızında %65 iyileşme görüyor.",
+        "Web sitelerinin %41'i farkında olmadan yapay zeka tarayıcı'ları engelliyor. llms.txt kullanan siteler, yapay zeka tarafından dizinlenme hızında %65 iyileşme görüyor.",
       researchSource: "OriginalityAI Robot.txt Study 2024 + llms-txt.org specification",
     },
     canAgencyDo: true,
@@ -365,19 +365,19 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "3.1",
     simpleTitle: "Birden fazla platformda bahsediliyor musun?",
     simpleDescription:
-      "ChatGPT, Claude, Gemini, Perplexity — ne kadar çok platformda bahsedilirsen, o kadar güçlü bir AI varlığın olur. Tek platformda olmak yetmez.",
+      "ChatGPT, Claude, Gemini, Perplexity — ne kadar çok platformda bahsedilirsen, o kadar güçlü bir yapay zeka varlığın olur. Tek platformda olmak yetmez.",
     difficulty: "MEDIUM",
     impact: "HIGH",
     estimatedTime: "1-3 ay",
     selfServiceSteps: [
-      "4 ana AI platformunda markanı sorgula ve sonuçları karşılaştır",
+      "4 ana yapay zekada markanı sorgula ve sonuçları karşılaştır",
       "Bahsedilmeyen platformlar için hedefli içerik stratejisi oluştur",
       "Her platform için farklı kaynak türleri oluştur (blog, veri, haber)",
       "Haftalık olarak GH7 ile sonuçları takip et",
     ],
     technicalDetail: {
       scope: [
-        "Platform-specific içerik stratejisi — her AI'ın farklı kaynak tercihi var",
+        "Platform-specific içerik stratejisi — her yapay zekanın farklı kaynak tercihi var",
         "ChatGPT: Wikipedia, güvenilir haber kaynakları, akademik makaleler ağırlıklı",
         "Perplexity: Güncel web sonuçları, soru-cevap formatı, citation-ready içerik",
         "Claude: Uzun form içerik, teknik dökümanlar, araştırma raporları",
@@ -386,7 +386,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Multi-channel content distribution — aynı bilgi farklı formatlarda",
       ],
       researchNote:
-        "3+ AI platformunda tutarlı şekilde bahsedilen markalar, tek platform markalarına göre kullanıcı güveninde %89 daha yüksek skor alıyor.",
+        "3+ yapay zekada tutarlı şekilde bahsedilen markalar, tek platform markalarına göre kullanıcı güveninde %89 daha yüksek skor alıyor.",
       researchSource: "GH7.ai Internal Research — 500+ marka analizi, 2024 Q4",
     },
     canAgencyDo: true,
@@ -397,7 +397,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "3.2",
     simpleTitle: "Rakiplerinden daha çok kaynağın var mı?",
     simpleDescription:
-      "AI karşılaştırmalı sorularda kaynak sayısına bakar. Rakibinin 15 kaynağı varsa senin de en az o kadar olmalı. Yoksa AI rakibini öneriyor, seni değil.",
+      "Yapay zeka karşılaştırmalı sorularda kaynak sayısına bakar. Rakibinin 15 kaynağı varsa senin de en az o kadar olmalı. Yoksa yapay zeka rakibini öneriyor, seni değil.",
     difficulty: "HARD",
     impact: "HIGH",
     estimatedTime: "2-6 ay",
@@ -412,12 +412,12 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Rakip kaynak gap analizi — her rakibin kaynak profili çıkarılır",
         "Kaynak çeşitlilik skoru — medya, dizin, UGC, akademik, referans kategorileri",
         "Backlink profile karşılaştırma — Ahrefs/Moz ile rakip DR/DA analizi",
-        "Content gap analizi — rakiplerin AI'da bahsedilip senin bahsedilmediğin konular",
+        "Content gap analizi — rakiplerin yapay zekada bahsedilip senin bahsedilmediğin konular",
         "Link building stratejisi — broken link, resource page, guest post",
         "Kaynak kalite piramidi — az ama yüksek otorite > çok ama düşük otorite",
       ],
       researchNote:
-        "AI karşılaştırma sorgularında, kaynak çeşitliliği kaynak sayısından daha etkili. 5 farklı türde kaynağı olan markalar, 20 tek tür kaynağı olan markalardan %44 daha sık öneriliyor.",
+        "Yapay zeka karşılaştırma sorgularında, kaynak çeşitliliği kaynak sayısından daha etkili. 5 farklı türde kaynağı olan markalar, 20 tek tür kaynağı olan markalardan %44 daha sık öneriliyor.",
       researchSource: "Zyppy AI Visibility Study 2024 — Cyrus Shepard",
     },
     canAgencyDo: true,
@@ -428,7 +428,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "3.3",
     simpleTitle: "Kaynak olarak gösteriliyor musun?",
     simpleDescription:
-      "AI modelleri cevap verirken kaynak gösterir. Senin siten bir kaynaksa, bu en üst düzey güven demek. Perplexity'de link olarak çıkmak, altın değerinde.",
+      "Yapay zekalar cevap verirken kaynak gösterir. Senin siten bir kaynaksa, bu en üst düzey güven demek. Perplexity'de link olarak çıkmak, altın değerinde.",
     difficulty: "HARD",
     impact: "HIGH",
     estimatedTime: "3-6 ay",
@@ -443,12 +443,12 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Citation-worthy içerik üretimi — özgün veri, sektör raporu, benchmark",
         "Citability optimizasyonu — net başlıklar, kolay referans alınabilir paragraflar",
         "Snippet-friendly yazım — ilk 2 cümlede net cevap, sonra detay",
-        "Canonical URL yapısı — AI'ın doğru sayfayı cite etmesini sağla",
+        "Canonical URL yapısı — yapay zekanın doğru sayfayı cite etmesini sağla",
         "Backlink velocity artışı — organik cite edilme zinciri başlatma",
         "Citation monitoring — Perplexity API ile otomatik takip",
       ],
       researchNote:
-        "AI citation alan sayfaların %78'i orijinal veri veya araştırma içeriyor. Genel bilgi sayfaları neredeyse hiç cite edilmiyor. Referans alınabilir içerik, AI'da önerilme olasılığını 7.2x artırıyor.",
+        "Yapay zeka referans alan sayfaların %78'i orijinal veri veya araştırma içeriyor. Genel bilgi sayfaları neredeyse hiç cite edilmiyor. Referans alınabilir içerik, yapay zekada önerilme olasılığını 7.2x artırıyor.",
       researchSource: "Backlinko AI Search Study 2024 — Brian Dean",
     },
     canAgencyDo: true,
@@ -459,7 +459,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "3.4",
     simpleTitle: "Otorite olarak tanınıyor musun?",
     simpleDescription:
-      "AI bazı markaları sektörlerinde otorite olarak kabul eder ve varsayılan öneri olarak sunar. Bu seviye, uzun vadeli ve stratejik çalışma gerektirir.",
+      "Yapay zekalar bazı markaları sektörlerinde otorite olarak kabul eder ve varsayılan öneri olarak sunar. Bu seviye, uzun vadeli ve stratejik çalışma gerektirir.",
     difficulty: "HARD",
     impact: "HIGH",
     estimatedTime: "6-12 ay",
@@ -480,7 +480,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Cross-referencing — diğer otoriteler tarafından referans alınma stratejisi",
       ],
       researchNote:
-        "Google'ın E-E-A-T framework'ü AI modellerinin güven değerlendirmesini doğrudan etkiler. Otorite skoru yüksek markalar, AI'ın 'en iyi X' sorgularında varsayılan öneri olma olasılığı %91.",
+        "Google'ın E-E-A-T framework'ü yapay zekaların güven değerlendirmesini doğrudan etkiler. Otorite skoru yüksek markalar, yapay zekanın 'en iyi X' sorgularında varsayılan öneri olma olasılığı %91.",
       researchSource: "Google Search Quality Evaluator Guidelines 2024 + Stanford HAI Report",
     },
     canAgencyDo: true,
@@ -491,7 +491,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     itemNumber: "3.5",
     simpleTitle: "Farklı soru tiplerinde çıkıyor musun?",
     simpleDescription:
-      "Sadece 'X kim' sorgularında değil; karşılaştırma, tavsiye, fiyat, lokasyon gibi farklı soru tiplerinde de AI tarafından bahsedilmek tam kapsamlı varlık demek.",
+      "Sadece 'X kim' sorgularında değil; karşılaştırma, tavsiye, fiyat, lokasyon gibi farklı soru tiplerinde de yapay zeka tarafından bahsedilmek tam kapsamlı varlık demek.",
     difficulty: "MEDIUM",
     impact: "MEDIUM",
     estimatedTime: "2-4 ay",
@@ -512,7 +512,7 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
         "Product Schema markup — ürün/hizmet sorgularında zengin sonuç",
       ],
       researchNote:
-        "5+ farklı soru kategorisinde AI'da görünen markalar, toplam AI trafiğinin %73'ünü alıyor. Sadece marka sorgularında görünen markalar, potansiyel trafiğin %85'ini kaçırıyor.",
+        "5+ farklı soru kategorisinde yapay zekada görünen markalar, toplam yapay zeka trafiğinin %73'ünü alıyor. Sadece marka sorgularında görünen markalar, potansiyel trafiğin %85'ini kaçırıyor.",
       researchSource: "Seer Interactive AI Search Intent Study 2024",
     },
     canAgencyDo: true,

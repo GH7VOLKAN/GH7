@@ -5,6 +5,8 @@ import { runSiteAudit } from "@/lib/ai/site-auditor";
 import { runPersonalAudit } from "@/lib/ai/personal-auditor";
 import { persistAuditResults } from "@/lib/ai/audit-persister";
 import { generateActionPlan } from "@/lib/ai/action-plan-generator";
+import { checkPromptFreshness } from "@/lib/ai/prompt-freshness";
+import { verifyChecklistItems } from "@/lib/ai/checklist-verifier";
 import { isPro } from "@/lib/plans";
 import { processExpiredPlans } from "@/lib/iyzico/activate-plan";
 
@@ -128,6 +130,69 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // ── Weekly: Gelişim Planı otomatik doğrulama (Pazartesi) ──
+  const dayOfWeekNow = new Date(now).getUTCDay();
+  let checklistResults = { verified: 0, changed: 0 };
+  if (dayOfWeekNow === 1) {
+    for (const brand of brands) {
+      const plan = brand.profile?.plan ?? "free";
+      if (!isPro(plan)) continue;
+      try {
+        const result = await verifyChecklistItems(brand.id);
+        checklistResults.verified += result.verified;
+        checklistResults.changed += result.changed;
+        if (result.changed > 0) {
+          console.log(`[auto-scan] Checklist verified for ${brand.id}: ${result.changed}/${result.verified} items changed`);
+        }
+      } catch (err) {
+        console.error(`[auto-scan] Checklist verify failed for ${brand.id}:`, err);
+      }
+    }
+  }
+
+  // ── Monthly: Soru güncellik kontrolü (ayın 1'i) ──
+  const dayOfMonth = new Date(now).getUTCDate();
+  let freshnessResults = { checked: 0, stale: 0 };
+  if (dayOfMonth === 1) {
+    for (const brand of brands) {
+      const plan = brand.profile?.plan ?? "free";
+      if (!isPro(plan)) continue;
+      try {
+        const prompts = await prisma.prompt.findMany({
+          where: { brandId: brand.id, isActive: true },
+          select: { id: true, text: true },
+        });
+        const result = await checkPromptFreshness(
+          prompts,
+          brand.sector ?? "",
+          brand.city ?? "",
+        );
+        freshnessResults.checked += result.checkedCount;
+        freshnessResults.stale += result.staleCount;
+
+        // Güncelliğini yitirmiş soruları işaretle
+        for (const r of result.results) {
+          if (r.isStale) {
+            await prisma.prompt.update({
+              where: { id: r.promptId },
+              data: {
+                tags: {
+                  push: "guncel-degil",
+                },
+              },
+            });
+          }
+        }
+
+        if (result.staleCount > 0) {
+          console.log(`[auto-scan] Freshness check for ${brand.id}: ${result.staleCount}/${result.checkedCount} stale`);
+        }
+      } catch (err) {
+        console.error(`[auto-scan] Freshness check failed for ${brand.id}:`, err);
+      }
+    }
+  }
+
   // Process expired plans and grace periods
   let planResults = { checked: 0, graceStarted: 0, deactivated: 0 };
   try {
@@ -143,6 +208,8 @@ export async function GET(request: NextRequest) {
     success: true,
     brandsChecked: brands.length,
     scansTriggered: triggered,
+    checklistVerification: checklistResults,
+    promptFreshness: freshnessResults,
     planExpiry: planResults,
   });
 }

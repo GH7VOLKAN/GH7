@@ -10,11 +10,13 @@ import type {
 import { buildFreeToolPrompt } from "./prompt-builder";
 import { getAvailableProviders } from "@/lib/ai/provider-registry";
 import { analyzeResponse } from "@/lib/ai/analyzer";
+import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
 import Anthropic from "@anthropic-ai/sdk";
 
-// ── Simple in-memory cache ──────────────────────────
-const cache = new Map<string, { result: FreeToolResult; ts: number }>();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+// ── Fallback in-memory cache (when Redis unavailable) ──
+const memCache = new Map<string, { result: FreeToolResult; ts: number }>();
+const MEM_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const REDIS_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
 
 // ── Rate limiter ────────────────────────────────────
 let recentQueries = 0;
@@ -277,11 +279,15 @@ export async function runFreeToolQuery(
     throw new Error("Çok fazla sorgu gönderildi. Lütfen bir dakika bekleyin.");
   }
 
-  // Check cache
-  const cacheKey = `${input.mode}:${input.name.toLowerCase().trim()}:${input.field.toLowerCase().trim()}:${input.city.toLowerCase().trim()}`;
-  const cached = cache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) {
-    return cached.result;
+  // Check cache — try Redis first, fall back to in-memory
+  const cacheKey = makeCacheKey("freetool", input.mode, input.name, input.field, input.city);
+
+  const redisCached = await cacheGet<FreeToolResult>(cacheKey);
+  if (redisCached) return redisCached;
+
+  const memCached = memCache.get(cacheKey);
+  if (memCached && Date.now() - memCached.ts < MEM_CACHE_TTL) {
+    return memCached.result;
   }
 
   recentQueries++;
@@ -468,7 +474,9 @@ export async function runFreeToolQuery(
     actionItems: proInsights.actionItems,
   };
 
-  cache.set(cacheKey, { result, ts: Date.now() });
+  // Store in both Redis (7 day TTL, cross-user) and in-memory (1h fallback)
+  await cacheSet(cacheKey, result, REDIS_TTL);
+  memCache.set(cacheKey, { result, ts: Date.now() });
 
   return result;
 }
