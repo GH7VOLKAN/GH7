@@ -11,6 +11,8 @@ import {
   deleteBrand,
   setDefaultBrand,
   activateTestPlan,
+  regenerateApiKey,
+  updateWebhookUrl,
 } from "@/lib/actions";
 import { PlanSelector } from "@/components/payment/plan-selector";
 import { CheckoutModal } from "@/components/payment/checkout-modal";
@@ -41,6 +43,13 @@ import {
   MoonIcon,
   MonitorIcon,
   XIcon,
+  KeyRoundIcon,
+  CopyIcon,
+  RefreshCwIcon,
+  EyeIcon,
+  EyeOffIcon,
+  ActivityIcon,
+  LinkIcon,
 } from "lucide-react";
 
 type BrandType = "firma" | "kisisel";
@@ -77,6 +86,9 @@ interface AyarlarClientProps {
   scanInterval: string;
   phone: string;
   smsEnabled: boolean;
+  emailScanComplete: boolean;
+  emailScoreChange: boolean;
+  emailWeeklyReport: boolean;
   userName: string;
   userEmail: string;
   avatarUrl: string | null;
@@ -101,6 +113,8 @@ interface AyarlarClientProps {
     totalBrands: number;
     totalCompetitors: number;
   };
+  apiKey: string | null;
+  webhookUrl: string | null;
 }
 
 // ─── Plan comparison data ───
@@ -133,6 +147,9 @@ export function AyarlarClient({
   scanInterval: initialInterval,
   phone: initialPhone,
   smsEnabled: initialSmsEnabled,
+  emailScanComplete: initialEmailScanComplete,
+  emailScoreChange: initialEmailScoreChange,
+  emailWeeklyReport: initialEmailWeeklyReport,
   userName,
   userEmail,
   avatarUrl,
@@ -147,6 +164,8 @@ export function AyarlarClient({
   paymentHistory,
   limits,
   usage,
+  apiKey: initialApiKey,
+  webhookUrl: initialWebhookUrl,
 }: AyarlarClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -168,6 +187,15 @@ export function AyarlarClient({
   // Notifications tab state
   const [phone, setPhone] = useState(initialPhone);
   const [smsEnabled, setSmsEnabled] = useState(initialSmsEnabled);
+
+  // Integration tab state (agency only)
+  const [currentApiKey, setCurrentApiKey] = useState(initialApiKey);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState(initialWebhookUrl ?? "");
+  const [webhookEnabled, setWebhookEnabled] = useState(!!initialWebhookUrl);
+  const [emailScanComplete, setEmailScanComplete] = useState(initialEmailScanComplete);
+  const [emailScoreChange, setEmailScoreChange] = useState(initialEmailScoreChange);
+  const [emailWeeklyReport, setEmailWeeklyReport] = useState(initialEmailWeeklyReport);
 
   // UI state
   const [isPending, startTransition] = useTransition();
@@ -320,7 +348,7 @@ export function AyarlarClient({
 
       {/* Tabs */}
       <Tabs defaultValue="genel" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 h-auto p-1">
+        <TabsList className={`grid w-full ${plan === "agency" ? "grid-cols-6" : "grid-cols-5"} h-auto p-1`}>
           <TabsTrigger value="genel" className="gap-1.5 text-xs sm:text-sm">
             <UserIcon className="size-3.5" />
             <span className="hidden sm:inline">Genel</span>
@@ -341,6 +369,12 @@ export function AyarlarClient({
             <RadarIcon className="size-3.5" />
             <span className="hidden sm:inline">Tarama</span>
           </TabsTrigger>
+          {plan === "agency" && (
+            <TabsTrigger value="entegrasyon" className="gap-1.5 text-xs sm:text-sm">
+              <KeyRoundIcon className="size-3.5" />
+              <span className="hidden sm:inline">Entegrasyon</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ─── TAB 1: GENEL ─── */}
@@ -941,24 +975,65 @@ export function AyarlarClient({
             <CardHeader>
               <CardTitle className="text-base">Bildirim Tercihleri</CardTitle>
               <CardDescription>
-                Tarama sonuçları ve skor değişimleri için bildirim ayarlarınızı yönetin.
+                Hangi durumlarda size haber verelim, siz seçin.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Email notifications */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">E-posta Bildirimleri</p>
-                  <p className="text-xs text-muted-foreground">
-                    Tarama sonuçları e-posta adresinize gönderilir
-                  </p>
+              {/* E-posta bildirimleri */}
+              <div className="space-y-4">
+                <p className="text-sm font-medium">E-posta Bildirimleri</p>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm">Tarama sonuçlarını gönderin</p>
+                    <p className="text-xs text-muted-foreground">
+                      Her tarama bittiğinde sonuçları e-posta ile alın
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailScanComplete}
+                    onCheckedChange={setEmailScanComplete}
+                  />
                 </div>
-                <Switch checked disabled />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm">Puan değişimlerinde bilgi verin</p>
+                    <p className="text-xs text-muted-foreground">
+                      Puanınız yükseldiğinde veya düştüğünde haberdar olun
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailScoreChange}
+                    onCheckedChange={setEmailScoreChange}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm">Haftalık raporu gönderin</p>
+                      {isFree && (
+                        <Badge variant="outline" className="text-[10px]">
+                          <LockIcon className="mr-0.5 size-2.5" /> Pro
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Her hafta ilerlemenizi özetleyen bir e-posta alın
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailWeeklyReport}
+                    onCheckedChange={setEmailWeeklyReport}
+                    disabled={isFree}
+                  />
+                </div>
               </div>
 
               <Separator />
 
-              {/* SMS notifications */}
+              {/* SMS bildirimleri */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1003,7 +1078,13 @@ export function AyarlarClient({
                 onClick={() => {
                   startTransition(async () => {
                     try {
-                      await updateNotificationPreferences({ phone, smsEnabled });
+                      await updateNotificationPreferences({
+                        phone,
+                        smsEnabled,
+                        emailScanComplete,
+                        emailScoreChange,
+                        emailWeeklyReport,
+                      });
                       showToast("Bildirim tercihleri güncellendi");
                     } catch {
                       showToast("Hata oluştu");
@@ -1113,6 +1194,204 @@ export function AyarlarClient({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ─── TAB 6: ENTEGRASYON (Agency only) ─── */}
+        {plan === "agency" && (
+          <TabsContent value="entegrasyon" className="space-y-6">
+            {/* Erişim Anahtarı */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <KeyRoundIcon className="size-4" />
+                  Erişim Anahtarı
+                </CardTitle>
+                <CardDescription>
+                  GH7 verilerinize programatik erişim sağlayın. Bu anahtarı güvenli bir yerde saklayın.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {currentApiKey ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 rounded-lg border border-border bg-muted/50 px-4 py-2.5 font-mono text-sm">
+                        {showApiKey
+                          ? currentApiKey
+                          : `gh7_${"•".repeat(20)}...${currentApiKey.slice(-4)}`}
+                      </div>
+                      <button
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="rounded-lg border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        title={showApiKey ? "Gizle" : "Göster"}
+                      >
+                        {showApiKey ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(currentApiKey);
+                          showToast("Anahtar panoya kopyalandı");
+                        }}
+                        className="rounded-lg border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        title="Kopyala"
+                      >
+                        <CopyIcon className="size-4" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!confirm("Mevcut anahtar geçersiz olacak. Yeni anahtar oluşturmak istediğinize emin misiniz?")) return;
+                        startTransition(async () => {
+                          try {
+                            const result = await regenerateApiKey(brandId);
+                            setCurrentApiKey(result.apiKey);
+                            setShowApiKey(true);
+                            showToast("Yeni erişim anahtarı oluşturuldu");
+                          } catch {
+                            showToast("Hata oluştu");
+                          }
+                        });
+                      }}
+                      disabled={isPending}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                    >
+                      <RefreshCwIcon className="size-3.5" />
+                      {isPending ? "Oluşturuluyor..." : "Yeniden Oluştur"}
+                    </button>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Henüz bir erişim anahtarınız yok. Oluşturmak için aşağıdaki butona tıklayın.
+                    </p>
+                    <button
+                      onClick={() => {
+                        startTransition(async () => {
+                          try {
+                            const result = await regenerateApiKey(brandId);
+                            setCurrentApiKey(result.apiKey);
+                            setShowApiKey(true);
+                            showToast("Erişim anahtarı oluşturuldu");
+                          } catch {
+                            showToast("Hata oluştu");
+                          }
+                        });
+                      }}
+                      disabled={isPending}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      <KeyRoundIcon className="size-3.5" />
+                      {isPending ? "Oluşturuluyor..." : "Erişim Anahtarı Oluştur"}
+                    </button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Webhook */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <LinkIcon className="size-4" />
+                  Webhook
+                </CardTitle>
+                <CardDescription>
+                  Tarama sonuçlarının otomatik olarak gönderileceği URL&apos;yi belirleyin.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Webhook Bildirimleri</p>
+                    <p className="text-xs text-muted-foreground">
+                      Tarama tamamlandığında sonuçlar bu adrese POST edilir
+                    </p>
+                  </div>
+                  <Switch
+                    checked={webhookEnabled}
+                    onCheckedChange={(checked) => {
+                      setWebhookEnabled(checked);
+                      if (!checked) {
+                        startTransition(async () => {
+                          try {
+                            await updateWebhookUrl(brandId, "");
+                            setWebhookUrl("");
+                            showToast("Webhook devre dışı bırakıldı");
+                          } catch {
+                            showToast("Hata oluştu");
+                          }
+                        });
+                      }
+                    }}
+                  />
+                </div>
+
+                {webhookEnabled && (
+                  <>
+                    <Separator />
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Webhook URL
+                      </label>
+                      <input
+                        type="url"
+                        value={webhookUrl}
+                        onChange={(e) => setWebhookUrl(e.target.value)}
+                        placeholder="https://example.com/webhook/gh7"
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono focus:border-foreground focus:outline-none"
+                      />
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        URL https:// ile başlamalıdır
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        startTransition(async () => {
+                          try {
+                            await updateWebhookUrl(brandId, webhookUrl);
+                            showToast("Webhook URL kaydedildi");
+                          } catch (err: unknown) {
+                            showToast(err instanceof Error ? err.message : "Hata oluştu");
+                          }
+                        });
+                      }}
+                      disabled={isPending}
+                      className="rounded-lg bg-foreground px-6 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      {isPending ? "Kaydediliyor..." : "Kaydet"}
+                    </button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Kullanım İstatistikleri */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ActivityIcon className="size-4" />
+                  Kullanım İstatistikleri
+                </CardTitle>
+                <CardDescription>
+                  Bu ayki entegrasyon kullanım bilgileriniz
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border p-4">
+                    <p className="text-xs font-medium text-muted-foreground">Aylık İstek Sayısı</p>
+                    <p className="mt-1 text-2xl font-bold">0</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">Bu ay yapılan toplam istek</p>
+                  </div>
+                  <div className="rounded-xl border border-border p-4">
+                    <p className="text-xs font-medium text-muted-foreground">Kalan Kota</p>
+                    <p className="mt-1 text-2xl font-bold">10.000</p>
+                    <Progress value={0} className="mt-2 h-1.5" />
+                    <p className="mt-1 text-[10px] text-muted-foreground">Aylık 10.000 istek hakkınız var</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Plan Selector Modal */}

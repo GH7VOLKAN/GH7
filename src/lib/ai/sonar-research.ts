@@ -19,6 +19,7 @@ async function querySonar(prompt: string): Promise<string> {
       model: "sonar",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 2048,
+      temperature: 0.7,
     }),
   });
 

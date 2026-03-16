@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     },
     include: {
       profile: {
-        select: { email: true, plan: true },
+        select: { email: true, plan: true, emailWeeklyReport: true },
       },
     },
   });
@@ -91,9 +91,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // 4. Send email
+      // 4. Send email (respect user preference)
       const email = brand.profile?.email;
-      if (!email) {
+      const wantsReport = brand.profile?.emailWeeklyReport !== false; // default true
+      if (!email || !wantsReport) {
         console.warn(`[weekly-report] No email for brand ${brand.id}, skipping`);
         results.push({
           brandId: brand.id,

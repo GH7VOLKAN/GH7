@@ -19,7 +19,10 @@ model Profile {
   fullName   String?  @map("full_name")
   avatarUrl  String?  @map("avatar_url")
   phone      String?
-  smsEnabled Boolean  @default(false) @map("sms_enabled")
+  smsEnabled       Boolean  @default(false) @map("sms_enabled")
+  emailScanComplete Boolean  @default(true)  @map("email_scan_complete")
+  emailScoreChange  Boolean  @default(true)  @map("email_score_change")
+  emailWeeklyReport Boolean  @default(true)  @map("email_weekly_report")
   plan          String   @default("free") // free, pro, business, agency
   planStartDate DateTime? @map("plan_start_date")
   planEndDate   DateTime? @map("plan_end_date")
@@ -50,6 +53,8 @@ model Brand {
   isDefault    Boolean  @default(false) @map("is_default")
   autoScan     Boolean  @default(true)  @map("auto_scan")
   scanInterval String   @default("thrice_weekly") @map("scan_interval") // daily, thrice_weekly, manual
+  apiKey       String?  @map("api_key")
+  webhookUrl   String?  @map("webhook_url")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

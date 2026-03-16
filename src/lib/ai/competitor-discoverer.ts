@@ -55,6 +55,7 @@ async function querySonar(prompt: string): Promise<string> {
       model: "sonar",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 3000,
+      temperature: 0.7,
     }),
     signal: AbortSignal.timeout(30_000),
   });
@@ -177,6 +178,7 @@ KURALLAR:
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
+      temperature: 0.7,
       messages: [{ role: "user", content: prompt }],
     });
 

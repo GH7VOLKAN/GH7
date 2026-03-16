@@ -47,6 +47,7 @@ async function querySonar(prompt: string): Promise<string> {
       model: "sonar",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 2048,
+      temperature: 0.7,
     }),
   });
 
@@ -209,6 +210,7 @@ JSON formatinda dondur — baska hicbir sey yazma:
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2048,
+      temperature: 0.7,
       messages: [{ role: "user", content: prompt }],
     });
 

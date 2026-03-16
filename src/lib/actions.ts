@@ -575,10 +575,54 @@ export async function activateTestPlan(plan: string) {
   return { success: true, plan };
 }
 
+// ─── Integration (Agency) ───────────────────────────────
+export async function regenerateApiKey(brandId: string) {
+  const { brand } = await getAuthenticatedBrand(brandId);
+
+  // Verify agency plan
+  const profile = await prisma.profile.findUnique({ where: { id: brand.profileId } });
+  if (profile?.plan !== "agency") throw new Error("Bu özellik yalnızca Ajans planında kullanılabilir");
+
+  const { randomBytes } = await import("crypto");
+  const key = `gh7_${randomBytes(32).toString("hex")}`;
+
+  await prisma.brand.update({
+    where: { id: brandId },
+    data: { apiKey: key },
+  });
+
+  revalidatePath("/dashboard/ayarlar");
+  return { success: true, apiKey: key };
+}
+
+export async function updateWebhookUrl(brandId: string, url: string) {
+  const { brand } = await getAuthenticatedBrand(brandId);
+
+  // Verify agency plan
+  const profile = await prisma.profile.findUnique({ where: { id: brand.profileId } });
+  if (profile?.plan !== "agency") throw new Error("Bu özellik yalnızca Ajans planında kullanılabilir");
+
+  // Basic URL validation
+  if (url && !url.startsWith("https://")) {
+    throw new Error("Webhook URL'si https:// ile başlamalıdır");
+  }
+
+  await prisma.brand.update({
+    where: { id: brandId },
+    data: { webhookUrl: url || null },
+  });
+
+  revalidatePath("/dashboard/ayarlar");
+  return { success: true };
+}
+
 // ─── Notification Preferences ───────────────────────────
 export async function updateNotificationPreferences(data: {
   phone: string;
   smsEnabled: boolean;
+  emailScanComplete: boolean;
+  emailScoreChange: boolean;
+  emailWeeklyReport: boolean;
 }) {
   const supabase = await createClient();
   const {
@@ -591,6 +635,9 @@ export async function updateNotificationPreferences(data: {
     data: {
       phone: data.phone.trim() || null,
       smsEnabled: data.smsEnabled,
+      emailScanComplete: data.emailScanComplete,
+      emailScoreChange: data.emailScoreChange,
+      emailWeeklyReport: data.emailWeeklyReport,
     },
   });
 

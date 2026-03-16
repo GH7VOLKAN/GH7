@@ -30,6 +30,9 @@ export default async function AyarlarPage() {
       scanInterval={activeBrand?.brand?.scanInterval ?? "daily"}
       phone={activeBrand?.profile?.phone ?? ""}
       smsEnabled={activeBrand?.profile?.smsEnabled ?? false}
+      emailScanComplete={activeBrand?.profile?.emailScanComplete ?? true}
+      emailScoreChange={activeBrand?.profile?.emailScoreChange ?? true}
+      emailWeeklyReport={activeBrand?.profile?.emailWeeklyReport ?? true}
       userName={activeBrand?.profile?.fullName ?? ""}
       userEmail={activeBrand?.profile?.email ?? ""}
       avatarUrl={activeBrand?.profile?.avatarUrl ?? null}
@@ -57,6 +60,8 @@ export default async function AyarlarPage() {
         totalBrands: userBrands.length,
         totalCompetitors,
       }}
+      apiKey={activeBrand?.brand?.apiKey ?? null}
+      webhookUrl={activeBrand?.brand?.webhookUrl ?? null}
     />
   );
 }

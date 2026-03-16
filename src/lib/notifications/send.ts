@@ -48,15 +48,19 @@ export async function sendNotification(options: NotifyOptions) {
   if (!brand?.profile) return;
 
   const { email, phone, smsEnabled } = brand.profile;
+  // Per-type email preferences (default true if field doesn't exist yet)
+  const emailScanComplete = (brand.profile as Record<string, unknown>).emailScanComplete !== false;
+  const emailScoreChange = (brand.profile as Record<string, unknown>).emailScoreChange !== false;
 
-  // 2. Email notification
+  // 2. Email notification (respects per-type preferences)
   try {
-    if (type === "scan_completed" && data?.score !== undefined) {
+    if (type === "scan_completed" && data?.score !== undefined && emailScanComplete) {
       await sendScanCompleteEmail(email, brand.name, data.score as number);
     } else if (
       (type === "score_up" || type === "score_down") &&
       data?.oldScore !== undefined &&
-      data?.newScore !== undefined
+      data?.newScore !== undefined &&
+      emailScoreChange
     ) {
       await sendScoreChangeEmail(
         email,
