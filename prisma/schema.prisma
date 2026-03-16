@@ -48,7 +48,8 @@ model Brand {
   city      String?
   profession  String?  // kisisel markalar icin meslek
   specialties String[] // uzmanlik alanlari
-  competitorNames String[] @map("competitor_names") // onboarding'de girilen rakip adlari
+  competitorNames   String[] @map("competitor_names")   // onboarding'de girilen rakip adlari
+  competitorDomains String[] @map("competitor_domains") // rakip web siteleri
   type         String   @default("firma") @map("brand_type") // firma, kisisel
   // V3 spec — Profile-centric fields
   businessCategories String[] @map("business_categories") // faaliyet alanlari (Sonar'dan)

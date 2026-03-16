@@ -29,43 +29,6 @@ async function getAuthenticatedBrand(brandId: string) {
   return { user, brand };
 }
 
-// ─── Domain Analysis (Onboarding Step) ──────────────────
-export async function analyzeDomainForOnboarding(brandName: string, domain: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
-
-  const cleanDomain = domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
-  if (!cleanDomain) throw new Error("Domain gerekli");
-
-  try {
-    const { researchOnboardingDomain } = await import("@/lib/ai/sonar-research");
-    const result = await researchOnboardingDomain(brandName.trim(), cleanDomain);
-    return {
-      businessCategories: result.businessCategories,
-      competitors: result.competitors,
-      strengths: result.strengths,
-      weaknesses: result.weaknesses,
-      serviceRegions: result.serviceRegions,
-      sector: result.sector,
-      rawAnalysis: result.rawAnalysis,
-    };
-  } catch (err) {
-    console.error("[analyzeDomainForOnboarding] Sonar analysis failed:", err);
-    return {
-      businessCategories: [],
-      competitors: [],
-      strengths: [],
-      weaknesses: [],
-      serviceRegions: [],
-      sector: null as string | null,
-      rawAnalysis: {} as Record<string, string>,
-    };
-  }
-}
-
 // ─── Brand Creation ─────────────────────────────────────
 export async function createBrand(data: {
   name: string;
@@ -76,6 +39,7 @@ export async function createBrand(data: {
   profession?: string;
   specialties?: string[];
   competitorNames?: string[];
+  competitorDomains?: string[];
   linkedinUrl?: string;
   // V3: Pre-approved Sonar analysis results from onboarding approval screen
   approvedBusinessCategories?: string[];
@@ -131,14 +95,16 @@ export async function createBrand(data: {
     // Fallback: Sonar'ı burada çalıştır (approval ekranı kullanılmadıysa)
     try {
       const { researchOnboardingDomain } = await import("@/lib/ai/sonar-research");
-      const sonarOnboarding = await researchOnboardingDomain(brandName, cleanDomain);
+      const sonarOnboarding = await researchOnboardingDomain(cleanDomain);
       businessCategories = sonarOnboarding.businessCategories;
       serviceRegions = sonarOnboarding.serviceRegions;
       strengths = sonarOnboarding.strengths;
       weaknesses = sonarOnboarding.weaknesses;
       sonarRawAnalysis = sonarOnboarding.rawAnalysis;
       if (!finalSector) finalSector = sonarOnboarding.sector;
-      if (finalCompetitors.length === 0) finalCompetitors = sonarOnboarding.competitors;
+      if (finalCompetitors.length === 0) {
+        finalCompetitors = sonarOnboarding.competitors.map((c) => c.name);
+      }
     } catch (err) {
       console.error("[createBrand] Sonar onboarding failed (non-fatal):", err);
     }
@@ -154,6 +120,7 @@ export async function createBrand(data: {
       profession,
       specialties,
       competitorNames: finalCompetitors,
+      competitorDomains: data.competitorDomains ?? [],
       type: data.type,
       isDefault: true,
       autoScan: true,

@@ -226,12 +226,19 @@ export async function researchSectorQuestions(
  * 3. Güçlü/zayıf yönler
  * 4. Hizmet bölgesi + hedef kitle
  */
+/**
+ * V3 Onboarding — Domain bazlı 4 Sonar sorgusu
+ * Sorgu 1: "{domain} ne yapıyor? Faaliyet alanları, ürünler, hizmetler?"
+ * Sorgu 2: "{domain} hangi konularda öne çıkıyor?"
+ * Sorgu 3: "{domain} rakipleri kim? 10 firma listele."
+ * Sorgu 4: "{domain} sektöründe öne çıkan diğer firmalar?"
+ */
 export async function researchOnboardingDomain(
-  brandName: string,
   domain: string,
 ): Promise<{
+  companyName: string | null;
   businessCategories: string[];
-  competitors: string[];
+  competitors: Array<{ name: string; domain: string | null }>;
   strengths: string[];
   weaknesses: string[];
   serviceRegions: string[];
@@ -239,17 +246,17 @@ export async function researchOnboardingDomain(
   rawAnalysis: Record<string, string>;
 }> {
   const queries = [
-    // Sorgu 1: Ne yapar?
-    `${domain} web sitesine ve ${brandName} hakkındaki bilgilere göre bu firma/kurum ne iş yapar? Ana faaliyet alanlarını listele. Kısa ve net.`,
-    // Sorgu 2: Rakipler
-    `${brandName} (${domain}) firmasının Türkiye'deki en bilinen 5 rakibi kimlerdir? Sadece isimleri listele.`,
-    // Sorgu 3: Güçlü/zayıf yönler
-    `${brandName} (${domain}) hakkında online bilgilere göre güçlü ve zayıf yönleri nelerdir? Güçlü: 3 madde, Zayıf: 3 madde.`,
-    // Sorgu 4: Hizmet bölgesi
-    `${brandName} (${domain}) hangi şehirlerde/bölgelerde hizmet veriyor? Hedef kitlesi kimler? Kısa cevap.`,
+    // Sorgu 1: Ne yapıyor?
+    `${domain} ne yapıyor? Bu web sitesinin ana faaliyet alanları, ürünleri ve hizmetleri nelerdir? Firma adını ve sektörünü de belirt. Kısa ve net listele.`,
+    // Sorgu 2: Hangi konularda öne çıkıyor?
+    `${domain} hangi konularda öne çıkıyor? Güçlü yönleri neler? Zayıf yönleri veya geliştirmesi gereken alanları neler? Kısa maddeler halinde.`,
+    // Sorgu 3: Rakipler — 10 firma
+    `${domain} ile aynı sektörde faaliyet gösteren rakip firmalar kimler? 10 firma ve varsa web sitesi adreslerini listele. Format: "Firma Adı - domain.com"`,
+    // Sorgu 4: Sektördeki diğer öne çıkanlar
+    `${domain} sektöründe Türkiye'de öne çıkan diğer firmalar hangileri? Hangi şehirlerde/bölgelerde bu sektör yoğun? Kısa cevap.`,
   ];
 
-  console.log(`[sonar-research] Running 4 onboarding queries for "${brandName}" (${domain})...`);
+  console.log(`[sonar-research] Running 4 onboarding queries for domain: ${domain}...`);
 
   const results = await Promise.allSettled(queries.map((q) => querySonar(q)));
 
@@ -261,50 +268,122 @@ export async function researchOnboardingDomain(
   const successCount = results.filter((r) => r.status === "fulfilled").length;
   console.log(`[sonar-research] Onboarding: Got ${successCount}/4 results`);
 
-  // Parse results
-  const businessCategories = extractListItems(fulfilled[0]).slice(0, 5);
-  const competitors = extractListItems(fulfilled[1]).slice(0, 5);
-  const allItems3 = fulfilled[2];
-  const strengths = extractStrengths(allItems3);
-  const weaknesses = extractWeaknesses(allItems3);
+  // Parse Sorgu 1: faaliyet alanları + firma adı + sektör
+  const businessCategories = extractListItems(fulfilled[0]).slice(0, 8);
+
+  // Extract company name from first response
+  const companyName = extractCompanyName(fulfilled[0], domain);
+
+  // Parse Sorgu 2: güçlü/zayıf yönler
+  const strengths = extractStrengths(fulfilled[1]);
+  const weaknesses = extractWeaknesses(fulfilled[1]);
+
+  // Parse Sorgu 3: rakipler (isim + domain)
+  const competitorEntries = extractCompetitorsWithDomains(fulfilled[2]).slice(0, 10);
+
+  // Parse Sorgu 4: bölgeler
   const serviceRegions = extractListItems(fulfilled[3]).slice(0, 5);
 
-  // Sector detection from first query
-  const sectorKeywords = fulfilled[0].toLowerCase();
+  // Sector detection
+  const combinedText = (fulfilled[0] + " " + fulfilled[3]).toLowerCase();
   let sector: string | null = null;
   const sectorPatterns = [
-    { pattern: /ısıtma|soğutma|klima|hvac/i, label: "Isıtma & Soğutma" },
-    { pattern: /hukuk|avukat|hukuki/i, label: "Hukuk" },
-    { pattern: /sağlık|tıp|hastane|klinik/i, label: "Sağlık" },
-    { pattern: /inşaat|yapı|müteahhit/i, label: "İnşaat" },
-    { pattern: /yazılım|teknoloji|bilişim|it/i, label: "Teknoloji" },
-    { pattern: /eğitim|okul|kurs/i, label: "Eğitim" },
-    { pattern: /gıda|restoran|yemek/i, label: "Gıda" },
-    { pattern: /tekstil|giyim|moda/i, label: "Tekstil" },
-    { pattern: /finans|banka|sigorta/i, label: "Finans" },
-    { pattern: /turizm|otel|seyahat/i, label: "Turizm" },
+    { pattern: /ısıtma|soğutma|klima|hvac|kombi|radyatör/i, label: "Isıtma & Soğutma" },
+    { pattern: /hukuk|avukat|hukuki|dava/i, label: "Hukuk" },
+    { pattern: /sağlık|tıp|hastane|klinik|doktor/i, label: "Sağlık" },
+    { pattern: /inşaat|yapı|müteahhit|mimar/i, label: "İnşaat" },
+    { pattern: /yazılım|teknoloji|bilişim|dijital/i, label: "Teknoloji" },
+    { pattern: /eğitim|okul|kurs|akademi/i, label: "Eğitim" },
+    { pattern: /gıda|restoran|yemek|kafe/i, label: "Gıda" },
+    { pattern: /tekstil|giyim|moda|konfeksiyon/i, label: "Tekstil" },
+    { pattern: /finans|banka|sigorta|yatırım/i, label: "Finans" },
+    { pattern: /turizm|otel|seyahat|tatil/i, label: "Turizm" },
+    { pattern: /otomotiv|araç|oto|tamir/i, label: "Otomotiv" },
+    { pattern: /güzellik|estetik|kuaför|bakım/i, label: "Güzellik & Bakım" },
+    { pattern: /danışmanlık|konsültanlık|yönetim/i, label: "Danışmanlık" },
+    { pattern: /lojistik|kargo|nakliyat|taşıma/i, label: "Lojistik" },
+    { pattern: /emlak|gayrimenkul|konut/i, label: "Emlak" },
+    { pattern: /tarım|çiftlik|hayvancılık/i, label: "Tarım" },
+    { pattern: /enerji|solar|güneş|elektrik/i, label: "Enerji" },
+    { pattern: /e-ticaret|marketplace|online satış/i, label: "E-Ticaret" },
   ];
   for (const sp of sectorPatterns) {
-    if (sp.pattern.test(sectorKeywords)) {
+    if (sp.pattern.test(combinedText)) {
       sector = sp.label;
       break;
     }
   }
 
   return {
+    companyName,
     businessCategories,
-    competitors,
+    competitors: competitorEntries,
     strengths,
     weaknesses,
     serviceRegions,
     sector,
     rawAnalysis: {
       whatDoes: fulfilled[0],
-      competitors: fulfilled[1],
-      strengthsWeaknesses: fulfilled[2],
-      regions: fulfilled[3],
+      standout: fulfilled[1],
+      competitors: fulfilled[2],
+      regionsSector: fulfilled[3],
     },
   };
+}
+
+/** Sonar cevabından firma adı çıkar */
+function extractCompanyName(text: string, domain: string): string | null {
+  // Try to find a proper name from the text
+  const domainBase = domain.replace(/\.(com|net|org|com\.tr|tr|io)$/i, "").replace(/\./g, " ");
+
+  // Look for patterns like "ISITMAX", "XYZ Firması", etc.
+  const namePatterns = [
+    /(?:firma(?:sı)?|şirket(?:i)?|marka(?:sı)?)\s+(?:olan\s+)?[""]?([A-ZÇĞIİÖŞÜ][A-Za-zçğıiöşü\s&.]+?)[""]?(?:\s*[,.]|\s+(?:olarak|bir|şirket|firma))/,
+    /([A-ZÇĞIİÖŞÜ][A-ZÇĞIİÖŞÜa-zçğıiöşü\s&.]{2,30}?)(?:\s*\(?\s*(?:${domain.replace(".", "\\.")})\)?)/i,
+  ];
+
+  for (const pattern of namePatterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) {
+      const name = match[1].trim();
+      if (name.length > 1 && name.length < 50) return name;
+    }
+  }
+
+  // Fallback: capitalize domain base
+  return domainBase.charAt(0).toUpperCase() + domainBase.slice(1);
+}
+
+/** Sonar cevabından rakip isim + domain çıkar */
+function extractCompetitorsWithDomains(text: string): Array<{ name: string; domain: string | null }> {
+  const results: Array<{ name: string; domain: string | null }> = [];
+  const lines = text.split("\n").filter((l) => l.trim());
+
+  for (const line of lines) {
+    const cleaned = line.replace(/^\s*[-•*\d.)\]]+\s*/, "").trim();
+    if (!cleaned || cleaned.length < 2) continue;
+
+    // Try to extract "Name - domain.com" or "Name (domain.com)"
+    const domainPattern = /([a-zA-Z0-9][-a-zA-Z0-9]*\.(?:com|net|org|com\.tr|tr|io|co)(?:\.[a-z]{2})?)/i;
+    const domainMatch = cleaned.match(domainPattern);
+
+    if (domainMatch) {
+      const domain = domainMatch[1].toLowerCase();
+      // Name is everything before the domain
+      const namePart = cleaned.substring(0, cleaned.indexOf(domainMatch[0])).replace(/[-–—:()]+\s*$/, "").trim();
+      if (namePart && namePart.length > 1) {
+        results.push({ name: namePart, domain });
+      }
+    } else {
+      // No domain found, just use the name
+      const namePart = cleaned.replace(/[-–—]+.*$/, "").trim();
+      if (namePart && namePart.length > 1 && namePart.length < 80) {
+        results.push({ name: namePart, domain: null });
+      }
+    }
+  }
+
+  return results;
 }
 
 // ─── Digital Footprint (Kişisel marka) ──────────────────
