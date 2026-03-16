@@ -25,7 +25,11 @@ async function cachedSendPrompt(
   provider: AIProvider,
   promptText: string,
 ): Promise<AIResponse> {
-  const cacheKey = makeCacheKey("ai", provider.platform, promptText);
+  // Cache key includes week number — spec F.7: SHA256(prompt + platform + week_number)
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+  const cacheKey = makeCacheKey("ai", provider.platform, promptText, String(weekNum));
 
   // 1. Check Redis cache first
   const redisCached = await cacheGet<AIResponse>(cacheKey);
@@ -108,6 +112,8 @@ export async function executeScan(
                   sentiment: null,
                   excerpt: null,
                   citations: [],
+                  competitors: [],
+                  citationSources: [],
                 };
               } else {
                 analysis = await analyzeResponse(
@@ -160,6 +166,8 @@ export async function executeScan(
                   excerpt: analysis.excerpt,
                   fullResponse: aiResponse.error ? null : aiResponse.content.slice(0, 3000),
                   citations: analysis.citations,
+                  competitors: analysis.competitors,
+                  citationSources: analysis.citationSources.length > 0 ? JSON.parse(JSON.stringify(analysis.citationSources)) : undefined,
                   scanWeek,
                   scanDay,
                 },
@@ -181,6 +189,11 @@ export async function executeScan(
       console.log(
         `[scan-engine] Batch ${batchNum}/${totalBatches} (${batch.length} prompts) done in ${batchMs}ms — ${totalResults}/${totalExpected} total`,
       );
+
+      // Rate limiting: 2-3 saniye bekleme arası (spec F.8)
+      if (batchStart + PROMPT_BATCH_SIZE < prompts.length) {
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
     }
 
     await calculateAndStoreScore(scanId, brandId);

@@ -107,6 +107,7 @@ model Scan {
   id          String    @id @default(cuid())
   brandId     String    @map("brand_id")
   brand       Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  type        String    @default("manual") // free_test, manual, scheduled
   status      String    @default("pending") // pending, running, completed, failed
   startedAt   DateTime  @default(now()) @map("started_at")
   completedAt DateTime? @map("completed_at")
@@ -126,12 +127,14 @@ model PromptResult {
   mentioned  Boolean  @default(false)
   position   String?  // "1. sıra", "2. sıra", "bahsediliyor", null
   sentiment  String?  // pozitif, nötr, negatif
-  excerpt      String?
-  fullResponse String?  @map("full_response")
-  citations    Json?    // string[] of cited URLs
-  createdAt    DateTime @default(now()) @map("created_at")
-  scanWeek  Int? @map("scan_week")
-  scanDay   Int? @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
+  excerpt         String?
+  fullResponse    String?  @map("full_response")
+  citations       Json?    // string[] of cited URLs
+  competitors     String[] // competitor names detected in response
+  citationSources Json?    @map("citation_sources") // [{name, url, type}]
+  createdAt       DateTime @default(now()) @map("created_at")
+  scanWeek        Int?     @map("scan_week")
+  scanDay         Int?     @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
 
   @@map("prompt_results")
 }
@@ -313,6 +316,8 @@ model ChecklistItem {
   selfServiceSteps  Json?    @map("self_service_steps") // string[]
   canAgencyDo       Boolean  @default(false) @map("can_agency_do")
   agencyPrice       String?  @map("agency_price")
+  reminderDate      DateTime? @map("reminder_date")
+  lastCheckedAt     DateTime? @map("last_checked_at")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

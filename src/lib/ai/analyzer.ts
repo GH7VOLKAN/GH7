@@ -101,7 +101,9 @@ JSON formatında yanıt ver (başka bir şey yazma):
   "position": "1. sıra" | "2. sıra" | "3. sıra" | "bahsediliyor" | null,
   "sentiment": "pozitif" | "nötr" | "negatif",
   "excerpt": "en fazla 200 karakter, markanın bahsedildiği kısım",
-  "citations": ["url1", "url2"]
+  "citations": ["url1", "url2"],
+  "competitors": ["rakip1", "rakip2"],
+  "citationSources": [{"name": "kaynak adı", "url": "https://...", "type": "website|directory|social|news|review|other"}]
 }
 
 Kurallar:
@@ -111,6 +113,8 @@ Kurallar:
 - "bahsediliyor": Listede sırası belirlenemiyorsa ama bir şekilde bahsediliyor
 - position null: Hiç bahsedilmiyorsa
 - citations: Yanıtta URL varsa listele, yoksa boş array
+- competitors: Yanıtta bahsedilen DİĞER firma/kişi adları (takip edilen marka HARİÇ). Listelenmiş, önerilen veya karşılaştırılan tüm rakipler.
+- citationSources: Yanıttaki URL'lerin yapılandırılmış hali. type: website (kurumsal site), directory (dizin — doktortakvimi, yelp vb.), social (linkedin, instagram), news (haber), review (yorum sitesi), other
 - ÖNEMLİ: Marka adı büyük-küçük harf veya Türkçe karakter farkıyla yazılmış olabilir (ör: "Isıtmax" = "ISITMAX"). Bu durumlar "bahsediliyor" sayılır.
 - ÖNEMLİ: Listeleme formatı farklı olabilir: numaralı (1. Marka), madde işaretli (• Marka), kalın (Marka:), virgülle ayrılmış (Marka1, Marka2). Hepsinde sırayı belirle.`;
 
@@ -130,6 +134,8 @@ export async function analyzeResponse(
       sentiment: null,
       excerpt: null,
       citations: extractUrls(rawResponse),
+      competitors: [],
+      citationSources: [],
     };
   }
 
@@ -146,6 +152,8 @@ export async function analyzeResponse(
       sentiment: "nötr",
       excerpt,
       citations: extractUrls(rawResponse),
+      competitors: [],
+      citationSources: [],
     };
   }
 
@@ -193,6 +201,8 @@ export async function analyzeResponse(
           ...extractUrls(rawResponse),
         ]),
       ],
+      competitors: parsed.competitors ?? [],
+      citationSources: parsed.citationSources ?? [],
     };
   } catch {
     // Fallback if analysis fails
@@ -202,6 +212,8 @@ export async function analyzeResponse(
       sentiment: "nötr",
       excerpt: extractExcerpt(rawResponse, brandName),
       citations: extractUrls(rawResponse),
+      competitors: [],
+      citationSources: [],
     };
   }
 }
