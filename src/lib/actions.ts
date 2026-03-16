@@ -807,3 +807,21 @@ export async function resetChecklistItemStatus(
   revalidatePath("/dashboard", "layout");
   return { success: true };
 }
+
+export async function setChecklistReminder(
+  brandId: string,
+  itemId: string,
+  reminderDate: string | null,
+) {
+  await getAuthenticatedBrand(brandId);
+
+  await prisma.checklistItem.updateMany({
+    where: { id: itemId, brandId },
+    data: {
+      reminderDate: reminderDate ? new Date(reminderDate) : null,
+    },
+  });
+
+  revalidatePath("/dashboard/gelisim");
+  return { success: true };
+}

@@ -17,6 +17,8 @@ import {
   ShieldCheckIcon,
   SearchIcon,
   TrophyIcon,
+  BellIcon,
+  CalendarIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BlurredSection } from "@/components/ui/blurred-section";
@@ -24,6 +26,7 @@ import {
   markChecklistItemDone,
   resetChecklistItemStatus,
   seedChecklistItems,
+  setChecklistReminder,
 } from "@/lib/actions";
 import type { ChecklistData, ChecklistItemFull } from "@/lib/dal/checklist";
 import type { TechnicalDetail } from "@/lib/checklist-defaults";
@@ -251,6 +254,121 @@ function StatusIcon({ status, size = "md" }: { status: string; size?: "sm" | "md
 }
 
 // ── Item card ───────────────────────────────────────────
+// ── Reminder section ────────────────────────────────────
+function ReminderSection({
+  brandId,
+  itemId,
+  currentReminder,
+}: {
+  brandId: string;
+  itemId: string;
+  currentReminder: string | null;
+}) {
+  const [showPicker, setShowPicker] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const router = useRouter();
+
+  const hasReminder = !!currentReminder;
+  const reminderDate = currentReminder ? new Date(currentReminder) : null;
+  const isPast = reminderDate ? reminderDate < new Date() : false;
+
+  async function handleSetReminder(date: string) {
+    setSaving(true);
+    try {
+      await setChecklistReminder(brandId, itemId, date);
+      router.refresh();
+      setShowPicker(false);
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleClearReminder() {
+    setSaving(true);
+    try {
+      await setChecklistReminder(brandId, itemId, null);
+      router.refresh();
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Quick reminder options
+  const quickOptions = [
+    { label: "Yarın", days: 1 },
+    { label: "3 gün sonra", days: 3 },
+    { label: "1 hafta sonra", days: 7 },
+    { label: "2 hafta sonra", days: 14 },
+  ];
+
+  if (hasReminder && !showPicker) {
+    return (
+      <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${
+        isPast
+          ? "border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/30"
+          : "border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30"
+      }`}>
+        <BellIcon className={`size-3.5 ${isPast ? "text-amber-500" : "text-blue-500"}`} />
+        <span className={isPast ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300"}>
+          {isPast ? "Hatırlatıcı geçti: " : "Hatırlatıcı: "}
+          {reminderDate!.toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+        </span>
+        <button
+          onClick={handleClearReminder}
+          disabled={saving}
+          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
+        >
+          {saving ? "..." : "Kaldır"}
+        </button>
+      </div>
+    );
+  }
+
+  if (showPicker) {
+    return (
+      <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+        <p className="text-xs font-medium">Ne zaman hatırlatayım?</p>
+        <div className="flex flex-wrap gap-1.5">
+          {quickOptions.map((opt) => {
+            const date = new Date();
+            date.setDate(date.getDate() + opt.days);
+            return (
+              <button
+                key={opt.days}
+                onClick={() => handleSetReminder(date.toISOString())}
+                disabled={saving}
+                className="rounded-full border border-border px-3 py-1 text-[11px] font-medium transition-colors hover:bg-foreground hover:text-background"
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => setShowPicker(false)}
+          className="text-[10px] text-muted-foreground hover:text-foreground"
+        >
+          İptal
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setShowPicker(true)}
+      className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <CalendarIcon className="size-3.5" />
+      Hatırlatıcı kur
+    </button>
+  );
+}
+
 function ChecklistItemCard({
   item,
   brandId,
@@ -377,6 +495,25 @@ function ChecklistItemCard({
               plan={plan}
             />
 
+            {/* Verification badge */}
+            {item.verifiedByAI && isComplete && (
+              <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/30">
+                <ShieldCheckIcon className="size-3.5 text-emerald-500" />
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  Yapay zeka tarafından doğrulandı
+                </span>
+              </div>
+            )}
+
+            {/* Reminder */}
+            {!isComplete && (
+              <ReminderSection
+                brandId={brandId}
+                itemId={item.id}
+                currentReminder={item.reminderDate}
+              />
+            )}
+
             {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {isComplete ? (
@@ -398,7 +535,7 @@ function ChecklistItemCard({
                   className="gap-1.5"
                 >
                   <CheckCircle2Icon className="size-3.5" />
-                  {loading ? "Kaydediliyor..." : "Tamamlandi Isaretle"}
+                  {loading ? "Kaydediliyor..." : "Tamamladım"}
                 </Button>
               )}
 
