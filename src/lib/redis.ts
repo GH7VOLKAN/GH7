@@ -81,15 +81,11 @@ export async function cacheDel(key: string): Promise<void> {
 
 /**
  * Generate a SHA256-based cache key from input components.
+ * Uses Node.js crypto for proper SHA256 hashing — cross-user safe.
  */
 export function makeCacheKey(prefix: string, ...parts: string[]): string {
-  // Simple hash — deterministic, collision-resistant for our use case
+  const { createHash } = require("crypto");
   const raw = parts.map((p) => p.toLowerCase().trim()).join(":");
-  let hash = 0;
-  for (let i = 0; i < raw.length; i++) {
-    const char = raw.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
-  }
-  // Use absolute value and hex for readability
-  return `${prefix}:${Math.abs(hash).toString(16)}`;
+  const hash = createHash("sha256").update(raw).digest("hex").slice(0, 16);
+  return `${prefix}:${hash}`;
 }

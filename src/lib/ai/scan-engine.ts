@@ -5,10 +5,39 @@ import { calculateAndStoreScore } from "./score-calculator";
 import { updateCompetitorScores } from "./competitor-scorer";
 import { discoverSourceDomains } from "./source-discoverer";
 import { sendNotification } from "@/lib/notifications/send";
-import type { AnalysisResult } from "./types";
+import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
+import type { AIProvider } from "./providers/base";
+import type { AnalysisResult, AIResponse } from "./types";
 
 // Process prompts in parallel batches for speed
 const PROMPT_BATCH_SIZE = 5;
+
+/**
+ * Cached AI call — SHA256 key, 7-day TTL, cross-user safe.
+ * Same prompt+platform always returns cached response if available.
+ */
+async function cachedSendPrompt(
+  provider: AIProvider,
+  promptText: string,
+): Promise<AIResponse> {
+  const cacheKey = makeCacheKey("ai", provider.platform, promptText);
+
+  // Check cache first
+  const cached = await cacheGet<AIResponse>(cacheKey);
+  if (cached && !cached.error) {
+    return cached;
+  }
+
+  // Make actual API call
+  const response = await provider.sendPrompt(promptText);
+
+  // Cache successful responses (7-day TTL)
+  if (!response.error) {
+    await cacheSet(cacheKey, response);
+  }
+
+  return response;
+}
 
 export async function executeScan(
   scanId: string,
@@ -57,7 +86,7 @@ export async function executeScan(
           // For each prompt, run all platforms in parallel
           const platformResults = await Promise.allSettled(
             providers.map(async (provider) => {
-              const aiResponse = await provider.sendPrompt(prompt.text);
+              const aiResponse = await cachedSendPrompt(provider, prompt.text);
 
               let analysis: AnalysisResult;
               if (aiResponse.error) {

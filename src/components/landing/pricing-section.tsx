@@ -12,17 +12,29 @@ const freePlan: PlanFeature[] = [
 ];
 
 const proPlan: PlanFeature[] = [
-  { text: "Her hafta otomatik kontrol" },
+  { text: "Haftada 3 otomatik kontrol" },
+  { text: "50 soru takibi" },
   { text: "Senin yerine kimin önerildiğini gör" },
   { text: "Ne yapman gerektiğini öğren" },
   { text: "Haftalık değişimleri takip et" },
+  { text: "Haftalık e-posta raporu" },
+];
+
+const businessPlan: PlanFeature[] = [
+  { text: "Pro'daki her şey" },
+  { text: "200 soru takibi" },
+  { text: "10 marka yönetimi" },
+  { text: "25 rakip analizi" },
   { text: "Öncelikli destek" },
 ];
 
-const bizYapalimPlan: PlanFeature[] = [
-  { text: "Her şeyi biz yaparız" },
-  { text: "4-6 haftada tamamlanır" },
-  { text: "Sen sadece sonucu takip edersin" },
+const agencyPlan: PlanFeature[] = [
+  { text: "Business'taki her şey" },
+  { text: "Günlük otomatik tarama" },
+  { text: "500 soru takibi" },
+  { text: "50 marka yönetimi" },
+  { text: "50 rakip analizi" },
+  { text: "Ajans paneli" },
 ];
 
 function FeatureItem({ feature }: { feature: PlanFeature }) {
@@ -50,16 +62,16 @@ export function PricingSection() {
           </p>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-5xl gap-8 sm:grid-cols-3">
+        <div className="mx-auto mt-14 grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {/* Free plan */}
-          <div className="rounded-2xl border border-border p-8">
+          <div className="rounded-2xl border border-border p-7">
             <p className="text-sm font-bold text-muted-foreground">Ücretsiz</p>
-            <p className="mt-2 text-4xl font-bold">0₺</p>
+            <p className="mt-2 text-3xl font-bold">0₺</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Sonsuza kadar
             </p>
 
-            <ul className="mt-8 space-y-4">
+            <ul className="mt-7 space-y-3.5">
               {freePlan.map((f) => (
                 <FeatureItem key={f.text} feature={f} />
               ))}
@@ -67,21 +79,21 @@ export function PricingSection() {
 
             <Link
               href="/login"
-              className="mt-8 flex w-full items-center justify-center rounded-lg border border-border px-8 py-3.5 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="mt-7 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
               Ücretsiz Dene
             </Link>
           </div>
 
           {/* Pro plan */}
-          <div className="relative rounded-2xl border-2 border-foreground bg-foreground/[0.02] p-8">
+          <div className="relative rounded-2xl border-2 border-foreground bg-foreground/[0.02] p-7">
             {/* Popular badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-foreground px-4 py-1 text-xs font-bold text-background">
               En Popüler
             </div>
 
-            <p className="text-sm font-bold">Aylık Takip</p>
-            <p className="mt-2 text-4xl font-bold">
+            <p className="text-sm font-bold">Pro</p>
+            <p className="mt-2 text-3xl font-bold">
               2.495₺
               <span className="text-base font-normal text-muted-foreground">
                 /ay
@@ -91,7 +103,7 @@ export function PricingSection() {
               7 gün ücretsiz deneme
             </p>
 
-            <ul className="mt-8 space-y-4">
+            <ul className="mt-7 space-y-3.5">
               {proPlan.map((f) => (
                 <FeatureItem key={f.text} feature={f} />
               ))}
@@ -99,31 +111,61 @@ export function PricingSection() {
 
             <Link
               href="/login"
-              className="mt-8 flex w-full items-center justify-center rounded-lg bg-foreground px-8 py-3.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="mt-7 flex w-full items-center justify-center rounded-lg bg-foreground px-6 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
               Takibe Başla
             </Link>
           </div>
 
-          {/* Biz Yapalım plan */}
-          <div className="rounded-2xl border border-border p-8">
-            <p className="text-sm font-bold text-muted-foreground">Biz Yapalım</p>
-            <p className="mt-2 text-4xl font-bold">
-              15.000₺
+          {/* Business plan */}
+          <div className="rounded-2xl border border-border p-7">
+            <p className="text-sm font-bold text-muted-foreground">Business</p>
+            <p className="mt-2 text-3xl font-bold">
+              7.495₺
+              <span className="text-base font-normal text-muted-foreground">
+                /ay
+              </span>
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Tek seferlik
+              Çoklu marka yönetimi
             </p>
 
-            <ul className="mt-8 space-y-4">
-              {bizYapalimPlan.map((f) => (
+            <ul className="mt-7 space-y-3.5">
+              {businessPlan.map((f) => (
                 <FeatureItem key={f.text} feature={f} />
               ))}
             </ul>
 
             <Link
               href="/login"
-              className="mt-8 flex w-full items-center justify-center rounded-lg border border-border px-8 py-3.5 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="mt-7 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+            >
+              Başla
+            </Link>
+          </div>
+
+          {/* Agency plan */}
+          <div className="rounded-2xl border border-border p-7">
+            <p className="text-sm font-bold text-muted-foreground">Ajans</p>
+            <p className="mt-2 text-3xl font-bold">
+              19.995₺
+              <span className="text-base font-normal text-muted-foreground">
+                /ay
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Günlük tarama, sınırsız güç
+            </p>
+
+            <ul className="mt-7 space-y-3.5">
+              {agencyPlan.map((f) => (
+                <FeatureItem key={f.text} feature={f} />
+              ))}
+            </ul>
+
+            <Link
+              href="/login"
+              className="mt-7 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
             >
               Bize Ulaş
             </Link>

@@ -1,10 +1,12 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ScanButton } from "@/components/scan/scan-button";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { SunIcon, MoonIcon } from "lucide-react";
 
 type BrandType = "firma" | "kisisel";
 
@@ -61,6 +63,7 @@ export function SiteHeader({
   unreadCount = 0,
 }: SiteHeaderProps) {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const titles = brandType === "kisisel" ? kisiselPageTitles : firmaPageTitles;
   const title = titles[pathname] ?? "Genel Bakis";
   const initial = userName?.charAt(0)?.toUpperCase() ?? "?";
@@ -90,6 +93,13 @@ export function SiteHeader({
               />
             </>
           )}
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+            title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+          >
+            {theme === "dark" ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
+          </button>
           <div className="flex size-8 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background">
             {initial}
           </div>

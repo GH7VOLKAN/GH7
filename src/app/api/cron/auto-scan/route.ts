@@ -7,7 +7,7 @@ import { persistAuditResults } from "@/lib/ai/audit-persister";
 import { generateActionPlan } from "@/lib/ai/action-plan-generator";
 import { checkPromptFreshness } from "@/lib/ai/prompt-freshness";
 import { verifyChecklistItems } from "@/lib/ai/checklist-verifier";
-import { isPro } from "@/lib/plans";
+import { isPro, getPlanLimits } from "@/lib/plans";
 import { processExpiredPlans } from "@/lib/iyzico/activate-plan";
 
 export const maxDuration = 300; // 5 min max for Vercel Pro
@@ -50,6 +50,15 @@ export async function GET(request: NextRequest) {
     // Skip brands with no active prompts
     if (brand.prompts.length === 0) continue;
 
+    // Free plan'lar otomatik tarama yapamaz
+    const plan = brand.profile?.plan ?? "free";
+    if (plan === "free") continue;
+
+    // Plan bazlı frekans kontrolü — plan'ın izin verdiği frekansı uygula
+    const planLimits = getPlanLimits(plan);
+    const effectiveInterval = planLimits.scanFrequency === "once" ? "manual" : planLimits.scanFrequency;
+    if (effectiveInterval === "manual") continue;
+
     const lastScan = brand.scans[0];
     const lastScanTime = lastScan?.completedAt?.getTime() ?? 0;
     const hoursSince = (now - lastScanTime) / (1000 * 60 * 60);
@@ -59,13 +68,10 @@ export async function GET(request: NextRequest) {
     const isScanDay = [1, 3, 5].includes(dayOfWeek); // Pzt, Car, Cum
 
     const shouldScan =
-      (brand.scanInterval === "daily" && hoursSince > 23) ||
-      (brand.scanInterval === "weekly" && isScanDay && hoursSince > 20) || // 3x/hafta uyumluluk
-      (brand.scanInterval === "thrice_weekly" && isScanDay && hoursSince > 20);
+      (effectiveInterval === "daily" && hoursSince > 23) ||
+      (effectiveInterval === "thrice_weekly" && isScanDay && hoursSince > 20);
 
     if (!shouldScan) continue;
-
-    const plan = brand.profile?.plan ?? "free";
 
     try {
       const scan = await prisma.scan.create({
