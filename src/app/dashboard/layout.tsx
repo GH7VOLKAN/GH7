@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
@@ -72,12 +73,19 @@ export default async function DashboardLayout({
         />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <div className="flex flex-col gap-4 py-4 pb-20 md:gap-6 md:py-6 md:pb-6">
               {children}
             </div>
           </div>
         </div>
       </SidebarInset>
+      <MobileBottomNav
+        checklistProgress={
+          checklistSummary
+            ? { completed: checklistSummary.completed, total: checklistSummary.total }
+            : undefined
+        }
+      />
     </SidebarProvider>
   );
 }

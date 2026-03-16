@@ -1,5 +1,6 @@
 import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { PlatformBreakdownCard } from "@/components/platform-breakdown-card";
 import { RecentMentionsTable } from "@/components/recent-mentions-table";
 import { BlurredSection } from "@/components/ui/blurred-section";
 import { WelcomeHero } from "@/components/welcome-hero";
@@ -57,6 +58,9 @@ export default async function GenelPage() {
         topCompetitorName={data.topCompetitorName}
         topCompetitorGap={data.topCompetitorGap}
       />
+      <div className="px-4 lg:px-6">
+        <PlatformBreakdownCard platforms={data.platformStats} />
+      </div>
       <BlurredSection
         isLocked={trendLocked}
         title="Trend Grafigi"

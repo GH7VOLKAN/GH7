@@ -86,7 +86,7 @@ export function CompetitorDetailDialog({
               ) : (
                 <UserIcon className="size-3" />
               )}
-              {competitor.source === "ai_discovered" ? "AI Keşfetti" : "Manuel Eklendi"}
+              {competitor.source === "ai_discovered" ? "Otomatik Kesfedildi" : "Manuel Eklendi"}
             </Badge>
             <Badge
               variant="outline"
@@ -131,7 +131,7 @@ export function CompetitorDetailDialog({
           {userRow && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                Platform Karşılaştırma
+                Yapay Zeka Karsilastirma
               </p>
               <div className="flex flex-col gap-2">
                 {PLATFORMS.map((platform) => {

@@ -180,7 +180,7 @@ export function BlurredUpsell({ result }: { result: FreeToolResult }) {
       {/* ── 2. WHY NOT FOUND ───────────────────────────── */}
       <ProSection
         icon={SearchIcon}
-        title={isKisisel ? "AI Neden Seni Tanımıyor?" : "AI Neden Bahsetmiyor?"}
+        title={isKisisel ? "Yapay Zeka Neden Seni Tanimiyor?" : "Yapay Zeka Neden Bahsetmiyor?"}
         badge="3 neden"
       >
         <div className="space-y-3">
@@ -288,7 +288,7 @@ export function BlurredUpsell({ result }: { result: FreeToolResult }) {
       {/* ── 4. WEEKLY TRACKING ─────────────────────────── */}
       <ProSection
         icon={TrendingUpIcon}
-        title="Haftalık AI Takip Raporu"
+        title="Haftalik Yapay Zeka Takip Raporu"
         badge="7 gün"
       >
         <div className="pointer-events-none select-none blur-[4px]">
@@ -356,7 +356,7 @@ export function BlurredUpsell({ result }: { result: FreeToolResult }) {
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
             {isKisisel
               ? "Senin yerine kimin önerildiğini, neden tanınmadığını, kişiselleştirilmiş aksiyon planını ve haftalık ilerleme raporlarını gör."
-              : "Rakip analizi, kaynak takibi, site SEO analizi, aksiyon planı ve haftalık AI görünürlük raporlarını aç."}
+              : "Rakip analizi, kaynak takibi, site hazirlik kontrolu, aksiyon plani ve haftalik yapay zeka gorunurluk raporlarini ac."}
           </p>
 
           <Link

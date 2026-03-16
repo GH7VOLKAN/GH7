@@ -91,7 +91,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
           <div>
             <CardTitle>Rakip Karşılaştırma</CardTitle>
             <CardDescription>
-              AI platformlarındaki görünürlük karşılaştırması — satıra tıklayarak detayları görün
+              Yapay zekalardaki gorunurluk karsilastirmasi — satira tiklayarak detaylari gorun
             </CardDescription>
           </div>
           <DiscoverCompetitorsButton
@@ -198,7 +198,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                                 className="text-[10px] px-1 py-0 gap-0.5 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
                               >
                                 <SparklesIcon className="size-2.5" />
-                                AI
+                                Otomatik
                               </Badge>
                             ) : (
                               <Badge
@@ -260,7 +260,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                 {competitorRows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      Henüz rakip yok. &quot;Rakipleri AI ile Keşfet&quot; butonuna tıklayarak Perplexity Sonar ve Claude ile sektörünüzdeki gerçek rakipleri otomatik bulun.
+                      Henuz rakip yok. &quot;Rakipleri Otomatik Kesfet&quot; butonuna tiklayarak sektorunuzdeki gercek rakipleri otomatik bulun.
                     </TableCell>
                   </TableRow>
                 )}

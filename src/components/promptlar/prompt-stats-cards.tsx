@@ -28,9 +28,9 @@ const sourceIcons: Record<string, typeof SparklesIcon> = {
 };
 
 const sourceNames: Record<string, string> = {
-  ai_generated: "AI",
-  dataforseo: "DataForSEO",
-  sonar: "Sonar",
+  ai_generated: "Otomatik",
+  dataforseo: "Otomatik",
+  sonar: "Otomatik",
   manual: "Manuel",
   user_added: "Manuel",
 };
@@ -138,7 +138,7 @@ export function PromptStatsCards({
               {promptItems.length} prompt üzerinden hesaplandı
             </div>
             <div className="text-muted-foreground">
-              4 AI platformunda ortalama bahsedilme oranı
+              4 yapay zekada ortalama bahsedilme orani
             </div>
           </CardFooter>
         </Card>

@@ -63,7 +63,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
           Rekabet Analizi — {detail.name} vs {userName}
         </CardTitle>
         <CardDescription>
-          AI platformlarında en güçlü rakibinizle karşılaştırma ve iyileştirme fırsatları
+          yapay zekalarda en güçlü rakibinizle karşılaştırma ve iyileştirme fırsatları
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
@@ -124,7 +124,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
               <p className="font-medium mb-1">Bu ne anlama geliyor?</p>
               {isAhead ? (
                 <p className="text-muted-foreground">
-                  {userName} şu an AI platformlarında {detail.name}&apos;den daha sık bahsediliyor.
+                  {userName} şu an yapay zekalarda {detail.name}&apos;den daha sık bahsediliyor.
                   Bu avantajı korumak için site teknik altyapınızı güçlendirmeye ve içerik üretmeye devam edin.
                 </p>
               ) : gap <= 10 ? (
@@ -134,7 +134,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                 </p>
               ) : gap <= 30 ? (
                 <p className="text-muted-foreground">
-                  {detail.name} AI platformlarında {userName}&apos;den belirgin şekilde daha fazla bahsediliyor.
+                  {detail.name} yapay zekalarda {userName}&apos;den belirgin şekilde daha fazla bahsediliyor.
                   Bu farkın kaynağı genellikle daha zengin yapılandırılmış veri, daha fazla harici kaynak ve daha güçlü dijital varlıktır.
                 </p>
               ) : (
@@ -176,7 +176,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                   );
                 })}
                 <p className="mt-1 text-xs text-muted-foreground px-1">
-                  Bu eksiklikleri gidermek AI platformlarında görünürlüğünüzü artırır. Site Analizi sayfasından detaylı kontrol yapabilirsiniz.
+                  Bu eksiklikleri gidermek yapay zekalardaki gorunurlugunuzu artirir. Site Kontrolu sayfasindan detayli kontrol yapabilirsiniz.
                 </p>
               </div>
             ) : (
@@ -193,7 +193,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
           <div>
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
               <GlobeIcon className="size-4 text-blue-500" />
-              AI&apos;ın Kullandığı Kaynaklar
+              Yapay Zekanin Kullandigi Kaynaklar
             </h3>
             {hasSourcePages ? (
               <div className="flex flex-col gap-2">
@@ -214,7 +214,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                   </div>
                 ))}
                 <p className="mt-1 text-xs text-muted-foreground px-1">
-                  Bu domainlerden gelen bilgiler AI yanıtlarını doğrudan etkiliyor. Bu kaynaklarda görünürlüğünüzü artırın.
+                  Bu kaynaklardan gelen bilgiler yapay zeka yanitlarini dogrudan etkiliyor. Bu kaynaklarda gorunurlugunuzu artirin.
                 </p>
               </div>
             ) : (

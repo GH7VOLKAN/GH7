@@ -163,6 +163,84 @@ export const getCompetitorsData = cache(async (brandId: string) => {
   const aiDiscoveredCount = competitors.filter((c) => c.source === "ai_discovered").length;
   const manualCount = competitors.filter((c) => c.source === "manual").length;
 
+  // --- Share of Voice calculation ---
+  const sovColors = [
+    "hsl(217, 91%, 60%)",  // blue
+    "hsl(280, 67%, 55%)",  // purple
+    "hsl(25, 95%, 53%)",   // orange
+    "hsl(346, 77%, 50%)",  // rose
+    "hsl(173, 58%, 39%)",  // teal
+    "hsl(47, 96%, 53%)",   // amber
+  ];
+
+  const totalPrompts = latestScan
+    ? await prisma.promptResult.count({ where: { scanId: latestScan.id } })
+    : 0;
+  const totalMentions = latestScan
+    ? await prisma.promptResult.count({ where: { scanId: latestScan.id, mentioned: true } })
+    : 0;
+
+  let shareOfVoice: { name: string; isUser: boolean; percentage: number; color: string }[] = [];
+
+  if (latestScan && totalPrompts > 0) {
+    // Fetch all results once for SoV
+    const allResults = latestScan
+      ? await prisma.promptResult.findMany({
+          where: { scanId: latestScan.id },
+          select: { mentioned: true, excerpt: true },
+        })
+      : [];
+
+    // User brand: count prompts where mentioned = true
+    const userMentionCount = allResults.filter((r) => r.mentioned).length;
+
+    // Competitors: count prompts where their name appears in the excerpt
+    const competitorSovEntries: { name: string; count: number }[] = [];
+    for (const comp of competitors) {
+      const nameLower = comp.name.toLowerCase();
+      const count = allResults.filter(
+        (r) => r.excerpt?.toLowerCase().includes(nameLower)
+      ).length;
+      competitorSovEntries.push({ name: comp.name, count });
+    }
+
+    // Build SoV array
+    const userPct = Math.round((userMentionCount / totalPrompts) * 100);
+    shareOfVoice.push({
+      name: brand?.name ?? "Siz",
+      isUser: true,
+      percentage: userPct,
+      color: "hsl(142, 71%, 45%)",
+    });
+
+    let competitorColorIdx = 0;
+    let assignedTotal = userPct;
+    for (const entry of competitorSovEntries) {
+      const pct = Math.round((entry.count / totalPrompts) * 100);
+      if (pct > 0) {
+        shareOfVoice.push({
+          name: entry.name,
+          isUser: false,
+          percentage: pct,
+          color: sovColors[competitorColorIdx % sovColors.length],
+        });
+        assignedTotal += pct;
+        competitorColorIdx++;
+      }
+    }
+
+    // "Diğerleri" for remaining percentage
+    const othersPct = Math.max(0, 100 - assignedTotal);
+    if (othersPct > 0) {
+      shareOfVoice.push({
+        name: "Diğerleri",
+        isUser: false,
+        percentage: othersPct,
+        color: "hsl(220, 9%, 70%)",
+      });
+    }
+  }
+
   return {
     rows,
     detail,
@@ -170,8 +248,9 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     userReadinessScore,
     aiDiscoveredCount,
     manualCount,
-    totalResults: latestScan ? await prisma.promptResult.count({ where: { scanId: latestScan.id } }) : 0,
-    totalMentions: latestScan ? await prisma.promptResult.count({ where: { scanId: latestScan.id, mentioned: true } }) : 0,
+    totalResults: totalPrompts,
+    totalMentions,
+    shareOfVoice,
   };
 });
 

@@ -178,7 +178,7 @@ function checkContent(html: string): AuditCategoryResult {
 async function checkTechnical(
   domain: string,
   html: string,
-): Promise<AuditCategoryResult> {
+): Promise<{ category: AuditCategoryResult; robotsText: string }> {
   const checks: AuditCheckResult[] = [];
 
   // HTTPS
@@ -239,7 +239,7 @@ async function checkTechnical(
         ),
   );
 
-  return { name: "Teknik", checks };
+  return { category: { name: "Teknik", checks }, robotsText: robotsRes.text };
 }
 
 function checkExternalPlatforms(html: string): AuditCategoryResult {
@@ -314,6 +314,134 @@ function checkExternalPlatforms(html: string): AuditCategoryResult {
   return { name: "Dış Platform", checks };
 }
 
+async function checkAIAccess(
+  domain: string,
+  html: string,
+  robotsText: string,
+): Promise<AuditCategoryResult> {
+  const checks: AuditCheckResult[] = [];
+
+  // 1. llms.txt check
+  const llmsRes = await safeFetch(`https://${domain}/llms.txt`);
+  checks.push(
+    llmsRes.ok
+      ? check("llms.txt", "pass", "llms.txt dosyası bulundu.", null)
+      : check(
+          "llms.txt",
+          "fail",
+          "llms.txt dosyası bulunamadı.",
+          "Sitenize llms.txt dosyasi ekleyin. Bu dosya yapay zekalarin sitenizi daha iyi anlamasini saglar.",
+        ),
+  );
+
+  // 2. AI Crawler check in robots.txt
+  const aiCrawlers = ["GPTBot", "ClaudeBot", "Google-Extended", "PerplexityBot"];
+  const lines = robotsText.split("\n").map((l) => l.trim());
+
+  let currentUserAgent = "";
+  const blockedAgents = new Set<string>();
+
+  for (const line of lines) {
+    const uaMatch = line.match(/^user-agent:\s*(.+)/i);
+    if (uaMatch) {
+      currentUserAgent = uaMatch[1].trim().toLowerCase();
+      continue;
+    }
+    const disallowMatch = line.match(/^disallow:\s*\/\s*$/i);
+    if (disallowMatch) {
+      if (currentUserAgent === "*") {
+        // Wildcard block — applies to all unless overridden
+        for (const crawler of aiCrawlers) {
+          blockedAgents.add(crawler.toLowerCase());
+        }
+      } else {
+        blockedAgents.add(currentUserAgent);
+      }
+    }
+  }
+
+  const allowedCrawlers = aiCrawlers.filter(
+    (c) => !blockedAgents.has(c.toLowerCase()),
+  );
+
+  if (allowedCrawlers.length === aiCrawlers.length && robotsText.length > 0) {
+    checks.push(
+      check(
+        "Yapay Zeka Bot Erişimi",
+        "pass",
+        `Tüm yapay zeka botlarına erişim açık (${aiCrawlers.join(", ")}).`,
+        null,
+      ),
+    );
+  } else if (allowedCrawlers.length > 0 && allowedCrawlers.length < aiCrawlers.length) {
+    const blocked = aiCrawlers.filter((c) => blockedAgents.has(c.toLowerCase()));
+    checks.push(
+      check(
+        "Yapay Zeka Bot Erişimi",
+        "partial",
+        `Bazı yapay zeka botları engelleniyor: ${blocked.join(", ")}.`,
+        "robots.txt dosyanizda yapay zeka botlarina (GPTBot, ClaudeBot, Google-Extended, PerplexityBot) erisim izni verin.",
+      ),
+    );
+  } else {
+    checks.push(
+      check(
+        "Yapay Zeka Bot Erişimi",
+        "fail",
+        robotsText.length === 0
+          ? "robots.txt bulunamadı, yapay zeka bot erişimi belirlenemedi."
+          : "Tüm yapay zeka botları engelleniyor.",
+        "robots.txt dosyanizda yapay zeka botlarina (GPTBot, ClaudeBot, Google-Extended, PerplexityBot) erisim izni verin.",
+      ),
+    );
+  }
+
+  // 3. Open Graph / Social Preview check
+  const hasOgTitle = /<meta\s[^>]*property=["']og:title["'][^>]*>/i.test(html) ||
+    /<meta\s[^>]*content=["'][^"']*["']\s[^>]*property=["']og:title["'][^>]*>/i.test(html);
+  const hasOgDesc = /<meta\s[^>]*property=["']og:description["'][^>]*>/i.test(html) ||
+    /<meta\s[^>]*content=["'][^"']*["']\s[^>]*property=["']og:description["'][^>]*>/i.test(html);
+  const hasOgImage = /<meta\s[^>]*property=["']og:image["'][^>]*>/i.test(html) ||
+    /<meta\s[^>]*content=["'][^"']*["']\s[^>]*property=["']og:image["'][^>]*>/i.test(html);
+
+  const ogCount = [hasOgTitle, hasOgDesc, hasOgImage].filter(Boolean).length;
+  const ogMissing: string[] = [];
+  if (!hasOgTitle) ogMissing.push("og:title");
+  if (!hasOgDesc) ogMissing.push("og:description");
+  if (!hasOgImage) ogMissing.push("og:image");
+
+  if (ogCount === 3) {
+    checks.push(
+      check(
+        "Open Graph Etiketleri",
+        "pass",
+        "Tüm Open Graph etiketleri bulundu (og:title, og:description, og:image).",
+        null,
+      ),
+    );
+  } else if (ogCount >= 1) {
+    checks.push(
+      check(
+        "Open Graph Etiketleri",
+        "partial",
+        `Eksik Open Graph etiketleri: ${ogMissing.join(", ")}.`,
+        "Sayfaniza Open Graph etiketleri (og:title, og:description, og:image) ekleyin. Yapay zekalar bu bilgileri kullanir.",
+      ),
+    );
+  } else {
+    checks.push(
+      check(
+        "Open Graph Etiketleri",
+        "fail",
+        "Open Graph etiketleri bulunamadı.",
+        "Sayfaniza Open Graph etiketleri (og:title, og:description, og:image) ekleyin. Yapay zekalar bu bilgileri kullanir.",
+      ),
+    );
+  }
+
+  return { name: "Yapay Zeka Erişimi", checks };
+}
+
 export async function runSiteAudit(domain: string): Promise<AuditResult> {
   // Fetch homepage
   const homeRes = await safeFetch(`https://${domain}`);
@@ -358,22 +486,30 @@ export async function runSiteAudit(domain: string): Promise<AuditResult> {
             failCheck("Google Business Göstergeleri"),
           ],
         },
+        {
+          name: "Yapay Zeka Erişimi",
+          checks: [
+            failCheck("llms.txt"),
+            failCheck("Yapay Zeka Bot Erişimi"),
+            failCheck("Open Graph Etiketleri"),
+          ],
+        },
       ],
     };
   }
 
   const html = homeRes.text;
 
-  const [technical] = await Promise.all([
-    checkTechnical(domain, html),
-  ]);
+  const technicalResult = await checkTechnical(domain, html);
+  const aiAccess = await checkAIAccess(domain, html, technicalResult.robotsText);
 
   return {
     categories: [
       checkStructuredData(html),
       checkContent(html),
-      technical,
+      technicalResult.category,
       checkExternalPlatforms(html),
+      aiAccess,
     ],
   };
 }

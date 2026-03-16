@@ -1,6 +1,7 @@
 import { CompetitorStatsCards } from "@/components/rakipler/competitor-stats-cards";
 import { CompetitorTable } from "@/components/rakipler/competitor-table";
 import { GapAnalysisCard } from "@/components/rakipler/gap-analysis-card";
+import { ShareOfVoiceCard } from "@/components/rakipler/share-of-voice-card";
 import { BlurredSection } from "@/components/ui/blurred-section";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getCompetitorsData } from "@/lib/dal/competitors";
@@ -38,6 +39,9 @@ export default async function RakiplerPage() {
         aiDiscoveredCount={data.aiDiscoveredCount}
         manualCount={data.manualCount}
       />
+      <div className="px-4 lg:px-6">
+        <ShareOfVoiceCard data={data.shareOfVoice} />
+      </div>
       <div className="px-4 lg:px-6">
         <CompetitorTable rows={data.rows} brandId={brandId} />
       </div>

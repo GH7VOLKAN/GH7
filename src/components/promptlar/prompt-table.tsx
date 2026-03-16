@@ -62,7 +62,7 @@ const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
 const sourceLabels: Record<string, { label: string; color: string; icon: typeof SparklesIcon }> = {
   ai_generated: {
-    label: "AI Üretimi",
+    label: "Otomatik",
     color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
     icon: SparklesIcon,
   },
@@ -359,7 +359,7 @@ export function PromptTable({ promptItems, brandId }: PromptTableProps) {
               {/* Per-platform results */}
               <div>
                 <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                  Platform Sonuçları
+                  Yapay Zeka Sonuclari
                 </p>
                 <div className="flex flex-col gap-2">
                   {PLATFORMS.map((platform) => {

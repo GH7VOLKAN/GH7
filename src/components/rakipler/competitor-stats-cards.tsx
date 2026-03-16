@@ -113,9 +113,9 @@ export function CompetitorStatsCards({
           </div>
           <div className="text-muted-foreground">
             {mentionGap > 0
-              ? "Rakibiniz AI platformlarında sizden daha sık bahsediliyor"
+              ? "Rakibiniz yapay zekalarda sizden daha sik bahsediliyor"
               : mentionGap < 0
-                ? "AI platformlarında rakibinizden daha sık bahsediliyorsunuz"
+                ? "Yapay zekalarda rakibinizden daha sik bahsediliyorsunuz"
                 : "En güçlü rakibinizle aynı düzeydesiniz"}
           </div>
         </CardFooter>

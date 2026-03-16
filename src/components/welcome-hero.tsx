@@ -82,7 +82,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
     },
     {
       icon: BrainCircuitIcon,
-      title: "AI'lar Analiz Etsin",
+      title: "Yapay Zekalar Analiz Etsin",
       desc: "ChatGPT, Claude, Gemini, Perplexity",
       active: status === "running",
       done: status === "completed",

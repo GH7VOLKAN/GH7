@@ -235,7 +235,7 @@ export function FreeToolWidget() {
           {/* Platform cards */}
           <div>
             <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Platform Bazlı Sonuçlar
+              Yapay Zeka Bazli Sonuclar
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {result.platforms.map((p) => (
@@ -255,7 +255,7 @@ export function FreeToolWidget() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">
-                  Bu ücretsiz test, 1 prompt ile anlık bir görüntüdür
+                  Bu ucretsiz test, 1 soru ile anlik bir goruntudur
                 </p>
                 <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
                   Pro ile aynı analiz çok daha kapsamlı yapılır:
@@ -264,7 +264,7 @@ export function FreeToolWidget() {
                   <div className="flex items-center gap-2 text-[13px] text-foreground/70">
                     <RepeatIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span>
-                      <span className="font-medium">200 farklı prompt</span> ile
+                      <span className="font-medium">200 farkli soru</span> ile
                       derinlemesine analiz
                     </span>
                   </div>
@@ -285,7 +285,7 @@ export function FreeToolWidget() {
                   <div className="flex items-center gap-2 text-[13px] text-foreground/70">
                     <ZapIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span>
-                      Kaynak analizi, SEO önerileri,{" "}
+                      Kaynak analizi, site iyilestirme onerileri,{" "}
                       <span className="font-medium">aksiyon planı</span>
                     </span>
                   </div>

@@ -14,6 +14,12 @@ export interface RecentMention {
   scanDate: string;
 }
 
+export interface PlatformStat {
+  platform: PlatformKey;
+  mentioned: number;
+  total: number;
+}
+
 export interface DashboardOverview {
   mentionScore: number;
   mentionTrend: number;
@@ -26,6 +32,7 @@ export interface DashboardOverview {
   totalMentionCount: number;
   totalResultCount: number;
   recentMentions: RecentMention[];
+  platformStats: PlatformStat[];
   visibilityData: {
     name: string;
     isUser: boolean;
@@ -75,6 +82,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
   let recentMentions: RecentMention[] = [];
   let totalMentionCount = 0;
   let totalResultCount = 0;
+  let platformStats: PlatformStat[] = [];
 
   if (latestScan) {
     const allResults = await prisma.promptResult.findMany({
@@ -82,6 +90,24 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     });
     totalResultCount = allResults.length;
     totalMentionCount = allResults.filter((r) => r.mentioned).length;
+
+    // Per-platform breakdown
+    const platCounts: Record<string, { mentioned: number; total: number }> = {
+      chatgpt: { mentioned: 0, total: 0 },
+      claude: { mentioned: 0, total: 0 },
+      gemini: { mentioned: 0, total: 0 },
+      perplexity: { mentioned: 0, total: 0 },
+    };
+    for (const r of allResults) {
+      if (!platCounts[r.platform]) continue;
+      platCounts[r.platform].total++;
+      if (r.mentioned) platCounts[r.platform].mentioned++;
+    }
+    platformStats = (["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]).map((p) => ({
+      platform: p,
+      mentioned: platCounts[p].mentioned,
+      total: platCounts[p].total,
+    }));
 
     const results = await prisma.promptResult.findMany({
       where: { scanId: latestScan.id, mentioned: true },
@@ -165,6 +191,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     totalMentionCount,
     totalResultCount,
     recentMentions,
+    platformStats,
     visibilityData,
     priorityActions,
     scoreHistory,
