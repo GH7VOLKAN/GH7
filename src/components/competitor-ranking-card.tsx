@@ -8,16 +8,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { CompetitorRankEntry } from "@/lib/dal/overview";
-import type { PlatformKey } from "@/lib/types";
+import { platformLabels, type PlatformKey } from "@/lib/types";
+import { PlatformIcon, PLATFORM_COLORS } from "@/components/platform-icon";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
-
-const PLATFORM_CONFIG: Record<PlatformKey, { name: string; short: string; color: string }> = {
-  chatgpt: { name: "ChatGPT", short: "GPT", color: "text-emerald-600 dark:text-emerald-400" },
-  claude: { name: "Claude", short: "C", color: "text-orange-600 dark:text-orange-400" },
-  gemini: { name: "Gemini", short: "G", color: "text-blue-600 dark:text-blue-400" },
-  perplexity: { name: "Perplexity", short: "P", color: "text-purple-600 dark:text-purple-400" },
-};
 
 interface CompetitorRankingCardProps {
   ranking: CompetitorRankEntry[];
@@ -94,12 +88,14 @@ export function CompetitorRankingCard({ ranking, totalResults }: CompetitorRanki
         {/* Platform bazlı sıralama */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]).map((plat) => {
-            const config = PLATFORM_CONFIG[plat];
+            const colors = PLATFORM_COLORS[plat];
+            const label = platformLabels[plat];
             const top3 = platformRanking[plat];
             return (
-              <div key={plat} className="rounded-lg border border-border p-3">
-                <div className={`text-xs font-bold ${config.color}`}>
-                  [{config.short}●]
+              <div key={plat} className="rounded-lg border border-border/60 p-3">
+                <div className="flex items-center gap-1.5">
+                  <PlatformIcon platform={plat} size={14} />
+                  <span className={`text-xs font-semibold ${colors.text}`}>{label.name}</span>
                 </div>
                 <div className="mt-1.5 space-y-0.5">
                   {top3.map((name, rank) => (

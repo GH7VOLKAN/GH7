@@ -7,7 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { PlatformKey } from "@/lib/types";
+import { PlatformIcon, PLATFORM_COLORS } from "@/components/platform-icon";
+import { platformLabels, type PlatformKey } from "@/lib/types";
 
 interface PlatformStat {
   platform: PlatformKey;
@@ -26,117 +27,88 @@ interface PlatformBreakdownCardProps {
   weeklyRate?: WeeklyRate;
 }
 
-const PLATFORM_CONFIG: Record<
-  PlatformKey,
-  { name: string; color: string; bgColor: string; darkBgColor: string }
-> = {
-  chatgpt: {
-    name: "ChatGPT",
-    color: "text-emerald-700 dark:text-emerald-400",
-    bgColor: "bg-emerald-100",
-    darkBgColor: "dark:bg-emerald-900/40",
-  },
-  claude: {
-    name: "Claude",
-    color: "text-orange-700 dark:text-orange-400",
-    bgColor: "bg-orange-100",
-    darkBgColor: "dark:bg-orange-900/40",
-  },
-  gemini: {
-    name: "Gemini",
-    color: "text-blue-700 dark:text-blue-400",
-    bgColor: "bg-blue-100",
-    darkBgColor: "dark:bg-blue-900/40",
-  },
-  perplexity: {
-    name: "Perplexity",
-    color: "text-purple-700 dark:text-purple-400",
-    bgColor: "bg-purple-100",
-    darkBgColor: "dark:bg-purple-900/40",
-  },
-};
-
 export function PlatformBreakdownCard({ platforms, weeklyRate }: PlatformBreakdownCardProps) {
   const hasWeeklyData = weeklyRate && weeklyRate.totalScans > 1;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Yapay Zekalar Sizi Ne Kadar Taniyor?</CardTitle>
+        <CardTitle>Platform Bazlı Görünürlük</CardTitle>
         <CardDescription>
           {hasWeeklyData
-            ? `Bu hafta ${weeklyRate.totalScans} taramanin ${weeklyRate.mentionedInScans} tanesinde sizi onerdiler`
-            : "Her yapay zekanin sizi ne siklikta onerdigi"}
+            ? `Bu hafta ${weeklyRate.totalScans} taramada ${weeklyRate.mentionedInScans} kez önerildiniz`
+            : "Her yapay zekanın sizi ne sıklıkta önerdiği"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {platforms.map((p) => {
-            const config = PLATFORM_CONFIG[p.platform];
+            const colors = PLATFORM_COLORS[p.platform];
+            const label = platformLabels[p.platform];
             const pct = p.total > 0 ? Math.round((p.mentioned / p.total) * 100) : 0;
             const weeklyPlatform = weeklyRate?.perPlatform[p.platform];
 
             return (
               <div
                 key={p.platform}
-                className={`flex flex-col items-center gap-2 rounded-xl border px-3 py-4 transition-colors ${config.bgColor} ${config.darkBgColor}`}
+                className="group flex flex-col items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-5 transition-all hover:border-border hover:shadow-sm"
               >
-                {/* Platform name */}
-                <span className={`text-xs font-bold ${config.color}`}>
-                  {config.name}
-                </span>
+                {/* Platform ikon + isim */}
+                <div className="flex items-center gap-2">
+                  <div className={`flex size-8 items-center justify-center rounded-lg ${colors.bg}`}>
+                    <PlatformIcon platform={p.platform} size={18} />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold leading-none">{label.name}</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{label.company}</p>
+                  </div>
+                </div>
 
-                {/* Score ring */}
-                <div className="relative flex size-16 items-center justify-center">
-                  <svg className="size-16" viewBox="0 0 64 64">
+                {/* Skor daire */}
+                <div className="relative flex size-[72px] items-center justify-center">
+                  <svg className="size-[72px]" viewBox="0 0 72 72">
                     <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
+                      cx="36"
+                      cy="36"
+                      r="30"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="4"
-                      className="text-black/5 dark:text-white/10"
+                      className="text-muted/60"
                     />
                     <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
+                      cx="36"
+                      cy="36"
+                      r="30"
                       fill="none"
-                      stroke="currentColor"
+                      stroke={colors.hex}
                       strokeWidth="4"
                       strokeLinecap="round"
-                      strokeDasharray={`${(pct / 100) * 175.9} 175.9`}
-                      transform="rotate(-90 32 32)"
-                      className={config.color}
+                      strokeDasharray={`${(pct / 100) * 188.5} 188.5`}
+                      transform="rotate(-90 36 36)"
+                      className="transition-all duration-700"
                     />
                   </svg>
-                  <span className="absolute text-lg font-bold tabular-nums">
-                    {pct}
+                  <span className="absolute text-xl font-bold tabular-nums">
+                    {pct}<span className="text-xs font-normal text-muted-foreground">%</span>
                   </span>
                 </div>
 
-                {/* Mention rate text */}
+                {/* Mention bilgisi */}
                 <div className="flex flex-col items-center gap-0.5">
-                  <p className="text-center text-[10px] leading-tight text-muted-foreground">
+                  <p className="text-center text-[11px] text-muted-foreground">
                     {p.total > 0 ? (
                       <>
-                        {p.total} sorunun{" "}
-                        <strong className="text-foreground">{p.mentioned}</strong>
-                        &apos;{p.mentioned > 1 ? "i" : ""}nde oneriyor
+                        <span className="font-semibold text-foreground">{p.mentioned}</span>
+                        /{p.total} soruda öneriyor
                       </>
                     ) : (
-                      "Henuz taranmadi"
+                      "Henüz taranmadı"
                     )}
                   </p>
-                  {/* Weekly mention rate badge */}
                   {hasWeeklyData && weeklyPlatform && weeklyPlatform.total > 0 && (
-                    <p className="text-center text-[9px] font-medium text-muted-foreground/70">
-                      {weeklyPlatform.total} denemede{" "}
-                      <span className={weeklyPlatform.mentioned > 0 ? "text-foreground" : ""}>
-                        {weeklyPlatform.mentioned}
-                      </span>
-                      &apos;{weeklyPlatform.mentioned > 1 ? "i" : ""}nde
+                    <p className="text-center text-[10px] text-muted-foreground/70">
+                      Haftalık: {weeklyPlatform.mentioned}/{weeklyPlatform.total}
                     </p>
                   )}
                 </div>

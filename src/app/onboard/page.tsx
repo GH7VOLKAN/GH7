@@ -16,20 +16,17 @@ import {
   SparklesIcon,
   GlobeIcon,
   ExternalLinkIcon,
-  LinkedinIcon,
 } from "lucide-react";
 
 type BrandType = "firma" | "kisisel";
 type Step =
-  | "type"
-  | "domain"                // firma: sadece domain gir
-  | "manual-info"           // firma: "web sitem yok" fallback
-  | "kisisel-linkedin"      // kişisel: LinkedIn URL veya "hesabım yok"
-  | "kisisel-manual"        // kişisel: "LinkedIn hesabım yok" — manuel giriş
-  | "analyzing"             // Sonar analiz ediliyor
-  | "approval"              // sonuçları onayla (firma)
-  | "approval-kisisel"      // sonuçları onayla (kişisel)
-  | "loading";              // brand oluşturuluyor
+  | "type"              // Adım 1: Firma mı Kişisel mi?
+  | "domain"            // Adım 2a: Firma → web sitesi gir
+  | "kisisel-info"      // Adım 2b: Kişisel → ad soyad + meslek
+  | "analyzing"         // Sonar analiz ediliyor (geçiş ekranı)
+  | "approval"          // Adım 3a: Firma onay
+  | "approval-kisisel"  // Adım 3b: Kişisel onay
+  | "loading";          // Brand oluşturuluyor (geçiş ekranı)
 
 interface CompetitorEntry {
   name: string;
@@ -64,23 +61,13 @@ export default function OnboardPage() {
   const [step, setStep] = useState<Step>("type");
   const [brandType, setBrandType] = useState<BrandType>("firma");
 
-  // ── Firma: Domain step ──
+  // ── Firma: Domain ──
   const [domain, setDomain] = useState("");
 
-  // ── Firma: Manual fallback ──
-  const [manualName, setManualName] = useState("");
-  const [manualSector, setManualSector] = useState("");
-  const [manualCity, setManualCity] = useState("");
-  const [manualCompetitors, setManualCompetitors] = useState(["", "", ""]);
-
-  // ── Kişisel marka ──
-  const [linkedinUrl, setLinkedinUrl] = useState("");
+  // ── Kişisel: Ad Soyad + Meslek ──
   const [kisiselName, setKisiselName] = useState("");
-  const [kisiselDomain, setKisiselDomain] = useState("");
   const [profession, setProfession] = useState("");
-  const [sector, setSector] = useState("");
   const [city, setCity] = useState("");
-  const [specialties, setSpecialties] = useState(["", "", ""]);
 
   // ── Firma onay ekranı ──
   const [firmaAnalysis, setFirmaAnalysis] = useState<FirmaAnalysis | null>(null);
@@ -110,7 +97,7 @@ export default function OnboardPage() {
 
   function handleTypeSelect(type: BrandType) {
     setBrandType(type);
-    setStep(type === "firma" ? "domain" : "kisisel-linkedin");
+    setStep(type === "firma" ? "domain" : "kisisel-info");
   }
 
   // ═══ FIRMA: Domain → Sonar analiz → Onay ═══
@@ -130,7 +117,7 @@ export default function OnboardPage() {
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Analiz başarısız oldu");
+          throw new Error(data.error || "Analiz basarisiz oldu");
         }
         const data: FirmaAnalysis = await res.json();
         setFirmaAnalysis(data);
@@ -141,51 +128,17 @@ export default function OnboardPage() {
         setApprovedRegions(data.regions);
         setStep("approval");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Bir hata oluştu");
+        setError(err instanceof Error ? err.message : "Bir hata olustu");
         setStep("domain");
       }
     });
   }
 
-  // ═══ KİŞİSEL: LinkedIn URL → Sonar analiz → Onay ═══
-  function handleLinkedinSubmit(e: React.FormEvent) {
+  // ═══ KİŞİSEL: Ad Soyad + Meslek → Sonar analiz → Onay ═══
+  function handleKisiselSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!linkedinUrl.trim()) { setError("LinkedIn URL'inizi girin"); return; }
-    setError(null);
-    setAnalyzeLabel("kisisel");
-    setStep("analyzing");
-
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/onboarding/analyze-personal", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ linkedinUrl: linkedinUrl.trim() }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Analiz başarısız oldu");
-        }
-        const data: KisiselAnalysis = await res.json();
-        setKisiselAnalysis(data);
-        setApprovedKisiselName(data.name || "");
-        setApprovedProfession(data.profession || "");
-        setApprovedCity(data.city || "");
-        setApprovedSpecialties(data.specialties);
-        setApprovedKisiselCompetitors(data.competitors.map((c) => c.name));
-        setStep("approval-kisisel");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Bir hata oluştu");
-        setStep("kisisel-linkedin");
-      }
-    });
-  }
-
-  // ═══ KİŞİSEL MANUEL → Sonar analiz → Onay ═══
-  function handleKisiselManualSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!kisiselName.trim()) { setError("Adınızı girin"); return; }
-    if (!profession.trim()) { setError("Mesleğinizi girin"); return; }
+    if (!kisiselName.trim()) { setError("Adinizi girin"); return; }
+    if (!profession.trim()) { setError("Mesleginizi girin"); return; }
     setError(null);
     setAnalyzeLabel("kisisel");
     setStep("analyzing");
@@ -203,35 +156,20 @@ export default function OnboardPage() {
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Analiz başarısız oldu");
+          throw new Error(data.error || "Analiz basarisiz oldu");
         }
         const data: KisiselAnalysis = await res.json();
         setKisiselAnalysis(data);
         setApprovedKisiselName(data.name || kisiselName);
         setApprovedProfession(data.profession || profession);
         setApprovedCity(data.city || city);
-        setApprovedSpecialties(data.specialties.length > 0 ? data.specialties : specialties.filter((s) => s.trim()));
+        setApprovedSpecialties(data.specialties);
         setApprovedKisiselCompetitors(data.competitors.map((c) => c.name));
         setStep("approval-kisisel");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Bir hata oluştu");
-        setStep("kisisel-manual");
+        setError(err instanceof Error ? err.message : "Bir hata olustu");
+        setStep("kisisel-info");
       }
-    });
-  }
-
-  // ═══ Firma manual (web sitem yok) → doğrudan brand oluştur ═══
-  function handleManualSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!manualName.trim()) { setError("Firma adını girin"); return; }
-    setError(null);
-    handleFinalSubmit({
-      name: manualName,
-      domain: "",
-      sector: manualSector,
-      type: "firma",
-      city: manualCity || undefined,
-      competitorNames: manualCompetitors.filter((c) => c.trim()),
     });
   }
 
@@ -257,14 +195,13 @@ export default function OnboardPage() {
   function handleKisiselApprovalSubmit() {
     handleFinalSubmit({
       name: approvedKisiselName,
-      domain: kisiselDomain,
-      sector,
+      domain: "",
+      sector: "",
       type: "kisisel",
       city: approvedCity || undefined,
       profession: approvedProfession || undefined,
       specialties: approvedSpecialties,
       competitorNames: approvedKisiselCompetitors,
-      linkedinUrl: linkedinUrl.trim() || undefined,
       approvedStrengths: kisiselAnalysis?.strengths,
       approvedWeaknesses: kisiselAnalysis?.weaknesses,
       sonarRawAnalysis: kisiselAnalysis?.rawAnalysis,
@@ -291,8 +228,8 @@ export default function OnboardPage() {
       } catch (err) {
         clearTimeout(timer1);
         clearTimeout(timer2);
-        setStep(brandType === "firma" ? "domain" : "kisisel-linkedin");
-        setError(err instanceof Error ? err.message : "Bir hata oluştu");
+        setStep(brandType === "firma" ? "domain" : "kisisel-info");
+        setError(err instanceof Error ? err.message : "Bir hata olustu");
       }
     });
   }
@@ -308,47 +245,45 @@ export default function OnboardPage() {
   function removeSpecialty(i: number) { setApprovedSpecialties((p) => p.filter((_, idx) => idx !== i)); }
   function addKisiselComp() { const v = newKisiselCompInput.trim(); if (v && !approvedKisiselCompetitors.includes(v)) { setApprovedKisiselCompetitors((p) => [...p, v]); setNewKisiselCompInput(""); } }
   function removeKisiselComp(i: number) { setApprovedKisiselCompetitors((p) => p.filter((_, idx) => idx !== i)); }
-  function updateManualCompetitor(i: number, v: string) { setManualCompetitors((p) => p.map((c, idx) => (idx === i ? v : c))); }
-  function updateSpecialty(i: number, v: string) { setSpecialties((p) => p.map((s, idx) => (idx === i ? v : s))); }
 
   const inputClass = "w-full rounded-xl border border-border bg-background px-4 py-3.5 text-sm focus:border-foreground focus:outline-none transition-colors placeholder:text-muted-foreground/40";
   const chipClass = "inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-sm transition-colors";
 
   // ═══════════════════════════════════════════════════════
-  // STEP 1: Type Selection
+  // ADIM 1: Firma mi Kişisel mi?
   // ═══════════════════════════════════════════════════════
   if (step === "type") {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <div className="flex items-center justify-between px-6 py-5 sm:px-10">
           <GH7Logo size="default" />
-          <span className="text-xs text-muted-foreground">Adım 1 / 3</span>
+          <span className="text-xs text-muted-foreground">Adim 1 / 3</span>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
           <div className="w-full max-w-2xl text-center">
             <h1 className="text-4xl font-light tracking-[-0.04em] md:text-5xl lg:text-6xl">
-              Yapay Zeka Seni<br /><span className="font-semibold">Tanıyor mu?</span>
+              Yapay Zeka Seni<br /><span className="font-semibold">Taniyor mu?</span>
             </h1>
             <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground md:text-lg">
-              Markanızın ChatGPT, Claude, Gemini ve Perplexity&apos;deki görünürlüğünü ölçün ve iyileştirin.
+              Markanizin ChatGPT, Claude, Gemini ve Perplexity&apos;deki gorunurlugunuzu olcun ve iyilestirin.
             </p>
             <div className="mx-auto mt-12 grid max-w-xl gap-4 sm:grid-cols-2">
               <button type="button" onClick={() => handleTypeSelect("firma")} className="group relative overflow-hidden rounded-2xl border border-border p-6 text-left transition-all hover:border-foreground hover:shadow-lg">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-foreground/5 transition-colors group-hover:bg-foreground group-hover:text-background"><BuildingIcon className="size-6" /></div>
                 <h3 className="mt-4 text-lg font-semibold tracking-[-0.02em]">Firma / Kurum</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">Şirket, marka veya kurum için yapay zeka görünürlük takibi ve rakip analizi</p>
+                <p className="mt-1.5 text-sm text-muted-foreground">Sirket, marka veya kurum icin yapay zeka gorunurluk takibi</p>
                 <ArrowRightIcon className="absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/30 transition-all group-hover:right-3 group-hover:text-foreground" />
               </button>
               <button type="button" onClick={() => handleTypeSelect("kisisel")} className="group relative overflow-hidden rounded-2xl border border-border p-6 text-left transition-all hover:border-foreground hover:shadow-lg">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-foreground/5 transition-colors group-hover:bg-foreground group-hover:text-background"><UserIcon className="size-6" /></div>
-                <h3 className="mt-4 text-lg font-semibold tracking-[-0.02em]">Kişisel Marka</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">Bireysel tanınırlık, dijital iz takibi ve kişisel görünürlük analizi</p>
+                <h3 className="mt-4 text-lg font-semibold tracking-[-0.02em]">Kisisel Marka</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">Bireysel taninirlik ve kisisel gorunurluk analizi</p>
                 <ArrowRightIcon className="absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/30 transition-all group-hover:right-3 group-hover:text-foreground" />
               </button>
             </div>
             <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground/60">
-              <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />Ücretsiz başla</span>
-              <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />Kredi kartı gerekmez</span>
+              <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />Ucretsiz basla</span>
+              <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />Kredi karti gerekmez</span>
               <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />2 dakikada kurulum</span>
             </div>
           </div>
@@ -358,33 +293,32 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // FIRMA: Domain Only
+  // ADIM 2a: FIRMA — Sadece Web Sitesi
   // ═══════════════════════════════════════════════════════
   if (step === "domain") {
     return (
       <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adım 2 / 3</span></div>
+        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adim 2 / 3</span></div>
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
           <div className="w-full max-w-lg">
             <button type="button" onClick={() => setStep("type")} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
             <div className="flex items-center gap-3 mb-2">
               <div className="flex size-12 items-center justify-center rounded-xl bg-foreground/5"><GlobeIcon className="size-6 text-foreground/70" /></div>
-              <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">Web Adresinizi Girin</h1>
+              <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">Web Adresiniz</h1>
             </div>
-            <p className="mt-3 text-base text-muted-foreground">Yapay zeka web sitenizi analiz edecek ve firmanızı otomatik tanıyacak.</p>
+            <p className="mt-3 text-base text-muted-foreground">Web sitenizi girin, yapay zeka firmanizi otomatik analiz etsin.</p>
             <form onSubmit={handleDomainSubmit} className="mt-10 space-y-6">
               <div>
                 <div className="relative">
                   <GlobeIcon className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                   <input type="text" value={domain} onChange={(e) => { setDomain(e.target.value); setError(null); }} placeholder="isitmax.com" className={`${inputClass} pl-11 text-base`} autoFocus />
                 </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">https:// olmadan yazın</p>
+                <p className="mt-1.5 text-xs text-muted-foreground">https:// olmadan yazin</p>
               </div>
               {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">{error}</p>}
-              <button type="submit" disabled={isPending || !domain.trim()} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Analiz ediliyor..." : "Analiz Et →"}</button>
-              <div className="text-center">
-                <button type="button" onClick={() => setStep("manual-info")} className="text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground">Web sitem yok</button>
-              </div>
+              <button type="submit" disabled={isPending || !domain.trim()} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">
+                {isPending ? "Analiz ediliyor..." : "Analiz Et"}
+              </button>
             </form>
           </div>
         </div>
@@ -393,59 +327,37 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // FIRMA: Manual Fallback (web sitem yok)
+  // ADIM 2b: KİŞİSEL — Ad Soyad + Meslek
   // ═══════════════════════════════════════════════════════
-  if (step === "manual-info") {
+  if (step === "kisisel-info") {
     return (
       <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adım 2 / 3</span></div>
-        <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
-          <div className="w-full max-w-lg">
-            <button type="button" onClick={() => setStep("domain")} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
-            <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">Markanızı Tanıyalım</h1>
-            <p className="mt-3 text-base text-muted-foreground">Web siteniz olmasa da firmanız hakkında bilgi verebilirsiniz.</p>
-            <form onSubmit={handleManualSubmit} className="mt-10 space-y-6">
-              <div><label className="text-sm font-medium">Firma / Marka Adı</label><input type="text" value={manualName} onChange={(e) => { setManualName(e.target.value); setError(null); }} placeholder="örneğin: ISITMAX" className={`mt-2 ${inputClass}`} autoFocus /></div>
-              <div><label className="text-sm font-medium">Sektör</label><input type="text" value={manualSector} onChange={(e) => setManualSector(e.target.value)} placeholder="örneğin: Isıtma & Soğutma" className={`mt-2 ${inputClass}`} /></div>
-              <div><label className="text-sm font-medium">Şehir <span className="font-normal text-muted-foreground">(isteğe bağlı)</span></label><input type="text" value={manualCity} onChange={(e) => setManualCity(e.target.value)} placeholder="örneğin: İstanbul" className={`mt-2 ${inputClass}`} /></div>
-              <div className="space-y-3"><label className="text-sm font-medium">Rakipler <span className="font-normal text-muted-foreground">(isteğe bağlı)</span></label>{manualCompetitors.map((comp, i) => (<input key={i} type="text" value={comp} onChange={(e) => updateManualCompetitor(i, e.target.value)} placeholder={`Rakip ${i + 1}`} className={inputClass} />))}</div>
-              {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">{error}</p>}
-              <button type="submit" disabled={isPending} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Devam Et"}</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  // KİŞİSEL: LinkedIn URL gir (Spec E.0 Seçenek A)
-  // ═══════════════════════════════════════════════════════
-  if (step === "kisisel-linkedin") {
-    return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adım 2 / 3</span></div>
+        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adim 2 / 3</span></div>
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
           <div className="w-full max-w-lg">
             <button type="button" onClick={() => setStep("type")} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
             <div className="flex items-center gap-3 mb-2">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/30"><LinkedinIcon className="size-6 text-blue-600" /></div>
-              <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">LinkedIn Profiliniz</h1>
+              <div className="flex size-12 items-center justify-center rounded-xl bg-foreground/5"><UserIcon className="size-6 text-foreground/70" /></div>
+              <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">Sizi Taniyalim</h1>
             </div>
-            <p className="mt-3 text-base text-muted-foreground">LinkedIn profilinizi yapay zeka ile analiz edelim — adınız, mesleğiniz ve uzmanlıklarınız otomatik çıkarılacak.</p>
-            <form onSubmit={handleLinkedinSubmit} className="mt-10 space-y-6">
+            <p className="mt-3 text-base text-muted-foreground">Adinizi ve mesleginizi girin, yapay zeka sizi arastirsin.</p>
+            <form onSubmit={handleKisiselSubmit} className="mt-10 space-y-5">
               <div>
-                <div className="relative">
-                  <LinkedinIcon className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-blue-500/50" />
-                  <input type="text" value={linkedinUrl} onChange={(e) => { setLinkedinUrl(e.target.value); setError(null); }} placeholder="linkedin.com/in/ahmetyilmaz" className={`${inputClass} pl-11 text-base`} autoFocus />
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">Profil URL&apos;inizi girin</p>
+                <label className="text-sm font-medium">Ad Soyad</label>
+                <input type="text" value={kisiselName} onChange={(e) => { setKisiselName(e.target.value); setError(null); }} placeholder="Dr. Ahmet Yilmaz" className={`mt-2 ${inputClass}`} autoFocus />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Meslek</label>
+                <input type="text" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="Ortopedi Uzmani" className={`mt-2 ${inputClass}`} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Sehir <span className="font-normal text-muted-foreground">(istege bagli)</span></label>
+                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Istanbul" className={`mt-2 ${inputClass}`} />
               </div>
               {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">{error}</p>}
-              <button type="submit" disabled={isPending || !linkedinUrl.trim()} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Analiz ediliyor..." : "Analiz Et →"}</button>
-              <div className="text-center">
-                <button type="button" onClick={() => setStep("kisisel-manual")} className="text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground">LinkedIn hesabım yok</button>
-              </div>
+              <button type="submit" disabled={isPending || !kisiselName.trim() || !profession.trim()} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">
+                {isPending ? "Analiz ediliyor..." : "Analiz Et"}
+              </button>
             </form>
           </div>
         </div>
@@ -454,34 +366,7 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // KİŞİSEL: Manuel Giriş (Spec E.0 Seçenek B)
-  // ═══════════════════════════════════════════════════════
-  if (step === "kisisel-manual") {
-    return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adım 2 / 3</span></div>
-        <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
-          <div className="w-full max-w-lg">
-            <button type="button" onClick={() => setStep("kisisel-linkedin")} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
-            <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">Sizi Tanıyalım</h1>
-            <p className="mt-3 text-base text-muted-foreground">Kendiniz hakkında bilgi verin, yapay zeka ile analiz edelim.</p>
-            <form onSubmit={handleKisiselManualSubmit} className="mt-10 space-y-6">
-              <div><label className="text-sm font-medium">Adınız Soyadınız</label><input type="text" value={kisiselName} onChange={(e) => { setKisiselName(e.target.value); setError(null); }} placeholder="örneğin: Dr. Ahmet Yılmaz" className={`mt-2 ${inputClass}`} autoFocus /></div>
-              <div><label className="text-sm font-medium">Meslek Alanı</label><input type="text" value={profession} onChange={(e) => setProfession(e.target.value)} placeholder="örneğin: Ortopedi Uzmanı" className={`mt-2 ${inputClass}`} /></div>
-              <div><label className="text-sm font-medium">Şehir <span className="font-normal text-muted-foreground">(isteğe bağlı)</span></label><input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="örneğin: Balıkesir" className={`mt-2 ${inputClass}`} /></div>
-              <div><label className="text-sm font-medium">Web Sitesi <span className="font-normal text-muted-foreground">(isteğe bağlı)</span></label><input type="text" value={kisiselDomain} onChange={(e) => setKisiselDomain(e.target.value)} placeholder="örneğin: drahmetyilmaz.com" className={`mt-2 ${inputClass}`} /></div>
-              <div className="space-y-3"><label className="text-sm font-medium">Uzmanlık Alanları <span className="font-normal text-muted-foreground">(isteğe bağlı)</span></label>{specialties.map((s, i) => (<input key={i} type="text" value={s} onChange={(e) => updateSpecialty(i, e.target.value)} placeholder={`Uzmanlık ${i + 1}`} className={inputClass} />))}</div>
-              {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">{error}</p>}
-              <button type="submit" disabled={isPending} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Analiz ediliyor..." : "Analiz Et →"}</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  // ANALYZING (Sonar running — firma veya kişisel)
+  // GECİS: Analiz ediliyor (Sonar running)
   // ═══════════════════════════════════════════════════════
   if (step === "analyzing") {
     const isFirma = analyzeLabel === "firma";
@@ -491,14 +376,14 @@ export default function OnboardPage() {
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
           <div className="w-full max-w-md text-center">
             <div className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-foreground/5"><SparklesIcon className="size-8 animate-pulse text-foreground" /></div>
-            <h1 className="mt-8 text-3xl font-light tracking-[-0.04em] md:text-4xl">{isFirma ? "Siteniz Analiz Ediliyor" : "Profiliniz Araştırılıyor"}</h1>
+            <h1 className="mt-8 text-3xl font-light tracking-[-0.04em] md:text-4xl">{isFirma ? "Siteniz Analiz Ediliyor" : "Profiliniz Arastiriliyor"}</h1>
             <p className="mt-3 text-base text-muted-foreground">
-              <span className="font-medium text-foreground">{isFirma ? domain : (linkedinUrl || kisiselName)}</span> yapay zeka ile araştırılıyor
+              <span className="font-medium text-foreground">{isFirma ? domain : kisiselName}</span> yapay zeka ile arastiriliyor
             </p>
             <div className="mx-auto mt-10 max-w-xs space-y-4 text-left">
               {(isFirma
-                ? ["Faaliyet alanları araştırılıyor", "Güçlü yönler tespit ediliyor", "Rakipler bulunuyor", "Bölge bilgileri çıkarılıyor"]
-                : ["Uzmanlık alanları araştırılıyor", "Dijital varlık taranıyor", "Senin yerine kim öneriliyor bulunuyor"]
+                ? ["Faaliyet alanlari arastiriliyor", "Guclu yonler tespit ediliyor", "Rakipler bulunuyor", "Bolge bilgileri cikariliyor"]
+                : ["Uzmanlik alanlari arastiriliyor", "Dijital varlik taraniyor", "Senin yerine kim oneriliyor bulunuyor"]
               ).map((label, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-foreground"><Loader2Icon className="size-3.5 animate-spin" /></div>
@@ -506,7 +391,7 @@ export default function OnboardPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-10 text-xs text-muted-foreground/60">Bu işlem 10-20 saniye sürebilir</p>
+            <p className="mt-10 text-xs text-muted-foreground/60">Bu islem 10-20 saniye surebilir</p>
           </div>
         </div>
       </div>
@@ -514,39 +399,39 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // FIRMA ONAY EKRANI (Spec E.0)
+  // ADIM 3a: FIRMA ONAY EKRANI
   // ═══════════════════════════════════════════════════════
   if (step === "approval") {
     const promptCount = approvedCategories.length > 0 ? approvedCategories.length * 10 : 50;
     return (
       <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adım 3 / 3</span></div>
+        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adim 3 / 3</span></div>
         <div className="flex flex-1 flex-col items-center px-6 pb-20 pt-4">
           <div className="w-full max-w-2xl">
-            <button type="button" onClick={() => setStep("domain")} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Farklı bir adres gir</button>
+            <button type="button" onClick={() => setStep("domain")} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Farkli bir adres gir</button>
 
-            {/* Header — "{domain} analiz edildi ✓" */}
+            {/* Header */}
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800/30 dark:bg-emerald-900/10">
               <CheckIcon className="size-5 text-emerald-600" />
               <div>
                 <p className="text-sm font-semibold">{domain} analiz edildi</p>
-                <p className="text-xs text-muted-foreground">Sonuçları inceleyin, düzenleyin ve onaylayın</p>
+                <p className="text-xs text-muted-foreground">Sonuclari inceleyin, duzenleyin ve onaylayin</p>
               </div>
             </div>
 
-            {/* Firma adı + sektör */}
+            {/* Firma adi + sektor */}
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div><label className="text-xs font-medium text-muted-foreground">Firma</label><input type="text" value={approvedName} onChange={(e) => setApprovedName(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
-              <div><label className="text-xs font-medium text-muted-foreground">Sektör</label><input type="text" value={approvedSector} onChange={(e) => setApprovedSector(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
+              <div><label className="text-xs font-medium text-muted-foreground">Sektor</label><input type="text" value={approvedSector} onChange={(e) => setApprovedSector(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
             </div>
 
             <div className="mt-6 space-y-5">
-              {/* Faaliyet Alanları */}
-              <EditableChipSection title="Faaliyet Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedCategories} onRemove={removeCategory} inputValue={newCategoryInput} onInputChange={setNewCategoryInput} onAdd={addCategory} placeholder="Yeni alan ekle..." chipClass={chipClass} inputClass={inputClass} />
+              {/* Faaliyet Alanlari */}
+              <EditableChipSection title="Faaliyet Alanlari" subtitle="Sorular bu alanlara gore uretilecek" items={approvedCategories} onRemove={removeCategory} inputValue={newCategoryInput} onInputChange={setNewCategoryInput} onAdd={addCategory} placeholder="Yeni alan ekle..." chipClass={chipClass} inputClass={inputClass} />
 
               {/* Rakipler */}
               <div className="rounded-2xl border border-border p-5">
-                <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold">Rakipler ({approvedCompetitors.length})</h2><p className="text-xs text-muted-foreground">Bu markalarla kıyaslanacaksınız</p></div></div>
+                <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold">Rakipler ({approvedCompetitors.length})</h2><p className="text-xs text-muted-foreground">Bu markalarla kiyaslanacaksiniz</p></div></div>
                 <div className="mt-3 space-y-2">
                   {approvedCompetitors.map((comp, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2">
@@ -556,35 +441,35 @@ export default function OnboardPage() {
                       <button type="button" onClick={() => removeCompetitor(i)} className="rounded-full p-1 text-muted-foreground/60 hover:bg-foreground/10 hover:text-foreground"><XIcon className="size-3" /></button>
                     </div>
                   ))}
-                  {approvedCompetitors.length === 0 && <p className="text-xs text-muted-foreground/60">Rakip bulunamadı</p>}
+                  {approvedCompetitors.length === 0 && <p className="text-xs text-muted-foreground/60">Rakip bulunamadi</p>}
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <input type="text" value={newCompetitorName} onChange={(e) => setNewCompetitorName(e.target.value)} placeholder="Rakip adı" className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none" />
+                  <input type="text" value={newCompetitorName} onChange={(e) => setNewCompetitorName(e.target.value)} placeholder="Rakip adi" className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none" />
                   <input type="text" value={newCompetitorDomain} onChange={(e) => setNewCompetitorDomain(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCompetitor())} placeholder="domain.com" className="w-36 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none" />
                   <button type="button" onClick={addCompetitor} className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted"><PlusIcon className="size-3.5" />Ekle</button>
                 </div>
               </div>
 
-              {/* Hizmet Bölgeleri */}
+              {/* Hizmet Bolgeleri */}
               {approvedRegions.length > 0 && (
-                <EditableChipSection title="Hizmet Bölgeleri" subtitle="Konum bazlı sorularda kullanılacak" items={approvedRegions} onRemove={removeRegion} inputValue={newRegionInput} onInputChange={setNewRegionInput} onAdd={addRegion} placeholder="Yeni bölge ekle..." chipClass={chipClass} inputClass={inputClass} />
+                <EditableChipSection title="Hizmet Bolgeleri" subtitle="Konum bazli sorularda kullanilacak" items={approvedRegions} onRemove={removeRegion} inputValue={newRegionInput} onInputChange={setNewRegionInput} onAdd={addRegion} placeholder="Yeni bolge ekle..." chipClass={chipClass} inputClass={inputClass} />
               )}
 
-              {/* Güçlü/Zayıf */}
+              {/* Guclu/Zayif */}
               <StrengthsWeaknesses strengths={firmaAnalysis?.strengths ?? []} weaknesses={firmaAnalysis?.weaknesses ?? []} />
             </div>
 
             {/* Soru bilgisi + Submit */}
             <div className="mt-6 rounded-xl border border-border bg-muted/20 p-4 text-center">
               <p className="text-sm text-muted-foreground">
-                Her faaliyet alanı için <span className="font-semibold text-foreground">10 soru</span> oluşturulacak.
+                Her faaliyet alani icin <span className="font-semibold text-foreground">10 soru</span> olusturulacak.
                 {" "}Toplam: <span className="font-semibold text-foreground">{Math.min(promptCount, 50)} soru</span>
               </p>
-              <p className="mt-1 text-xs text-muted-foreground/70">Tüm sorular firma önerisi alma odaklı.</p>
+              <p className="mt-1 text-xs text-muted-foreground/70">Tum sorular firma onerisi alma odakli.</p>
             </div>
 
-            <button type="button" onClick={handleFirmaApprovalSubmit} disabled={isPending} className="mt-6 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Analizi Başlat →"}</button>
-            <p className="mt-3 text-center text-xs text-muted-foreground/60">Düzenlemeleriniz yapay zeka sorularının kalitesini doğrudan etkiler</p>
+            <button type="button" onClick={handleFirmaApprovalSubmit} disabled={isPending} className="mt-6 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazirlaniyor..." : "Onayla ve Basla"}</button>
+            <p className="mt-3 text-center text-xs text-muted-foreground/60">Duzenlemeleriniz yapay zeka sorularinin kalitesini dogrudan etkiler</p>
           </div>
         </div>
       </div>
@@ -592,40 +477,40 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // KİŞİSEL ONAY EKRANI (Spec E.0)
+  // ADIM 3b: KİŞİSEL ONAY EKRANI
   // ═══════════════════════════════════════════════════════
   if (step === "approval-kisisel") {
     return (
       <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adım 3 / 3</span></div>
+        <div className="flex items-center justify-between px-6 py-5 sm:px-10"><GH7Logo size="default" /><span className="text-xs text-muted-foreground">Adim 3 / 3</span></div>
         <div className="flex flex-1 flex-col items-center px-6 pb-20 pt-4">
           <div className="w-full max-w-2xl">
-            <button type="button" onClick={() => setStep(linkedinUrl ? "kisisel-linkedin" : "kisisel-manual")} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
+            <button type="button" onClick={() => setStep("kisisel-info")} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
 
             {/* Header */}
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800/30 dark:bg-emerald-900/10">
               <CheckIcon className="size-5 text-emerald-600" />
               <div>
                 <p className="text-sm font-semibold">{approvedKisiselName || "Profiliniz"} analiz edildi</p>
-                <p className="text-xs text-muted-foreground">Sonuçları inceleyin, düzenleyin ve onaylayın</p>
+                <p className="text-xs text-muted-foreground">Sonuclari inceleyin, duzenleyin ve onaylayin</p>
               </div>
             </div>
 
-            {/* Ad + Meslek + Şehir */}
+            {/* Ad + Meslek + Sehir */}
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               <div><label className="text-xs font-medium text-muted-foreground">Ad Soyad</label><input type="text" value={approvedKisiselName} onChange={(e) => setApprovedKisiselName(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
               <div><label className="text-xs font-medium text-muted-foreground">Meslek</label><input type="text" value={approvedProfession} onChange={(e) => setApprovedProfession(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
-              <div><label className="text-xs font-medium text-muted-foreground">Şehir</label><input type="text" value={approvedCity} onChange={(e) => setApprovedCity(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
+              <div><label className="text-xs font-medium text-muted-foreground">Sehir</label><input type="text" value={approvedCity} onChange={(e) => setApprovedCity(e.target.value)} className={`mt-1 ${inputClass}`} /></div>
             </div>
 
             <div className="mt-6 space-y-5">
-              {/* Uzmanlık Alanları */}
-              <EditableChipSection title="Uzmanlık Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedSpecialties} onRemove={removeSpecialty} inputValue={newSpecialtyInput} onInputChange={setNewSpecialtyInput} onAdd={addSpecialty} placeholder="Yeni uzmanlık ekle..." chipClass={chipClass} inputClass={inputClass} />
+              {/* Uzmanlik Alanlari */}
+              <EditableChipSection title="Uzmanlik Alanlari" subtitle="Sorular bu alanlara gore uretilecek" items={approvedSpecialties} onRemove={removeSpecialty} inputValue={newSpecialtyInput} onInputChange={setNewSpecialtyInput} onAdd={addSpecialty} placeholder="Yeni uzmanlik ekle..." chipClass={chipClass} inputClass={inputClass} />
 
-              {/* Senin yerine önerilen kişiler */}
+              {/* Senin yerine onerilen kisiler */}
               <div className="rounded-2xl border border-border p-5">
-                <h2 className="text-sm font-semibold">Senin Yerine Önerilen Kişiler ({approvedKisiselCompetitors.length})</h2>
-                <p className="text-xs text-muted-foreground">Bu kişilerle kıyaslanacaksınız</p>
+                <h2 className="text-sm font-semibold">Senin Yerine Onerilen Kisiler ({approvedKisiselCompetitors.length})</h2>
+                <p className="text-xs text-muted-foreground">Bu kisilerle kiyaslanacaksiniz</p>
                 <div className="mt-3 space-y-2">
                   {approvedKisiselCompetitors.map((name, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2">
@@ -634,20 +519,20 @@ export default function OnboardPage() {
                       <button type="button" onClick={() => removeKisiselComp(i)} className="rounded-full p-1 text-muted-foreground/60 hover:bg-foreground/10 hover:text-foreground"><XIcon className="size-3" /></button>
                     </div>
                   ))}
-                  {approvedKisiselCompetitors.length === 0 && <p className="text-xs text-muted-foreground/60">Henüz kimse bulunamadı</p>}
+                  {approvedKisiselCompetitors.length === 0 && <p className="text-xs text-muted-foreground/60">Henuz kimse bulunamadi</p>}
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <input type="text" value={newKisiselCompInput} onChange={(e) => setNewKisiselCompInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKisiselComp())} placeholder="Kişi adı ekle..." className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none" />
+                  <input type="text" value={newKisiselCompInput} onChange={(e) => setNewKisiselCompInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKisiselComp())} placeholder="Kisi adi ekle..." className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none" />
                   <button type="button" onClick={addKisiselComp} className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted"><PlusIcon className="size-3.5" />Ekle</button>
                 </div>
               </div>
 
-              {/* Güçlü/Zayıf */}
+              {/* Guclu/Zayif */}
               <StrengthsWeaknesses strengths={kisiselAnalysis?.strengths ?? []} weaknesses={kisiselAnalysis?.weaknesses ?? []} />
             </div>
 
-            <button type="button" onClick={handleKisiselApprovalSubmit} disabled={isPending} className="mt-8 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Analizi Başlat →"}</button>
-            <p className="mt-3 text-center text-xs text-muted-foreground/60">Düzenlemeleriniz yapay zeka sorularının kalitesini doğrudan etkiler</p>
+            <button type="button" onClick={handleKisiselApprovalSubmit} disabled={isPending} className="mt-8 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazirlaniyor..." : "Onayla ve Basla"}</button>
+            <p className="mt-3 text-center text-xs text-muted-foreground/60">Duzenlemeleriniz yapay zeka sorularinin kalitesini dogrudan etkiler</p>
           </div>
         </div>
       </div>
@@ -655,13 +540,13 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // LOADING (brand creation)
+  // GECİS: Brand oluşturuluyor
   // ═══════════════════════════════════════════════════════
   if (step === "loading") {
     const steps = [
-      { label: brandType === "firma" ? "Sektörünüz analiz ediliyor" : "Dijital iziniz araştırılıyor", done: loadingStep > 1, active: loadingStep === 1 },
-      { label: "Akıllı sorular üretiliyor", done: loadingStep > 2, active: loadingStep === 2 },
-      { label: "Sayfanız hazırlanıyor", done: loadingStep >= 3, active: loadingStep === 3 },
+      { label: brandType === "firma" ? "Sektorunuz analiz ediliyor" : "Dijital iziniz arastiriliyor", done: loadingStep > 1, active: loadingStep === 1 },
+      { label: "Akilli sorular uretiliyor", done: loadingStep > 2, active: loadingStep === 2 },
+      { label: "Sayfaniz hazirlaniyor", done: loadingStep >= 3, active: loadingStep === 3 },
     ];
     return (
       <div className="flex min-h-screen flex-col bg-background">
@@ -669,8 +554,8 @@ export default function OnboardPage() {
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
           <div className="w-full max-w-md text-center">
             <div className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-foreground/5"><Loader2Icon className="size-8 animate-spin text-foreground" /></div>
-            <h1 className="mt-8 text-3xl font-light tracking-[-0.04em] md:text-4xl">Hazırlanıyor</h1>
-            <p className="mt-3 text-base text-muted-foreground">Yapay zeka görünürlük altyapısı kuruluyor</p>
+            <h1 className="mt-8 text-3xl font-light tracking-[-0.04em] md:text-4xl">Hazirlaniyor</h1>
+            <p className="mt-3 text-base text-muted-foreground">Yapay zeka gorunurluk altyapisi kuruluyor</p>
             <div className="mx-auto mt-10 max-w-xs space-y-4 text-left">
               {steps.map((s, i) => (
                 <div key={i} className={`flex items-center gap-3 transition-opacity duration-500 ${s.done || s.active ? "opacity-100" : "opacity-30"}`}>
@@ -681,7 +566,7 @@ export default function OnboardPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-10 text-xs text-muted-foreground/60">Bu işlem 10-30 saniye sürebilir</p>
+            <p className="mt-10 text-xs text-muted-foreground/60">Bu islem 10-30 saniye surebilir</p>
           </div>
         </div>
       </div>
@@ -692,7 +577,7 @@ export default function OnboardPage() {
 }
 
 // ─── Reusable: Editable Chip Section ─────────────────────
-function EditableChipSection({ title, subtitle, items, onRemove, inputValue, onInputChange, onAdd, placeholder, chipClass, inputClass }: {
+function EditableChipSection({ title, subtitle, items, onRemove, inputValue, onInputChange, onAdd, placeholder, chipClass, inputClass: _inputClass }: {
   title: string; subtitle: string; items: string[]; onRemove: (i: number) => void;
   inputValue: string; onInputChange: (v: string) => void; onAdd: () => void;
   placeholder: string; chipClass: string; inputClass: string;
@@ -708,10 +593,10 @@ function EditableChipSection({ title, subtitle, items, onRemove, inputValue, onI
             <button type="button" onClick={() => onRemove(i)} className="ml-0.5 rounded-full p-0.5 text-muted-foreground/60 hover:bg-foreground/10 hover:text-foreground"><XIcon className="size-3" /></button>
           </span>
         ))}
-        {items.length === 0 && <span className="text-xs text-muted-foreground/60">Henüz bulunamadı</span>}
+        {items.length === 0 && <span className="text-xs text-muted-foreground/60">Henuz bulunamadi</span>}
       </div>
       <div className="mt-3 flex gap-2">
-        <input type="text" value={inputValue} onChange={(e) => onInputChange(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onAdd())} placeholder={placeholder} className={`flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none`} />
+        <input type="text" value={inputValue} onChange={(e) => onInputChange(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onAdd())} placeholder={placeholder} className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-foreground focus:outline-none" />
         <button type="button" onClick={onAdd} className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted"><PlusIcon className="size-3.5" />Ekle</button>
       </div>
     </div>
@@ -725,14 +610,14 @@ function StrengthsWeaknesses({ strengths, weaknesses }: { strengths: string[]; w
     <div className="grid gap-4 sm:grid-cols-2">
       {strengths.length > 0 && (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50/30 p-4 dark:border-emerald-800/30 dark:bg-emerald-900/10">
-          <h3 className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Güçlü Yönler</h3>
+          <h3 className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Guclu Yonler</h3>
           <ul className="mt-2 space-y-1">{strengths.map((s, i) => (<li key={i} className="flex items-start gap-1.5 text-xs text-emerald-700/80 dark:text-emerald-300/80"><CheckIcon className="mt-0.5 size-3 shrink-0" />{s}</li>))}</ul>
         </div>
       )}
       {weaknesses.length > 0 && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-4 dark:border-amber-800/30 dark:bg-amber-900/10">
-          <h3 className="text-xs font-semibold text-amber-700 dark:text-amber-400">Geliştirilebilir Alanlar</h3>
-          <ul className="mt-2 space-y-1">{weaknesses.map((w, i) => (<li key={i} className="flex items-start gap-1.5 text-xs text-amber-700/80 dark:text-amber-300/80"><span className="mt-0.5 shrink-0">•</span>{w}</li>))}</ul>
+          <h3 className="text-xs font-semibold text-amber-700 dark:text-amber-400">Gelistirilebilir Alanlar</h3>
+          <ul className="mt-2 space-y-1">{weaknesses.map((w, i) => (<li key={i} className="flex items-start gap-1.5 text-xs text-amber-700/80 dark:text-amber-300/80"><span className="mt-0.5 shrink-0">&#x2022;</span>{w}</li>))}</ul>
         </div>
       )}
     </div>

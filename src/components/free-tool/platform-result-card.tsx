@@ -3,36 +3,8 @@
 import { useState } from "react";
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 import type { PlatformResult } from "@/lib/free-tool/types";
-
-const platformStyles: Record<
-  string,
-  { accent: string; bg: string; bar: string; icon: string }
-> = {
-  chatgpt: {
-    accent: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    bar: "bg-emerald-500",
-    icon: "bg-emerald-100 dark:bg-emerald-900/60",
-  },
-  claude: {
-    accent: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/50",
-    bar: "bg-orange-500",
-    icon: "bg-orange-100 dark:bg-orange-900/60",
-  },
-  gemini: {
-    accent: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-950/50",
-    bar: "bg-blue-500",
-    icon: "bg-blue-100 dark:bg-blue-900/60",
-  },
-  perplexity: {
-    accent: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/50",
-    bar: "bg-violet-500",
-    icon: "bg-violet-100 dark:bg-violet-900/60",
-  },
-};
+import { PlatformIcon, PLATFORM_COLORS } from "@/components/platform-icon";
+import type { PlatformKey } from "@/lib/types";
 
 const sentimentLabels: Record<string, { label: string; className: string }> = {
   pozitif: {
@@ -55,12 +27,7 @@ const sentimentLabels: Record<string, { label: string; className: string }> = {
 export function PlatformResultCard({ result }: { result: PlatformResult }) {
   const [expanded, setExpanded] = useState(false);
 
-  const style = platformStyles[result.platform] ?? {
-    accent: "text-foreground",
-    bg: "bg-muted/50",
-    bar: "bg-foreground",
-    icon: "bg-muted",
-  };
+  const colors = PLATFORM_COLORS[result.platform as PlatformKey] ?? PLATFORM_COLORS.chatgpt;
   const sentimentStyle = sentimentLabels[result.sentiment];
 
   // Extract domain from citations for clean display
@@ -79,17 +46,15 @@ export function PlatformResultCard({ result }: { result: PlatformResult }) {
 
   return (
     <div
-      className={`rounded-xl border border-border ${style.bg} p-5 transition-all`}
+      className={`rounded-xl border ${colors.border} ${colors.bg} p-5 transition-all`}
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
-            className={`flex size-9 items-center justify-center rounded-lg ${style.icon}`}
+            className={`flex size-9 items-center justify-center rounded-lg ${colors.bg}`}
           >
-            <span className={`text-xs font-bold ${style.accent}`}>
-              {result.label.charAt(0)}
-            </span>
+            <PlatformIcon platform={result.platform as PlatformKey} size={20} />
           </div>
           <div>
             <p className="text-sm font-semibold">{result.label}</p>
@@ -101,8 +66,8 @@ export function PlatformResultCard({ result }: { result: PlatformResult }) {
         <span
           className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${
             result.found
-              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-              : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
+              ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"
+              : "border border-muted bg-muted/50 text-muted-foreground"
           }`}
         >
           {result.found ? (
@@ -196,7 +161,7 @@ export function PlatformResultCard({ result }: { result: PlatformResult }) {
         <div className="flex flex-1 items-center gap-2">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${style.bar}`}
+              className={`h-full rounded-full transition-all duration-700 ${colors.dot}`}
               style={{ width: `${result.visibilityScore}%` }}
             />
           </div>

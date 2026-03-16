@@ -25,6 +25,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { platformLabels, type PlatformKey, type Sentiment } from "@/lib/types";
+import { PlatformBadge } from "@/components/platform-icon";
 import { ExternalLinkIcon, QuoteIcon } from "lucide-react";
 import type { RecentMention } from "@/lib/dal/overview";
 
@@ -98,9 +99,7 @@ export function RecentMentionsTable({
                     onClick={() => setSelected(mention)}
                   >
                     <TableCell>
-                      <Badge variant="outline" className="text-muted-foreground">
-                        {platformLabels[mention.platform].name}
-                      </Badge>
+                      <PlatformBadge platform={mention.platform} size="sm" />
                     </TableCell>
                     <TableCell className="max-w-[300px] truncate font-medium">
                       {mention.prompt}
@@ -165,9 +164,7 @@ export function RecentMentionsTable({
 
               {/* Platform + Position + Sentiment */}
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">
-                  {platformLabels[selected.platform].name}
-                </Badge>
+                <PlatformBadge platform={selected.platform} size="sm" />
                 <Badge
                   variant="outline"
                   className={positionColors[selected.position] ?? ""}

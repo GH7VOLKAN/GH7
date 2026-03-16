@@ -41,8 +41,8 @@ function TrendBadge({ value }: { value: number }) {
       variant="outline"
       className={
         value > 0
-          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"
+          : "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-400"
       }
     >
       {value > 0 ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />}
@@ -88,7 +88,7 @@ export function SectionCards({
           <div className="flex w-full items-center gap-3">
             <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 via-emerald-500 to-emerald-600 transition-all duration-1000"
+                className="h-full rounded-full bg-foreground transition-all duration-1000"
                 style={{ width: `${Math.max(mentionRate, 2)}%` }}
               />
             </div>

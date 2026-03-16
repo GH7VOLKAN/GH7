@@ -10,9 +10,10 @@
  * - Dağılım: %60 öneri, %20 karşılaştırma, %20 dolaylı
  * - businessArea + searchIntent etiketleri
  *
- * Free: 5 prompt (Haiku, hızlı)
- * Pro: 50 prompt (Per-area Sonar + Sonnet)
- * Business: 200 prompt (genişleme döngüleriyle)
+ * Free: 10 prompt (Sonnet, firma-bulma odaklı)
+ * Pro: 50 prompt/marka (Per-area Sonar + Sonnet), 1 marka
+ * Business: 50 prompt/marka × 3 marka (Per-area Sonar + Sonnet)
+ * Agency: 50 prompt/marka × 25 marka (Per-area Sonar + Sonnet)
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -57,24 +58,19 @@ export async function generateSmartPrompts(
   brand: BrandInfo,
   count: number,
 ): Promise<GeneratedPrompt[]> {
-  // Free: 10 prompt (Haiku, hızlı ve ucuz)
+  // Free: 10 prompt (Sonnet, firma-bulma odaklı)
   if (count <= 10) {
     return generateFreePrompts(brand, count);
   }
 
-  // Pro (50): Per-area Sonar + Sonnet
-  if (count <= 50) {
-    if (brand.type === "firma") {
-      return generateFirmaPrompts(brand, count);
-    }
-    return generateKisiselPrompts(brand, count);
+  // Pro/Business/Agency (50 prompt/marka): Per-area Sonar + Sonnet
+  if (brand.type === "firma") {
+    return generateFirmaPrompts(brand, count);
   }
-
-  // Business (200) / Agency (500): Genişleme döngüleriyle
-  return generateExpandedPrompts(brand, count);
+  return generateKisiselPrompts(brand, count);
 }
 
-// ─── Free Pipeline (Haiku, 5 prompt) ────────────────────
+// ─── Free Pipeline (Sonnet, 10 prompt) ────────────────────
 
 async function generateFreePrompts(
   brand: BrandInfo,
@@ -93,30 +89,38 @@ async function generateFreePrompts(
     ? `Faaliyet Alanlari: ${areas.join(", ")}\nHer alandan ESIT sayida soru uret.`
     : "";
 
-  const systemPrompt = `${count} adet markasiz, satis odakli prompt uret.
+  const systemPrompt = `${count} adet prompt üret. Her prompt MUTLAKA bir FİRMA veya UZMAN ÖNERİSİ almak için sorulmuş olmalı. Cevabı bir FİRMA ADI olan sorular üret.
 Tip: ${brand.type === "firma" ? "BUSINESS" : "PERSONAL"}
 Sektor/Meslek: ${sectorOrProfession}
 Sehir: ${brand.city || "belirtilmedi"}
 ${areasText}
 
-Gercek musterinin yapay zekaya soracagi dogal sorular.
+AMAC: Gercek bir musteri yapay zekaya "bana iyi bir firma/uzman bul" diye soruyor. Bu tarz sorular uret.
 Firma/kisi adi KESINLIKLE icermesin — %100 markasiz olmali.
 
-DAGILIM:
-- %60 oneri sorusu ("bana X oner", "en iyi X hangisi", "firma tavsiye et")
-- %20 karsilastirma sorusu ("X mi Y mi", "farklari nedir")
-- %20 dolayli soru ("X nasil yaptirilir" — AI bazen firma onerir)
+ORNEK İYİ SORULAR:
+- "${brand.city || 'Istanbul'}'de en iyi ${sectorOrProfession} firmasi hangisi?"
+- "Bana guvenilir bir ${sectorOrProfession} firmasi onerir misin?"
+- "${sectorOrProfession} icin teklif nereden alabilirim?"
+- "Hangi ${sectorOrProfession} firmasini tercih etmeliyim?"
 
-YASAK SORU TIPLERI (bunlari KESINLIKLE URETME):
-- "Kac yil dayanir", "omru ne kadar" gibi teknik bilgi sorulari
-- "Maliyeti ne kadar", "fiyati nedir" gibi saf fiyat sorulari
-- "Nasil calisir", "ne ise yarar" gibi ansiklopedik bilgi sorulari
-- Firmanin YAPMADIGI alanlarla ilgili sorular
+DAGILIM:
+- %60 oneri sorusu ("bana firma oner", "en iyi firma hangisi", "firma tavsiye et")
+- %20 karsilastirma sorusu ("hangi firma daha iyi", "firma A mi B mi")
+- %20 dolayli soru ("bu hizmeti nereden yaptirabilirim" — AI firma onerir)
+
+KESINLIKLE URETME (YASAK):
+- "Kac yil dayanir", "omru ne kadar" → TEKNİK BİLGİ, YASAK
+- "Maliyeti ne kadar", "fiyati nedir" → SAF FİYAT, YASAK
+- "Nasil calisir", "ne ise yarar" → ANSİKLOPEDİK, YASAK
+- "Nedir", "ne demek" → TANIMLAMA, YASAK
+- "Avantajlari nelerdir" → BİLGİ SORUSU, YASAK
+- Kisacasi: cevabi bir FIRMA ADI olmayan her soru YASAK
 
 JSON formatinda dondur — baska hicbir sey yazma:
 [{"text": "soru metni", "category": "oneri|karsilastirma|lokasyon|sorun", "searchIntent": "recommendation|comparison|indirect", "businessArea": "faaliyet alani", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
 
-  return callClaude(systemPrompt, brand.name, count, "ai_generated", "haiku");
+  return callClaude(systemPrompt, brand.name, count, "ai_generated", "sonnet");
 }
 
 // ─── Firma Pipeline (Per-Area Sonar + Sonnet) ────────────
@@ -161,7 +165,7 @@ async function generateFirmaPrompts(
     }
   }
 
-  const systemPrompt = `Sen GH7.ai prompt stratejistisin.
+  const systemPrompt = `Sen GH7.ai prompt stratejistisin. AMACIN: Gercek musterilerin yapay zekaya FİRMA BULMAK icin soracagi sorular uretmek.
 
 PROFIL BILGILERI:
 - Sektor: ${brand.sector || "belirtilmedi"}
@@ -171,36 +175,36 @@ PROFIL BILGILERI:
 - Tip: Firma${sonarContext}
 
 GOREVIN:
-1. Tam olarak ${count} adet markasiz, satis odakli prompt uret
-2. Gercek musterinin yapay zekaya soracagi dogal sorular
+1. Tam olarak ${count} adet markasiz, FİRMA BULMA odakli prompt uret
+2. Her soru "yapay zekadan firma/hizmet saglayici onerisi almak" icin sorulmali
 3. DAGILIM (KESİN ORAN):
-   %60 recommendation: Dogrudan oneri ("firma oner", "en iyi hangisi", "nereden yaptirabilirim")
-   %20 comparison: Karsilastirma ("hangisi daha iyi", "farklari neler")
-   %20 indirect: Dolayli ("nasil yaptirilir" — AI bazen firma onerir)
+   %60 recommendation: Dogrudan firma onerisi ("bana ${brand.city || 'sehir'}'de iyi bir {alan} firmasi oner", "en iyi {alan} firmasi hangisi", "guvenilir {alan} firmasi bul")
+   %20 comparison: Firma karsilastirma ("hangi {alan} firmasi daha iyi", "{alan}'de en iyi 3 firma")
+   %20 indirect: Dolayli firma bulma ("bu isi nereden yaptirabilirim", "teklif nereden alabilirim")
 4. Her prompt icin faaliyet alani etiketi belirle (businessArea)
 5. Her faaliyet alanindan ESIT DAGILIM sagla
-6. Kategorize et: oneri, karsilastirma, lokasyon, sorun, urun, yorum
-7. salesPotential belirle: HIGH (dogrudan oneri), MEDIUM (karsilastirma), LOW (dolayli)
+6. salesPotential belirle: HIGH (dogrudan firma onerisi), MEDIUM (karsilastirma), LOW (dolayli)
 
-YASAK SORU TIPLERI (bunlari KESINLIKLE URETME):
-- "Kac yil dayanir", "omru ne kadar" gibi teknik bilgi sorulari
-- "Maliyeti ne kadar", "fiyati nedir" gibi saf fiyat sorulari
-- "Nasil calisir", "ne ise yarar" gibi ansiklopedik bilgi sorulari
-- Firma/marka adi iceren sorular
-- Firmanin faaliyet alanlarinda OLMAYAN konulardaki sorular
+ORNEK İYİ SORULAR:
+- "${brand.city || 'Istanbul'}'de en iyi ${businessAreas[0] || 'sektor'} firmasi hangisi?"
+- "Bana guvenilir bir ${businessAreas[0] || 'sektor'} firmasi onerir misin?"
+- "${businessAreas[0] || 'sektor'} icin teklif nereden alabilirim?"
+- "Hangi ${businessAreas[0] || 'sektor'} firmasini tercih etmeliyim?"
+- "${brand.city || 'sehir'}'de ${businessAreas[0] || 'sektor'} yapan firmalar hangileri?"
 
-CESITLENDIR:
-- Lokasyon: "${brand.city || 'sehir'}'de en iyi {alan} firmasi"
-- Oneri: "bana iyi bir {alan} firmasi oner"
-- Karsilastirma: "{alan}'de hangisi daha iyi" (JENERIK, marka adi yok)
-- Teklif: "{alan} icin teklif nereden alabilirim"
-- Guven: "{alan}'de guvenilir firma nasil bulurum"
+KESINLIKLE YASAK — bu tip sorular URETME:
+- "X nedir", "nasil calisir", "ne ise yarar" → ANSİKLOPEDİK, YASAK
+- "Kac yil dayanir", "omru ne kadar" → TEKNİK BİLGİ, YASAK
+- "Maliyeti ne kadar", "fiyati nedir" → SAF FİYAT, YASAK
+- "Avantajlari nelerdir", "farklari nedir" → BİLGİ SORUSU, YASAK
+- Cevabi bir FİRMA ADI olmayan tum sorular YASAK
+- Firma/marka adi iceren sorular YASAK
 
 KRITIK: HICBIR promptta firma/kisi adi olmasin — %100 markasiz.
 HIGH potansiyelli (recommendation) promptlar listenin basinda olsun.
 
 JSON formatinda dondur — baska hicbir sey yazma:
-[{"text": "prompt metni", "category": "kategori", "businessArea": "faaliyet alani", "searchIntent": "recommendation|comparison|indirect", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
+[{"text": "prompt metni", "category": "oneri|karsilastirma|lokasyon|sorun", "businessArea": "faaliyet alani", "searchIntent": "recommendation|comparison|indirect", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
 
   return callClaude(systemPrompt, brand.name, count, areaResults.length > 0 ? "sonar" : "ai_generated", "sonnet");
 }
@@ -262,7 +266,7 @@ async function generateKisiselPrompts(
     }
   }
 
-  const systemPrompt = `Sen GH7.ai prompt stratejistisin.
+  const systemPrompt = `Sen GH7.ai prompt stratejistisin. AMACIN: Gercek musterilerin yapay zekaya UZMAN/HİZMET SAGLAYICI BULMAK icin soracagi sorular uretmek.
 
 PROFIL BILGILERI:
 - Meslek: ${brand.profession || "belirtilmedi"}
@@ -271,26 +275,32 @@ PROFIL BILGILERI:
 - Tip: Kisisel${sonarContext}
 
 GOREVIN:
-1. Tam olarak ${count} adet markasiz, satis odakli prompt uret
-2. Gercek bir hastanin/musterinin yapay zekaya soracagi dogal sorular
+1. Tam olarak ${count} adet markasiz, UZMAN BULMA odakli prompt uret
+2. Her soru "yapay zekadan kisi/uzman onerisi almak" icin sorulmali
 3. DAGILIM (KESİN ORAN):
-   %60 recommendation: Dogrudan hizmet arama ("${brand.city || 'sehir'}'de iyi ${brand.profession || 'uzman'} oner")
-   %20 comparison: Karsilastirma ("${brand.profession || 'meslek'} A mi B mi")
-   %20 indirect: Dolayli bilgi ("${brand.profession || 'meslek'} fiyatlari ne kadar")
+   %60 recommendation: Dogrudan uzman arama ("${brand.city || 'sehir'}'de iyi bir ${brand.profession || 'uzman'} oner", "en iyi ${brand.profession || 'uzman'} kim")
+   %20 comparison: Uzman karsilastirma ("${brand.city || 'sehir'}'de en iyi ${brand.profession || 'uzman'} kim", "hangi ${brand.profession || 'uzman'} daha iyi")
+   %20 indirect: Dolayli uzman bulma ("bu konuda kime danismaliyim", "nereden randevu alabilirim")
 4. Her prompt icin uzmanlik alani etiketi belirle (businessArea)
-5. Kategorize et: lokasyon, uzmanlik, oneri, karsilastirma, genel, itibar, fiyat, yorum
-6. Cesitlendir:
-   - Lokasyon: "${brand.city}'de iyi bir ${brand.profession} oner"
-   - Uzmanlik: "${businessAreas[0] || 'uzmanlik'} icin en iyi ${brand.profession}"
-   - Oneri: "bana ${brand.city}'de guvenilir bir ${brand.profession} bul"
-   - Karsilastirma: "${brand.city}'de en iyi ${brand.profession} kim"
+
+ORNEK İYİ SORULAR:
+- "${brand.city || 'Istanbul'}'de en iyi ${brand.profession || 'uzman'} kim?"
+- "Bana iyi bir ${businessAreas[0] || brand.profession || 'uzman'} onerir misin?"
+- "${brand.city || 'sehir'}'de ${businessAreas[0] || brand.profession || 'uzman'} ariyorum, kimi onerirsin?"
+- "Guvenilir bir ${brand.profession || 'uzman'} nasil bulurum?"
+
+KESINLIKLE YASAK — bu tip sorular URETME:
+- "X nedir", "nasil calisir" → ANSİKLOPEDİK, YASAK
+- "Kac yil surer", "ne kadar dayanir" → TEKNİK BİLGİ, YASAK
+- "Fiyati nedir", "ne kadar" → SAF FİYAT, YASAK
+- Cevabi bir KİŞİ ADI olmayan tum sorular YASAK
 
 KRITIK: HICBIR promptta kisi adi olmasin — %100 markasiz.
 "${brand.name}" adini KESINLIKLE kullanma.
 HIGH potansiyelli (recommendation) promptlar listenin basinda olsun.
 
 JSON formatinda dondur — baska hicbir sey yazma:
-[{"text": "prompt metni", "category": "kategori", "businessArea": "uzmanlik alani", "searchIntent": "recommendation|comparison|indirect"}]`;
+[{"text": "prompt metni", "category": "oneri|karsilastirma|lokasyon|uzmanlik", "businessArea": "uzmanlik alani", "searchIntent": "recommendation|comparison|indirect", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
 
   return callClaude(
     systemPrompt,
@@ -354,19 +364,48 @@ async function callClaude(
       salesPotential: p.salesPotential || (p.searchIntent === "recommendation" ? "HIGH" : p.searchIntent === "comparison" ? "MEDIUM" : "LOW"),
     }));
 
+    // Validation: Filter out non-firma-bulma prompts (encyclopedic, technical, definition)
+    const filteredPrompts = prompts.filter((p) => {
+      const lower = p.text.toLowerCase();
+      // Reject encyclopedic/technical patterns
+      const badPatterns = [
+        /nedir\s*\?/,           // "X nedir?"
+        /ne demek/,              // "X ne demek?"
+        /nasıl çalışır/,         // "nasıl çalışır?"
+        /ne işe yarar/,          // "ne işe yarar?"
+        /avantajları nelerdir/,  // encyclopedic
+        /dezavantajları/,        // encyclopedic
+        /farkı nedir/,           // "X ile Y farkı nedir?"
+        /kaç yıl dayanır/,       // technical lifespan
+        /ömrü ne kadar/,         // technical lifespan
+        /kaç saat sürer/,        // technical
+        /maliyeti ne kadar/,     // pure price (not firma recommendation)
+        /fiyatı nedir/,          // pure price
+        /tarihçesi/,             // history
+        /ne zaman icat/,         // history
+        /çeşitleri nelerdir/,    // types/encyclopedic
+        /türleri nelerdir/,      // types/encyclopedic
+      ];
+
+      for (const pattern of badPatterns) {
+        if (pattern.test(lower)) return false;
+      }
+
+      return true;
+    });
+
     // Validation: HICBIR promptta marka/kisi adi olmamali
     const brandLower = brandName.toLowerCase();
-    const containsBrand = prompts.filter((p) => p.text.toLowerCase().includes(brandLower));
+    const containsBrand = filteredPrompts.filter((p) => p.text.toLowerCase().includes(brandLower));
     if (containsBrand.length > 0) {
       console.warn(
-        `[prompt-generator] Warning: ${containsBrand.length}/${prompts.length} prompts contain "${brandName}" — filtering them out.`,
+        `[prompt-generator] Warning: ${containsBrand.length}/${filteredPrompts.length} prompts contain "${brandName}" — filtering them out.`,
       );
-      // Markali promptlari filtrele, kalan markasiz promptlari dondur
-      const cleaned = prompts.filter((p) => !p.text.toLowerCase().includes(brandLower));
+      const cleaned = filteredPrompts.filter((p) => !p.text.toLowerCase().includes(brandLower));
       return cleaned;
     }
 
-    return prompts;
+    return filteredPrompts;
   } catch (err) {
     console.error("[prompt-generator] Claude call failed:", err);
     return [];

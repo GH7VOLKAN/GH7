@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { TrendingUpIcon, LayersIcon, SparklesIcon, SearchIcon, UserIcon } from "lucide-react";
 import { platformLabels, type PlatformKey } from "@/lib/types";
+import { PlatformIcon, PLATFORM_COLORS } from "@/components/platform-icon";
 
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
@@ -145,15 +146,18 @@ export function PromptStatsCards({
       {/* Platform mention badges + Category breakdown */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">
-          {PLATFORMS.map((platform) => (
-            <Badge key={platform} variant="outline" className="text-muted-foreground gap-1.5 px-3 py-1.5">
-              {platformLabels[platform].name}
-              <span className="font-semibold text-foreground">
-                {mentionCounts[platform]}/{promptItems.length}
+          {PLATFORMS.map((platform) => {
+            const colors = PLATFORM_COLORS[platform];
+            return (
+              <span key={platform} className={`inline-flex items-center gap-1.5 rounded-md border ${colors.border} ${colors.bg} px-2.5 py-1.5`}>
+                <PlatformIcon platform={platform} size={14} />
+                <span className={`text-xs font-medium ${colors.text}`}>{platformLabels[platform].name}</span>
+                <span className="text-xs font-semibold text-foreground">
+                  {mentionCounts[platform]}/{promptItems.length}
+                </span>
               </span>
-              bahsedildi
-            </Badge>
-          ))}
+            );
+          })}
         </div>
         {Object.keys(categoryBreakdown).length > 0 && (
           <div className="flex flex-wrap gap-1.5">

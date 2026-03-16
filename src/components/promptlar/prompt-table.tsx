@@ -23,6 +23,7 @@ import {
   ChevronDownIcon,
 } from "lucide-react";
 import { platformLabels, type PlatformKey, type Sentiment } from "@/lib/types";
+import { PlatformIcon, PLATFORM_COLORS as PCOLORS } from "@/components/platform-icon";
 import { addCustomPrompt, deletePrompt } from "@/lib/actions";
 import type { PlatformResult } from "@/lib/dal/prompts";
 
@@ -45,16 +46,16 @@ function stripMarkdown(text: string): string {
 const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
 
 const PLATFORM_COLORS: Record<PlatformKey, { bg: string; text: string; label: string }> = {
-  chatgpt: { bg: "bg-emerald-500", text: "text-white", label: "GPT" },
-  claude: { bg: "bg-orange-500", text: "text-white", label: "C" },
-  gemini: { bg: "bg-blue-500", text: "text-white", label: "G" },
-  perplexity: { bg: "bg-purple-500", text: "text-white", label: "P" },
+  chatgpt: { bg: PCOLORS.chatgpt.bg, text: PCOLORS.chatgpt.text, label: "GPT" },
+  claude: { bg: PCOLORS.claude.bg, text: PCOLORS.claude.text, label: "C" },
+  gemini: { bg: PCOLORS.gemini.bg, text: PCOLORS.gemini.text, label: "G" },
+  perplexity: { bg: PCOLORS.perplexity.bg, text: PCOLORS.perplexity.text, label: "P" },
 };
 
 const INTENT_LABELS: Record<string, { label: string; color: string }> = {
-  recommendation: { label: "Öneri", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  comparison: { label: "Karşılaştırma", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  indirect: { label: "Dolaylı", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  recommendation: { label: "Öneri", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" },
+  comparison: { label: "Karşılaştırma", color: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-400" },
+  indirect: { label: "Dolaylı", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400" },
 };
 
 const sentimentColors: Record<Sentiment, string> = {
@@ -188,24 +189,22 @@ export function PromptTable({ promptItems, brandId }: PromptTableProps) {
                     )}
                   </div>
 
-                  {/* Platform icons — colored: green=mentioned, red=not */}
+                  {/* Platform icons — logo + check/cross */}
                   <div className="mt-3 flex items-center gap-4">
                     <div className="flex gap-1.5">
                       {PLATFORMS.map((p) => {
                         const mentioned = item.modelResults[p];
-                        const config = PLATFORM_COLORS[p];
                         return (
                           <span
                             key={p}
                             title={`${platformLabels[p].name}: ${mentioned ? "Bahsetti" : "Bahsetmedi"}`}
-                            className={`inline-flex items-center justify-center size-7 rounded-lg text-[10px] font-bold transition-colors ${
+                            className={`inline-flex items-center justify-center gap-0.5 size-7 rounded-lg transition-colors ${
                               mentioned
-                                ? `${config.bg} ${config.text}`
-                                : "bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400"
+                                ? "bg-foreground/5 ring-1 ring-foreground/10"
+                                : "bg-muted/50 opacity-40"
                             }`}
                           >
-                            {config.label}
-                            {mentioned ? " \u2713" : " \u2717"}
+                            <PlatformIcon platform={p} size={14} />
                           </span>
                         );
                       })}
@@ -315,19 +314,17 @@ function PlatformResponseCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const mentioned = result?.mentioned ?? false;
-  const config = PLATFORM_COLORS[platform];
+  const colors = PCOLORS[platform];
   const hasFullResponse = !!(result?.fullResponse && result.fullResponse.length > 0);
 
   return (
     <div className={`rounded-lg border px-3 py-2.5 transition-all ${
       mentioned
-        ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-800/30 dark:bg-emerald-900/10"
-        : "border-border bg-muted/20"
+        ? `${colors.border} ${colors.bg}`
+        : "border-border/60 bg-muted/20"
     }`}>
       <div className="flex items-center gap-2">
-        <span className={`inline-flex items-center justify-center size-5 rounded text-[9px] font-bold ${config.bg} ${config.text}`}>
-          {config.label}
-        </span>
+        <PlatformIcon platform={platform} size={16} />
         <span className="text-xs font-semibold">{platformLabels[platform].name}</span>
 
         {mentioned && result ? (
