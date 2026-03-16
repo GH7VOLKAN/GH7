@@ -29,6 +29,43 @@ async function getAuthenticatedBrand(brandId: string) {
   return { user, brand };
 }
 
+// ─── Domain Analysis (Onboarding Step) ──────────────────
+export async function analyzeDomainForOnboarding(brandName: string, domain: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const cleanDomain = domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  if (!cleanDomain) throw new Error("Domain gerekli");
+
+  try {
+    const { researchOnboardingDomain } = await import("@/lib/ai/sonar-research");
+    const result = await researchOnboardingDomain(brandName.trim(), cleanDomain);
+    return {
+      businessCategories: result.businessCategories,
+      competitors: result.competitors,
+      strengths: result.strengths,
+      weaknesses: result.weaknesses,
+      serviceRegions: result.serviceRegions,
+      sector: result.sector,
+      rawAnalysis: result.rawAnalysis,
+    };
+  } catch (err) {
+    console.error("[analyzeDomainForOnboarding] Sonar analysis failed:", err);
+    return {
+      businessCategories: [],
+      competitors: [],
+      strengths: [],
+      weaknesses: [],
+      serviceRegions: [],
+      sector: null as string | null,
+      rawAnalysis: {} as Record<string, string>,
+    };
+  }
+}
+
 // ─── Brand Creation ─────────────────────────────────────
 export async function createBrand(data: {
   name: string;
@@ -40,6 +77,12 @@ export async function createBrand(data: {
   specialties?: string[];
   competitorNames?: string[];
   linkedinUrl?: string;
+  // V3: Pre-approved Sonar analysis results from onboarding approval screen
+  approvedBusinessCategories?: string[];
+  approvedServiceRegions?: string[];
+  approvedStrengths?: string[];
+  approvedWeaknesses?: string[];
+  sonarRawAnalysis?: Record<string, string>;
 }) {
   const supabase = await createClient();
   const {
@@ -63,34 +106,43 @@ export async function createBrand(data: {
   const competitorNames = data.competitorNames?.filter((c) => c.trim()) ?? [];
   const cleanDomain = data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
 
-  // V3: Domain-based Sonar analysis for onboarding (firma only, paid plans)
-  let sonarOnboarding: {
-    businessCategories: string[];
-    competitors: string[];
-    strengths: string[];
-    weaknesses: string[];
-    serviceRegions: string[];
-    sector: string | null;
-    rawAnalysis: Record<string, string>;
-  } | null = null;
+  // V3: Use pre-approved data from onboarding approval screen, or run Sonar fresh
+  const hasApprovedData = data.approvedBusinessCategories && data.approvedBusinessCategories.length > 0;
 
-  if (data.type === "firma" && cleanDomain) {
+  let finalSector = sectorName;
+  let finalCompetitors = competitorNames;
+  let businessCategories: string[] = [];
+  let serviceRegions: string[] = [];
+  let strengths: string[] = [];
+  let weaknesses: string[] = [];
+  let sonarRawAnalysis: Record<string, string> | undefined;
+
+  if (hasApprovedData) {
+    // Onay ekranından gelen veriler — Sonar tekrar çalışmaz
+    businessCategories = data.approvedBusinessCategories ?? [];
+    serviceRegions = data.approvedServiceRegions ?? [];
+    strengths = data.approvedStrengths ?? [];
+    weaknesses = data.approvedWeaknesses ?? [];
+    sonarRawAnalysis = data.sonarRawAnalysis;
+    if (competitorNames.length === 0 && data.competitorNames && data.competitorNames.length > 0) {
+      finalCompetitors = data.competitorNames;
+    }
+  } else if (data.type === "firma" && cleanDomain) {
+    // Fallback: Sonar'ı burada çalıştır (approval ekranı kullanılmadıysa)
     try {
       const { researchOnboardingDomain } = await import("@/lib/ai/sonar-research");
-      sonarOnboarding = await researchOnboardingDomain(brandName, cleanDomain);
+      const sonarOnboarding = await researchOnboardingDomain(brandName, cleanDomain);
+      businessCategories = sonarOnboarding.businessCategories;
+      serviceRegions = sonarOnboarding.serviceRegions;
+      strengths = sonarOnboarding.strengths;
+      weaknesses = sonarOnboarding.weaknesses;
+      sonarRawAnalysis = sonarOnboarding.rawAnalysis;
+      if (!finalSector) finalSector = sonarOnboarding.sector;
+      if (finalCompetitors.length === 0) finalCompetitors = sonarOnboarding.competitors;
     } catch (err) {
       console.error("[createBrand] Sonar onboarding failed (non-fatal):", err);
     }
   }
-
-  const finalSector = sectorName || sonarOnboarding?.sector || null;
-  const finalCompetitors = competitorNames.length > 0
-    ? competitorNames
-    : sonarOnboarding?.competitors ?? [];
-  const businessCategories = sonarOnboarding?.businessCategories ?? [];
-  const serviceRegions = sonarOnboarding?.serviceRegions ?? [];
-  const strengths = sonarOnboarding?.strengths ?? [];
-  const weaknesses = sonarOnboarding?.weaknesses ?? [];
 
   const brand = await prisma.brand.create({
     data: {
@@ -111,8 +163,8 @@ export async function createBrand(data: {
       serviceRegions,
       strengths,
       weaknesses,
-      sonarAnalysis: sonarOnboarding?.rawAnalysis
-        ? JSON.parse(JSON.stringify(sonarOnboarding.rawAnalysis))
+      sonarAnalysis: sonarRawAnalysis
+        ? JSON.parse(JSON.stringify(sonarRawAnalysis))
         : undefined,
       linkedinUrl: data.linkedinUrl?.trim() || null,
     },
