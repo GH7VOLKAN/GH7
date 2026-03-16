@@ -43,6 +43,8 @@ export interface ChecklistItemFull {
   canAgencyDo: boolean;
   agencyPrice: string | null;
   reminderDate: string | null;
+  completedAt: string | null;
+  verificationNote: string | null;
 }
 
 export interface ChecklistData {
@@ -143,6 +145,8 @@ export const getChecklistData = cache(
         canAgencyDo: item.canAgencyDo,
         agencyPrice: item.agencyPrice,
         reminderDate: item.reminderDate?.toISOString() ?? null,
+        completedAt: item.completedAt?.toISOString() ?? null,
+        verificationNote: item.verificationNote ?? null,
       });
       if (item.status === "complete") entry.completed++;
     }

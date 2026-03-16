@@ -751,7 +751,12 @@ export async function markChecklistItemDone(
 
   await prisma.checklistItem.updateMany({
     where: { id: itemId, brandId },
-    data: { status: "complete", userMarkedDone: true },
+    data: {
+      status: "complete",
+      userMarkedDone: true,
+      completedAt: new Date(),
+      verifiedByAI: false, // sonraki taramada doğrulanacak
+    },
   });
 
   revalidatePath("/dashboard/gelisim");
@@ -767,7 +772,13 @@ export async function resetChecklistItemStatus(
 
   await prisma.checklistItem.updateMany({
     where: { id: itemId, brandId },
-    data: { status: "missing", userMarkedDone: false, verifiedByAI: false },
+    data: {
+      status: "missing",
+      userMarkedDone: false,
+      verifiedByAI: false,
+      completedAt: null,
+      verificationNote: null,
+    },
   });
 
   revalidatePath("/dashboard/gelisim");

@@ -4,6 +4,7 @@ import { analyzeResponse } from "./analyzer";
 import { calculateAndStoreScore } from "./score-calculator";
 import { updateCompetitorScores } from "./competitor-scorer";
 import { discoverSourceDomains } from "./source-discoverer";
+import { verifyScanChecklistItems } from "./checklist-verifier";
 import { sendNotification } from "@/lib/notifications/send";
 import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
 import type { AIProvider } from "./providers/base";
@@ -199,6 +200,7 @@ export async function executeScan(
     await calculateAndStoreScore(scanId, brandId);
     await updateCompetitorScores(scanId, brandId);
     await discoverSourceDomains(scanId, brandId);
+    await verifyScanChecklistItems(scanId, brandId);
 
     // Get current score for notification
     const today = new Date();

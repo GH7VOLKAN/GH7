@@ -6,6 +6,7 @@ import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { getLastScanInfo } from "@/lib/dal/scans";
 import { getNotifications } from "@/lib/dal/notifications";
 import { getChecklistSummary } from "@/lib/dal/checklist";
+import { getTopCompetitorChecklist } from "@/lib/dal/competitors";
 import { redirect } from "next/navigation";
 
 // Dashboard is always dynamic — requires auth + DB
@@ -27,10 +28,11 @@ export default async function DashboardLayout({
     redirect("/onboard");
   }
 
-  const [scanInfo, notifData, checklistSummary] = await Promise.all([
+  const [scanInfo, notifData, checklistSummary, topCompetitor] = await Promise.all([
     brandId ? getLastScanInfo(brandId) : null,
     brandId ? getNotifications(brandId) : null,
     brandId ? getChecklistSummary(brandId) : null,
+    brandId ? getTopCompetitorChecklist(brandId) : null,
   ]);
 
   return (
@@ -47,6 +49,7 @@ export default async function DashboardLayout({
         brandType={brandType}
         plan={plan}
         checklistSummary={checklistSummary}
+        topCompetitor={topCompetitor}
         user={
           user
             ? { name: user.fullName, email: user.email, avatarUrl: user.avatarUrl }

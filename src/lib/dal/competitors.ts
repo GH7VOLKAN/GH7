@@ -387,3 +387,18 @@ export async function getCompetitorDeepDetail(
 
   return { promptAppearances, sharedSources, competitorOnlySources };
 }
+
+// ─── Sidebar rakip overlay için ────────────────────────
+
+export const getTopCompetitorChecklist = cache(
+  async (brandId: string): Promise<{ name: string; score: number } | null> => {
+    const topCompetitor = await prisma.competitor.findFirst({
+      where: { brandId },
+      orderBy: { mentionScore: "desc" },
+      select: { name: true, mentionScore: true },
+    });
+
+    if (!topCompetitor || topCompetitor.mentionScore === 0) return null;
+    return { name: topCompetitor.name, score: topCompetitor.mentionScore };
+  },
+);

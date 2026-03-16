@@ -2,6 +2,7 @@ import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { PlatformBreakdownCard } from "@/components/platform-breakdown-card";
 import { RecentMentionsTable } from "@/components/recent-mentions-table";
+import { MonthlyReportCard } from "@/components/monthly-report-card";
 import { BlurredSection } from "@/components/ui/blurred-section";
 import { WelcomeHero } from "@/components/welcome-hero";
 import { getActiveBrand } from "@/lib/dal/brand";
@@ -79,6 +80,9 @@ export default async function GenelPage() {
         totalMentionCount={data.totalMentionCount}
         totalResultCount={data.totalResultCount}
       />
+      <div className="px-4 lg:px-6">
+        <MonthlyReportCard brandId={brandId} plan={plan} />
+      </div>
     </>
   );
 }

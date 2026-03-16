@@ -327,8 +327,10 @@ model ChecklistItem {
   selfServiceSteps  Json?    @map("self_service_steps") // string[]
   canAgencyDo       Boolean  @default(false) @map("can_agency_do")
   agencyPrice       String?  @map("agency_price")
+  completedAt       DateTime? @map("completed_at")
   reminderDate      DateTime? @map("reminder_date")
   lastCheckedAt     DateTime? @map("last_checked_at")
+  verificationNote  String?   @map("verification_note")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

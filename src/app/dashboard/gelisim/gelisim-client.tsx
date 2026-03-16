@@ -253,6 +253,74 @@ function StatusIcon({ status, size = "md" }: { status: string; size?: "sm" | "md
   }
 }
 
+// ── Completion status ────────────────────────────────────
+function CompletionStatus({ item }: { item: ChecklistItemFull }) {
+  if (item.verifiedByAI) {
+    // AI doğruladı
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/30">
+          <ShieldCheckIcon className="size-3.5 text-emerald-500" />
+          <span className="text-emerald-700 dark:text-emerald-300">
+            Yapay zeka tarafından doğrulandı
+          </span>
+          {item.completedAt && (
+            <span className="ml-auto text-[10px] text-emerald-600/60 dark:text-emerald-400/60">
+              {new Date(item.completedAt).toLocaleDateString("tr-TR", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          )}
+        </div>
+        {item.verificationNote && (
+          <p className="text-[11px] leading-relaxed text-emerald-700/70 dark:text-emerald-300/70 pl-1">
+            {item.verificationNote}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Tamamlandı ama henüz doğrulanmadı
+  const completedDate = item.completedAt ? new Date(item.completedAt) : new Date();
+  const nextVerification = getNextScanDate(completedDate);
+
+  return (
+    <div className="rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2.5 dark:border-blue-900 dark:bg-blue-950/30">
+      <div className="flex items-center gap-2 text-xs">
+        <CheckCircle2Icon className="size-3.5 text-blue-500" />
+        <span className="text-blue-700 dark:text-blue-300 font-medium">
+          Tamamlandı olarak işaretledin
+        </span>
+      </div>
+      <p className="mt-1 text-[11px] text-blue-600/70 dark:text-blue-400/70 pl-6">
+        Sonraki taramada yapay zeka doğrulayacak.{" "}
+        <span className="font-medium">
+          Test tarihi: {nextVerification.toLocaleDateString("tr-TR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </span>
+      </p>
+    </div>
+  );
+}
+
+/** Bir sonraki Pazartesi/Çarşamba/Cuma'yı bul (thrice_weekly tarama) */
+function getNextScanDate(from: Date): Date {
+  const d = new Date(from);
+  d.setDate(d.getDate() + 1); // yarından başla
+  const scanDays = [1, 3, 5]; // Pzt, Çar, Cum
+  while (!scanDays.includes(d.getDay())) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
 // ── Item card ───────────────────────────────────────────
 // ── Reminder section ────────────────────────────────────
 function ReminderSection({
@@ -495,14 +563,9 @@ function ChecklistItemCard({
               plan={plan}
             />
 
-            {/* Verification badge */}
-            {item.verifiedByAI && isComplete && (
-              <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/30">
-                <ShieldCheckIcon className="size-3.5 text-emerald-500" />
-                <span className="text-emerald-700 dark:text-emerald-300">
-                  Yapay zeka tarafından doğrulandı
-                </span>
-              </div>
+            {/* Completed confirmation + verification status */}
+            {isComplete && (
+              <CompletionStatus item={item} />
             )}
 
             {/* Reminder */}
