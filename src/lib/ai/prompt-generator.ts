@@ -55,11 +55,16 @@ export async function generateSmartPrompts(
     return generateFreePrompts(brand, count);
   }
 
-  // Pro+: Sonar araştırma + Sonnet
-  if (brand.type === "firma") {
-    return generateFirmaPrompts(brand, count);
+  // Pro (50): Sonar + Sonnet temel akış
+  if (count <= 50) {
+    if (brand.type === "firma") {
+      return generateFirmaPrompts(brand, count);
+    }
+    return generateKisiselPrompts(brand, count);
   }
-  return generateKisiselPrompts(brand, count);
+
+  // Business (200) / Agency (500): Genişleme döngüleriyle
+  return generateExpandedPrompts(brand, count);
 }
 
 // ─── Free Pipeline (Haiku, 5 prompt) ────────────────────
@@ -260,4 +265,108 @@ async function callClaude(
     console.error("[prompt-generator] Claude call failed:", err);
     return [];
   }
+}
+
+// ─── Business/Agency Expanded Pipeline (200-500 prompt) ──
+
+/**
+ * Spec E.3/E.4: 5 genişleme döngüsüyle çok sayıda prompt üretimi.
+ * Döngü 1: Genel sektör → 50 prompt
+ * Döngü 2: Alt uzmanlıklar → +50 prompt
+ * Döngü 3: Mevsimsel/dönemsel → +30 prompt
+ * Döngü 4: Farklı müşteri tipleri → +30 prompt
+ * Döngü 5: Sorun bazlı → +40 prompt
+ * Sonnet hepsini birleştirir, tekrarları çıkarır, hedefe tamamlar.
+ */
+async function generateExpandedPrompts(
+  brand: BrandInfo,
+  targetCount: number,
+): Promise<GeneratedPrompt[]> {
+  const sectorOrProfession = brand.type === "firma" ? brand.sector : brand.profession;
+  const city = brand.city || "";
+
+  // Döngü 1: Temel (50 prompt — mevcut Pro pipeline)
+  const baseFn = brand.type === "firma" ? generateFirmaPrompts : generateKisiselPrompts;
+  const basePrompts = await baseFn(brand, 50);
+
+  // Döngü 2-5: Ek sorgu alanları — Sonar + Sonnet
+  const expansionQueries = [
+    // Döngü 2: Alt uzmanlıklar
+    `${sectorOrProfession} sektöründe alt uzmanlık alanları nelerdir? Her alt alan için yapay zekaya sorulabilecek 15 soru üret. ${city ? `${city} odaklı olsun.` : ""}`,
+    // Döngü 3: Mevsimsel/dönemsel
+    `${sectorOrProfession} sektöründe mevsimsel veya dönemsel talepler nelerdir? Kışın, yazın, bayramlarda ne soruluyor? 10 soru üret.`,
+    // Döngü 4: Farklı müşteri tipleri
+    `${sectorOrProfession} hizmeti alan farklı müşteri tipleri kimler? (ev sahibi, müteahhit, genç, yaşlı vb.) Her tip için 10 farklı soru üret.`,
+    // Döngü 5: Sorun/şikayet bazlı
+    `${sectorOrProfession} ile ilgili en çok hangi şikayetler ve sorunlar yaşanıyor? Bu sorunlarla ilgili yapay zekaya sorulabilecek 15 soru üret.`,
+  ];
+
+  // Sonar ile paralel araştırma
+  const expansionResults = await Promise.allSettled(
+    expansionQueries.map(async (query) => {
+      try {
+        const res = await fetch("https://api.perplexity.ai/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "sonar",
+            messages: [{ role: "user", content: query }],
+            max_tokens: 2048,
+            temperature: 0.7,
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+        if (!res.ok) return "";
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content ?? "";
+      } catch {
+        return "";
+      }
+    }),
+  );
+
+  const expansionTexts = expansionResults
+    .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+    .map((r) => r.value)
+    .filter(Boolean);
+
+  const remaining = targetCount - basePrompts.length;
+  if (remaining <= 0) return basePrompts.slice(0, targetCount);
+
+  // Sonnet ile tüm genişleme verilerini birleştir ve tekrarları çıkar
+  const consolidationPrompt = `Sen GH7.ai prompt stratejistisin.
+
+MEVCUT PROMPTLAR (${basePrompts.length} adet — bunların tekrarını ÜRETME):
+${basePrompts.map((p) => `- ${p.text}`).join("\n")}
+
+GENIŞLEME ARAŞTIRMASI VERİLERİ:
+${expansionTexts.map((t, i) => `\n--- Döngü ${i + 2} ---\n${t.slice(0, 2000)}`).join("")}
+
+PROFİL: ${sectorOrProfession}, ${city}
+
+GÖREV:
+1. Araştırma verilerinden ${remaining} adet YENİ markasız prompt üret
+2. Mevcut promptlarla TEKRAR ETME — tamamen farklı açılardan sor
+3. Kategorize et: oneri, fiyat, karsilastirma, sorun, lokasyon, bilgi, urun, yorum
+4. Cesitlendir: alt uzmanlıklar, mevsimsel, müşteri tipleri, sorun bazlı
+5. HIGH potansiyelli promptlar önce
+
+KRİTİK: HİÇBİR promptta firma/kişi adı olmasın — %100 markasız.
+
+JSON: [{"text": "...", "category": "..."}]`;
+
+  const additionalPrompts = await callClaude(
+    consolidationPrompt,
+    brand.name,
+    remaining,
+    "sonar",
+    "sonnet",
+  );
+
+  // Birleştir ve hedef sayıya kırp
+  const allPrompts = [...basePrompts, ...additionalPrompts];
+  return allPrompts.slice(0, targetCount);
 }

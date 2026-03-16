@@ -114,6 +114,126 @@ const IMPACT_LABELS: Record<string, { label: string; color: string }> = {
   HIGH: { label: "Yuksek Etki", color: "text-emerald-600 dark:text-emerald-400" },
 };
 
+// ── "Adım adım yapayım" — Opus on-demand DIY rehber ────
+interface DiyGuide {
+  title: string;
+  estimatedTime: string;
+  difficulty: string;
+  steps: Array<{ stepNumber: number; title: string; description: string; tip: string | null }>;
+  completionMessage: string;
+}
+
+function DiyGuideSection({
+  brandId,
+  itemId,
+  fallbackSteps,
+  plan,
+}: {
+  brandId: string;
+  itemId: string;
+  fallbackSteps: string[];
+  plan: string;
+}) {
+  const [guide, setGuide] = React.useState<DiyGuide | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [showFallback, setShowFallback] = React.useState(false);
+  const isPro = plan !== "free";
+
+  async function fetchGuide() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checklist/guide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandId, checklistItemId: itemId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGuide(data.guide);
+      } else {
+        // Fallback to static steps
+        setShowFallback(true);
+      }
+    } catch {
+      setShowFallback(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // AI rehber yüklendiyse göster
+  if (guide) {
+    return (
+      <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-blue-700 dark:text-blue-300">
+            {guide.title}
+          </p>
+          <span className="text-[10px] text-muted-foreground">
+            {guide.estimatedTime} • {guide.difficulty}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {guide.steps.map((step) => (
+            <div key={step.stepNumber} className="flex items-start gap-2">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                {step.stepNumber}
+              </span>
+              <div>
+                <p className="text-xs font-medium">{step.title}</p>
+                <p className="text-[11px] leading-relaxed text-foreground/70">{step.description}</p>
+                {step.tip && (
+                  <p className="mt-0.5 text-[10px] italic text-blue-600 dark:text-blue-400">💡 {step.tip}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {guide.completionMessage && (
+          <p className="text-[11px] text-muted-foreground italic">{guide.completionMessage}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback: static steps
+  if (showFallback && fallbackSteps.length > 0) {
+    return (
+      <div className="space-y-2">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Kendin Yap Adımları
+        </p>
+        <div className="space-y-1.5">
+          {fallbackSteps.map((step, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-[9px] font-bold text-muted-foreground">
+                {i + 1}
+              </span>
+              <p className="text-xs leading-relaxed text-foreground/70">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Button to trigger
+  return (
+    <button
+      onClick={isPro ? fetchGuide : undefined}
+      disabled={loading || !isPro}
+      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+        isPro
+          ? "border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300"
+          : "border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
+      }`}
+    >
+      <ArrowRightIcon className="size-3.5" />
+      {loading ? "Rehber hazırlanıyor..." : isPro ? "Adım adım yapayım →" : "Adım adım rehber (Pro)"}
+    </button>
+  );
+}
+
 // ── Status icon ─────────────────────────────────────────
 function StatusIcon({ status, size = "md" }: { status: string; size?: "sm" | "md" }) {
   const cls = size === "sm" ? "size-4" : "size-5";
@@ -249,26 +369,13 @@ function ChecklistItemCard({
               </div>
             )}
 
-            {/* Kendin yap adımları */}
-            {item.selfServiceSteps.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                  Kendin Yap Adimlari
-                </p>
-                <div className="space-y-1.5">
-                  {item.selfServiceSteps.map((step, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-[9px] font-bold text-muted-foreground">
-                        {i + 1}
-                      </span>
-                      <p className="text-xs leading-relaxed text-foreground/70">
-                        {step}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Adım adım yapayım — Opus ile dinamik rehber */}
+            <DiyGuideSection
+              brandId={brandId}
+              itemId={item.id}
+              fallbackSteps={item.selfServiceSteps}
+              plan={plan}
+            />
 
             {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
