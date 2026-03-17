@@ -69,11 +69,14 @@ export const getCompetitorsData = cache(async (brandId: string) => {
 
   const userPlatforms: Record<PlatformKey, number> = { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0 };
 
-  if (latestScan) {
-    const scanResults = await prisma.promptResult.findMany({
-      where: { scanId: latestScan.id },
-    });
+  // Fetch scan results once and reuse for user platforms, competitor scores, and SoV
+  const scanResults = latestScan
+    ? await prisma.promptResult.findMany({
+        where: { scanId: latestScan.id },
+      })
+    : [];
 
+  if (latestScan) {
     const platCounts: Record<string, { mentioned: number; total: number }> = {
       chatgpt: { mentioned: 0, total: 0 },
       claude: { mentioned: 0, total: 0 },
@@ -90,6 +93,51 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     for (const [plat, counts] of Object.entries(platCounts)) {
       userPlatforms[plat as PlatformKey] =
         counts.total > 0 ? Math.round((counts.mentioned / counts.total) * 100) : 0;
+    }
+  }
+
+  // Compute competitor platform scores from scan data
+  const competitorPlatformScores = new Map<string, Record<PlatformKey, number>>();
+  const competitorMentionScores = new Map<string, number>();
+
+  if (latestScan) {
+    for (const comp of competitors) {
+      const nameLower = comp.name.toLowerCase();
+      const platCounts: Record<string, { mentioned: number; total: number }> = {
+        chatgpt: { mentioned: 0, total: 0 },
+        claude: { mentioned: 0, total: 0 },
+        gemini: { mentioned: 0, total: 0 },
+        perplexity: { mentioned: 0, total: 0 },
+      };
+      let totalMentioned = 0;
+      let totalChecked = 0;
+
+      for (const r of scanResults) {
+        if (!platCounts[r.platform]) continue;
+        platCounts[r.platform].total++;
+        totalChecked++;
+
+        // Check if competitor is mentioned in excerpt or competitors array
+        const inExcerpt = r.excerpt?.toLowerCase().includes(nameLower) ?? false;
+        const inCompetitors = (r.competitors as string[])?.some(
+          (c: string) => c.toLowerCase().includes(nameLower)
+        ) ?? false;
+
+        if (inExcerpt || inCompetitors) {
+          platCounts[r.platform].mentioned++;
+          totalMentioned++;
+        }
+      }
+
+      const platforms: Record<PlatformKey, number> = { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0 };
+      for (const [plat, counts] of Object.entries(platCounts)) {
+        platforms[plat as PlatformKey] = counts.total > 0
+          ? Math.round((counts.mentioned / counts.total) * 100)
+          : 0;
+      }
+
+      competitorPlatformScores.set(comp.id, platforms);
+      competitorMentionScores.set(comp.id, totalChecked > 0 ? Math.round((totalMentioned / totalChecked) * 100) : 0);
     }
   }
 
@@ -112,9 +160,9 @@ export const getCompetitorsData = cache(async (brandId: string) => {
       name: c.name,
       domain: c.domain,
       isUser: false,
-      mentionScore: c.mentionScore,
+      mentionScore: competitorMentionScores.get(c.id) ?? c.mentionScore,
       readinessScore: c.readinessScore,
-      platforms: (c.platforms as Record<PlatformKey, number>) ?? {
+      platforms: competitorPlatformScores.get(c.id) ?? (c.platforms as Record<PlatformKey, number>) ?? {
         chatgpt: 0,
         claude: 0,
         gemini: 0,
@@ -153,12 +201,13 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     promptCount: s.urls.length,
   }));
 
-  // Detail for top competitor
-  const topCompetitor = competitors[0];
-  const detail: CompetitorDetailData | null = topCompetitor
+  // Detail for top competitor (re-sort by computed scores)
+  const sortedCompetitorRows = rows.filter(r => !r.isUser).sort((a, b) => b.mentionScore - a.mentionScore);
+  const topCompetitorRow = sortedCompetitorRows[0];
+  const detail: CompetitorDetailData | null = topCompetitorRow
     ? {
-        name: topCompetitor.name,
-        mentionScore: topCompetitor.mentionScore,
+        name: topCompetitorRow.name,
+        mentionScore: topCompetitorRow.mentionScore,
         userMentionScore,
         readinessGaps,
         topSourcePages,
@@ -189,13 +238,8 @@ export const getCompetitorsData = cache(async (brandId: string) => {
   let shareOfVoice: { name: string; isUser: boolean; percentage: number; color: string }[] = [];
 
   if (latestScan && totalPrompts > 0) {
-    // Fetch all results once for SoV
-    const allResults = latestScan
-      ? await prisma.promptResult.findMany({
-          where: { scanId: latestScan.id },
-          select: { mentioned: true, excerpt: true },
-        })
-      : [];
+    // Reuse scanResults already fetched above
+    const allResults = scanResults;
 
     // User brand: count prompts where mentioned = true
     const userMentionCount = allResults.filter((r) => r.mentioned).length;

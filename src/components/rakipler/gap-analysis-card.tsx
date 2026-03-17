@@ -77,7 +77,7 @@ export function GapAnalysisCard({ detail, userName, plan = "free" }: GapAnalysis
             <Link href="/dashboard/ayarlar">
               <Badge variant="outline" className="gap-1 text-xs cursor-pointer hover:bg-muted shrink-0">
                 <LockIcon className="size-3" />
-                Tüm rakipleri karşılaştır
+                Ücretsiz planda en güçlü 1 rakip
               </Badge>
             </Link>
           )}
@@ -85,11 +85,10 @@ export function GapAnalysisCard({ detail, userName, plan = "free" }: GapAnalysis
         {isFree && (
           <div className="mt-2 rounded-lg border border-dashed border-border/70 bg-muted/20 px-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Ücretsiz planda sadece en güçlü 1 rakibinle karşılaştırma yapabilirsin.{" "}
+              Ücretsiz planda en güçlü rakibinle karşılaştırabilirsin. Tüm 10 rakibi görmek ve detaylı analiz için{" "}
               <Link href="/dashboard/ayarlar" className="font-semibold text-foreground underline underline-offset-2">
-                Pro plana geçerek
-              </Link>{" "}
-              tüm rakiplerle detaylı analiz yap.
+                Pro plana geç
+              </Link>.
             </p>
           </div>
         )}
@@ -117,7 +116,7 @@ export function GapAnalysisCard({ detail, userName, plan = "free" }: GapAnalysis
                   : "border-red-200 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
               }`}
             >
-              {isAhead ? "Öndesin!" : `${gap} puan fark`}
+              {isAhead ? "Öndesin!" : `Rakip ${gap} soru daha fazla öneriliyor`}
             </Badge>
             <div className="flex-1">
               <p className="text-sm font-medium text-muted-foreground text-right">{detail.name}</p>

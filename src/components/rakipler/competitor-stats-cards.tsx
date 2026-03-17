@@ -21,6 +21,7 @@ interface CompetitorStatsCardsProps {
   totalMentions: number;
   aiDiscoveredCount: number;
   manualCount: number;
+  userName?: string;
 }
 
 const PLATFORM_COUNT = 4;

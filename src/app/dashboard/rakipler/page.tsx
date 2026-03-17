@@ -3,10 +3,9 @@ import { CompetitorTable } from "@/components/rakipler/competitor-table";
 import { EmptyAreasCard } from "@/components/rakipler/empty-areas-card";
 import { GapAnalysisCard } from "@/components/rakipler/gap-analysis-card";
 import { ShareOfVoiceCard } from "@/components/rakipler/share-of-voice-card";
-import { BlurredSection } from "@/components/ui/blurred-section";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getCompetitorsData } from "@/lib/dal/competitors";
-import { canAccess, getPlanLimits } from "@/lib/plans";
+import { getPlanLimits } from "@/lib/plans";
 
 export default async function RakiplerPage() {
   const activeBrand = await getActiveBrand();
@@ -24,7 +23,6 @@ export default async function RakiplerPage() {
 
   const data = await getCompetitorsData(brandId);
   const userName = activeBrand.brand?.name ?? "Siz";
-  const competitorLocked = !canAccess(plan, "competitorView");
 
   // Free plan: max 1 competitor visible, rest blurred
   const maxVisibleCompetitors = plan === "free" ? 1 : planLimits.maxCompetitors;
@@ -32,11 +30,7 @@ export default async function RakiplerPage() {
   const canAddManual = plan !== "free";
 
   return (
-    <BlurredSection
-      isLocked={competitorLocked}
-      title="Rakip Analizi"
-      description="Rakiplerinizin yapay zeka görünürlüğünü karşılaştırmak için Pro plana geçin."
-    >
+    <div className="flex flex-col gap-4 py-4">
       <CompetitorStatsCards
         rows={data.rows}
         userMentionScore={data.userMentionScore}
@@ -45,6 +39,7 @@ export default async function RakiplerPage() {
         totalMentions={data.totalMentions}
         aiDiscoveredCount={data.aiDiscoveredCount}
         manualCount={data.manualCount}
+        userName={userName}
       />
       <div className="px-4 lg:px-6">
         <ShareOfVoiceCard data={data.shareOfVoice} />
@@ -69,6 +64,6 @@ export default async function RakiplerPage() {
       <div className="px-4 lg:px-6">
         <EmptyAreasCard opportunities={data.emptyAreaOpportunities} />
       </div>
-    </BlurredSection>
+    </div>
   );
 }

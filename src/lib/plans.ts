@@ -33,7 +33,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxPrompts: 10,
     manualPromptAdd: false,
     scanFrequency: "once",
-    competitorView: false,
+    competitorView: true,
     competitorAnalysis: false,
     auditView: false,
     actionPlanView: false,

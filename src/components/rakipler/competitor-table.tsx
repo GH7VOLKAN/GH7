@@ -103,7 +103,7 @@ export function CompetitorTable({
     if (activePlatforms === 0) {
       return (
         <span className="text-sm text-muted-foreground">
-          Henüz önerilmiyor
+          {totalPlatforms} yapay zekanın hiçbiri önermiyor
         </span>
       );
     }
@@ -111,7 +111,7 @@ export function CompetitorTable({
     return (
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">
-          {activePlatforms}/{totalPlatforms} platformda öneriyor
+          {totalPlatforms} yapay zekadan {activePlatforms}&apos;{activePlatforms === 1 ? "i" : activePlatforms === 2 ? "si" : "ü"} öneriyor
         </span>
         <div className="flex gap-0.5">
           {platforms.map((p) => (
@@ -146,9 +146,9 @@ export function CompetitorTable({
             />
           ) : (
             <Link href="/dashboard/ayarlar">
-              <Badge variant="outline" className="gap-1 text-xs cursor-pointer hover:bg-muted">
+              <Badge variant="outline" className="gap-1.5 text-xs cursor-pointer hover:bg-muted border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
                 <LockIcon className="size-3" />
-                Pro ile keşfet
+                Yeni rakip keşfetmek Pro özelliği
               </Badge>
             </Link>
           )}
@@ -182,10 +182,11 @@ export function CompetitorTable({
           ) : (
             <div className="mb-4 rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-3 text-center">
               <p className="text-sm text-muted-foreground">
-                Rakip eklemek ve yeni rakip keşfetmek için{" "}
+                Yeni rakip eklemek ve rakipleri yeniden keşfetmek{" "}
                 <Link href="/dashboard/ayarlar" className="font-semibold text-foreground underline underline-offset-2">
-                  Pro plana geçin
-                </Link>
+                  Pro, Business veya Ajans
+                </Link>{" "}
+                planlarına özel bir özelliktir.
               </p>
             </div>
           )}
@@ -352,15 +353,14 @@ export function CompetitorTable({
                         <div className="flex flex-col items-center gap-2">
                           <LockIcon className="size-4 text-muted-foreground" />
                           <p className="text-sm text-muted-foreground">
-                            {lockedCompetitors.length} rakip daha var.{" "}
-                            <Link
-                              href="/dashboard/ayarlar"
-                              className="font-semibold text-foreground underline underline-offset-2"
-                            >
-                              Pro plana geçerek
-                            </Link>{" "}
-                            tüm rakipleri görün.
+                            Ücretsiz planda en güçlü 1 rakibini görebilirsin. {lockedCompetitors.length} rakip daha tespit edildi.
                           </p>
+                          <Link
+                            href="/dashboard/ayarlar"
+                            className="text-sm font-semibold text-foreground underline underline-offset-2"
+                          >
+                            Haftalık takip ve tüm rakip analizi için Pro&apos;ya geç &rarr;
+                          </Link>
                         </div>
                       </TableCell>
                     </TableRow>
