@@ -144,13 +144,15 @@ KESINLIKLE YASAK — bu tip sorular URETME:
 - Cevabi bir FİRMA ADI olmayan tum sorular YASAK
 - Firma/marka adi iceren sorular YASAK
 
-KRITIK: HICBIR promptta firma/kisi adi olmasin — %100 markasiz.
+KRITIK: HICBIR promptta firma adi, kisi adi, domain adi (ornegin isitmax.com, abc.com.tr gibi) olmasin — %100 markasiz.
+"hakkinda bilgin var mi" veya "X firmasi nasil" gibi direkt firma soran sorular YASAK.
+Her soru genel bir musteri sorusu olmali: "en iyi firma oner", "guvenilir firma bul" tarzinda.
 HIGH potansiyelli (recommendation) promptlar listenin basinda olsun.
 
 JSON formatinda dondur — baska hicbir sey yazma:
 [{"text": "prompt metni", "category": "oneri|karsilastirma|lokasyon|sorun", "businessArea": "faaliyet alani", "searchIntent": "recommendation|comparison|indirect", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
 
-  return callClaude(systemPrompt, brand.name, count, areaResults.length > 0 ? "sonar" : "ai_generated", "sonnet");
+  return callClaude(systemPrompt, brand.name, count, areaResults.length > 0 ? "sonar" : "ai_generated", "sonnet", brand.domain);
 }
 
 // ─── Kisisel Marka Pipeline ────────────────────────────
@@ -239,8 +241,7 @@ KESINLIKLE YASAK — bu tip sorular URETME:
 - "Fiyati nedir", "ne kadar" → SAF FİYAT, YASAK
 - Cevabi bir KİŞİ ADI olmayan tum sorular YASAK
 
-KRITIK: HICBIR promptta kisi adi olmasin — %100 markasiz.
-"${brand.name}" adini KESINLIKLE kullanma.
+KRITIK: HICBIR promptta kisi adi, firma adi, domain adi olmasin — %100 markasiz.
 HIGH potansiyelli (recommendation) promptlar listenin basinda olsun.
 
 JSON formatinda dondur — baska hicbir sey yazma:
@@ -252,6 +253,7 @@ JSON formatinda dondur — baska hicbir sey yazma:
     count,
     footprint?.raw || areaResults.length > 0 ? "sonar" : "ai_generated",
     "sonnet",
+    brand.domain,
   );
 }
 
@@ -263,6 +265,7 @@ async function callClaude(
   expectedCount: number,
   source: "ai_generated" | "sonar",
   tier: "haiku" | "sonnet" = "sonnet",
+  brandDomain?: string,
 ): Promise<GeneratedPrompt[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Anthropic API key not configured");
@@ -338,18 +341,26 @@ async function callClaude(
       return true;
     });
 
-    // Validation: HICBIR promptta marka/kisi adi olmamali
+    // Validation: HICBIR promptta marka/kisi adi veya domain olmamali
     const brandLower = brandName.toLowerCase();
-    const containsBrand = filteredPrompts.filter((p) => p.text.toLowerCase().includes(brandLower));
-    if (containsBrand.length > 0) {
+    const domainLower = brandDomain?.toLowerCase().replace(/\.(com|net|org|io|ai|tr|com\.tr)$/, "") || "";
+
+    const cleanedPrompts = filteredPrompts.filter((p) => {
+      const lower = p.text.toLowerCase();
+      if (lower.includes(brandLower)) return false;
+      if (domainLower && domainLower.length > 3 && lower.includes(domainLower)) return false;
+      // Also filter ".com", "domain.com" patterns
+      if (brandDomain && lower.includes(brandDomain.toLowerCase())) return false;
+      return true;
+    });
+
+    if (cleanedPrompts.length < filteredPrompts.length) {
       console.warn(
-        `[prompt-generator] Warning: ${containsBrand.length}/${filteredPrompts.length} prompts contain "${brandName}" — filtering them out.`,
+        `[prompt-generator] Warning: ${filteredPrompts.length - cleanedPrompts.length}/${filteredPrompts.length} prompts contained brand/domain — filtered out.`,
       );
-      const cleaned = filteredPrompts.filter((p) => !p.text.toLowerCase().includes(brandLower));
-      return cleaned;
     }
 
-    return filteredPrompts;
+    return cleanedPrompts;
   } catch (err) {
     console.error("[prompt-generator] Claude call failed:", err);
     return [];
@@ -441,6 +452,7 @@ JSON: [{"text": "...", "category": "...", "businessArea": "...", "searchIntent":
     remaining,
     "sonar",
     "sonnet",
+    brand.domain,
   );
 
   // Birleştir ve hedef sayıya kırp

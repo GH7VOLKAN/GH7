@@ -199,7 +199,7 @@ export async function createBrand(data: {
       });
     } else {
       // Fallback: generate basic prompts if smart generation fails
-      const fallbackPrompts = generateFallbackPrompts(brandName, sectorName, data.type === "firma", promptCount);
+      const fallbackPrompts = generateFallbackPrompts(brandName, sectorName, data.type === "firma", promptCount, cityName, businessCategories);
       await prisma.prompt.createMany({
         data: fallbackPrompts.map((p) => ({
           brandId: brand.id,
@@ -212,7 +212,7 @@ export async function createBrand(data: {
     }
   } catch (err) {
     console.error("[createBrand] Smart prompt generation failed, using fallback:", err);
-    const fallbackPrompts = generateFallbackPrompts(brandName, sectorName, data.type === "firma", promptCount);
+    const fallbackPrompts = generateFallbackPrompts(brandName, sectorName, data.type === "firma", promptCount, cityName, businessCategories);
     await prisma.prompt.createMany({
       data: fallbackPrompts.map((p) => ({
         brandId: brand.id,
@@ -291,41 +291,53 @@ export async function createBrand(data: {
 }
 
 function generateFallbackPrompts(
-  brandName: string,
+  _brandName: string,
   sector: string | null,
   isFirma: boolean,
   maxCount: number,
+  city?: string | null,
+  businessCategories?: string[],
 ): { text: string; tags: string[] }[] {
+  const sectorLabel = sector || "genel";
+  const cityLabel = city || "Türkiye";
+  const areas = businessCategories?.length ? businessCategories : sector ? [sector] : [];
+
   if (isFirma) {
-    const base = [
-      { text: `${brandName} hakkında ne biliyorsun?`, tags: ["marka", "tanınırlık"] },
-      { text: `${brandName} nasıl bir firma?`, tags: ["marka", "genel"] },
-      { text: `En iyi ${sector || brandName} firmaları hangileri?`, tags: ["marka", "karşılaştırma"] },
-      { text: `${brandName} güvenilir mi?`, tags: ["marka", "güven"] },
-      { text: `${brandName} müşteri yorumları nasıl?`, tags: ["marka", "yorum"] },
-      { text: `${brandName} marka analizi`, tags: ["marka", "analiz"] },
+    const base: { text: string; tags: string[] }[] = [
+      { text: `${cityLabel}'de en iyi ${sectorLabel} firması hangisi?`, tags: ["sektör", "öneri"] },
+      { text: `${sectorLabel} alanında güvenilir firma önerir misin?`, tags: ["sektör", "güven"] },
+      { text: `${cityLabel}'de ${sectorLabel} sektöründe hangi firmalar öne çıkıyor?`, tags: ["sektör", "karşılaştırma"] },
+      { text: `${sectorLabel} hizmeti almak istiyorum, firma tavsiye eder misin?`, tags: ["sektör", "tavsiye"] },
+      { text: `${cityLabel}'de ${sectorLabel} için teklif nereden alabilirim?`, tags: ["sektör", "lokasyon"] },
+      { text: `En iyi ${sectorLabel} firmaları hangileri?`, tags: ["sektör", "karşılaştırma"] },
     ];
 
-    if (sector) {
+    // Faaliyet alanlarından ek sorular
+    for (const area of areas.slice(0, 4)) {
       base.push(
-        { text: `${sector} sektöründe en iyi firmalar`, tags: ["sektör", "karşılaştırma"] },
-        { text: `${sector} fiyatları 2026`, tags: ["sektör", "fiyat"] },
-        { text: `${sector} tavsiyeleri`, tags: ["sektör", "tavsiye"] },
-        { text: `${brandName} ${sector} hizmetleri`, tags: ["marka", "ürün"] },
+        { text: `${cityLabel}'de ${area} yapan en iyi firma hangisi?`, tags: ["alan", "öneri"] },
+        { text: `${area} için güvenilir bir firma önerir misin?`, tags: ["alan", "güven"] },
       );
     }
 
     return base.slice(0, maxCount);
   }
 
-  // Kişisel marka
-  const personal = [
-    { text: `${brandName} kimdir?`, tags: ["kişisel", "tanınırlık"] },
-    { text: `${brandName} hakkında ne biliyorsun?`, tags: ["kişisel", "genel"] },
-    { text: `${brandName} ne iş yapar?`, tags: ["kişisel", "uzmanlık"] },
-    { text: `${brandName} nerede çalışır?`, tags: ["kişisel", "kariyer"] },
-    { text: `${brandName} başarıları nelerdir?`, tags: ["kişisel", "başarı"] },
+  // Kişisel marka — meslek/uzmanlık bazlı
+  const profession = sector || "uzman";
+  const personal: { text: string; tags: string[] }[] = [
+    { text: `${cityLabel}'de en iyi ${profession} kim?`, tags: ["kişisel", "öneri"] },
+    { text: `Bana iyi bir ${profession} önerir misin?`, tags: ["kişisel", "tavsiye"] },
+    { text: `${cityLabel}'de ${profession} arıyorum, kimi önerirsin?`, tags: ["kişisel", "lokasyon"] },
+    { text: `Güvenilir bir ${profession} nasıl bulurum?`, tags: ["kişisel", "güven"] },
+    { text: `${profession} alanında en deneyimli uzmanlar kimler?`, tags: ["kişisel", "karşılaştırma"] },
   ];
+
+  for (const area of areas.slice(0, 3)) {
+    personal.push(
+      { text: `${cityLabel}'de ${area} konusunda uzman biri önerir misin?`, tags: ["alan", "öneri"] },
+    );
+  }
 
   return personal.slice(0, maxCount);
 }
