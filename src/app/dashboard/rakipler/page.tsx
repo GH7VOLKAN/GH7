@@ -6,12 +6,13 @@ import { ShareOfVoiceCard } from "@/components/rakipler/share-of-voice-card";
 import { BlurredSection } from "@/components/ui/blurred-section";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getCompetitorsData } from "@/lib/dal/competitors";
-import { canAccess } from "@/lib/plans";
+import { canAccess, getPlanLimits } from "@/lib/plans";
 
 export default async function RakiplerPage() {
   const activeBrand = await getActiveBrand();
   const brandId = activeBrand?.brand?.id;
   const plan = activeBrand?.plan ?? "free";
+  const planLimits = getPlanLimits(plan);
 
   if (!brandId) {
     return (
@@ -24,6 +25,11 @@ export default async function RakiplerPage() {
   const data = await getCompetitorsData(brandId);
   const userName = activeBrand.brand?.name ?? "Siz";
   const competitorLocked = !canAccess(plan, "competitorView");
+
+  // Free plan: max 1 competitor visible, rest blurred
+  const maxVisibleCompetitors = plan === "free" ? 1 : planLimits.maxCompetitors;
+  const canDiscover = plan !== "free";
+  const canAddManual = plan !== "free";
 
   return (
     <BlurredSection
@@ -44,10 +50,21 @@ export default async function RakiplerPage() {
         <ShareOfVoiceCard data={data.shareOfVoice} />
       </div>
       <div className="px-4 lg:px-6">
-        <CompetitorTable rows={data.rows} brandId={brandId} />
+        <CompetitorTable
+          rows={data.rows}
+          brandId={brandId}
+          canDiscover={canDiscover}
+          canAddManual={canAddManual}
+          maxVisibleCompetitors={maxVisibleCompetitors}
+          plan={plan}
+        />
       </div>
       <div className="px-4 lg:px-6">
-        <GapAnalysisCard detail={data.detail} userName={userName} />
+        <GapAnalysisCard
+          detail={data.detail}
+          userName={userName}
+          plan={plan}
+        />
       </div>
       <div className="px-4 lg:px-6">
         <EmptyAreasCard opportunities={data.emptyAreaOpportunities} />

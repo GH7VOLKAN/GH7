@@ -99,7 +99,7 @@ export function ScanButton({
         ) : (
           <>
             <PlayIcon />
-            <span className="hidden sm:inline">Tarama Başlat</span>
+            <span className="hidden sm:inline">{lastScanAt ? "Yeniden Tara" : "Tarama Başlat"}</span>
           </>
         )}
       </Button>

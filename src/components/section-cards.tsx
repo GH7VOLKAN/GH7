@@ -59,16 +59,21 @@ function TrendBadge({ value }: { value: number }) {
   );
 }
 
+const PLATFORM_COUNT = 4;
+
 function buildHeroStatement(
   mentionCount: number,
   resultCount: number
 ): string {
   if (resultCount === 0) return "Henüz tarama yapılmadı";
-  if (mentionCount === 0)
-    return `${resultCount} soruda hiç önerilmiyorsun`;
-  if (mentionCount === resultCount)
-    return `${resultCount} sorunun hepsinde öneriliyorsun!`;
-  return `${resultCount} soruda ${mentionCount} tanesinde seni öneriyor`;
+  if (mentionCount === 0) return "Hiç önerilmiyorsun";
+  return `${mentionCount} kez önerildin`;
+}
+
+function buildHeroSubtitle(resultCount: number): string | null {
+  if (resultCount === 0) return null;
+  const uniquePrompts = Math.round(resultCount / PLATFORM_COUNT);
+  return `${uniquePrompts} soruda ${PLATFORM_COUNT} yapay zekada tarandı`;
 }
 
 function buildCompetitorStatement(
@@ -100,6 +105,7 @@ export function SectionCards({
       : 0;
 
   const heroText = buildHeroStatement(totalMentionCount, totalResultCount);
+  const heroSubtitle = buildHeroSubtitle(totalResultCount);
   const competitorText = buildCompetitorStatement(
     topCompetitorName,
     topCompetitorGap
@@ -116,6 +122,9 @@ export function SectionCards({
           <CardTitle className="text-xl font-semibold leading-snug text-foreground @[250px]/card:text-2xl">
             {heroText}
           </CardTitle>
+          {heroSubtitle && (
+            <p className="text-sm text-muted-foreground">{heroSubtitle}</p>
+          )}
           <CardAction>
             <TrendBadge value={mentionTrend} />
           </CardAction>
@@ -131,7 +140,7 @@ export function SectionCards({
                 />
               </div>
               <span className="text-xs tabular-nums text-muted-foreground">
-                {totalMentionCount}/{totalResultCount}
+                {totalMentionCount}/{totalResultCount} sonuç
               </span>
             </div>
           )}

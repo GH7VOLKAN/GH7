@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,7 @@ import {
   Trash2Icon,
   SparklesIcon,
   UserIcon,
+  LockIcon,
 } from "lucide-react";
 import { platformLabels, type PlatformKey } from "@/lib/types";
 import { addCompetitor, removeCompetitor } from "@/lib/actions";
@@ -48,18 +50,27 @@ interface CompetitorRow {
 interface CompetitorTableProps {
   rows: CompetitorRow[];
   brandId: string;
+  canDiscover: boolean;
+  canAddManual: boolean;
+  maxVisibleCompetitors: number;
+  plan: string;
 }
 
-function scoreColor(score: number): string {
-  if (score >= 50) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 25) return "text-amber-600 dark:text-amber-400";
-  if (score > 0) return "text-red-500 dark:text-red-400";
-  return "text-muted-foreground";
-}
-
-export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
+export function CompetitorTable({
+  rows,
+  brandId,
+  canDiscover,
+  canAddManual,
+  maxVisibleCompetitors,
+  plan,
+}: CompetitorTableProps) {
   const userRow = rows.find((r) => r.isUser) ?? null;
-  const competitorRows = rows.filter((r) => !r.isUser);
+  const allCompetitorRows = rows.filter((r) => !r.isUser);
+
+  // Split visible vs locked competitors
+  const visibleCompetitors = allCompetitorRows.slice(0, maxVisibleCompetitors);
+  const lockedCompetitors = allCompetitorRows.slice(maxVisibleCompetitors);
+
   const [newName, setNewName] = useState("");
   const [newDomain, setNewDomain] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -84,6 +95,39 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
     });
   }
 
+  // Natural language score display
+  function ScoreDisplay({ row }: { row: CompetitorRow }) {
+    const totalPlatforms = platforms.length;
+    const activePlatforms = platforms.filter((p) => row.platforms[p] > 0).length;
+
+    if (activePlatforms === 0) {
+      return (
+        <span className="text-sm text-muted-foreground">
+          Henüz önerilmiyor
+        </span>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-medium">
+          {activePlatforms}/{totalPlatforms} platformda öneriyor
+        </span>
+        <div className="flex gap-0.5">
+          {platforms.map((p) => (
+            <div
+              key={p}
+              className={`h-1.5 w-5 rounded-full ${
+                row.platforms[p] > 0 ? "bg-foreground" : "bg-muted"
+              }`}
+              title={`${platformLabels[p].name}: %${row.platforms[p]}`}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Card className="border border-border/50 shadow-sm rounded-2xl">
@@ -91,39 +135,60 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
           <div>
             <CardTitle>Rakip Karşılaştırma</CardTitle>
             <CardDescription>
-              Yapay zekalardaki görünürlük karşılaştırması — satıra tıklayarak detayları görün
+              Yapay zekalardaki görünürlük karşılaştırması
+              {allCompetitorRows.length > 0 && " — satıra tıklayarak detayları görün"}
             </CardDescription>
           </div>
-          <DiscoverCompetitorsButton
-            brandId={brandId}
-            hasCompetitors={competitorRows.length > 0}
-          />
+          {canDiscover ? (
+            <DiscoverCompetitorsButton
+              brandId={brandId}
+              hasCompetitors={allCompetitorRows.length > 0}
+            />
+          ) : (
+            <Link href="/dashboard/ayarlar">
+              <Badge variant="outline" className="gap-1 text-xs cursor-pointer hover:bg-muted">
+                <LockIcon className="size-3" />
+                Pro ile keşfet
+              </Badge>
+            </Link>
+          )}
         </CardHeader>
         <CardContent>
-          {/* Manual add form */}
-          <div className="mb-4 flex gap-2">
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Rakip adı"
-              className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
-            />
-            <input
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="domain.com"
-              className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
-            />
-            <Button
-              onClick={handleAdd}
-              disabled={isPending || !newName.trim()}
-              size="sm"
-            >
-              <PlusIcon className="mr-1 size-4" />
-              Ekle
-            </Button>
-          </div>
+          {/* Manual add form — only for paid plans */}
+          {canAddManual ? (
+            <div className="mb-4 flex gap-2">
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Rakip adı"
+                className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+              />
+              <input
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                placeholder="domain.com"
+                className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+              />
+              <Button
+                onClick={handleAdd}
+                disabled={isPending || !newName.trim()}
+                size="sm"
+              >
+                <PlusIcon className="mr-1 size-4" />
+                Ekle
+              </Button>
+            </div>
+          ) : (
+            <div className="mb-4 rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-3 text-center">
+              <p className="text-sm text-muted-foreground">
+                Rakip eklemek ve yeni rakip keşfetmek için{" "}
+                <Link href="/dashboard/ayarlar" className="font-semibold text-foreground underline underline-offset-2">
+                  Pro plana geçin
+                </Link>
+              </p>
+            </div>
+          )}
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -139,7 +204,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                       {platformLabels[p].name}
                     </TableHead>
                   ))}
-                  <TableHead className="w-10" />
+                  {canAddManual && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -151,7 +216,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{userRow.name}</span>
                           <Badge variant="default" className="text-[10px] px-1.5 py-0">
-                            Siz
+                            Sen
                           </Badge>
                         </div>
                         <span className="text-xs text-muted-foreground">
@@ -160,81 +225,84 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <ScoreCell score={userRow.mentionScore} diff={null} />
+                      <ScoreDisplay row={userRow} />
                     </TableCell>
                     {platforms.map((p) => (
                       <TableCell
                         key={p}
-                        className={`hidden lg:table-cell text-center tabular-nums font-medium ${scoreColor(userRow.platforms[p])}`}
+                        className="hidden lg:table-cell text-center tabular-nums font-medium"
                       >
-                        %{userRow.platforms[p]}
+                        {userRow.platforms[p] > 0 ? (
+                          <span className="text-foreground">öneriyor</span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
                       </TableCell>
                     ))}
-                    <TableCell />
+                    {canAddManual && <TableCell />}
                   </TableRow>
                 )}
 
-                {/* Competitor rows — clickable */}
-                {competitorRows.map((row) => {
-                  const mentionDiff = row.mentionScore - (userRow?.mentionScore ?? 0);
-
-                  return (
-                    <TableRow
-                      key={row.id}
-                      className={`cursor-pointer hover:bg-accent/50 transition-colors ${deletingId === row.id ? "opacity-30" : ""}`}
-                      onClick={() => setSelected(row)}
-                    >
-                      <TableCell>
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-medium">{row.name}</span>
-                            {row.source === "ai_discovered" ? (
-                              <Badge
-                                variant="outline"
-                                className="text-[10px] px-1 py-0 gap-0.5 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
-                              >
-                                <SparklesIcon className="size-2.5" />
-                                Otomatik
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="text-[10px] px-1 py-0 gap-0.5"
-                              >
-                                <UserIcon className="size-2.5" />
-                                Manuel
-                              </Badge>
-                            )}
-                            {row.relevance === "indirect" && (
-                              <Badge
-                                variant="outline"
-                                className="text-[10px] px-1 py-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                              >
-                                Dolaylı
-                              </Badge>
-                            )}
-                          </div>
-                          {row.reason && (
-                            <span className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">
-                              {row.reason}
-                            </span>
+                {/* Visible competitor rows */}
+                {visibleCompetitors.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={`cursor-pointer hover:bg-accent/50 transition-colors ${deletingId === row.id ? "opacity-30" : ""}`}
+                    onClick={() => setSelected(row)}
+                  >
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-medium">{row.name}</span>
+                          {row.source === "ai_discovered" ? (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] px-1 py-0 gap-0.5 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                            >
+                              <SparklesIcon className="size-2.5" />
+                              Otomatik
+                            </Badge>
+                          ) : row.source === "scan_discovered" ? (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] px-1 py-0 gap-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            >
+                              <SparklesIcon className="size-2.5" />
+                              Taramada bulundu
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] px-1 py-0 gap-0.5"
+                            >
+                              <UserIcon className="size-2.5" />
+                              Manuel
+                            </Badge>
                           )}
-                          <span className="text-xs text-muted-foreground">
-                            {row.domain}
-                          </span>
                         </div>
+                        {row.reason && (
+                          <span className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">
+                            {row.reason}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <ScoreDisplay row={row} />
+                    </TableCell>
+                    {platforms.map((p) => (
+                      <TableCell
+                        key={p}
+                        className="hidden lg:table-cell text-center tabular-nums font-medium"
+                      >
+                        {row.platforms[p] > 0 ? (
+                          <span className="text-foreground">öneriyor</span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
                       </TableCell>
-                      <TableCell>
-                        <ScoreCell score={row.mentionScore} diff={mentionDiff} />
-                      </TableCell>
-                      {platforms.map((p) => (
-                        <TableCell
-                          key={p}
-                          className={`hidden lg:table-cell text-center tabular-nums font-medium ${scoreColor(row.platforms[p])}`}
-                        >
-                          %{row.platforms[p]}
-                        </TableCell>
-                      ))}
+                    ))}
+                    {canAddManual && (
                       <TableCell>
                         <Button
                           variant="ghost"
@@ -246,14 +314,63 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                           <Trash2Icon className="size-4" />
                         </Button>
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    )}
+                  </TableRow>
+                ))}
 
-                {competitorRows.length === 0 && (
+                {/* Locked competitor rows — blurred for free plan */}
+                {lockedCompetitors.length > 0 && (
+                  <>
+                    {lockedCompetitors.slice(0, 3).map((row) => (
+                      <TableRow
+                        key={row.id}
+                        className="pointer-events-none select-none"
+                      >
+                        <TableCell>
+                          <div className="blur-[4px] opacity-40">
+                            <span className="font-medium">{row.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="blur-[4px] opacity-40">
+                            <span className="text-sm">Öneriyor</span>
+                          </div>
+                        </TableCell>
+                        {platforms.map((p) => (
+                          <TableCell
+                            key={p}
+                            className="hidden lg:table-cell text-center"
+                          >
+                            <div className="blur-[4px] opacity-40">—</div>
+                          </TableCell>
+                        ))}
+                        {canAddManual && <TableCell />}
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell colSpan={platforms.length + 3} className="text-center py-4">
+                        <div className="flex flex-col items-center gap-2">
+                          <LockIcon className="size-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            {lockedCompetitors.length} rakip daha var.{" "}
+                            <Link
+                              href="/dashboard/ayarlar"
+                              className="font-semibold text-foreground underline underline-offset-2"
+                            >
+                              Pro plana geçerek
+                            </Link>{" "}
+                            tüm rakipleri görün.
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </>
+                )}
+
+                {allCompetitorRows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      Henüz rakip yok. &quot;Rakipleri Otomatik Keşfet&quot; butonuna tıklayarak sektörünüzdeki gerçek rakipleri otomatik bulun.
+                    <TableCell colSpan={platforms.length + 3} className="text-center text-muted-foreground py-8">
+                      Henüz rakip yok. Tarama yapıldığında yapay zekaların önerdiği rakipler otomatik olarak burada görünecek.
                     </TableCell>
                   </TableRow>
                 )}
@@ -271,34 +388,5 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
         onClose={() => setSelected(null)}
       />
     </>
-  );
-}
-
-function ScoreCell({ score, diff }: { score: number; diff: number | null }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <span className="text-lg font-semibold tabular-nums">{score}</span>
-        {diff !== null && diff !== 0 && (
-          <Badge
-            variant="outline"
-            className={`text-[10px] px-1.5 py-0 ${
-              diff > 0
-                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-            }`}
-          >
-            {diff > 0 ? "+" : ""}
-            {diff}
-          </Badge>
-        )}
-      </div>
-      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-700"
-          style={{ width: `${Math.min(score, 100)}%` }}
-        />
-      </div>
-    </div>
   );
 }

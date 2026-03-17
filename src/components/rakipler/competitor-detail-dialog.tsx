@@ -125,7 +125,7 @@ export function CompetitorDetailDialog({
               ) : (
                 <UserIcon className="size-3" />
               )}
-              {competitor.source === "ai_discovered" ? "Otomatik Kesfedildi" : "Manuel Eklendi"}
+              {competitor.source === "ai_discovered" ? "Otomatik Keşfedildi" : competitor.source === "scan_discovered" ? "Taramada Bulundu" : "Manuel Eklendi"}
             </Badge>
             <Badge
               variant="outline"
@@ -170,13 +170,12 @@ export function CompetitorDetailDialog({
           {userRow && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                Yapay Zeka Karsilastirma
+                Yapay Zeka Karşılaştırma
               </p>
               <div className="flex flex-col gap-2">
                 {PLATFORMS.map((platform) => {
                   const compScore = competitor.platforms[platform];
                   const userScore = userRow.platforms[platform];
-                  const diff = userScore - compScore;
 
                   return (
                     <div
@@ -186,48 +185,27 @@ export function CompetitorDetailDialog({
                       <span className="text-xs font-medium w-20 shrink-0">
                         {platformLabels[platform].name}
                       </span>
-                      <div className="flex-1 flex items-center gap-2">
-                        {/* User bar */}
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] text-muted-foreground">Siz</span>
-                            <span className="text-[10px] font-medium">%{userScore}</span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary transition-all"
-                              style={{ width: `${userScore}%` }}
-                            />
-                          </div>
+                      <div className="flex-1 flex items-center gap-3">
+                        {/* User status */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">Sen:</span>
+                          {userScore > 0 ? (
+                            <span className="text-xs font-semibold text-foreground">öneriyor</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/60">—</span>
+                          )}
                         </div>
-                        {/* Competitor bar */}
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] text-muted-foreground">{competitor.name.split(" ")[0]}</span>
-                            <span className="text-[10px] font-medium">%{compScore}</span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className={`h-full rounded-full transition-all ${compScore > userScore ? "bg-red-400" : "bg-zinc-300"}`}
-                              style={{ width: `${compScore}%` }}
-                            />
-                          </div>
+                        <span className="text-muted-foreground/30">|</span>
+                        {/* Competitor status */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">{competitor.name.split(" ")[0]}:</span>
+                          {compScore > 0 ? (
+                            <span className="text-xs font-semibold text-foreground">öneriyor</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/60">—</span>
+                          )}
                         </div>
                       </div>
-                      {/* Diff badge */}
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] px-1.5 py-0 shrink-0 ${
-                          diff > 0
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : diff < 0
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : ""
-                        }`}
-                      >
-                        {diff > 0 ? "+" : ""}
-                        {diff}
-                      </Badge>
                     </div>
                   );
                 })}
@@ -235,26 +213,41 @@ export function CompetitorDetailDialog({
             </div>
           )}
 
-          {/* Overall score comparison */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border bg-primary/5 p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">
-                {userRow?.name ?? "Siz"}
-              </p>
-              <p className="text-2xl font-bold tabular-nums">
-                {userRow?.mentionScore ?? 0}
-              </p>
-              <p className="text-[10px] text-muted-foreground">Bahsedilme Skoru</p>
+          {/* Overall comparison — natural language */}
+          <div className="rounded-lg border bg-muted/20 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold">Sen</span>
+              <span className="text-sm font-medium text-muted-foreground">{competitor.name}</span>
             </div>
-            <div className="rounded-lg border bg-muted/30 p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">
-                {competitor.name}
-              </p>
-              <p className="text-2xl font-bold tabular-nums">
-                {competitor.mentionScore}
-              </p>
-              <p className="text-[10px] text-muted-foreground">Bahsedilme Skoru</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all"
+                    style={{ width: `${Math.min(userRow?.mentionScore ?? 0, 100)}%` }}
+                  />
+                </div>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground shrink-0">vs</span>
+              <div className="flex-1">
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      competitor.mentionScore > (userRow?.mentionScore ?? 0) ? "bg-red-400" : "bg-muted-foreground/30"
+                    }`}
+                    style={{ width: `${Math.min(competitor.mentionScore, 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
+            <p className="mt-2 text-xs text-center text-muted-foreground">
+              {competitor.mentionScore > (userRow?.mentionScore ?? 0)
+                ? `${competitor.name} yapay zekalarda senden daha sık öneriliyor`
+                : competitor.mentionScore < (userRow?.mentionScore ?? 0)
+                  ? `Sen ${competitor.name}'den daha sık öneriliyorsun`
+                  : "Eşit görünürlükteysiniz"
+              }
+            </p>
           </div>
 
           {/* ─── "Neden Önde?" Section ─────────────────── */}

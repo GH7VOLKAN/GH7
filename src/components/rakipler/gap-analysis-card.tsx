@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -17,6 +18,7 @@ import {
   ShieldAlertIcon,
   SparklesIcon,
   ArrowRightIcon,
+  LockIcon,
 } from "lucide-react";
 
 interface CompetitorDetail {
@@ -30,9 +32,12 @@ interface CompetitorDetail {
 interface GapAnalysisCardProps {
   detail: CompetitorDetail | null;
   userName: string;
+  plan?: string;
 }
 
-export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
+export function GapAnalysisCard({ detail, userName, plan = "free" }: GapAnalysisCardProps) {
+  const isFree = plan === "free";
+
   if (!detail) {
     return (
       <Card className="border border-border/50 shadow-sm rounded-2xl">
@@ -42,7 +47,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
             Henüz rakip verisi yok
           </p>
           <p className="mt-1 text-xs text-muted-foreground/70">
-            Rakip ekledikten ve tarama çalıştırdıktan sonra rekabet analizi burada görünecek.
+            Tarama tamamlandıktan sonra yapay zekalar tarafından önerilen rakipler otomatik olarak burada analiz edilecek.
           </p>
         </CardContent>
       </Card>
@@ -58,20 +63,43 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
   return (
     <Card className="border border-border/50 shadow-sm rounded-2xl">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUpIcon className="size-5 text-primary" />
-          Rekabet Analizi — {detail.name} vs {userName}
-        </CardTitle>
-        <CardDescription>
-          yapay zekalarda en güçlü rakibinizle karşılaştırma ve iyileştirme fırsatları
-        </CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUpIcon className="size-5 text-primary" />
+              Rekabet Analizi — {detail.name} vs Sen
+            </CardTitle>
+            <CardDescription>
+              Yapay zekalarda en güçlü rakibinle karşılaştırma
+            </CardDescription>
+          </div>
+          {isFree && (
+            <Link href="/dashboard/ayarlar">
+              <Badge variant="outline" className="gap-1 text-xs cursor-pointer hover:bg-muted shrink-0">
+                <LockIcon className="size-3" />
+                Tüm rakipleri karşılaştır
+              </Badge>
+            </Link>
+          )}
+        </div>
+        {isFree && (
+          <div className="mt-2 rounded-lg border border-dashed border-border/70 bg-muted/20 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Ücretsiz planda sadece en güçlü 1 rakibinle karşılaştırma yapabilirsin.{" "}
+              <Link href="/dashboard/ayarlar" className="font-semibold text-foreground underline underline-offset-2">
+                Pro plana geçerek
+              </Link>{" "}
+              tüm rakiplerle detaylı analiz yap.
+            </p>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {/* Comparison hero — natural language */}
         <div className="rounded-2xl border border-border/50 bg-muted/10 p-5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
-              <p className="text-sm font-bold text-foreground">{userName}</p>
+              <p className="text-sm font-bold text-foreground">Sen</p>
               <div className="mt-2 flex items-center gap-3">
                 <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/50">
                   <div
@@ -115,23 +143,23 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
               <p className="font-medium mb-1">Bu ne anlama geliyor?</p>
               {isAhead ? (
                 <p className="text-muted-foreground">
-                  {userName} şu an yapay zekalarda {detail.name}&apos;den daha sık bahsediliyor.
-                  Bu avantajı korumak için site teknik altyapınızı güçlendirmeye ve içerik üretmeye devam edin.
+                  Yapay zekalarda {detail.name}&apos;den daha sık öneriliyorsun.
+                  Bu avantajı korumak için içerik üretmeye ve dijital varlığını güçlendirmeye devam et.
                 </p>
               ) : gap <= 10 ? (
                 <p className="text-muted-foreground">
                   {detail.name} sadece {gap} puan önde — farkı kapatmak mümkün.
-                  Aşağıdaki teknik iyileştirmeleri yaparak ve sektörel içerik üreterek rakibinizi geçebilirsiniz.
+                  Aşağıdaki iyileştirmeleri yaparak rakibini geçebilirsin.
                 </p>
               ) : gap <= 30 ? (
                 <p className="text-muted-foreground">
-                  {detail.name} yapay zekalarda {userName}&apos;den belirgin şekilde daha fazla bahsediliyor.
-                  Bu farkın kaynağı genellikle daha zengin yapılandırılmış veri, daha fazla harici kaynak ve daha güçlü dijital varlıktır.
+                  {detail.name} yapay zekalarda senden belirgin şekilde daha fazla öneriliyor.
+                  Bu farkın kaynağı genellikle daha zengin içerik ve daha güçlü dijital varlıktır.
                 </p>
               ) : (
                 <p className="text-muted-foreground">
                   Büyük bir fark var. {detail.name} muhtemelen çok daha güçlü bir dijital altyapıya sahip.
-                  Öncelikle aşağıdaki hazırlık eksikliklerini giderin, ardından içerik stratejisi ile farkı kapatmaya başlayın.
+                  Öncelikle aşağıdaki eksiklikleri gider, ardından içerik stratejisi ile farkı kapatmaya başla.
                 </p>
               )}
             </div>
@@ -147,8 +175,8 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
             </h3>
             {hasReadinessGaps ? (
               <div className="flex flex-col gap-2">
-                {criticalGaps.map((gap, i) => {
-                  const [label, ...rest] = gap.split(":");
+                {criticalGaps.map((gapItem, i) => {
+                  const [label, ...rest] = gapItem.split(":");
                   const recommendation = rest.join(":").trim();
 
                   return (
@@ -167,14 +195,14 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                   );
                 })}
                 <p className="mt-1 text-xs text-muted-foreground px-1">
-                  Bu eksiklikleri gidermek yapay zekalardaki görünürlüğünüzü artırır. Site Kontrolü sayfasından detaylı kontrol yapabilirsiniz.
+                  Bu eksiklikleri gidermek yapay zekalardaki görünürlüğünü artırır.
                 </p>
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-4 py-3 dark:bg-emerald-900/10">
                 <CheckCircle2Icon className="size-4 text-emerald-500" />
                 <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                  Teknik altyapınız iyi durumda — tüm kontroller geçiyor!
+                  Teknik altyapın iyi durumda — tüm kontroller geçiyor!
                 </p>
               </div>
             )}
@@ -205,7 +233,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                   </div>
                 ))}
                 <p className="mt-1 text-xs text-muted-foreground px-1">
-                  Bu kaynaklardan gelen bilgiler yapay zeka yanıtlarını doğrudan etkiliyor. Bu kaynaklarda görünürlüğünüzü artırın.
+                  Bu kaynaklardan gelen bilgiler yapay zeka yanıtlarını doğrudan etkiliyor.
                 </p>
               </div>
             ) : (
@@ -221,27 +249,27 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
         {!isAhead && (
           <div className="rounded-2xl border border-border/50 bg-muted/10 p-4">
             <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <ArrowRightIcon className="size-4 text-violet-600 dark:text-violet-400" />
+              <ArrowRightIcon className="size-4" />
               Önerilen Adımlar
             </h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {hasReadinessGaps && (
                 <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-violet-400" />
-                  <span>Teknik eksiklikleri giderin (Site Analizi → Aksiyon Planı)</span>
+                  <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-foreground/40" />
+                  <span>Teknik eksiklikleri gider (Site Kontrolü sayfasından)</span>
                 </div>
               )}
               <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-violet-400" />
-                <span>Yapay zekanın sizi daha iyi anlaması için sitenizi yapılandırın</span>
+                <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-foreground/40" />
+                <span>Yapay zekanın seni daha iyi anlaması için siteni yapılandır</span>
               </div>
               <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-violet-400" />
-                <span>Sektörel blog ve SSS içerikleri oluşturun</span>
+                <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-foreground/40" />
+                <span>Sektörel blog ve SSS içerikleri oluştur</span>
               </div>
               <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-violet-400" />
-                <span>Harici kaynaklarda (dizinler, haberler) yer alın</span>
+                <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-foreground/40" />
+                <span>Harici kaynaklarda (dizinler, haberler) yer al</span>
               </div>
             </div>
           </div>

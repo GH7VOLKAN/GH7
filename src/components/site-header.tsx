@@ -16,7 +16,6 @@ const firmaPageTitles: Record<string, string> = {
   "/dashboard/kaynaklar": "Kaynaklar",
   "/dashboard/rakipler": "Rakipler",
   "/dashboard/site": "Site Kontrolü",
-  "/dashboard/aksiyon": "Aksiyon Planı",
   "/dashboard/gelisim": "Gelişim Planı",
   "/dashboard/ayarlar": "Ayarlar",
 };
@@ -27,7 +26,6 @@ const kisiselPageTitles: Record<string, string> = {
   "/dashboard/kaynaklar": "Dijital İz",
   "/dashboard/rakipler": "Senin Yerine Kim",
   "/dashboard/site": "Dijital Kontrol",
-  "/dashboard/aksiyon": "Aksiyon Planı",
   "/dashboard/gelisim": "Gelişim Planı",
   "/dashboard/ayarlar": "Ayarlar",
 };

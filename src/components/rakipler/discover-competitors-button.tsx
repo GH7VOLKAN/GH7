@@ -76,7 +76,7 @@ export function DiscoverCompetitorsButton({
       ) : (
         <>
           <SparklesIcon className="mr-1.5 size-4" />
-          {hasCompetitors ? "Rakipleri Yeniden Kesfet" : "Rakipleri Otomatik Kesfet"}
+          {hasCompetitors ? "Rakipleri Yeniden Keşfet" : "Rakipleri Otomatik Keşfet"}
         </>
       )}
     </Button>

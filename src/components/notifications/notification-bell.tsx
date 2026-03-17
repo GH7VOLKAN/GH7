@@ -72,11 +72,7 @@ export function NotificationBell({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button className="relative inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" />
-        }
-      >
+      <DropdownMenuTrigger className="relative inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
         <BellIcon className="size-4" />
         {unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">

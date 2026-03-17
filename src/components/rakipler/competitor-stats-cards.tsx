@@ -23,6 +23,8 @@ interface CompetitorStatsCardsProps {
   manualCount: number;
 }
 
+const PLATFORM_COUNT = 4;
+
 export function CompetitorStatsCards({
   rows,
   userMentionScore,
@@ -32,11 +34,14 @@ export function CompetitorStatsCards({
   manualCount,
 }: CompetitorStatsCardsProps) {
   const competitorRows = rows.filter((r) => !r.isUser);
-  const topCompetitor = competitorRows.sort((a, b) => b.mentionScore - a.mentionScore)[0];
+  const topCompetitor = [...competitorRows].sort((a, b) => b.mentionScore - a.mentionScore)[0];
   const mentionGap = topCompetitor
     ? topCompetitor.mentionScore - userMentionScore
     : 0;
 
+  // totalResults = prompts × platforms (40 = 10×4)
+  // Show unique prompts for clarity
+  const uniquePrompts = PLATFORM_COUNT > 0 ? Math.round(totalResults / PLATFORM_COUNT) : totalResults;
   const mentionPercent = totalResults > 0 ? Math.round((totalMentions / totalResults) * 100) : 0;
 
   return (
@@ -48,10 +53,13 @@ export function CompetitorStatsCards({
             <SwordsIcon className="size-4" />
             Bahsedilme Durumu
           </div>
-          <Badge variant="outline">Siz</Badge>
+          <Badge variant="outline">Sen</Badge>
         </div>
         <div className="text-lg font-semibold">
-          {totalResults} soruda {totalMentions} kez önerildiniz
+          {totalMentions > 0
+            ? `${PLATFORM_COUNT} yapay zekada ${totalMentions} kez önerildin`
+            : `${uniquePrompts} soru soruldu, henüz önerilmedin`
+          }
         </div>
         <div className="w-full">
           <div className="h-2 w-full rounded-full bg-muted">
@@ -61,7 +69,7 @@ export function CompetitorStatsCards({
             />
           </div>
           <div className="mt-1.5 text-xs text-muted-foreground">
-            Toplam bahsedilme oranı: %{mentionPercent}
+            {uniquePrompts} soruda {PLATFORM_COUNT} platformda toplam {totalResults} sorgu yapıldı
           </div>
         </div>
       </div>
@@ -84,14 +92,14 @@ export function CompetitorStatsCards({
         {topCompetitor ? (
           <div className={`text-lg font-semibold ${mentionGap > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
             {mentionGap > 0
-              ? `${topCompetitor.name} senden ${mentionGap} soru daha fazla öneriliyor`
+              ? `${topCompetitor.name} senden daha fazla öneriliyor`
               : mentionGap < 0
                 ? `Sen ${topCompetitor.name}'den daha çok öneriliyorsun`
                 : `${topCompetitor.name} ile aynı seviyedesin`}
           </div>
         ) : (
           <div className="text-lg font-semibold text-muted-foreground">
-            Henüz rakip eklenmedi
+            Tarama sonrası rakipler otomatik bulunacak
           </div>
         )}
         <div className="text-xs text-muted-foreground">
@@ -99,7 +107,9 @@ export function CompetitorStatsCards({
             ? "Farkı kapatmak için içeriklerini ve stratejilerini incele"
             : mentionGap < 0
               ? "Harika gidiyorsun, bu avantajı korumaya devam et!"
-              : "Rekabet dengede, bir adım öne geçmek senin elinde"}
+              : competitorRows.length === 0
+                ? "İlk tarama sonrası yapay zekaların önerdiği rakipler burada görünecek"
+                : "Rekabet dengede, bir adım öne geçmek senin elinde"}
         </div>
       </div>
 
@@ -119,13 +129,18 @@ export function CompetitorStatsCards({
           {aiDiscoveredCount > 0 && (
             <Badge variant="outline" className="text-muted-foreground gap-1">
               <SparklesIcon className="size-3" />
-              AI ile keşfedilen: {aiDiscoveredCount}
+              Otomatik keşfedilen: {aiDiscoveredCount}
             </Badge>
           )}
           {manualCount > 0 && (
             <Badge variant="outline" className="text-muted-foreground gap-1">
               Manuel eklenen: {manualCount}
             </Badge>
+          )}
+          {competitorRows.length === 0 && (
+            <span className="text-xs text-muted-foreground">
+              Tarama sonrası rakipler otomatik olarak tespit edilecek
+            </span>
           )}
         </div>
       </div>
