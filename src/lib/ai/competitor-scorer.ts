@@ -1,5 +1,23 @@
 import { prisma } from "@/lib/db";
 
+// Turkish character normalization — matches analyzer.ts
+function normalizeTurkish(text: string): string {
+  return text
+    .replace(/İ/g, "I")
+    .replace(/ı/g, "i")
+    .replace(/Ş/g, "S")
+    .replace(/ş/g, "s")
+    .replace(/Ğ/g, "G")
+    .replace(/ğ/g, "g")
+    .replace(/Ü/g, "U")
+    .replace(/ü/g, "u")
+    .replace(/Ö/g, "O")
+    .replace(/ö/g, "o")
+    .replace(/Ç/g, "C")
+    .replace(/ç/g, "c")
+    .toLowerCase();
+}
+
 export async function updateCompetitorScores(
   scanId: string,
   brandId: string,
@@ -10,7 +28,7 @@ export async function updateCompetitorScores(
 
   const results = await prisma.promptResult.findMany({
     where: { scanId },
-    select: { platform: true, excerpt: true, competitors: true },
+    select: { platform: true, excerpt: true, fullResponse: true, competitors: true },
   });
 
   // Auto-discover new competitors from scan results
@@ -71,13 +89,22 @@ export async function updateCompetitorScores(
         perplexity: { mentioned: 0, total: 0 },
       };
 
-    const nameLower = comp.name.toLowerCase();
+    const nameNorm = normalizeTurkish(comp.name);
 
     for (const r of results) {
       const plat = r.platform;
       if (!platformCounts[plat]) continue;
       platformCounts[plat].total++;
-      if (r.excerpt?.toLowerCase().includes(nameLower)) {
+
+      // Check fullResponse first (3000 chars), fall back to excerpt (200 chars)
+      const textToSearch = r.fullResponse ?? r.excerpt ?? "";
+      const inText = normalizeTurkish(textToSearch).includes(nameNorm);
+
+      // Also check the competitors array from the analyzer
+      const inCompetitors = (Array.isArray(r.competitors) ? (r.competitors as string[]) : [])
+        .some((c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c)));
+
+      if (inText || inCompetitors) {
         platformCounts[plat].mentioned++;
       }
     }

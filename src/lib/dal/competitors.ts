@@ -2,6 +2,24 @@ import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey } from "@/lib/types";
 
+// Turkish character normalization — consistent with analyzer.ts
+function normalizeTurkish(text: string): string {
+  return text
+    .replace(/İ/g, "I")
+    .replace(/ı/g, "i")
+    .replace(/Ş/g, "S")
+    .replace(/ş/g, "s")
+    .replace(/Ğ/g, "G")
+    .replace(/ğ/g, "g")
+    .replace(/Ü/g, "U")
+    .replace(/ü/g, "u")
+    .replace(/Ö/g, "O")
+    .replace(/ö/g, "o")
+    .replace(/Ç/g, "C")
+    .replace(/ç/g, "c")
+    .toLowerCase();
+}
+
 export interface CompetitorRowData {
   id: string;
   name: string;
@@ -102,7 +120,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
 
   if (latestScan) {
     for (const comp of competitors) {
-      const nameLower = comp.name.toLowerCase();
+      const nameNorm = normalizeTurkish(comp.name);
       const platCounts: Record<string, { mentioned: number; total: number }> = {
         chatgpt: { mentioned: 0, total: 0 },
         claude: { mentioned: 0, total: 0 },
@@ -117,13 +135,16 @@ export const getCompetitorsData = cache(async (brandId: string) => {
         platCounts[r.platform].total++;
         totalChecked++;
 
-        // Check if competitor is mentioned in excerpt or competitors array
-        const inExcerpt = r.excerpt?.toLowerCase().includes(nameLower) ?? false;
+        // Check fullResponse (3000 chars) first, fall back to excerpt (200 chars)
+        const textToSearch = r.fullResponse ?? r.excerpt ?? "";
+        const inText = normalizeTurkish(textToSearch).includes(nameNorm);
+
+        // Also check the competitors array from the analyzer
         const inCompetitors = (r.competitors as string[])?.some(
-          (c: string) => c.toLowerCase().includes(nameLower)
+          (c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c))
         ) ?? false;
 
-        if (inExcerpt || inCompetitors) {
+        if (inText || inCompetitors) {
           platCounts[r.platform].mentioned++;
           totalMentioned++;
         }
@@ -244,13 +265,18 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     // User brand: count prompts where mentioned = true
     const userMentionCount = allResults.filter((r) => r.mentioned).length;
 
-    // Competitors: count prompts where their name appears in the excerpt
+    // Competitors: count prompts where their name appears in the response
     const competitorSovEntries: { name: string; count: number }[] = [];
     for (const comp of competitors) {
-      const nameLower = comp.name.toLowerCase();
-      const count = allResults.filter(
-        (r) => r.excerpt?.toLowerCase().includes(nameLower)
-      ).length;
+      const nameNorm = normalizeTurkish(comp.name);
+      const count = allResults.filter((r) => {
+        const textToSearch = r.fullResponse ?? r.excerpt ?? "";
+        const inText = normalizeTurkish(textToSearch).includes(nameNorm);
+        const inCompetitors = (r.competitors as string[])?.some(
+          (c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c))
+        ) ?? false;
+        return inText || inCompetitors;
+      }).length;
       competitorSovEntries.push({ name: comp.name, count });
     }
 
@@ -388,19 +414,24 @@ export async function getCompetitorDeepDetail(
     include: { prompt: { select: { text: true } } },
   });
 
-  const nameLower = competitorName.toLowerCase();
+  const nameNorm = normalizeTurkish(competitorName);
   const brand = await prisma.brand.findUnique({ where: { id: brandId } });
-  const brandNameLower = brand?.name.toLowerCase() ?? "";
 
   const promptAppearances: CompetitorPromptAppearance[] = [];
 
   for (const r of allResults) {
-    if (r.excerpt?.toLowerCase().includes(nameLower)) {
+    const textToSearch = r.fullResponse ?? r.excerpt ?? "";
+    const inText = normalizeTurkish(textToSearch).includes(nameNorm);
+    const inCompetitors = (r.competitors as string[])?.some(
+      (c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c))
+    ) ?? false;
+
+    if (inText || inCompetitors) {
       promptAppearances.push({
         promptText: r.prompt.text,
         platform: r.platform,
-        excerpt: r.excerpt,
-        userMentionedToo: r.mentioned, // user brand also mentioned in same result
+        excerpt: r.excerpt ?? (r.fullResponse?.slice(0, 300) ?? ""),
+        userMentionedToo: r.mentioned,
       });
     }
   }
@@ -410,11 +441,13 @@ export async function getCompetitorDeepDetail(
   const userCitationDomains = new Set<string>();
 
   for (const r of allResults) {
+    const textToSearch = r.fullResponse ?? r.excerpt ?? "";
+    const compMentioned = normalizeTurkish(textToSearch).includes(nameNorm);
     const citations = Array.isArray(r.citations) ? (r.citations as string[]) : [];
     for (const url of citations) {
       try {
         const domain = new URL(url).hostname.replace(/^www\./, "");
-        if (r.excerpt?.toLowerCase().includes(nameLower)) {
+        if (compMentioned) {
           competitorCitationDomains.add(domain);
         }
         if (r.mentioned) {
