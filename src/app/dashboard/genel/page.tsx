@@ -2,13 +2,13 @@ import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { PlatformBreakdownCard } from "@/components/platform-breakdown-card";
 import { CompetitorRankingCard } from "@/components/competitor-ranking-card";
+import { TopActionCard } from "@/components/top-action-card";
 import { RecentMentionsTable } from "@/components/recent-mentions-table";
 import { MonthlyReportCard } from "@/components/monthly-report-card";
-import { BlurredSection } from "@/components/ui/blurred-section";
+import { ProUpgradeCard } from "@/components/pro-upgrade-card";
 import { WelcomeHero } from "@/components/welcome-hero";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getOverviewData } from "@/lib/dal/overview";
-import { canAccess } from "@/lib/plans";
 
 export default async function GenelPage() {
   const activeBrand = await getActiveBrand();
@@ -43,8 +43,6 @@ export default async function GenelPage() {
     hazirlik: h.readinessScore,
   }));
 
-  const trendLocked = !canAccess(plan, "trendView");
-
   return (
     <>
       {/* Üst: 2 büyük metrik — mention rate + senin yerine kim */}
@@ -76,16 +74,17 @@ export default async function GenelPage() {
         </div>
       )}
 
-      {/* Trend grafik (Pro+) */}
-      <BlurredSection
-        isLocked={trendLocked}
-        title="Trend Grafiği"
-        description="Zaman içindeki görünürlük değişimlerini görmek için Pro plana geçin."
-      >
+      {/* En önemli aksiyonun */}
+      {data.priorityActions.length > 0 && (
         <div className="px-4 lg:px-6">
-          <ChartAreaInteractive scoreHistory={chartData} />
+          <TopActionCard action={data.priorityActions[0]} />
         </div>
-      </BlurredSection>
+      )}
+
+      {/* Trend grafik */}
+      <div className="px-4 lg:px-6">
+        <ChartAreaInteractive scoreHistory={chartData} />
+      </div>
 
       {/* Son bahsedilmeler */}
       <RecentMentionsTable
@@ -99,6 +98,9 @@ export default async function GenelPage() {
       <div className="px-4 lg:px-6">
         <MonthlyReportCard brandId={brandId} plan={plan} />
       </div>
+
+      {/* Pro CTA — sayfanın en altında */}
+      <ProUpgradeCard type="trend" plan={plan} />
     </>
   );
 }

@@ -30,26 +30,26 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
-    maxPrompts: 10,
-    manualPromptAdd: false,
-    scanFrequency: "once",
-    competitorView: true,
-    competitorAnalysis: false,
-    auditView: false,
-    actionPlanView: false,
-    trendView: false,
-    weeklyReport: false,
-    promptFreshness: false,
-    checklistAutoVerify: false,
+    maxPrompts: 50,            // Spec: 50 soru — PRO ile aynı
+    manualPromptAdd: false,    // Prompt ekleme Pro+
+    scanFrequency: "once",     // TEK FARK: 1 kez tarama
+    competitorView: true,      // Her şey açık
+    competitorAnalysis: true,  // "Neden Önde?" açık
+    auditView: true,           // Site kontrolü açık
+    actionPlanView: true,      // Gelişim planı açık
+    trendView: false,          // Trend yok — tek seferlik
+    weeklyReport: false,       // Haftalık rapor yok
+    promptFreshness: false,    // Aylık kontrol yok
+    checklistAutoVerify: false, // "Tamamladım" doğrulama yok
     smsEnabled: false,
     maxBrands: 1,
-    maxCompetitors: 0,
-    useSonarResearch: false,
-    checklistLayer3: false,
-    mentionRate: false,
-    citationView: false,
-    shareOfVoice: false,
-    exportPDF: false,
+    maxCompetitors: 10,        // Spec: 10 rakip — PRO ile aynı
+    useSonarResearch: false,   // Sonar araştırma Pro+
+    checklistLayer3: true,     // Tüm katmanlar açık
+    mentionRate: false,        // Trend yok — tek seferlik
+    citationView: true,        // Kaynaklar açık
+    shareOfVoice: true,        // Görünürlük payı açık
+    exportPDF: false,          // PDF export Pro+
   },
   pro: {
     maxPrompts: 50,

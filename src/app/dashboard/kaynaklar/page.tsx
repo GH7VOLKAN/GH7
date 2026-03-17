@@ -1,11 +1,13 @@
 import { SourceStatsCards } from "@/components/kaynaklar/source-stats-cards";
 import { SourceTable } from "@/components/kaynaklar/source-table";
+import { ProUpgradeCard } from "@/components/pro-upgrade-card";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getSourcesData } from "@/lib/dal/sources";
 
 export default async function KaynaklarPage() {
   const activeBrand = await getActiveBrand();
   const brandId = activeBrand?.brand?.id;
+  const plan = activeBrand?.plan ?? "free";
 
   if (!brandId) {
     return (
@@ -23,6 +25,9 @@ export default async function KaynaklarPage() {
       <div className="px-4 lg:px-6">
         <SourceTable sourceDomains={data.sourceDomains} />
       </div>
+
+      {/* Pro CTA — sayfanın en altında */}
+      <ProUpgradeCard type="verification" plan={plan} />
     </>
   );
 }

@@ -21,7 +21,6 @@ import {
   CalendarIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BlurredSection } from "@/components/ui/blurred-section";
 import {
   markChecklistItemDone,
   resetChecklistItemStatus,
@@ -758,8 +757,6 @@ export function GelisimClient({
       {data.layers.map((layer) => {
         const LayerIcon = LAYER_ICONS[layer.layer] ?? SearchIcon;
         const layerColor = LAYER_COLORS[layer.layer] ?? LAYER_COLORS[1];
-        const isLayer3 = layer.layer === 3;
-        const isLayerLocked = isFree && isLayer3;
         const layerProgress =
           layer.total > 0
             ? Math.round((layer.completed / layer.total) * 100)
@@ -827,35 +824,21 @@ export function GelisimClient({
           </div>
         );
 
-        if (isLayerLocked) {
-          return (
-            <BlurredSection
-              key={layer.layer}
-              isLocked={true}
-              title="Yapay Zeka Seni Oneriyor mu?"
-              description="Katman 3 kontrol noktalarini gormek ve tamamlamak icin Pro plana gecin."
-            >
-              {layerContent}
-            </BlurredSection>
-          );
-        }
-
         return <React.Fragment key={layer.layer}>{layerContent}</React.Fragment>;
       })}
 
-      {/* Bottom CTA for free users */}
+      {/* Pro CTA — sayfanın en altında, zaman bazlı */}
       {isFree && (
-        <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-8 text-center">
-          <p className="text-lg font-bold">Tum Kontrol Noktalarini Ac</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Katman 3 (Oneri) kontrol noktalarini tamamlayarak Yapay zeka gorunurlugunu
-            maksimuma cikar.
+        <div className="rounded-2xl border border-border/50 bg-white p-8 text-center dark:bg-card">
+          <p className="text-lg font-semibold text-foreground">Yaptıklarının işe yaradığını gör</p>
+          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+            Gelişim planında adım tamamladın mı? Yapay zekanın fark edip etmediğini kontrol edelim.
           </p>
           <Link
             href="/dashboard/ayarlar"
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-foreground px-8 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-8 py-3 text-sm font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            Pro ile Basla
+            İlerleme takibi başlat → 2.495₺/ay
             <ArrowRightIcon className="size-4" />
           </Link>
         </div>

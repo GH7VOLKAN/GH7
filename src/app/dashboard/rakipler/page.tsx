@@ -3,6 +3,7 @@ import { CompetitorTable } from "@/components/rakipler/competitor-table";
 import { EmptyAreasCard } from "@/components/rakipler/empty-areas-card";
 import { GapAnalysisCard } from "@/components/rakipler/gap-analysis-card";
 import { ShareOfVoiceCard } from "@/components/rakipler/share-of-voice-card";
+import { ProUpgradeCard } from "@/components/pro-upgrade-card";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getCompetitorsData } from "@/lib/dal/competitors";
 import { getPlanLimits } from "@/lib/plans";
@@ -64,6 +65,9 @@ export default async function RakiplerPage() {
       <div className="px-4 lg:px-6">
         <EmptyAreasCard opportunities={data.emptyAreaOpportunities} />
       </div>
+
+      {/* Pro CTA — sayfanın en altında */}
+      <ProUpgradeCard type="competitor" plan={plan} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { PromptStatsCards } from "@/components/promptlar/prompt-stats-cards";
 import { PromptTable } from "@/components/promptlar/prompt-table";
 import { SuggestedPromptsTable } from "@/components/promptlar/suggested-prompts-table";
+import { ProUpgradeCard } from "@/components/pro-upgrade-card";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getPromptsData } from "@/lib/dal/prompts";
 import { getPlanLimits, isPro } from "@/lib/plans";
@@ -60,6 +61,9 @@ export default async function PromptlarPage() {
           <SuggestedPromptsTable suggestedPrompts={data.suggested} brandId={brandId} />
         </div>
       )}
+
+      {/* Pro CTA — sayfanın en altında */}
+      <ProUpgradeCard type="trend" plan={plan} />
     </>
   );
 }
