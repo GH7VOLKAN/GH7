@@ -16,14 +16,14 @@ interface ShareOfVoiceCardProps {
 export function ShareOfVoiceCard({ data }: ShareOfVoiceCardProps) {
   if (data.length === 0) {
     return (
-      <Card>
+      <Card className="border border-border/50 shadow-sm rounded-2xl">
         <CardContent className="py-12 text-center">
           <PieChartIcon className="mx-auto mb-3 size-8 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">
             Henüz görünürlük payı verisi yok
           </p>
           <p className="mt-1 text-xs text-muted-foreground/70">
-            Tarama tamamlandiktan sonra yapay zekalardaki gorunurluk dagilimi burada gorunecek.
+            Tarama tamamlandıktan sonra yapay zekalardaki görünürlük dağılımı burada görünecek.
           </p>
         </CardContent>
       </Card>
@@ -31,14 +31,14 @@ export function ShareOfVoiceCard({ data }: ShareOfVoiceCardProps) {
   }
 
   return (
-    <Card>
+    <Card className="border border-border/50 shadow-sm rounded-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PieChartIcon className="size-5 text-primary" />
           Görünürlük Payı
         </CardTitle>
         <CardDescription>
-          Yapay zekalarin sorulara verdigi yanitlarda bahsedilme oranlari
+          Yapay zekaların sorulara verdiği yanıtlarda bahsedilme oranları
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

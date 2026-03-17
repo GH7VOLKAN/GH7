@@ -16,7 +16,7 @@ export default async function RakiplerPage() {
   if (!brandId) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        Marka bulunamadi. Lutfen ayarlardan marka ekleyin.
+        Marka bulunamadı. Lütfen ayarlardan marka ekleyin.
       </div>
     );
   }
@@ -29,7 +29,7 @@ export default async function RakiplerPage() {
     <BlurredSection
       isLocked={competitorLocked}
       title="Rakip Analizi"
-      description="Rakiplerinizin yapay zeka gorunurlugunu karsilastirmak icin Pro plana gecin."
+      description="Rakiplerinizin yapay zeka görünürlüğünü karşılaştırmak için Pro plana geçin."
     >
       <CompetitorStatsCards
         rows={data.rows}

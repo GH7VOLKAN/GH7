@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -13,8 +14,7 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
   MinusIcon,
-  MessageSquareIcon,
-  UsersIcon,
+  ArrowRightIcon,
 } from "lucide-react";
 
 interface SectionCardsProps {
@@ -30,9 +30,12 @@ interface SectionCardsProps {
 function TrendBadge({ value }: { value: number }) {
   if (value === 0) {
     return (
-      <Badge variant="outline" className="border-transparent bg-muted/60 text-muted-foreground">
+      <Badge
+        variant="outline"
+        className="border-transparent bg-muted/60 text-muted-foreground"
+      >
         <MinusIcon className="size-3" />
-        Sabit
+        Değişim yok
       </Badge>
     );
   }
@@ -45,11 +48,41 @@ function TrendBadge({ value }: { value: number }) {
           : "border-transparent bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
       }
     >
-      {value > 0 ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />}
+      {value > 0 ? (
+        <TrendingUpIcon className="size-3" />
+      ) : (
+        <TrendingDownIcon className="size-3" />
+      )}
       {value > 0 ? "+" : ""}
-      {value}
+      {value} soru
     </Badge>
   );
+}
+
+function buildHeroStatement(
+  mentionCount: number,
+  resultCount: number
+): string {
+  if (resultCount === 0) return "Henüz tarama yapılmadı";
+  if (mentionCount === 0)
+    return `${resultCount} soruda hiç önerilmiyorsun`;
+  if (mentionCount === resultCount)
+    return `${resultCount} sorunun hepsinde öneriliyorsun!`;
+  return `${resultCount} soruda ${mentionCount} tanesinde seni öneriyor`;
+}
+
+function buildCompetitorStatement(
+  name: string | null,
+  gap: number
+): string {
+  if (!name) return "Tarama tamamlanınca rakiplerin burada görünecek";
+  if (gap > 0) {
+    return `${name}, senden ${gap} soru daha fazla öneriliyor`;
+  }
+  if (gap < 0) {
+    return `Seni ${name}'dan daha çok öneriyorlar!`;
+  }
+  return `${name} ile başabaş gidiyorsunuz`;
 }
 
 export function SectionCards({
@@ -61,90 +94,87 @@ export function SectionCards({
   topCompetitorName,
   topCompetitorGap,
 }: SectionCardsProps) {
-  const mentionRate = totalResultCount > 0
-    ? Math.round((totalMentionCount / totalResultCount) * 100)
-    : 0;
+  const mentionRate =
+    totalResultCount > 0
+      ? Math.round((totalMentionCount / totalResultCount) * 100)
+      : 0;
+
+  const heroText = buildHeroStatement(totalMentionCount, totalResultCount);
+  const competitorText = buildCompetitorStatement(
+    topCompetitorName,
+    topCompetitorGap
+  );
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2">
-      {/* Kart 1: Yapay Zeka Görünürlüğü */}
+      {/* Kart 1: Yapay Zeka Seni Ne Kadar Taniyor? */}
       <Card className="@container/card border border-border/50 shadow-sm rounded-2xl transition-shadow hover:shadow-md">
-        <CardHeader className="p-6">
-          <CardDescription className="flex items-center gap-1.5 text-muted-foreground">
-            <MessageSquareIcon className="size-3.5" />
-            Yapay Zeka Görünürlüğü
+        <CardHeader className="p-6 pb-2">
+          <CardDescription className="text-xs uppercase tracking-wider text-muted-foreground/70">
+            Yapay Zeka Seni Ne Kadar Tanıyor?
           </CardDescription>
-          <CardTitle className="text-3xl font-bold tabular-nums tracking-tight text-foreground @[250px]/card:text-4xl">
-            {totalResultCount > 0
-              ? `${totalMentionCount}/${totalResultCount}`
-              : `${mentionScore}/100`}
+          <CardTitle className="text-xl font-semibold leading-snug text-foreground @[250px]/card:text-2xl">
+            {heroText}
           </CardTitle>
           <CardAction>
             <TrendBadge value={mentionTrend} />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-3 px-6 pb-6 text-sm">
+        <CardFooter className="flex-col items-start gap-3 px-6 pb-6 pt-3 text-sm">
           {/* Progress bar */}
-          <div className="flex w-full items-center gap-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-foreground transition-all duration-1000"
-                style={{ width: `${Math.max(mentionRate, 2)}%` }}
-              />
+          {totalResultCount > 0 && (
+            <div className="flex w-full items-center gap-3">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-foreground transition-all duration-1000"
+                  style={{ width: `${Math.max(mentionRate, 2)}%` }}
+                />
+              </div>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {totalMentionCount}/{totalResultCount}
+              </span>
             </div>
-            <span className="text-sm font-bold tabular-nums text-foreground">%{mentionRate}</span>
-          </div>
-          <p className="text-muted-foreground">
-            {totalResultCount > 0
-              ? `Yapay zeka seni ${totalResultCount} denemede ${totalMentionCount} kez öneriyor`
-              : "Henüz tarama yapılmadı"}
-          </p>
+          )}
           {lastScanTimeAgo && (
-            <p className="text-xs text-muted-foreground/60">Son tarama: {lastScanTimeAgo}</p>
+            <p className="text-xs text-muted-foreground/50">
+              Son tarama: {lastScanTimeAgo}
+            </p>
           )}
         </CardFooter>
       </Card>
 
-      {/* Kart 2: Senin Yerine Kim */}
+      {/* Kart 2: Senin Yerine Kim Oneriliyor? */}
       <Card className="@container/card border border-border/50 shadow-sm rounded-2xl transition-shadow hover:shadow-md">
-        <CardHeader className="p-6">
-          <CardDescription className="flex items-center gap-1.5 text-muted-foreground">
-            <UsersIcon className="size-3.5" />
-            Senin Yerine Kim?
+        <CardHeader className="p-6 pb-2">
+          <CardDescription className="text-xs uppercase tracking-wider text-muted-foreground/70">
+            Senin Yerine Kim Öneriliyor?
           </CardDescription>
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground @[250px]/card:text-4xl">
-            {topCompetitorName || "—"}
+          <CardTitle className="text-xl font-semibold leading-snug text-foreground @[250px]/card:text-2xl">
+            {topCompetitorName || "Henüz belli değil"}
           </CardTitle>
-          <CardAction>
-            {topCompetitorName && (
+          {topCompetitorName && topCompetitorGap <= 0 && (
+            <CardAction>
               <Badge
                 variant="outline"
-                className={
-                  topCompetitorGap > 0
-                    ? "border-transparent bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-                    : topCompetitorGap < 0
-                      ? "border-transparent bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                      : "border-transparent bg-muted/60 text-muted-foreground"
-                }
+                className="border-transparent bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
               >
-                {topCompetitorGap > 0
-                  ? `${topCompetitorGap} puan önde`
-                  : topCompetitorGap < 0
-                    ? `${Math.abs(topCompetitorGap)} puan geride`
-                    : "Eşit"}
+                <TrendingUpIcon className="size-3" />
+                Önde gidiyorsun
               </Badge>
-            )}
-          </CardAction>
+            </CardAction>
+          )}
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-2 px-6 pb-6 text-sm">
-          <p className="font-medium text-foreground">
-            {topCompetitorName
-              ? `${topCompetitorName} en sık önerilen rakip`
-              : "Tarama sonrası rakipler görünecek"}
-          </p>
-          <p className="text-muted-foreground">
-            Yapay zekalar seni yerine kimi öneriyor?
-          </p>
+        <CardFooter className="flex-col items-start gap-3 px-6 pb-6 pt-3 text-sm">
+          <p className="text-muted-foreground">{competitorText}</p>
+          {topCompetitorName && (
+            <Link
+              href="/dashboard/rakipler"
+              className="group inline-flex items-center gap-1 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground"
+            >
+              Tüm rakipleri gör
+              <ArrowRightIcon className="size-3 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
         </CardFooter>
       </Card>
     </div>

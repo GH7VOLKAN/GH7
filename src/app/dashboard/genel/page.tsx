@@ -19,7 +19,7 @@ export default async function GenelPage() {
   if (!brandId) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        Marka bulunamadi. Lutfen ayarlardan marka ekleyin.
+        Marka bulunamadı. Lütfen ayarlardan marka ekleyin.
       </div>
     );
   }
@@ -79,8 +79,8 @@ export default async function GenelPage() {
       {/* Trend grafik (Pro+) */}
       <BlurredSection
         isLocked={trendLocked}
-        title="Trend Grafigi"
-        description="Zaman icindeki skor degisimlerini gormek icin Pro plana gecin."
+        title="Trend Grafiği"
+        description="Zaman içindeki görünürlük değişimlerini görmek için Pro plana geçin."
       >
         <div className="px-4 lg:px-6">
           <ChartAreaInteractive scoreHistory={chartData} />

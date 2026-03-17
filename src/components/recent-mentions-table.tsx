@@ -128,7 +128,7 @@ export function RecentMentionsTable({
                 {recentMentions.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                      Henüz bahsedilme verisi yok. Tarama başlatmak için header&apos;daki butona tıklayın.
+                      Henüz veri yok. İlk taramanızı başlattıktan sonra yapay zekaların yanıtları burada görünecek.
                     </TableCell>
                   </TableRow>
                 )}

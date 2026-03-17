@@ -86,12 +86,12 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
 
   return (
     <>
-      <Card>
+      <Card className="border border-border/50 shadow-sm rounded-2xl">
         <CardHeader className="flex-row items-start justify-between gap-4">
           <div>
             <CardTitle>Rakip Karşılaştırma</CardTitle>
             <CardDescription>
-              Yapay zekalardaki gorunurluk karsilastirmasi — satira tiklayarak detaylari gorun
+              Yapay zekalardaki görünürlük karşılaştırması — satıra tıklayarak detayları görün
             </CardDescription>
           </div>
           <DiscoverCompetitorsButton
@@ -130,8 +130,7 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
               <TableHeader className="bg-muted">
                 <TableRow>
                   <TableHead>Firma</TableHead>
-                  <TableHead>Bahsedilme</TableHead>
-                  <TableHead className="hidden sm:table-cell">Hazırlık</TableHead>
+                  <TableHead>Görünürlük</TableHead>
                   {platforms.map((p) => (
                     <TableHead
                       key={p}
@@ -162,9 +161,6 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                     </TableCell>
                     <TableCell>
                       <ScoreCell score={userRow.mentionScore} diff={null} />
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <ScoreCell score={userRow.readinessScore} diff={null} />
                     </TableCell>
                     {platforms.map((p) => (
                       <TableCell
@@ -231,9 +227,6 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
                       <TableCell>
                         <ScoreCell score={row.mentionScore} diff={mentionDiff} />
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <ScoreCell score={row.readinessScore} diff={null} />
-                      </TableCell>
                       {platforms.map((p) => (
                         <TableCell
                           key={p}
@@ -259,8 +252,8 @@ export function CompetitorTable({ rows, brandId }: CompetitorTableProps) {
 
                 {competitorRows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      Henuz rakip yok. &quot;Rakipleri Otomatik Kesfet&quot; butonuna tiklayarak sektorunuzdeki gercek rakipleri otomatik bulun.
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      Henüz rakip yok. &quot;Rakipleri Otomatik Keşfet&quot; butonuna tıklayarak sektörünüzdeki gerçek rakipleri otomatik bulun.
                     </TableCell>
                   </TableRow>
                 )}

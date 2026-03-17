@@ -35,7 +35,7 @@ interface GapAnalysisCardProps {
 export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
   if (!detail) {
     return (
-      <Card>
+      <Card className="border border-border/50 shadow-sm rounded-2xl">
         <CardContent className="py-12 text-center">
           <SparklesIcon className="mx-auto mb-3 size-8 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">
@@ -56,7 +56,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
   const hasSourcePages = detail.topSourcePages.length > 0;
 
   return (
-    <Card>
+    <Card className="border border-border/50 shadow-sm rounded-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUpIcon className="size-5 text-primary" />
@@ -67,57 +67,48 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        {/* Score comparison hero */}
-        <div className="flex items-center gap-4 rounded-xl border bg-gradient-to-r from-primary/5 to-transparent p-5">
-          <div className="flex-1 text-center">
-            <p className="text-xs font-medium text-muted-foreground mb-1">
-              {userName}
-            </p>
-            <p className="text-4xl font-bold tabular-nums text-primary">
-              {detail.userMentionScore}
-            </p>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-700"
-                style={{ width: `${detail.userMentionScore}%` }}
-              />
+        {/* Comparison hero — natural language */}
+        <div className="rounded-2xl border border-border/50 bg-muted/10 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">{userName}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/50">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all duration-700"
+                    style={{ width: `${Math.min(detail.userMentionScore, 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-1">
             <Badge
               variant="outline"
-              className={`text-sm px-3 py-1 font-bold ${
+              className={`shrink-0 px-3 py-1 text-xs font-bold ${
                 isAhead
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  : "border-red-200 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
               }`}
             >
-              {isAhead ? "ÖNDE" : `${gap} FARK`}
+              {isAhead ? "Öndesin!" : `${gap} puan fark`}
             </Badge>
-            <span className="text-[10px] text-muted-foreground">puan farkı</span>
-          </div>
-
-          <div className="flex-1 text-center">
-            <p className="text-xs font-medium text-muted-foreground mb-1">
-              {detail.name}
-            </p>
-            <p className="text-4xl font-bold tabular-nums text-muted-foreground">
-              {detail.mentionScore}
-            </p>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  detail.mentionScore > detail.userMentionScore ? "bg-red-400" : "bg-zinc-300"
-                }`}
-                style={{ width: `${detail.mentionScore}%` }}
-              />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground text-right">{detail.name}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/50">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      detail.mentionScore > detail.userMentionScore ? "bg-red-400" : "bg-muted-foreground/30"
+                    }`}
+                    style={{ width: `${Math.min(detail.mentionScore, 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Interpretation — What does this mean? */}
-        <div className="rounded-lg border-l-4 border-l-primary bg-primary/5 px-4 py-3">
+        <div className="rounded-xl border border-border/50 bg-muted/10 px-4 py-3">
           <div className="flex items-start gap-2">
             <LightbulbIcon className="mt-0.5 size-4 shrink-0 text-primary" />
             <div className="text-sm">
@@ -152,7 +143,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
           <div>
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
               <ShieldAlertIcon className="size-4 text-amber-500" />
-              Teknik Hazırlık Eksiklikleri
+              İyileştirme Fırsatları
             </h3>
             {hasReadinessGaps ? (
               <div className="flex flex-col gap-2">
@@ -176,7 +167,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                   );
                 })}
                 <p className="mt-1 text-xs text-muted-foreground px-1">
-                  Bu eksiklikleri gidermek yapay zekalardaki gorunurlugunuzu artirir. Site Kontrolu sayfasindan detayli kontrol yapabilirsiniz.
+                  Bu eksiklikleri gidermek yapay zekalardaki görünürlüğünüzü artırır. Site Kontrolü sayfasından detaylı kontrol yapabilirsiniz.
                 </p>
               </div>
             ) : (
@@ -193,7 +184,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
           <div>
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
               <GlobeIcon className="size-4 text-blue-500" />
-              Yapay Zekanin Kullandigi Kaynaklar
+              Yapay Zekanın Kullandığı Kaynaklar
             </h3>
             {hasSourcePages ? (
               <div className="flex flex-col gap-2">
@@ -214,7 +205,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
                   </div>
                 ))}
                 <p className="mt-1 text-xs text-muted-foreground px-1">
-                  Bu kaynaklardan gelen bilgiler yapay zeka yanitlarini dogrudan etkiliyor. Bu kaynaklarda gorunurlugunuzu artirin.
+                  Bu kaynaklardan gelen bilgiler yapay zeka yanıtlarını doğrudan etkiliyor. Bu kaynaklarda görünürlüğünüzü artırın.
                 </p>
               </div>
             ) : (
@@ -228,7 +219,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
 
         {/* Action items summary */}
         {!isAhead && (
-          <div className="rounded-lg border bg-gradient-to-r from-violet-50 to-blue-50 p-4 dark:from-violet-900/10 dark:to-blue-900/10">
+          <div className="rounded-2xl border border-border/50 bg-muted/10 p-4">
             <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
               <ArrowRightIcon className="size-4 text-violet-600 dark:text-violet-400" />
               Önerilen Adımlar
@@ -242,7 +233,7 @@ export function GapAnalysisCard({ detail, userName }: GapAnalysisCardProps) {
               )}
               <div className="flex items-start gap-2 text-xs text-muted-foreground">
                 <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-violet-400" />
-                <span>Yapay zekanin sizi daha iyi anlamasi icin sitenizi yapilandirin</span>
+                <span>Yapay zekanın sizi daha iyi anlaması için sitenizi yapılandırın</span>
               </div>
               <div className="flex items-start gap-2 text-xs text-muted-foreground">
                 <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-violet-400" />

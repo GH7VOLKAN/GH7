@@ -1,26 +1,18 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { CheckStatus } from "@/lib/types";
 import { createActionFromAuditCheck } from "@/lib/actions";
 import { toast } from "sonner";
+import { ChevronDownIcon } from "lucide-react";
 
 interface AuditCheck {
   id: string;
@@ -46,20 +38,42 @@ interface AuditCategoriesProps {
   brandId: string;
 }
 
-const statusIcon: Record<CheckStatus, string> = {
-  pass: "✓",
-  fail: "✗",
-  partial: "~",
-};
-
-const statusLabel: Record<CheckStatus, string> = {
-  pass: "Geçti",
-  fail: "Başarısız",
-  partial: "Kısmî",
+const statusConfig: Record<CheckStatus, { icon: string; color: string; bg: string; rowBg: string }> = {
+  pass: {
+    icon: "✓",
+    color: "text-green-700 dark:text-green-400",
+    bg: "bg-green-100 dark:bg-green-900/40",
+    rowBg: "",
+  },
+  partial: {
+    icon: "⚠",
+    color: "text-amber-700 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-900/40",
+    rowBg: "",
+  },
+  fail: {
+    icon: "✗",
+    color: "text-red-700 dark:text-red-400",
+    bg: "bg-red-100 dark:bg-red-900/40",
+    rowBg: "bg-red-50/50 dark:bg-red-950/20",
+  },
 };
 
 export function AuditCategories({ auditCategories, brandId }: AuditCategoriesProps) {
   const [isPending, startTransition] = useTransition();
+  const [expandedChecks, setExpandedChecks] = useState<Set<string>>(new Set());
+
+  function toggleCheck(checkId: string) {
+    setExpandedChecks((prev) => {
+      const next = new Set(prev);
+      if (next.has(checkId)) {
+        next.delete(checkId);
+      } else {
+        next.add(checkId);
+      }
+      return next;
+    });
+  }
 
   function handleAddAction(check: AuditCheck) {
     startTransition(async () => {
@@ -79,111 +93,99 @@ export function AuditCategories({ auditCategories, brandId }: AuditCategoriesPro
   return (
     <div className="flex flex-col gap-4 px-4 lg:px-6">
       {auditCategories.map((cat) => {
-        const pct =
-          cat.maxScore > 0 ? Math.round((cat.score / cat.maxScore) * 100) : 0;
+        const passCount = cat.checks.filter((c) => c.status === "pass").length;
 
         return (
-          <Card key={cat.id}>
+          <Card key={cat.id} className="border border-border/50 shadow-sm rounded-2xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-3 text-base">
                 {cat.name}
-                <Badge variant="outline" className="text-muted-foreground">
-                  {cat.score}/{cat.maxScore}
+                <Badge
+                  variant="outline"
+                  className={
+                    passCount === cat.checks.length
+                      ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {passCount}/{cat.checks.length} kontrol geçti
                 </Badge>
               </CardTitle>
-              <CardDescription>
-                <span className="flex items-center gap-3">
-                  <span>%{pct} tamamlandı</span>
-                  <span className="text-xs">·</span>
-                  <span>{cat.checks.length} kontrol</span>
-                </span>
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Category progress bar */}
-              <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-700"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+              <ul className="divide-y divide-border rounded-xl border">
+                {cat.checks.map((check) => {
+                  const config = statusConfig[check.status];
+                  const isExpanded = expandedChecks.has(check.id);
+                  const hasExpandContent = check.detail || check.recommendation;
 
-              {/* Checks table */}
-              <div className="overflow-hidden rounded-lg border">
-                <Table>
-                  <TableHeader className="bg-muted">
-                    <TableRow>
-                      <TableHead className="w-[100px]">Durum</TableHead>
-                      <TableHead>Kontrol</TableHead>
-                      <TableHead className="w-[80px]">Skor</TableHead>
-                      <TableHead className="hidden md:table-cell">
-                        Detay
-                      </TableHead>
-                      <TableHead className="w-[140px] text-right">
-                        Aksiyon
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cat.checks.map((check) => (
-                      <TableRow key={check.id}>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              check.status === "pass" ? "outline" : "secondary"
-                            }
-                          >
-                            {statusIcon[check.status]} {statusLabel[check.status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <span className="font-medium">{check.label}</span>
-                            {check.recommendation && (
-                              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1 md:hidden">
-                                {check.recommendation}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="tabular-nums font-semibold">
-                          {check.score}/{check.maxScore}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-muted-foreground">
-                          <p className="line-clamp-1">{check.detail}</p>
+                  return (
+                    <li key={check.id} className={config.rowBg}>
+                      {/* Check row */}
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
+                        onClick={() => hasExpandContent && toggleCheck(check.id)}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold ${config.bg} ${config.color}`}
+                        >
+                          {config.icon}
+                        </span>
+                        <span className="flex-1 text-sm font-medium">{check.label}</span>
+                        {hasExpandContent && (
+                          <ChevronDownIcon
+                            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        )}
+                      </button>
+
+                      {/* Expanded content */}
+                      {isExpanded && hasExpandContent && (
+                        <div className="border-t bg-muted/30 px-4 py-3 pl-13">
+                          {check.detail && (
+                            <p className="text-sm text-muted-foreground">{check.detail}</p>
+                          )}
                           {check.recommendation && (
-                            <p className="mt-0.5 text-xs line-clamp-1">
-                              Öneri: {check.recommendation}
+                            <p className="mt-1.5 text-sm">
+                              <span className="font-medium">Öneri:</span>{" "}
+                              {check.recommendation}
                             </p>
                           )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {check.raasEligible ? (
-                            <Button
-                              size="sm"
-                              disabled={isPending}
-                              onClick={() => handleAddAction(check)}
-                            >
-                              Biz Uygulayalım
-                            </Button>
-                          ) : check.recommendation ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={isPending}
-                              onClick={() => handleAddAction(check)}
-                            >
-                              Aksiyona Ekle
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                          <div className="mt-3 flex gap-2">
+                            {check.raasEligible ? (
+                              <Button
+                                size="sm"
+                                disabled={isPending}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddAction(check);
+                                }}
+                              >
+                                Biz Uygulayalım
+                              </Button>
+                            ) : check.recommendation ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isPending}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddAction(check);
+                                }}
+                              >
+                                Aksiyona Ekle
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </CardContent>
           </Card>
         );

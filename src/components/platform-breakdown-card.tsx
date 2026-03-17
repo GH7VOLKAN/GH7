@@ -30,12 +30,6 @@ interface PlatformBreakdownCardProps {
 export function PlatformBreakdownCard({ platforms, weeklyRate }: PlatformBreakdownCardProps) {
   const hasWeeklyData = weeklyRate && weeklyRate.totalScans > 1;
 
-  // SVG donut config
-  const size = 80;
-  const center = size / 2;
-  const radius = 34;
-  const circumference = 2 * Math.PI * radius;
-
   return (
     <Card className="border border-border/50 shadow-sm rounded-2xl transition-shadow hover:shadow-md">
       <CardHeader className="p-6">
@@ -49,7 +43,7 @@ export function PlatformBreakdownCard({ platforms, weeklyRate }: PlatformBreakdo
         </CardDescription>
       </CardHeader>
       <CardContent className="px-6 pb-6">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {platforms.map((p) => {
             const colors = PLATFORM_COLORS[p.platform];
             const label = platformLabels[p.platform];
@@ -59,64 +53,50 @@ export function PlatformBreakdownCard({ platforms, weeklyRate }: PlatformBreakdo
             return (
               <div
                 key={p.platform}
-                className="flex flex-col items-center gap-4 rounded-2xl border border-border/50 bg-white px-4 py-6 transition-all hover:shadow-md dark:bg-card"
+                className="flex flex-col gap-3 rounded-xl bg-white p-4 transition-all hover:shadow-md dark:bg-card"
+                style={{ borderLeft: `4px solid ${colors.hex}` }}
               >
                 {/* Platform icon + name */}
                 <div className="flex items-center gap-2">
-                  <div className={`flex size-8 items-center justify-center rounded-lg ${colors.bg}`}>
-                    <PlatformIcon platform={p.platform} size={18} />
+                  <div className={`flex size-7 items-center justify-center rounded-lg ${colors.bg}`}>
+                    <PlatformIcon platform={p.platform} size={16} />
                   </div>
-                  <p className="text-sm font-semibold leading-none text-foreground">{label.name}</p>
+                  <span className="text-sm font-semibold text-foreground">{label.name}</span>
                 </div>
 
-                {/* Circular progress donut */}
-                <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-                  <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                    <circle
-                      cx={center}
-                      cy={center}
-                      r={radius}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      className="text-muted"
+                {/* Natural language stat */}
+                <p className="text-xs text-muted-foreground leading-snug">
+                  {p.total > 0 ? (
+                    <>
+                      <span className="font-bold text-foreground">{p.mentioned}</span>/{p.total} soruda öneriyor
+                    </>
+                  ) : (
+                    "Henüz taranmadı"
+                  )}
+                </p>
+
+                {/* Horizontal bar */}
+                <div className="flex items-center gap-2">
+                  <div className="h-2 flex-1 rounded-full bg-muted/50 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: colors.hex,
+                      }}
                     />
-                    <circle
-                      cx={center}
-                      cy={center}
-                      r={radius}
-                      fill="none"
-                      stroke={colors.hex}
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeDasharray={`${(pct / 100) * circumference} ${circumference}`}
-                      transform={`rotate(-90 ${center} ${center})`}
-                      className="transition-all duration-700"
-                    />
-                  </svg>
-                  <span className="absolute text-xl font-bold tabular-nums text-foreground">
-                    {pct}<span className="text-xs font-normal text-muted-foreground">%</span>
+                  </div>
+                  <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+                    %{pct}
                   </span>
                 </div>
 
-                {/* Mentioned / total count */}
-                <div className="flex flex-col items-center gap-1">
-                  <p className="text-center text-xs text-muted-foreground">
-                    {p.total > 0 ? (
-                      <>
-                        <span className="font-bold tabular-nums text-foreground">{p.mentioned}</span>
-                        <span className="text-muted-foreground">/{p.total} soruda öneriyor</span>
-                      </>
-                    ) : (
-                      "Henüz taranmadı"
-                    )}
+                {/* Weekly data */}
+                {hasWeeklyData && weeklyPlatform && weeklyPlatform.total > 0 && (
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Haftalık: {weeklyPlatform.mentioned}/{weeklyPlatform.total}
                   </p>
-                  {hasWeeklyData && weeklyPlatform && weeklyPlatform.total > 0 && (
-                    <p className="text-center text-[10px] text-muted-foreground/60">
-                      Haftalık: {weeklyPlatform.mentioned}/{weeklyPlatform.total}
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
             );
           })}

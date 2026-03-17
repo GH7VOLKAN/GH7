@@ -217,8 +217,7 @@ export function AppSidebar({
                   {/* Competitor overlay */}
                   {!gelisimOpen && hasChecklist && topCompetitor && (
                     <div className="flex items-center gap-1.5 px-3 pb-1 text-[10px] text-muted-foreground">
-                      <span className="truncate max-w-[120px]">{topCompetitor.name}</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">{topCompetitor.score}/100</span>
+                      <span className="truncate max-w-[120px]">Rakip: {topCompetitor.name}</span>
                     </div>
                   )}
 

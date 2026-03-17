@@ -1,15 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { TrendingUpIcon, TrendingDownIcon, ShieldIcon, SwordsIcon, UsersIcon, SparklesIcon } from "lucide-react";
+import { TrendingUpIcon, TrendingDownIcon, SwordsIcon, UsersIcon, SparklesIcon } from "lucide-react";
 import type { PlatformKey } from "@/lib/types";
 
 interface CompetitorRow {
@@ -34,7 +26,6 @@ interface CompetitorStatsCardsProps {
 export function CompetitorStatsCards({
   rows,
   userMentionScore,
-  userReadinessScore,
   totalResults,
   totalMentions,
   aiDiscoveredCount,
@@ -46,113 +37,98 @@ export function CompetitorStatsCards({
     ? topCompetitor.mentionScore - userMentionScore
     : 0;
 
+  const mentionPercent = totalResults > 0 ? Math.round((totalMentions / totalResults) * 100) : 0;
+
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Bahsedilme Skoru</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {userMentionScore}/100
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <SwordsIcon className="size-3" />
-              Siz
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {totalMentions}/{totalResults} soruda bahsedildiniz
+    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-3">
+      {/* Card 1: Bahsedilme Durumu */}
+      <div className="border border-border/50 shadow-sm rounded-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <SwordsIcon className="size-4" />
+            Bahsedilme Durumu
           </div>
-          <div className="text-muted-foreground">
-            4 yapay zekada toplam bahsedilme oranınız
+          <Badge variant="outline">Siz</Badge>
+        </div>
+        <div className="text-lg font-semibold">
+          {totalResults} soruda {totalMentions} kez önerildiniz
+        </div>
+        <div className="w-full">
+          <div className="h-2 w-full rounded-full bg-muted">
+            <div
+              className="h-2 rounded-full bg-foreground transition-all"
+              style={{ width: `${mentionPercent}%` }}
+            />
           </div>
-        </CardFooter>
-      </Card>
+          <div className="mt-1.5 text-xs text-muted-foreground">
+            Toplam bahsedilme oranı: %{mentionPercent}
+          </div>
+        </div>
+      </div>
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Hazırlık Skoru</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {userReadinessScore}/100
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <ShieldIcon className="size-3" />
-              Siz
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Teknik altyapı değerlendirmesi
+      {/* Card 2: En Güçlü Rakip */}
+      <div className="border border-border/50 shadow-sm rounded-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {mentionGap > 0 ? (
+              <TrendingDownIcon className="size-4" />
+            ) : (
+              <TrendingUpIcon className="size-4" />
+            )}
+            En Güçlü Rakip
           </div>
-          <div className="text-muted-foreground">
-            Yapılandırılmış veri, meta etiketler ve schema.org kontrolü
-          </div>
-        </CardFooter>
-      </Card>
-
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Lider Rakip Farkı</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {mentionGap > 0 ? "+" : ""}{mentionGap}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              {mentionGap > 0 ? <TrendingDownIcon className="size-3" /> : <TrendingUpIcon className="size-3" />}
-              {mentionGap > 0 ? "Geride" : "Önde"}
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {topCompetitor?.name ?? "Rakip yok"} {mentionGap > 0 ? "önde" : mentionGap < 0 ? "geride" : "eşit"}
-          </div>
-          <div className="text-muted-foreground">
+          <Badge variant="outline">
+            {topCompetitor?.name ?? "Rakip yok"}
+          </Badge>
+        </div>
+        {topCompetitor ? (
+          <div className={`text-lg font-semibold ${mentionGap > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
             {mentionGap > 0
-              ? "Rakibiniz yapay zekalarda sizden daha sik bahsediliyor"
+              ? `${topCompetitor.name} senden ${mentionGap} soru daha fazla öneriliyor`
               : mentionGap < 0
-                ? "Yapay zekalarda rakibinizden daha sik bahsediliyorsunuz"
-                : "En güçlü rakibinizle aynı düzeydesiniz"}
+                ? `Sen ${topCompetitor.name}'den daha çok öneriliyorsun`
+                : `${topCompetitor.name} ile aynı seviyedesin`}
           </div>
-        </CardFooter>
-      </Card>
+        ) : (
+          <div className="text-lg font-semibold text-muted-foreground">
+            Henüz rakip eklenmedi
+          </div>
+        )}
+        <div className="text-xs text-muted-foreground">
+          {mentionGap > 0
+            ? "Farkı kapatmak için içeriklerini ve stratejilerini incele"
+            : mentionGap < 0
+              ? "Harika gidiyorsun, bu avantajı korumaya devam et!"
+              : "Rekabet dengede, bir adım öne geçmek senin elinde"}
+        </div>
+      </div>
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Takip Edilen Rakip</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {competitorRows.length}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <UsersIcon className="size-3" />
-              Aktif
+      {/* Card 3: Takip Edilen Rakipler */}
+      <div className="border border-border/50 shadow-sm rounded-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <UsersIcon className="size-4" />
+            Takip Edilen Rakipler
+          </div>
+          <Badge variant="outline">{competitorRows.length} aktif</Badge>
+        </div>
+        <div className="text-2xl font-semibold tabular-nums">
+          {competitorRows.length}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {aiDiscoveredCount > 0 && (
+            <Badge variant="outline" className="text-muted-foreground gap-1">
+              <SparklesIcon className="size-3" />
+              AI ile keşfedilen: {aiDiscoveredCount}
             </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="flex flex-wrap gap-1.5">
-            {aiDiscoveredCount > 0 && (
-              <Badge variant="outline" className="text-muted-foreground gap-1">
-                <SparklesIcon className="size-3" />
-                Otomatik: {aiDiscoveredCount}
-              </Badge>
-            )}
-            {manualCount > 0 && (
-              <Badge variant="outline" className="text-muted-foreground gap-1">
-                Manuel: {manualCount}
-              </Badge>
-            )}
-          </div>
-          <div className="text-muted-foreground">
-            Perplexity Sonar + Claude ile keşfedilen ve manuel eklenen rakipler
-          </div>
-        </CardFooter>
-      </Card>
+          )}
+          {manualCount > 0 && (
+            <Badge variant="outline" className="text-muted-foreground gap-1">
+              Manuel eklenen: {manualCount}
+            </Badge>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

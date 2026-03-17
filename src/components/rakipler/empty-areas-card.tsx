@@ -25,18 +25,18 @@ interface EmptyAreasCardProps {
 export function EmptyAreasCard({ opportunities }: EmptyAreasCardProps) {
   if (opportunities.length === 0) {
     return (
-      <Card>
+      <Card className="border border-border/50 shadow-sm rounded-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TargetIcon className="size-5 text-amber-500" />
-            Firsat Alanlari
+            Fırsat Alanları
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 rounded-lg border bg-emerald-50 px-4 py-3 dark:bg-emerald-900/10">
             <LightbulbIcon className="size-4 text-emerald-500" />
             <p className="text-sm text-emerald-700 dark:text-emerald-400">
-              Tum alanlarda aktif rekabet var.
+              Tüm alanlarda aktif rekabet var.
             </p>
           </div>
         </CardContent>
@@ -45,14 +45,14 @@ export function EmptyAreasCard({ opportunities }: EmptyAreasCardProps) {
   }
 
   return (
-    <Card>
+    <Card className="border border-border/50 shadow-sm rounded-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TargetIcon className="size-5 text-amber-500" />
-          Firsat Alanlari
+          Fırsat Alanları
         </CardTitle>
         <CardDescription>
-          Bu sorularda henuz guclu bir oyuncu yok — one gecme firsati!
+          Bu sorularda henüz güçlü bir oyuncu yok — öne geçme fırsatı!
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
@@ -82,7 +82,7 @@ export function EmptyAreasCard({ opportunities }: EmptyAreasCardProps) {
           </div>
         ))}
         <p className="mt-1 text-xs text-muted-foreground px-1">
-          Bu sorularda kimse guclu degil. Icerik ureterek bu alanlarda ilk akla gelen marka olabilirsiniz.
+          Bu sorularda kimse güçlü değil. İçerik üreterek bu alanlarda ilk akla gelen marka olabilirsiniz.
         </p>
       </CardContent>
     </Card>
