@@ -4,7 +4,6 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { getLastScanInfo } from "@/lib/dal/scans";
-import { getNotifications } from "@/lib/dal/notifications";
 import { getChecklistSummary } from "@/lib/dal/checklist";
 import { getTopCompetitorChecklist } from "@/lib/dal/competitors";
 import { redirect } from "next/navigation";
@@ -28,9 +27,8 @@ export default async function DashboardLayout({
     redirect("/onboard");
   }
 
-  const [scanInfo, notifData, checklistSummary, topCompetitor] = await Promise.all([
+  const [scanInfo, checklistSummary, topCompetitor] = await Promise.all([
     brandId ? getLastScanInfo(brandId) : null,
-    brandId ? getNotifications(brandId) : null,
     brandId ? getChecklistSummary(brandId) : null,
     brandId ? getTopCompetitorChecklist(brandId) : null,
   ]);
@@ -39,8 +37,8 @@ export default async function DashboardLayout({
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
+          "--sidebar-width": "256px",
+          "--header-height": "48px",
         } as React.CSSProperties
       }
     >
@@ -59,28 +57,19 @@ export default async function DashboardLayout({
       <SidebarInset>
         <SiteHeader
           userName={user?.fullName ?? "D"}
+          avatarUrl={user?.avatarUrl}
           brandId={brandId}
           brandType={brandType}
           lastScanAt={scanInfo?.lastCompletedAt}
           scanRunning={scanInfo?.isRunning}
           runningScanId={scanInfo?.runningScanId}
-          notifications={notifData?.notifications.map((n) => ({
-            id: n.id,
-            type: n.type,
-            title: n.title,
-            message: n.message,
-            read: n.read,
-            createdAt: n.createdAt.toISOString(),
-          }))}
-          unreadCount={notifData?.unreadCount}
         />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 pb-20 md:gap-6 md:py-6 md:pb-6">
-              {children}
-            </div>
+        {/* Kinde-style main content area — centered, max-width, fafafa bg */}
+        <main className="flex-1 overflow-y-auto pb-20 md:pb-8">
+          <div className="mx-auto w-full max-w-[880px] px-4 lg:px-6">
+            {children}
           </div>
-        </div>
+        </main>
       </SidebarInset>
       <MobileBottomNav
         checklistProgress={
