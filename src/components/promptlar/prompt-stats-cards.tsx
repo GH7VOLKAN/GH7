@@ -87,15 +87,15 @@ export function PromptStatsCards({
   return (
     <div className="flex flex-col gap-4 px-4 lg:px-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 dark:*:data-[slot=card]:bg-card">
-        <Card className="@container/card">
+      <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2">
+        <Card className="@container/card border border-border/50 shadow-sm rounded-2xl">
           <CardHeader>
-            <CardDescription>Aktif Soru</CardDescription>
+            <CardDescription>Aktif Sorular</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {activeCount}
             </CardTitle>
             <CardAction>
-              <Badge variant="outline">
+              <Badge variant="outline" className="bg-muted/40 text-muted-foreground border-border/60">
                 <LayersIcon className="size-3" />
                 Takip
               </Badge>
@@ -106,7 +106,7 @@ export function PromptStatsCards({
               {Object.entries(sourceBreakdown).map(([source, count]) => {
                 const Icon = sourceIcons[source] ?? SparklesIcon;
                 return (
-                  <Badge key={source} variant="outline" className="text-muted-foreground gap-1">
+                  <Badge key={source} variant="outline" className="text-muted-foreground gap-1 bg-muted/30 border-border/60">
                     <Icon className="size-3" />
                     {sourceNames[source] ?? source}: {count}
                   </Badge>
@@ -119,14 +119,14 @@ export function PromptStatsCards({
           </CardFooter>
         </Card>
 
-        <Card className="@container/card">
+        <Card className="@container/card border border-border/50 shadow-sm rounded-2xl">
           <CardHeader>
             <CardDescription>Ortalama Görünürlük</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               %{avgVisibility}
             </CardTitle>
             <CardAction>
-              <Badge variant="outline">
+              <Badge variant="outline" className="bg-muted/40 text-muted-foreground border-border/60">
                 <TrendingUpIcon className="size-3" />
                 Analiz
               </Badge>
@@ -137,7 +137,7 @@ export function PromptStatsCards({
               {promptItems.length} prompt üzerinden hesaplandı
             </div>
             <div className="text-muted-foreground">
-              4 yapay zekada ortalama bahsedilme orani
+              4 yapay zekada ortalama bahsedilme oranı
             </div>
           </CardFooter>
         </Card>
@@ -146,25 +146,31 @@ export function PromptStatsCards({
       {/* Platform mention badges + Category breakdown */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">
-          {PLATFORMS.map((platform) => {
-            const colors = PLATFORM_COLORS[platform];
-            return (
-              <span key={platform} className={`inline-flex items-center gap-1.5 rounded-md border ${colors.border} ${colors.bg} px-2.5 py-1.5`}>
-                <PlatformIcon platform={platform} size={14} />
-                <span className={`text-xs font-medium ${colors.text}`}>{platformLabels[platform].name}</span>
-                <span className="text-xs font-semibold text-foreground">
-                  {mentionCounts[platform]}/{promptItems.length}
-                </span>
+          {PLATFORMS.map((platform) => (
+            <span
+              key={platform}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/50 bg-background px-3 py-1.5 shadow-sm"
+            >
+              <PlatformIcon platform={platform} size={14} />
+              <span className="text-xs font-medium text-foreground/80">
+                {platformLabels[platform].name}
               </span>
-            );
-          })}
+              <span className="text-xs font-semibold tabular-nums text-foreground">
+                {mentionCounts[platform]}/{promptItems.length}
+              </span>
+            </span>
+          ))}
         </div>
         {Object.keys(categoryBreakdown).length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {Object.entries(categoryBreakdown)
               .sort(([, a], [, b]) => b - a)
               .map(([cat, count]) => (
-                <Badge key={cat} variant="outline" className="text-muted-foreground text-xs">
+                <Badge
+                  key={cat}
+                  variant="outline"
+                  className="text-muted-foreground text-xs bg-muted/20 border-border/40"
+                >
                   {categoryNames[cat] ?? cat} ({count})
                 </Badge>
               ))}

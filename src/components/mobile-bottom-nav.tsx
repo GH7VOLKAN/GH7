@@ -20,7 +20,6 @@ interface TabItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  badge?: string;
   showProgress?: boolean;
 }
 
@@ -39,7 +38,6 @@ const tabs: TabItem[] = [
     label: "Rakipler",
     href: "/dashboard/rakipler",
     icon: UsersIcon,
-    badge: "★",
   },
   {
     label: "Dijital",
@@ -47,7 +45,7 @@ const tabs: TabItem[] = [
     icon: GlobeIcon,
   },
   {
-    label: "Gelisim",
+    label: "Gelişim",
     href: "/dashboard/gelisim",
     icon: ClipboardListIcon,
     showProgress: true,
@@ -60,9 +58,9 @@ export function MobileBottomNav({
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-border/40 bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
+    <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-border/40 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
       <div
-        className="flex items-center justify-around h-[60px]"
+        className="flex items-center justify-around h-[64px]"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {tabs.map((tab) => {
@@ -75,20 +73,16 @@ export function MobileBottomNav({
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[10px] font-medium transition-colors relative",
+                "flex flex-col items-center justify-center gap-1 flex-1 h-full text-[10px] font-medium transition-colors relative",
                 isActive
-                  ? "text-primary"
+                  ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <span className="relative">
-                <Icon className="h-5 w-5" />
-                {tab.badge && (
-                  <span className="absolute -top-1 -right-2.5 text-[9px] text-amber-500 font-bold leading-none">
-                    {tab.badge}
-                  </span>
-                )}
-              </span>
+              {isActive && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-foreground" />
+              )}
+              <Icon className="h-5 w-5" />
               <span className="flex items-center gap-0.5">
                 {tab.label}
                 {tab.showProgress && checklistProgress && checklistProgress.total > 0 && (

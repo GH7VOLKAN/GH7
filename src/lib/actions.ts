@@ -67,7 +67,9 @@ export async function createBrand(data: {
   const cityName = data.city?.trim() || null;
   const profession = data.profession?.trim() || null;
   const specialties = data.specialties?.filter((s) => s.trim()) ?? [];
-  const competitorNames = data.competitorNames?.filter((c) => c.trim()) ?? [];
+  const competitorNames = data.competitorNames
+    ?.map((c) => c.replace(/\*\*/g, "").replace(/^\||\|$/g, "").trim())
+    .filter((c) => c.length >= 2 && !/^(aşağıda|yukarıda|bu firmalar|arama sonuç)/i.test(c)) ?? [];
   const cleanDomain = data.domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
 
   // V3: Use pre-approved data from onboarding approval screen, or run Sonar fresh
@@ -140,7 +142,10 @@ export async function createBrand(data: {
   // Sync competitors to Competitor table (onboarding'den gelen rakipleri tabloya yaz)
   if (finalCompetitors.length > 0) {
     try {
-      const competitorData = finalCompetitors.map((name, idx) => ({
+      const competitorData = finalCompetitors
+        .map((raw) => raw.replace(/\*\*/g, "").replace(/^\||\|$/g, "").trim()) // Clean markdown artifacts
+        .filter((name) => name.length >= 2 && !/^(aşağıda|yukarıda|bu firmalar|arama sonuç)/i.test(name))
+        .map((name, idx) => ({
         brandId: brand.id,
         name,
         domain: data.competitorDomains?.[idx] ?? "",

@@ -98,41 +98,42 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
 
   return (
     <div className="px-4 lg:px-6">
-      <div className="mx-auto max-w-2xl py-12 text-center">
+      <div className="mx-auto max-w-2xl py-16 text-center">
         {/* Hero */}
-        <h1 className="text-3xl font-light tracking-[-0.04em] md:text-4xl">
+        <h1 className="text-4xl font-light tracking-[-0.04em] md:text-5xl">
           Hoş Geldiniz!
-          <br />
-          <span className="font-semibold">İlk Taramanızı Başlatın</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-md text-base text-muted-foreground">
+        <p className="mt-3 text-xl font-semibold tracking-tight md:text-2xl">
+          İlk Taramanızı Başlatın
+        </p>
+        <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground leading-relaxed">
           <span className="font-medium text-foreground">{brandName}</span> için{" "}
-          {activePromptCount} soru hazir. 4 yapay zekada markanızın ne kadar
+          {activePromptCount} soru hazır. 4 yapay zekada markanızın ne kadar
           tanındığını öğrenin.
         </p>
 
         {/* 3-Step Visual */}
-        <div className="mx-auto mt-12 grid max-w-xl gap-4 sm:grid-cols-3">
+        <div className="mx-auto mt-14 grid max-w-xl gap-4 sm:grid-cols-3">
           {steps.map((s, i) => {
             const Icon = s.icon;
             return (
               <div
                 key={i}
-                className={`relative rounded-xl border p-5 text-center transition-all ${
+                className={`relative rounded-2xl border p-6 text-center transition-all ${
                   s.done
-                    ? "border-foreground/20 bg-foreground/5"
+                    ? "border-foreground/20 bg-foreground/[0.03]"
                     : s.active
-                      ? "border-foreground shadow-sm"
-                      : "border-border"
+                      ? "border-foreground shadow-sm bg-background"
+                      : "border-border/50"
                 }`}
               >
                 <div
-                  className={`mx-auto flex size-10 items-center justify-center rounded-lg transition-colors ${
+                  className={`mx-auto flex size-11 items-center justify-center rounded-xl transition-colors ${
                     s.done
                       ? "bg-foreground text-background"
                       : s.active
-                        ? "bg-foreground/10"
-                        : "bg-muted"
+                        ? "bg-foreground text-background"
+                        : "bg-muted/50"
                   }`}
                 >
                   {s.done ? (
@@ -156,11 +157,11 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
         </div>
 
         {/* CTA */}
-        <div className="mt-10">
+        <div className="mt-12">
           {status === "idle" && (
             <button
               onClick={startScan}
-              className="inline-flex items-center gap-2 rounded-xl bg-foreground px-8 py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99]"
+              className="inline-flex items-center gap-2.5 rounded-xl bg-foreground px-10 py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] shadow-sm"
             >
               <PlayIcon className="size-5" />
               Taramayı Başlat
@@ -173,7 +174,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
                 <Loader2Icon className="size-4 animate-spin" />
                 Tarama devam ediyor...
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted/50">
                 <div
                   className="h-full rounded-full bg-foreground transition-all duration-1000"
                   style={{ width: `${progress}%` }}
@@ -186,9 +187,9 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
           )}
 
           {status === "completed" && (
-            <div className="inline-flex items-center gap-2 rounded-xl bg-foreground/10 px-6 py-3 text-sm font-medium">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-foreground/15 bg-foreground/5 px-6 py-3 text-sm font-medium">
               <CheckIcon className="size-4" />
-              Tarama tamamlandı! Sayfa yenileniyor...
+              Tamamlandı! Sayfa yenileniyor...
             </div>
           )}
 
@@ -197,7 +198,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
               <p className="text-sm text-red-500">Tarama başlatılamadı. Tekrar deneyin.</p>
               <button
                 onClick={startScan}
-                className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-background"
+                className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-background hover:opacity-90 transition-opacity"
               >
                 Tekrar Dene
               </button>

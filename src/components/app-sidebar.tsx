@@ -51,7 +51,7 @@ const FREE_LOCKED_PATHS = new Set([
 function getNavItems(brandType: BrandType) {
   return [
     {
-      title: "Genel Bakis",
+      title: "Genel Bakış",
       href: "/dashboard/genel",
       icon: <LayoutDashboardIcon />,
     },
@@ -61,7 +61,7 @@ function getNavItems(brandType: BrandType) {
       icon: <MessageSquareTextIcon />,
     },
     {
-      title: brandType === "kisisel" ? "Dijital Iz" : "Kaynaklar",
+      title: brandType === "kisisel" ? "Dijital İz" : "Kaynaklar",
       href: "/dashboard/kaynaklar",
       icon: <LinkIcon />,
     },
@@ -71,12 +71,12 @@ function getNavItems(brandType: BrandType) {
       icon: <UsersIcon />,
     },
     {
-      title: brandType === "kisisel" ? "Dijital Kontrol" : "Site Kontrolu",
+      title: brandType === "kisisel" ? "Dijital Kontrol" : "Site Kontrolü",
       href: "/dashboard/site",
       icon: <GlobeIcon />,
     },
     {
-      title: "Gelisim Plani",
+      title: "Gelişim Planı",
       href: "/dashboard/gelisim",
       icon: <ListChecksIcon />,
     },
@@ -165,12 +165,14 @@ export function AppSidebar({
             <SidebarMenu>
               {navItems.map((item) => {
                 const isLocked = isFree && FREE_LOCKED_PATHS.has(item.href);
+                const isActive = pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       tooltip={item.title}
-                      isActive={pathname === item.href}
+                      isActive={isActive}
                       render={<Link href={item.href} />}
+                      className={isActive ? "bg-accent font-medium" : ""}
                     >
                       {item.icon}
                       <span className="flex-1">{item.title}</span>
@@ -188,18 +190,18 @@ export function AppSidebar({
         {/* ── Gelişim Planı Tree ─────────────────────────── */}
         {hasChecklist && (
           <SidebarGroup>
-            <SidebarGroupLabel>Gelisim</SidebarGroupLabel>
+            <SidebarGroupLabel>Gelişim</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    tooltip="Gelisim Plani"
+                    tooltip="Gelişim Planı"
                     isActive={isGelisimPage}
                     onClick={() => setGelisimOpen(!gelisimOpen)}
-                    className="group/gelisim"
+                    className={`group/gelisim ${isGelisimPage ? "bg-accent font-medium" : ""}`}
                   >
                     <ClipboardListIcon />
-                    <span className="flex-1">Gelisim Plani</span>
+                    <span className="flex-1">Gelişim Planı</span>
                     <ChevronDownIcon
                       className={`size-4 text-muted-foreground transition-transform duration-200 ${
                         gelisimOpen ? "rotate-0" : "-rotate-90"
@@ -220,24 +222,22 @@ export function AppSidebar({
                     </div>
                   )}
 
-                  {/* Mini 4-week progress bars */}
+                  {/* Mini progress bars (no H1/H2/H3/H4 labels) */}
                   {!gelisimOpen && hasChecklist && (
-                    <div className="flex items-center gap-1 px-3 py-1.5">
-                      {["H1", "H2", "H3", "H4"].map((label, i) => {
-                        // Simulate weekly progress: each week adds ~25% of remaining
+                    <div className="flex items-center gap-1.5 px-3 py-1.5">
+                      {[1, 2, 3, 4].map((week) => {
                         const weekPct = Math.min(
                           100,
-                          Math.round((completedCount / Math.max(totalCount, 1)) * 100 * ((i + 1) / 4)),
+                          Math.round((completedCount / Math.max(totalCount, 1)) * 100 * (week / 4)),
                         );
                         return (
-                          <div key={label} className="flex flex-1 flex-col items-center gap-0.5">
-                            <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                          <div key={week} className="flex-1">
+                            <div className="h-1 w-full overflow-hidden rounded-full bg-muted/50">
                               <div
-                                className="h-full rounded-full bg-primary transition-all duration-500"
+                                className="h-full rounded-full bg-foreground/70 transition-all duration-500"
                                 style={{ width: `${weekPct}%` }}
                               />
                             </div>
-                            <span className="text-[8px] text-muted-foreground/60">{label}</span>
                           </div>
                         );
                       })}
@@ -323,15 +323,15 @@ export function AppSidebar({
         {isFree && (
           <SidebarGroup>
             <SidebarGroupContent>
-              <div className="mx-2 rounded-lg border border-border bg-foreground/5 p-3 text-center">
+              <div className="mx-2 rounded-xl border border-border/50 bg-muted/20 p-4 text-center">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Ucretsiz Plan
+                  Ücretsiz Plan
                 </p>
                 <Link
                   href="/dashboard/ayarlar"
-                  className="mt-2 inline-block rounded-md bg-foreground px-3 py-1.5 text-[11px] font-bold text-background transition-transform hover:scale-[1.02]"
+                  className="mt-2.5 inline-block rounded-lg bg-foreground px-4 py-1.5 text-[11px] font-bold text-background transition-opacity hover:opacity-90"
                 >
-                  Pro&apos;ya Gec
+                  Pro&apos;ya Geç
                 </Link>
               </div>
             </SidebarGroupContent>
@@ -347,15 +347,16 @@ export function AppSidebar({
                   tooltip="Ayarlar"
                   isActive={pathname === "/dashboard/ayarlar"}
                   render={<Link href="/dashboard/ayarlar" />}
+                  className={pathname === "/dashboard/ayarlar" ? "bg-accent font-medium" : ""}
                 >
                   <Settings2Icon />
                   <span>Ayarlar</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip="Cikis Yap">
+                <SidebarMenuButton onClick={handleLogout} tooltip="Çıkış Yap">
                   <LogOutIcon />
-                  <span>Cikis Yap</span>
+                  <span>Çıkış Yap</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -379,9 +380,9 @@ export function AppSidebar({
                   {initial}
                 </div>
               )}
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.name ?? "Demo"}</span>
-                <span className="truncate text-xs text-foreground/70">
+              <div className="grid flex-1 text-left leading-tight">
+                <span className="truncate text-sm font-medium text-foreground">{user?.name ?? "Demo"}</span>
+                <span className="truncate text-xs text-muted-foreground">
                   {user?.email ?? "demo@gh7.ai"}
                 </span>
               </div>

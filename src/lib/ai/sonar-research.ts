@@ -105,11 +105,11 @@ export async function researchBusinessAreaQuestions(
     ? serviceRegions.join(", ")
     : city;
 
-  // Sorgu A: Recommendation-seeking (Spec E.2 birebir)
-  const queryA = `Birisi ${businessArea} hizmeti almak istiyor ve yapay zekaya soruyor. Özellikle firma önerisi isteyen, teklif almak isteyen, güvenilir firma arayan 10 soru yaz.`;
+  // Sorgu A: Recommendation-seeking — şehir + Türkiye odaklı
+  const queryA = `${city}'de ${businessArea} hizmeti almak isteyen biri yapay zekaya ne sorar? Sadece FİRMA BULMAYA yönelik sorular: "en iyi firma öner", "güvenilir firma bul", "nereden teklif alayım", "hangi firmayı tercih edeyim". Teknik bilgi veya ansiklopedik soru YAZMA. 10 soru yaz.`;
 
-  // Sorgu B: Location + trust (Spec E.2 birebir)
-  const queryB = `Türkiye'de ${businessArea} arayan biri yapay zekaya ne sorar? Firma önerisi, marka karşılaştırma, en iyi firma sorguları. 10 soru yaz.`;
+  // Sorgu B: Location + trust — yerel + firma bulma odaklı
+  const queryB = `Türkiye'de ${regionText} bölgesinde ${businessArea} firması arayan kişi yapay zekaya ne sorar? Firma önerisi, marka karşılaştırma, "en iyi hangisi", "hangi firma daha iyi" tarzı 10 soru yaz. Teknik/ansiklopedik soru YAZMA.`;
 
   console.log(`[sonar-research] Running 2 queries for business area "${businessArea}" in "${city}"...`);
 
@@ -245,27 +245,56 @@ export async function researchOnboardingDomain(
   sector: string | null;
   rawAnalysis: Record<string, string>;
 }> {
-  const queries = [
-    // Sorgu 1 (firma analizi) — Spec E.0
+  // ═══ AŞAMA 1: Firma analizi + güçlü/zayıf yönler (paralel) ═══
+  const phase1Queries = [
+    // Sorgu 1 (firma analizi)
     `${domain} web sitesini analiz et. Bu firma ne yapıyor? Firma adı, faaliyet alanları, ürün/hizmet kategorileri, hizmet verdiği bölgeler, sektör, hedef kitle kim?`,
-    // Sorgu 2 (öne çıkan alanlar) — Spec E.0
+    // Sorgu 2 (öne çıkan alanlar)
     `${domain} Google'da hangi konularda öne çıkıyor? En çok trafik alan sayfaları, güçlü olduğu alanlar, zayıf olduğu alanlar neler?`,
-    // Sorgu 3a (doğrudan rakipler) — Spec E.0
-    `${domain}'un Türkiye'deki doğrudan rakipleri kimler? Aynı sektörde benzer ürün/hizmet sunan firmalar. 10 firma ve web siteleri listele.`,
-    // Sorgu 3b (sektörel rakipler) — Spec E.0
-    `${domain} sektöründe Türkiye'de öne çıkan firmalar ve web siteleri hangileri? ${domain} hariç.`,
   ];
 
-  console.log(`[sonar-research] Running 4 onboarding queries for domain: ${domain}...`);
+  console.log(`[sonar-research] Phase 1: Running 2 analysis queries for domain: ${domain}...`);
+  const phase1Results = await Promise.allSettled(phase1Queries.map((q) => querySonar(q)));
+  const phase1 = phase1Results.map((r) => r.status === "fulfilled" ? r.value : "");
 
-  const results = await Promise.allSettled(queries.map((q) => querySonar(q)));
+  // Aşama 1'den sektör ve faaliyet alanlarını çıkar
+  const firmaText = phase1[0];
 
-  const fulfilled = results.map((r) => {
-    if (r.status === "fulfilled") return r.value;
-    return "";
-  });
+  // Sektör tespiti: Sonar yanıtının İLK 300 karakterinden (faaliyet tanımı kısmı)
+  // Tüm metinden yaparsak hedef kitle kısmındaki kelimeler yanıltıyor
+  // (ör. ISITMAX'ın hedef kitlesi "otel" → yanlışlıkla "Turizm" algılanıyor)
+  const detectedSector = detectSectorFromText(firmaText.slice(0, 300));
 
-  const successCount = results.filter((r) => r.status === "fulfilled").length;
+  // ═══ KRİTİK: Rakip aramada genel sektör etiketi DEĞİL, Sonar'ın bulduğu
+  // gerçek ürün/hizmet tanımlarını kullan. Örnek:
+  //   YANLIŞ: "Isıtma & Soğutma" → Baymak, Demirdöküm (kombi firmaları, rakip değil)
+  //   DOĞRU: "elektrikli yerden ısıtma, heat trace, kar buz eritme" → gerçek rakipler
+  // ═══
+  // Sonar'ın Phase 1 yanıtının ilk 500 karakterini "firma tanımı" olarak kullan
+  const firmaSummary = firmaText
+    .replace(/\[\d+\]/g, "")   // citation refs temizle
+    .replace(/\*\*/g, "")      // bold temizle
+    .slice(0, 500)
+    .trim();
+
+  console.log(`[sonar-research] Detected sector: "${detectedSector || 'bilinmiyor'}" — searching competitors with actual product description...`);
+
+  // ═══ AŞAMA 2: Rakip bulma — Sonar'ın gerçek ürün tanımıyla (paralel) ═══
+  const phase2Queries = [
+    // Sorgu 3a: Sonar Phase 1 özeti + "benzer firmalar" — en isabetli sorgu
+    `Şu firmanın Türkiye'deki doğrudan rakiplerini bul:\n\n${firmaSummary}\n\nBu firmayla AYNI ÜRÜN/HİZMETLERİ sunan, benzer ölçekte 10 TÜRK firma ve web sitelerini listele. ${domain} hariç. Genel sektör devleri (Baymak, Vaillant, Demirdöküm gibi) YAZMA. Sadece aynı niş alanda faaliyet gösteren firmalar.`,
+    // Sorgu 3b: Domain bazlı — Sonar zaten domain'i tanıyor
+    `${domain} ile aynı ürün ve hizmetleri sunan Türkiye'deki rakip firmalar hangileri? ${domain}'un yaptığı işi yapan diğer TÜRK firmalar. Büyük holding veya genel sektör markaları DEĞİL, aynı niş pazarda aynı müşteriye hizmet veren benzer ölçekte 10 firma ve web siteleri listele.`,
+  ];
+
+  console.log(`[sonar-research] Phase 2: Running 2 competitor queries...`);
+  const phase2Results = await Promise.allSettled(phase2Queries.map((q) => querySonar(q)));
+  const phase2 = phase2Results.map((r) => r.status === "fulfilled" ? r.value : "");
+
+  // Combine into fulfilled array (backward compatible)
+  const fulfilled = [phase1[0], phase1[1], phase2[0], phase2[1]];
+
+  const successCount = [...phase1Results, ...phase2Results].filter((r) => r.status === "fulfilled").length;
   console.log(`[sonar-research] Onboarding: Got ${successCount}/4 results`);
 
   // Parse Sorgu 1: faaliyet alanları + firma adı + sektör
@@ -283,11 +312,25 @@ export async function researchOnboardingDomain(
   const competitors3b = extractCompetitorsWithDomains(fulfilled[3]);
   const allCompetitors = [...competitors3a];
   for (const c of competitors3b) {
-    if (!allCompetitors.some((existing) => existing.name.toLowerCase() === c.name.toLowerCase())) {
+    // Deduplicate by name OR domain
+    const isDuplicate = allCompetitors.some((existing) =>
+      existing.name.toLowerCase() === c.name.toLowerCase() ||
+      (existing.domain && c.domain && existing.domain === c.domain)
+    );
+    if (!isDuplicate) {
       allCompetitors.push(c);
     }
   }
-  const competitorEntries = allCompetitors.slice(0, 10);
+  // Merge: same domain'e sahip entry'lerde domain olan entry'yi tercih et
+  const merged = new Map<string, { name: string; domain: string | null }>();
+  for (const c of allCompetitors) {
+    const key = c.domain || c.name.toLowerCase();
+    const existing = merged.get(key);
+    if (!existing || (c.domain && !existing.domain)) {
+      merged.set(key, c);
+    }
+  }
+  const competitorEntries = filterTurkishCompetitors([...merged.values()]).slice(0, 10);
 
   // Parse bölgeler (Sorgu 1'den — faaliyet bölgeleri)
   const regionText = fulfilled[0] + " " + fulfilled[3];
@@ -298,35 +341,8 @@ export async function researchOnboardingDomain(
       lower.includes("geneli") || lower.length < 30;
   }).slice(0, 5);
 
-  // Sector detection
-  const combinedText = (fulfilled[0] + " " + fulfilled[3]).toLowerCase();
-  let sector: string | null = null;
-  const sectorPatterns = [
-    { pattern: /ısıtma|soğutma|klima|hvac|kombi|radyatör/i, label: "Isıtma & Soğutma" },
-    { pattern: /hukuk|avukat|hukuki|dava/i, label: "Hukuk" },
-    { pattern: /sağlık|tıp|hastane|klinik|doktor/i, label: "Sağlık" },
-    { pattern: /inşaat|yapı|müteahhit|mimar/i, label: "İnşaat" },
-    { pattern: /yazılım|teknoloji|bilişim|dijital/i, label: "Teknoloji" },
-    { pattern: /eğitim|okul|kurs|akademi/i, label: "Eğitim" },
-    { pattern: /gıda|restoran|yemek|kafe/i, label: "Gıda" },
-    { pattern: /tekstil|giyim|moda|konfeksiyon/i, label: "Tekstil" },
-    { pattern: /finans|banka|sigorta|yatırım/i, label: "Finans" },
-    { pattern: /turizm|otel|seyahat|tatil/i, label: "Turizm" },
-    { pattern: /otomotiv|araç|oto|tamir/i, label: "Otomotiv" },
-    { pattern: /güzellik|estetik|kuaför|bakım/i, label: "Güzellik & Bakım" },
-    { pattern: /danışmanlık|konsültanlık|yönetim/i, label: "Danışmanlık" },
-    { pattern: /lojistik|kargo|nakliyat|taşıma/i, label: "Lojistik" },
-    { pattern: /emlak|gayrimenkul|konut/i, label: "Emlak" },
-    { pattern: /tarım|çiftlik|hayvancılık/i, label: "Tarım" },
-    { pattern: /enerji|solar|güneş|elektrik/i, label: "Enerji" },
-    { pattern: /e-ticaret|marketplace|online satış/i, label: "E-Ticaret" },
-  ];
-  for (const sp of sectorPatterns) {
-    if (sp.pattern.test(combinedText)) {
-      sector = sp.label;
-      break;
-    }
-  }
+  // Sector: already detected from phase 1
+  const sector = detectedSector;
 
   return {
     companyName,
@@ -374,8 +390,8 @@ export async function researchOnboardingPersonal(input: {
       `${url} LinkedIn profilini analiz et. Bu kişinin adı, mesleği, uzmanlık alanları, şehri, eğitimi ve deneyimi nedir? Detaylı bilgi ver.`,
       // Sorgu 2: Dijital varlık
       `${url} sahibi hakkında internette ne bilgi var? Web sitesi, Google Business profili, sektörel dizinlerde kaydı, haberler veya röportajlar var mı?`,
-      // Sorgu 3: Rakipler (aynı alanda öne çıkan kişiler)
-      `${url} profilindeki kişiyle aynı meslek ve şehirde çalışan, yapay zeka tarafından önerilme ihtimali yüksek 10 kişi kim? İsimlerini listele.`,
+      // Sorgu 3: Rakipler (aynı alanda öne çıkan Türk kişiler)
+      `${url} profilindeki kişiyle aynı meslek ve şehirde çalışan TÜRKİYE'deki profesyoneller kim? ÖNEMLİ: SADECE TÜRK uzmanlar/profesyoneller. Yabancı isim KESINLIKLE YAZMA. Türkiye'de yaşayan ve çalışan 10 Türk profesyonelin isimlerini listele.`,
     );
   } else {
     // Manuel giriş — ad + meslek + şehir
@@ -385,8 +401,8 @@ export async function researchOnboardingPersonal(input: {
       `${desc} hakkında ne biliyorsun? Bu kişinin uzmanlık alanları, deneyimi, eğitimi nedir? Detaylı bilgi ver.`,
       // Sorgu 2: Dijital varlık
       `${desc} — bu kişinin web sitesi, LinkedIn profili, Google Business profili, sektörel dizinlerde kaydı, haber veya röportajları var mı?`,
-      // Sorgu 3: Senin yerine kim (rakipler)
-      `${input.profession || "uzman"} ${input.city || "Türkiye"} alanında yapay zekanın önerebileceği en bilinen 10 kişi kim? İsimlerini listele.`,
+      // Sorgu 3: Senin yerine kim (Türk rakipler)
+      `${input.city || "Türkiye"}'de ${input.profession || "uzman"} alanında yapay zekanın önerebileceği en bilinen TÜRK profesyoneller kim? ÖNEMLİ: SADECE Türkiye'de yaşayan ve çalışan Türk uzmanlar. Yabancı isim KESINLIKLE YAZMA. 10 Türk uzmanın isimlerini listele.`,
     );
   }
 
@@ -470,36 +486,182 @@ function extractCompanyName(text: string, domain: string): string | null {
   return domainBase.charAt(0).toUpperCase() + domainBase.slice(1);
 }
 
-/** Sonar cevabından rakip isim + domain çıkar */
+/** Sonar cevabından rakip isim + domain çıkar
+ * Desteklenen formatlar:
+ * - "1. Firma Adı - domain.com"
+ * - "- Firma Adı (domain.com)"
+ * - "| Firma Adı | domain.com |"  (markdown tablo)
+ * - "**Firma Adı** — domain.com"
+ */
 function extractCompetitorsWithDomains(text: string): Array<{ name: string; domain: string | null }> {
   const results: Array<{ name: string; domain: string | null }> = [];
   const lines = text.split("\n").filter((l) => l.trim());
 
   for (const line of lines) {
-    const cleaned = line.replace(/^\s*[-•*\d.)\]]+\s*/, "").trim();
-    if (!cleaned || cleaned.length < 2) continue;
+    // Step 1: Pipe/tablo formatını temizle: "| Firma | domain |" → "Firma  domain"
+    let cleaned = line
+      .replace(/^\s*\|/, "")     // Baştaki pipe
+      .replace(/\|\s*$/, "")     // Sondaki pipe
+      .replace(/\|/g, " ")       // Ortadaki pipe'lar → boşluk
+      .replace(/^\s*[-•*\d.)\]]+\s*/, "")  // Liste işaretleri
+      .replace(/\*\*/g, "")      // Bold markdown
+      .trim();
 
-    // Try to extract "Name - domain.com" or "Name (domain.com)"
-    const domainPattern = /([a-zA-Z0-9][-a-zA-Z0-9]*\.(?:com|net|org|com\.tr|tr|io|co)(?:\.[a-z]{2})?)/i;
+    if (!cleaned || cleaned.length < 3) continue;
+
+    // Remove citation refs like [1][2], URL prefixes, and markdown artifacts
+    cleaned = cleaned
+      .replace(/\[\d+\]/g, "")
+      .replace(/https?:\/\//g, "")   // Remove http:// https://
+      .replace(/^www\.\s*/i, "")     // Remove leading www.
+      .trim();
+
+    if (!cleaned || cleaned.length < 3) continue;
+
+    // Skip header/description/explanation lines (Turkish + English)
+    if (/^(firma|şirket|ad[ıi]|web|domain|sıra|#|---)/i.test(cleaned)) continue;
+    if (/^(aşağıda|yukarıda|bunlar|şunlar|sıralama|alfabetik|arama sonuç)/i.test(cleaned)) continue;
+    if (/^(tanımlanan|listelenen|belirlenen|tespit edilen|bulunan|mevcut|maalesef|ne yazık)/i.test(cleaned)) continue;
+    if (/^(to help|i would|search result|however|note|information|competitive|consult|review|details|comparable)/i.test(cleaned)) continue;
+    if (/^(bu |bu firmalar|gereklidir|gerekli|yeterli|sorgunuz|recommendation)/i.test(cleaned)) continue;
+    // Skip lines that are clearly explanatory sentences (contain ":" after a phrase)
+    if (/^[A-Za-zÇĞIİÖŞÜçğıiöşü\s]{20,}:/.test(cleaned)) continue;
+
+    // Step 2: Domain pattern
+    const domainPattern = /([a-zA-Z0-9][-a-zA-Z0-9]*\.(?:com\.tr|com|net|org|tr|io|co)(?:\.[a-z]{2})?)/i;
     const domainMatch = cleaned.match(domainPattern);
 
     if (domainMatch) {
       const domain = domainMatch[1].toLowerCase();
-      // Name is everything before the domain
-      const namePart = cleaned.substring(0, cleaned.indexOf(domainMatch[0])).replace(/[-–—:()]+\s*$/, "").trim();
-      if (namePart && namePart.length > 1) {
+      // Name = domain'den önceki kısım
+      let namePart = cleaned.substring(0, cleaned.indexOf(domainMatch[0]))
+        .replace(/[-–—:()[\]]+\s*$/, "")
+        .trim();
+
+      // Eğer isim boşsa domain'den türet
+      if (!namePart || namePart.length < 2) {
+        namePart = domain.replace(/\.(com\.tr|com|net|org|tr|io|co).*$/, "");
+        namePart = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      }
+
+      // Skip "www." as a name — use domain-derived name instead
+      if (namePart === "www." || namePart === "www" || namePart.length < 2) {
+        namePart = domain
+          .replace(/^www\./, "")
+          .replace(/\.(com\.tr|com|net|org|tr|io|co).*$/, "");
+        namePart = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      }
+
+      if (namePart && namePart.length >= 2 && namePart.length < 80) {
         results.push({ name: namePart, domain });
       }
     } else {
-      // No domain found, just use the name
-      const namePart = cleaned.replace(/[-–—]+.*$/, "").trim();
-      if (namePart && namePart.length > 1 && namePart.length < 80) {
-        results.push({ name: namePart, domain: null });
+      // Domain yok — sadece isim
+      const namePart = cleaned
+        .replace(/[-–—]+.*$/, "")
+        .replace(/\s*\(.*?\)\s*/g, " ")  // Parantez içi açıklamaları kaldır
+        .replace(/\[\d+\]/g, "")          // Citation refs [1][2]
+        .trim();
+      if (namePart && namePart.length >= 3 && namePart.length < 80) {
+        // "Bu firmalar," gibi açıklama cümlelerini atla
+        if (!/^(bu|bu firmalar|bunlar|yukarıda|aşağıda|not|kaynak)/i.test(namePart)) {
+          results.push({ name: namePart, domain: null });
+        }
       }
     }
   }
 
   return results;
+}
+
+/** Filter out obviously non-Turkish competitors */
+function filterTurkishCompetitors(
+  competitors: Array<{ name: string; domain: string | null }>
+): Array<{ name: string; domain: string | null }> {
+  // Known global/international brands to exclude (not Turkish companies)
+  const globalBrands = new Set([
+    // Tech giants
+    'amazon', 'google', 'microsoft', 'apple', 'meta', 'facebook', 'netflix',
+    'uber', 'airbnb', 'booking', 'alibaba', 'samsung', 'sony', 'lg',
+    'hp', 'dell', 'ibm', 'oracle', 'sap', 'salesforce', 'adobe',
+    // HVAC / Heating / Industrial
+    'siemens', 'bosch', 'philips', 'daikin', 'mitsubishi', 'carrier',
+    'trane', 'lennox', 'honeywell', 'schneider', 'abb', 'emerson',
+    'johnson controls', 'toshiba', 'panasonic', 'whirlpool', 'electrolux',
+    'danfoss', 'devi', 'raychem', 'nvent', 'nvent', 'rehau', 'uponor',
+    'heimeier', 'oventrop', 'thermon', 'chromalox', 'watlow', 'heatizon',
+    'warmup', 'schluter', 'frostguard', 'pentair', 'ferroli', 'vaillant',
+    'viessmann', 'buderus', 'junkers', 'baxi', 'grundfos', 'wilo',
+    // Retail / Consumer
+    'walmart', 'ikea', 'zara', 'h&m', 'unilever', 'procter', 'nestle',
+    'coca-cola', 'pepsi', 'mcdonalds', 'starbucks', 'nike', 'adidas',
+    // Auto
+    'bmw', 'mercedes', 'toyota', 'honda', 'ford', 'volkswagen',
+    // Digital / SaaS
+    'hubspot', 'mailchimp', 'shopify', 'wix', 'squarespace', 'wordpress',
+    'linkedin', 'twitter', 'instagram', 'tiktok', 'youtube', 'pinterest',
+  ]);
+
+  return competitors.filter((c) => {
+    const nameLower = c.name.toLowerCase().trim();
+    const domainLower = (c.domain || '').toLowerCase();
+
+    // Exclude if name matches known global brand
+    for (const brand of globalBrands) {
+      if (nameLower.includes(brand)) return false;
+    }
+
+    // Exclude obvious non-Turkish domains
+    if (domainLower && !domainLower.includes('.tr') && !domainLower.includes('.com')) {
+      // .co.uk, .de, .fr, etc. are definitely not Turkish
+      if (/\.(uk|de|fr|es|it|nl|jp|cn|kr|in|au|ca|ru|br|mx|se|no|dk|fi|ch|at|be|pl|cz)$/i.test(domainLower)) {
+        return false;
+      }
+    }
+
+    // Exclude if name is too short (likely abbreviation of global brand)
+    if (nameLower.length <= 2) return false;
+
+    // Exclude English sentences/descriptions that got parsed as names
+    if (/^(to help|i would|i recommend|search result|clarification|this |the |here |these |note |please |however |for more|unfortunately)/i.test(nameLower)) return false;
+    if (/^(işte |aradığınız|sağlanan|bu bilgi|bu konuda|bu tür|gereklidir|gerekli|yeterli değil|sektörel dizin|daha fazla)/i.test(nameLower)) return false;
+
+    // Exclude if it looks like a sentence (too many words) rather than a company name
+    const wordCount = nameLower.split(/\s+/).length;
+    if (wordCount > 6) return false;
+
+    return true;
+  });
+}
+
+/** Detect sector from raw text */
+function detectSectorFromText(text: string): string | null {
+  const lower = typeof text === "string" ? text.toLowerCase() : "";
+  // Sıralama önemli: Daha spesifik pattern'lar önce gelir
+  const sectorPatterns = [
+    { pattern: /turizm|otel|seyahat|tatil|konaklama|bungalov|pansiyon|butik otel|apart|hostel/i, label: "Turizm" },
+    { pattern: /ısıtma|soğutma|klima|hvac|kombi|radyatör|yerden ısıtma/i, label: "Isıtma & Soğutma" },
+    { pattern: /hukuk|avukat|hukuki|dava/i, label: "Hukuk" },
+    { pattern: /sağlık|tıp|hastane|klinik|doktor/i, label: "Sağlık" },
+    { pattern: /yazılım|teknoloji|bilişim|dijital/i, label: "Teknoloji" },
+    { pattern: /eğitim|okul|kurs|akademi/i, label: "Eğitim" },
+    { pattern: /gıda|restoran|yemek|kafe/i, label: "Gıda" },
+    { pattern: /tekstil|giyim|moda|konfeksiyon/i, label: "Tekstil" },
+    { pattern: /finans|banka|sigorta|yatırım/i, label: "Finans" },
+    { pattern: /otomotiv|araç|oto|tamir/i, label: "Otomotiv" },
+    { pattern: /güzellik|estetik|kuaför|bakım/i, label: "Güzellik & Bakım" },
+    { pattern: /danışmanlık|konsültanlık|yönetim/i, label: "Danışmanlık" },
+    { pattern: /lojistik|kargo|nakliyat|taşıma/i, label: "Lojistik" },
+    { pattern: /emlak|gayrimenkul|konut/i, label: "Emlak" },
+    { pattern: /tarım|çiftlik|hayvancılık/i, label: "Tarım" },
+    { pattern: /enerji|solar|güneş|elektrik/i, label: "Enerji" },
+    { pattern: /e-ticaret|marketplace|online satış/i, label: "E-Ticaret" },
+    { pattern: /inşaat|müteahhit|mimar/i, label: "İnşaat" },  // En son: "yapı" kelimesi çok genel
+  ];
+  for (const sp of sectorPatterns) {
+    if (sp.pattern.test(lower)) return sp.label;
+  }
+  return null;
 }
 
 // ─── Digital Footprint (Kişisel marka) ──────────────────
@@ -571,7 +733,11 @@ function extractListItems(text: string, _hint?: string): string[] {
   for (const line of lines) {
     const trimmed = line.trim();
     if (/^(\d+[\.\)]\s*|- |\* |• )/.test(trimmed)) {
-      const cleaned = trimmed.replace(/^(\d+[\.\)]\s*|- |\* |• )/, "").trim();
+      const cleaned = trimmed
+        .replace(/^(\d+[\.\)]\s*|- |\* |• )/, "")
+        .replace(/\*\*/g, "")          // Remove markdown bold
+        .replace(/\[.*?\]/g, "")       // Remove citation refs [1][2]
+        .trim();
       if (cleaned.length > 3 && cleaned.length < 200) {
         items.push(cleaned);
       }

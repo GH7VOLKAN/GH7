@@ -30,7 +30,7 @@ interface SectionCardsProps {
 function TrendBadge({ value }: { value: number }) {
   if (value === 0) {
     return (
-      <Badge variant="outline" className="text-muted-foreground">
+      <Badge variant="outline" className="border-transparent bg-muted/60 text-muted-foreground">
         <MinusIcon className="size-3" />
         Sabit
       </Badge>
@@ -41,8 +41,8 @@ function TrendBadge({ value }: { value: number }) {
       variant="outline"
       className={
         value > 0
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"
-          : "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-400"
+          ? "border-transparent bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+          : "border-transparent bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
       }
     >
       {value > 0 ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />}
@@ -67,14 +67,14 @@ export function SectionCards({
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2">
-      {/* Kart 1: Yapay Zeka Seni Ne Kadar Tanıyor? */}
-      <Card className="@container/card" data-slot="card">
-        <CardHeader>
-          <CardDescription className="flex items-center gap-1.5">
+      {/* Kart 1: Yapay Zeka Görünürlüğü */}
+      <Card className="@container/card border border-border/50 shadow-sm rounded-2xl transition-shadow hover:shadow-md">
+        <CardHeader className="p-6">
+          <CardDescription className="flex items-center gap-1.5 text-muted-foreground">
             <MessageSquareIcon className="size-3.5" />
-            Yapay zeka seni ne kadar tanıyor?
+            Yapay Zeka Görünürlüğü
           </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-3xl font-bold tabular-nums tracking-tight text-foreground @[250px]/card:text-4xl">
             {totalResultCount > 0
               ? `${totalMentionCount}/${totalResultCount}`
               : `${mentionScore}/100`}
@@ -83,10 +83,10 @@ export function SectionCards({
             <TrendBadge value={mentionTrend} />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-2 text-sm">
+        <CardFooter className="flex-col items-start gap-3 px-6 pb-6 text-sm">
           {/* Progress bar */}
           <div className="flex w-full items-center gap-3">
-            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-foreground transition-all duration-1000"
                 style={{ width: `${Math.max(mentionRate, 2)}%` }}
@@ -94,25 +94,25 @@ export function SectionCards({
             </div>
             <span className="text-sm font-bold tabular-nums text-foreground">%{mentionRate}</span>
           </div>
-          <div className="text-muted-foreground">
+          <p className="text-muted-foreground">
             {totalResultCount > 0
-              ? `${totalResultCount} denemede ${totalMentionCount}'${totalMentionCount > 1 ? "i" : ""}nde öneriyor`
+              ? `Yapay zeka seni ${totalResultCount} denemede ${totalMentionCount} kez öneriyor`
               : "Henüz tarama yapılmadı"}
-          </div>
+          </p>
           {lastScanTimeAgo && (
-            <div className="text-xs text-muted-foreground/60">Son tarama: {lastScanTimeAgo}</div>
+            <p className="text-xs text-muted-foreground/60">Son tarama: {lastScanTimeAgo}</p>
           )}
         </CardFooter>
       </Card>
 
       {/* Kart 2: Senin Yerine Kim */}
-      <Card className="@container/card" data-slot="card">
-        <CardHeader>
-          <CardDescription className="flex items-center gap-1.5">
+      <Card className="@container/card border border-border/50 shadow-sm rounded-2xl transition-shadow hover:shadow-md">
+        <CardHeader className="p-6">
+          <CardDescription className="flex items-center gap-1.5 text-muted-foreground">
             <UsersIcon className="size-3.5" />
             Senin Yerine Kim?
           </CardDescription>
-          <CardTitle className="text-2xl font-semibold @[250px]/card:text-3xl">
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground @[250px]/card:text-4xl">
             {topCompetitorName || "—"}
           </CardTitle>
           <CardAction>
@@ -121,10 +121,10 @@ export function SectionCards({
                 variant="outline"
                 className={
                   topCompetitorGap > 0
-                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                    ? "border-transparent bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
                     : topCompetitorGap < 0
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : "text-muted-foreground"
+                      ? "border-transparent bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                      : "border-transparent bg-muted/60 text-muted-foreground"
                 }
               >
                 {topCompetitorGap > 0
@@ -136,15 +136,15 @@ export function SectionCards({
             )}
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-foreground font-medium">
+        <CardFooter className="flex-col items-start gap-2 px-6 pb-6 text-sm">
+          <p className="font-medium text-foreground">
             {topCompetitorName
-              ? `${topCompetitorName} en sık önerilen`
+              ? `${topCompetitorName} en sık önerilen rakip`
               : "Tarama sonrası rakipler görünecek"}
-          </div>
-          <div className="text-muted-foreground">
-            Yapay zekaların seni yerine kimi öneriyor
-          </div>
+          </p>
+          <p className="text-muted-foreground">
+            Yapay zekalar seni yerine kimi öneriyor?
+          </p>
         </CardFooter>
       </Card>
     </div>
