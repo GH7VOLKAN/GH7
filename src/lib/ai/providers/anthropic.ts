@@ -21,7 +21,7 @@ export class AnthropicProvider implements AIProvider {
     }
 
     // Try models in order — fall back if one fails
-    const models = ["claude-3-5-haiku-20241022", "claude-3-haiku-20240307"];
+    const models = ["claude-sonnet-4-20250514", "claude-3-5-haiku-20241022"];
 
     for (const model of models) {
       try {

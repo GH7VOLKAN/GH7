@@ -55,11 +55,11 @@ export async function GET() {
         method: "POST",
         headers: {
           "x-api-key": process.env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
+          "anthropic-version": "2024-10-22",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-3-5-haiku-20241022",
+          model: "claude-sonnet-4-20250514",
           messages: [{ role: "user", content: "Merhaba, 1+1=?" }],
           max_tokens: 20,
         }),

@@ -20,31 +20,45 @@ export class GoogleProvider implements AIProvider {
       return { platform: "gemini", content: "", error: "API key not configured" };
     }
 
-    try {
-      const model = this.genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
-        generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
-      });
+    // Try models in order — fall back on quota/rate limit errors
+    const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
 
-      // Wrap with timeout since Google SDK doesn't have built-in timeout
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Gemini API timeout (30s)")), 30_000)
-      );
+    for (const modelName of models) {
+      try {
+        const model = this.genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+        });
 
-      const result = await Promise.race([
-        model.generateContent(promptText),
-        timeoutPromise,
-      ]);
+        // Wrap with timeout since Google SDK doesn't have built-in timeout
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Gemini API timeout (30s)")), 30_000)
+        );
 
-      const content = result.response.text();
+        const result = await Promise.race([
+          model.generateContent(promptText),
+          timeoutPromise,
+        ]);
 
-      return { platform: "gemini", content };
-    } catch (err) {
-      return {
-        platform: "gemini",
-        content: "",
-        error: err instanceof Error ? err.message : "Unknown error",
-      };
+        const content = result.response.text();
+
+        return { platform: "gemini", content };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.warn(`[gemini-provider] ${modelName} failed: ${msg}`);
+        // If rate limited (429), try next model
+        if (msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")) {
+          continue;
+        }
+        // Other errors — don't retry
+        return { platform: "gemini", content: "", error: msg };
+      }
     }
+
+    return {
+      platform: "gemini",
+      content: "",
+      error: "All Gemini models failed (quota exceeded — check Google AI billing)",
+    };
   }
 }
