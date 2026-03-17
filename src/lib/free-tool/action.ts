@@ -12,6 +12,7 @@ import { getAvailableProviders } from "@/lib/ai/provider-registry";
 import { analyzeResponse } from "@/lib/ai/analyzer";
 import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
 import Anthropic from "@anthropic-ai/sdk";
+import { researchOnboardingDomain } from "@/lib/ai/sonar-research";
 
 // ── Fallback in-memory cache (when Redis unavailable) ──
 const memCache = new Map<string, { result: FreeToolResult; ts: number }>();
@@ -295,6 +296,21 @@ export async function runFreeToolQuery(
   }
 
   recentQueries++;
+
+  // Firma modunda domain'den sektör/şehir çıkar (Sonar)
+  if (input.mode === "firma" && (!input.field || !input.city)) {
+    try {
+      const domain = input.name.replace(/^https?:\/\//, "").replace(/\/+$/, "").toLowerCase();
+      console.log("[free-tool] Firma mode — researching domain:", domain);
+      const research = await researchOnboardingDomain(domain);
+      if (!input.field && research.sector) input.field = research.sector;
+      if (!input.field && research.businessCategories?.length) input.field = research.businessCategories[0];
+      if (!input.city && research.serviceRegions?.length) input.city = research.serviceRegions[0];
+      console.log("[free-tool] Sonar result — field:", input.field, "city:", input.city);
+    } catch (err) {
+      console.error("[free-tool] Sonar domain research failed:", err);
+    }
+  }
 
   const prompt = buildFreeToolPrompt(input);
   const providers = getAvailableProviders();
