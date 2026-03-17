@@ -20,26 +20,35 @@ export class AnthropicProvider implements AIProvider {
       return { platform: "claude", content: "", error: "API key not configured" };
     }
 
-    try {
-      const response = await this.client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 2048,
-        temperature: 0.7,
-        messages: [{ role: "user", content: promptText }],
-      });
+    // Try models in order — fall back if one fails
+    const models = ["claude-3-5-haiku-20241022", "claude-3-haiku-20240307"];
 
-      const text = response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
-        .join("\n");
+    for (const model of models) {
+      try {
+        const response = await this.client.messages.create({
+          model,
+          max_tokens: 2048,
+          temperature: 0.7,
+          messages: [{ role: "user", content: promptText }],
+        });
 
-      return { platform: "claude", content: text };
-    } catch (err) {
-      return {
-        platform: "claude",
-        content: "",
-        error: err instanceof Error ? err.message : "Unknown error",
-      };
+        const text = response.content
+          .filter((b): b is Anthropic.TextBlock => b.type === "text")
+          .map((b) => b.text)
+          .join("\n");
+
+        return { platform: "claude", content: text };
+      } catch (err) {
+        console.warn(`[anthropic-provider] ${model} failed:`, err instanceof Error ? err.message : err);
+        // Try next model
+        continue;
+      }
     }
+
+    return {
+      platform: "claude",
+      content: "",
+      error: "All Claude models failed",
+    };
   }
 }
