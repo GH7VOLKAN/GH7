@@ -19,8 +19,8 @@ import {
   TrophyIcon,
   BellIcon,
   CalendarIcon,
+  PackageIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   markChecklistItemDone,
   resetChecklistItemStatus,
@@ -29,6 +29,14 @@ import {
 } from "@/lib/actions";
 import type { ChecklistData, ChecklistItemFull } from "@/lib/dal/checklist";
 import type { TechnicalDetail } from "@/lib/checklist-defaults";
+import { HeroSection } from "@/components/kinde/hero-section";
+import {
+  FadeIn,
+  Stagger,
+  AnimBar,
+  PageSection,
+  SectionTitle,
+} from "@/components/kinde/animations";
 
 // ── Technical detail helpers ────────────────────────────
 
@@ -42,44 +50,85 @@ function TechnicalDetailSection({ detail }: { detail: TechnicalDetail }) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="border-t border-dashed border-border/50">
+    <div style={{ borderTop: "1px dashed #eee" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-center gap-2 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        style={{
+          display: "flex",
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          padding: "10px 0",
+          fontSize: 12,
+          fontWeight: 500,
+          color: "#999",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+        }}
       >
         <ChevronDownIcon
-          className={`size-3.5 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
+          style={{
+            width: 14,
+            height: 14,
+            transition: "transform 0.2s",
+            transform: open ? "rotate(0)" : "rotate(-90deg)",
+          }}
         />
         {open ? "Teknik detayi gizle" : "Teknik detay"}
       </button>
 
       {open && (
-        <div className="mx-4 mb-4 rounded-lg border border-border bg-muted/30 p-4 space-y-3 font-mono">
-          {/* Technical scope header */}
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground font-sans">
+        <div
+          style={{
+            margin: "0 16px 16px",
+            borderRadius: 12,
+            border: "1px solid #eee",
+            background: "#fafafa",
+            padding: 16,
+            fontFamily: "monospace",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              color: "#999",
+              fontFamily: "inherit",
+              marginBottom: 12,
+            }}
+          >
             Teknik Kapsam
           </p>
 
-          {/* Scope bullet list */}
-          <div className="space-y-1.5">
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {detail.scope.map((item, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/40" />
-                <p className="text-[11px] leading-relaxed text-foreground/70">
-                  {item}
-                </p>
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span
+                  style={{
+                    marginTop: 6,
+                    width: 4,
+                    height: 4,
+                    borderRadius: "50%",
+                    background: "#bbb",
+                    flexShrink: 0,
+                  }}
+                />
+                <p style={{ fontSize: 11, lineHeight: 1.6, color: "#666" }}>{item}</p>
               </div>
             ))}
           </div>
 
-          {/* Research note */}
           {detail.researchNote && (
-            <div className="mt-3 border-t border-border/50 pt-3 font-sans">
-              <p className="text-xs leading-relaxed text-foreground/60">
+            <div style={{ marginTop: 12, borderTop: "1px solid #eee", paddingTop: 12 }}>
+              <p style={{ fontSize: 12, lineHeight: 1.6, color: "#777" }}>
                 {detail.researchNote}
               </p>
               {detail.researchSource && (
-                <p className="mt-1.5 text-[10px] text-muted-foreground/60">
+                <p style={{ marginTop: 6, fontSize: 10, color: "#aaa" }}>
                   Kaynak: {detail.researchSource}
                 </p>
               )}
@@ -98,25 +147,19 @@ const LAYER_ICONS: Record<number, React.ElementType> = {
   3: TrophyIcon,
 };
 
-const LAYER_COLORS: Record<number, string> = {
-  1: "from-blue-500/10 to-blue-500/5 border-blue-500/20",
-  2: "from-amber-500/10 to-amber-500/5 border-amber-500/20",
-  3: "from-emerald-500/10 to-emerald-500/5 border-emerald-500/20",
-};
-
-const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
-  EASY: { label: "Kolay", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" },
-  MEDIUM: { label: "Orta", color: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400" },
-  HARD: { label: "Zor", color: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" },
+const DIFFICULTY_LABELS: Record<string, { label: string; bg: string; fg: string }> = {
+  EASY: { label: "Kolay", bg: "#ecfdf5", fg: "#059669" },
+  MEDIUM: { label: "Orta", bg: "#fffbeb", fg: "#d97706" },
+  HARD: { label: "Zor", bg: "#fef2f2", fg: "#dc2626" },
 };
 
 const IMPACT_LABELS: Record<string, { label: string; color: string }> = {
-  LOW: { label: "Dusuk Etki", color: "text-muted-foreground" },
-  MEDIUM: { label: "Orta Etki", color: "text-amber-600 dark:text-amber-400" },
-  HIGH: { label: "Yuksek Etki", color: "text-emerald-600 dark:text-emerald-400" },
+  LOW: { label: "Dusuk Etki", color: "#999" },
+  MEDIUM: { label: "Orta Etki", color: "#d97706" },
+  HIGH: { label: "Yuksek Etki", color: "#059669" },
 };
 
-// ── "Adım adım yapayım" — Opus on-demand DIY rehber ────
+// ── "Pro ile AI rehber al" — Opus on-demand DIY rehber ────
 interface DiyGuide {
   title: string;
   estimatedTime: string;
@@ -153,7 +196,6 @@ function DiyGuideSection({
         const data = await res.json();
         setGuide(data.guide);
       } else {
-        // Fallback to static steps
         setShowFallback(true);
       }
     } catch {
@@ -163,36 +205,60 @@ function DiyGuideSection({
     }
   }
 
-  // AI rehber yüklendiyse göster
+  // AI rehber loaded
   if (guide) {
     return (
-      <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900 dark:bg-blue-950/30">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-blue-700 dark:text-blue-300">
-            {guide.title}
-          </p>
-          <span className="text-[10px] text-muted-foreground">
-            {guide.estimatedTime} • {guide.difficulty}
+      <div
+        style={{
+          borderRadius: 12,
+          border: "1px solid #dbeafe",
+          background: "#eff6ff",
+          padding: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#1d4ed8" }}>{guide.title}</p>
+          <span style={{ fontSize: 10, color: "#999" }}>
+            {guide.estimatedTime} &bull; {guide.difficulty}
           </span>
         </div>
-        <div className="space-y-2">
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
           {guide.steps.map((step) => (
-            <div key={step.stepNumber} className="flex items-start gap-2">
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+            <div key={step.stepNumber} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <span
+                style={{
+                  marginTop: 2,
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  background: "#dbeafe",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#1d4ed8",
+                  flexShrink: 0,
+                }}
+              >
                 {step.stepNumber}
               </span>
               <div>
-                <p className="text-xs font-medium">{step.title}</p>
-                <p className="text-[11px] leading-relaxed text-foreground/70">{step.description}</p>
+                <p style={{ fontSize: 12, fontWeight: 500 }}>{step.title}</p>
+                <p style={{ fontSize: 11, lineHeight: 1.6, color: "#666" }}>{step.description}</p>
                 {step.tip && (
-                  <p className="mt-0.5 text-[10px] italic text-blue-600 dark:text-blue-400">💡 {step.tip}</p>
+                  <p style={{ marginTop: 2, fontSize: 10, fontStyle: "italic", color: "#2563eb" }}>
+                    {step.tip}
+                  </p>
                 )}
               </div>
             </div>
           ))}
         </div>
         {guide.completionMessage && (
-          <p className="text-[11px] text-muted-foreground italic">{guide.completionMessage}</p>
+          <p style={{ fontSize: 11, color: "#999", fontStyle: "italic", marginTop: 8 }}>
+            {guide.completionMessage}
+          </p>
         )}
       </div>
     );
@@ -201,17 +267,41 @@ function DiyGuideSection({
   // Fallback: static steps
   if (showFallback && fallbackSteps.length > 0) {
     return (
-      <div className="space-y-2">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          Kendin Yap Adımları
+      <div>
+        <p
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            color: "#999",
+            marginBottom: 8,
+          }}
+        >
+          Kendin Yap Adimlari
         </p>
-        <div className="space-y-1.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {fallbackSteps.map((step, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-[9px] font-bold text-muted-foreground">
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <span
+                style={{
+                  marginTop: 2,
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  background: "#f3f4f6",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: "#999",
+                  flexShrink: 0,
+                }}
+              >
                 {i + 1}
               </span>
-              <p className="text-xs leading-relaxed text-foreground/70">{step}</p>
+              <p style={{ fontSize: 12, lineHeight: 1.6, color: "#666" }}>{step}</p>
             </div>
           ))}
         </div>
@@ -220,51 +310,92 @@ function DiyGuideSection({
   }
 
   // Button to trigger
+  if (isPro) {
+    return (
+      <button
+        onClick={fetchGuide}
+        disabled={loading}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          borderRadius: 12,
+          border: "1px solid #dbeafe",
+          background: "#eff6ff",
+          color: "#1d4ed8",
+          padding: "8px 12px",
+          fontSize: 12,
+          fontWeight: 500,
+          cursor: loading ? "wait" : "pointer",
+        }}
+      >
+        <ArrowRightIcon style={{ width: 14, height: 14 }} />
+        {loading ? "Rehber hazirlaniyor..." : "Adim adim yapayim"}
+      </button>
+    );
+  }
+
+  // Free user: link to settings for Pro
   return (
-    <button
-      onClick={isPro ? fetchGuide : undefined}
-      disabled={loading || !isPro}
-      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-        isPro
-          ? "border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300"
-          : "border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
-      }`}
+    <Link
+      href="/dashboard/ayarlar"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        borderRadius: 9999,
+        border: "1px solid #eee",
+        background: "#fafafa",
+        color: "#666",
+        padding: "8px 16px",
+        fontSize: 12,
+        fontWeight: 500,
+        textDecoration: "none",
+      }}
     >
-      <ArrowRightIcon className="size-3.5" />
-      {loading ? "Rehber hazırlanıyor..." : isPro ? "Adım adım yapayım →" : "Adım adım rehber (Pro)"}
-    </button>
+      <ArrowRightIcon style={{ width: 14, height: 14 }} />
+      Pro ile AI rehber al
+    </Link>
   );
 }
 
 // ── Status icon ─────────────────────────────────────────
 function StatusIcon({ status, size = "md" }: { status: string; size?: "sm" | "md" }) {
-  const cls = size === "sm" ? "size-4" : "size-5";
+  const s = size === "sm" ? 16 : 20;
   switch (status) {
     case "complete":
-      return <CheckCircle2Icon className={`${cls} shrink-0 text-emerald-500`} />;
+      return <CheckCircle2Icon style={{ width: s, height: s, color: "#10b981", flexShrink: 0 }} />;
     case "warning":
-      return <AlertTriangleIcon className={`${cls} shrink-0 text-amber-500`} />;
+      return <AlertTriangleIcon style={{ width: s, height: s, color: "#f59e0b", flexShrink: 0 }} />;
     case "locked":
-      return <LockIcon className={`${cls} shrink-0 text-muted-foreground/40`} />;
+      return <LockIcon style={{ width: s, height: s, color: "#ccc", flexShrink: 0 }} />;
     case "missing":
     default:
-      return <XCircleIcon className={`${cls} shrink-0 text-red-400`} />;
+      return <XCircleIcon style={{ width: s, height: s, color: "#f87171", flexShrink: 0 }} />;
   }
 }
 
 // ── Completion status ────────────────────────────────────
 function CompletionStatus({ item }: { item: ChecklistItemFull }) {
   if (item.verifiedByAI) {
-    // AI doğruladı
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/30">
-          <ShieldCheckIcon className="size-3.5 text-emerald-500" />
-          <span className="text-emerald-700 dark:text-emerald-300">
-            Yapay zeka tarafından doğrulandı
-          </span>
+      <div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            borderRadius: 12,
+            border: "1px solid #d1fae5",
+            background: "#ecfdf5",
+            padding: "8px 12px",
+            fontSize: 12,
+          }}
+        >
+          <ShieldCheckIcon style={{ width: 14, height: 14, color: "#10b981" }} />
+          <span style={{ color: "#059669" }}>Yapay zeka tarafindan dogrulandi</span>
           {item.completedAt && (
-            <span className="ml-auto text-[10px] text-emerald-600/60 dark:text-emerald-400/60">
+            <span style={{ marginLeft: "auto", fontSize: 10, color: "#6ee7b7" }}>
               {new Date(item.completedAt).toLocaleDateString("tr-TR", {
                 day: "numeric",
                 month: "short",
@@ -274,7 +405,7 @@ function CompletionStatus({ item }: { item: ChecklistItemFull }) {
           )}
         </div>
         {item.verificationNote && (
-          <p className="text-[11px] leading-relaxed text-emerald-700/70 dark:text-emerald-300/70 pl-1">
+          <p style={{ fontSize: 11, lineHeight: 1.6, color: "#059669", paddingLeft: 4, marginTop: 8 }}>
             {item.verificationNote}
           </p>
         )}
@@ -282,22 +413,27 @@ function CompletionStatus({ item }: { item: ChecklistItemFull }) {
     );
   }
 
-  // Tamamlandı ama henüz doğrulanmadı
   const completedDate = item.completedAt ? new Date(item.completedAt) : new Date();
   const nextVerification = getNextScanDate(completedDate);
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2.5 dark:border-blue-900 dark:bg-blue-950/30">
-      <div className="flex items-center gap-2 text-xs">
-        <CheckCircle2Icon className="size-3.5 text-blue-500" />
-        <span className="text-blue-700 dark:text-blue-300 font-medium">
-          Tamamlandı olarak işaretledin
-        </span>
+    <div
+      style={{
+        borderRadius: 12,
+        border: "1px solid #dbeafe",
+        background: "#eff6ff",
+        padding: "10px 12px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+        <CheckCircle2Icon style={{ width: 14, height: 14, color: "#3b82f6" }} />
+        <span style={{ color: "#1d4ed8", fontWeight: 500 }}>Tamamlandi olarak isaretledin</span>
       </div>
-      <p className="mt-1 text-[11px] text-blue-600/70 dark:text-blue-400/70 pl-6">
-        Sonraki taramada yapay zeka doğrulayacak.{" "}
-        <span className="font-medium">
-          Test tarihi: {nextVerification.toLocaleDateString("tr-TR", {
+      <p style={{ marginTop: 4, fontSize: 11, color: "#60a5fa", paddingLeft: 22 }}>
+        Sonraki taramada yapay zeka dogrulayacak.{" "}
+        <span style={{ fontWeight: 500 }}>
+          Test tarihi:{" "}
+          {nextVerification.toLocaleDateString("tr-TR", {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -309,18 +445,16 @@ function CompletionStatus({ item }: { item: ChecklistItemFull }) {
   );
 }
 
-/** Bir sonraki Pazartesi/Çarşamba/Cuma'yı bul (thrice_weekly tarama) */
 function getNextScanDate(from: Date): Date {
   const d = new Date(from);
-  d.setDate(d.getDate() + 1); // yarından başla
-  const scanDays = [1, 3, 5]; // Pzt, Çar, Cum
+  d.setDate(d.getDate() + 1);
+  const scanDays = [1, 3, 5];
   while (!scanDays.includes(d.getDay())) {
     d.setDate(d.getDate() + 1);
   }
   return d;
 }
 
-// ── Item card ───────────────────────────────────────────
 // ── Reminder section ────────────────────────────────────
 function ReminderSection({
   brandId,
@@ -364,32 +498,45 @@ function ReminderSection({
     }
   }
 
-  // Quick reminder options
   const quickOptions = [
-    { label: "Yarın", days: 1 },
-    { label: "3 gün sonra", days: 3 },
+    { label: "Yarin", days: 1 },
+    { label: "3 gun sonra", days: 3 },
     { label: "1 hafta sonra", days: 7 },
     { label: "2 hafta sonra", days: 14 },
   ];
 
   if (hasReminder && !showPicker) {
     return (
-      <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${
-        isPast
-          ? "border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/30"
-          : "border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30"
-      }`}>
-        <BellIcon className={`size-3.5 ${isPast ? "text-amber-500" : "text-blue-500"}`} />
-        <span className={isPast ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300"}>
-          {isPast ? "Hatırlatıcı geçti: " : "Hatırlatıcı: "}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          borderRadius: 12,
+          border: `1px solid ${isPast ? "#fde68a" : "#dbeafe"}`,
+          background: isPast ? "#fffbeb" : "#eff6ff",
+          padding: "8px 12px",
+          fontSize: 12,
+        }}
+      >
+        <BellIcon style={{ width: 14, height: 14, color: isPast ? "#f59e0b" : "#3b82f6" }} />
+        <span style={{ color: isPast ? "#b45309" : "#1d4ed8" }}>
+          {isPast ? "Hatirlatici gecti: " : "Hatirlatici: "}
           {reminderDate!.toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
         </span>
         <button
           onClick={handleClearReminder}
           disabled={saving}
-          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
+          style={{
+            marginLeft: "auto",
+            fontSize: 10,
+            color: "#999",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
         >
-          {saving ? "..." : "Kaldır"}
+          {saving ? "..." : "Kaldir"}
         </button>
       </div>
     );
@@ -397,9 +544,16 @@ function ReminderSection({
 
   if (showPicker) {
     return (
-      <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-        <p className="text-xs font-medium">Ne zaman hatırlatayım?</p>
-        <div className="flex flex-wrap gap-1.5">
+      <div
+        style={{
+          borderRadius: 12,
+          border: "1px solid #eee",
+          background: "#fafafa",
+          padding: 12,
+        }}
+      >
+        <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Ne zaman hatirlatayim?</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {quickOptions.map((opt) => {
             const date = new Date();
             date.setDate(date.getDate() + opt.days);
@@ -408,7 +562,15 @@ function ReminderSection({
                 key={opt.days}
                 onClick={() => handleSetReminder(date.toISOString())}
                 disabled={saving}
-                className="rounded-full border border-border px-3 py-1 text-[11px] font-medium transition-colors hover:bg-foreground hover:text-background"
+                style={{
+                  borderRadius: 9999,
+                  border: "1px solid #eee",
+                  background: "white",
+                  padding: "4px 12px",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
               >
                 {opt.label}
               </button>
@@ -417,9 +579,16 @@ function ReminderSection({
         </div>
         <button
           onClick={() => setShowPicker(false)}
-          className="text-[10px] text-muted-foreground hover:text-foreground"
+          style={{
+            marginTop: 8,
+            fontSize: 10,
+            color: "#999",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
         >
-          İptal
+          Iptal
         </button>
       </div>
     );
@@ -428,14 +597,24 @@ function ReminderSection({
   return (
     <button
       onClick={() => setShowPicker(true)}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        fontSize: 12,
+        color: "#999",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+      }}
     >
-      <CalendarIcon className="size-3.5" />
-      Hatırlatıcı kur
+      <CalendarIcon style={{ width: 14, height: 14 }} />
+      Hatirlatici kur
     </button>
   );
 }
 
+// ── Item card ───────────────────────────────────────────
 function ChecklistItemCard({
   item,
   brandId,
@@ -482,44 +661,73 @@ function ChecklistItemCard({
 
   return (
     <div
-      className={`rounded-xl border transition-all ${
-        isComplete
-          ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/30"
-          : isLocked
-          ? "border-border/50 bg-muted/30 opacity-60"
-          : "border-border bg-card hover:border-foreground/10"
-      }`}
+      className="kinde-card"
+      style={{
+        opacity: isLocked ? 0.5 : 1,
+        overflow: "hidden",
+      }}
     >
       {/* Header */}
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-3 p-4 text-left"
         disabled={isLocked}
+        style={{
+          display: "flex",
+          width: "100%",
+          alignItems: "center",
+          gap: 12,
+          padding: 16,
+          textAlign: "left",
+          background: "none",
+          border: "none",
+          cursor: isLocked ? "default" : "pointer",
+        }}
       >
         <StatusIcon status={item.status} />
-        <div className="flex-1 min-w-0">
+        <div style={{ flex: 1, minWidth: 0 }}>
           <p
-            className={`text-sm font-medium ${
-              isComplete ? "line-through text-muted-foreground" : ""
-            }`}
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--foreground)",
+              textDecoration: isComplete ? "line-through" : "none",
+              opacity: isComplete ? 0.6 : 1,
+            }}
           >
             {item.simpleTitle}
           </p>
-          <div className="mt-1 flex items-center gap-2">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 4,
+              flexWrap: "wrap",
+            }}
+          >
             <span
-              className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium ${difficulty.color}`}
+              style={{
+                display: "inline-flex",
+                borderRadius: 6,
+                padding: "2px 6px",
+                fontSize: 10,
+                fontWeight: 600,
+                background: difficulty.bg,
+                color: difficulty.fg,
+              }}
             >
               {difficulty.label}
             </span>
-            <span className={`text-[10px] font-medium ${impact.color}`}>
+            <span style={{ fontSize: 10, fontWeight: 500, color: impact.color }}>
               {impact.label}
             </span>
-            <span className="text-[10px] text-muted-foreground" title={`Yapılabilirlik: ${item.feasibilityScore}/5`}>
-              {"●".repeat(item.feasibilityScore)}{"○".repeat(5 - item.feasibilityScore)}
+            <span style={{ fontSize: 10, color: "#999" }} title={`Yapilabilirlik: ${item.feasibilityScore}/5`}>
+              {"●".repeat(item.feasibilityScore)}
+              {"○".repeat(5 - item.feasibilityScore)}
             </span>
             {item.estimatedTime && (
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <ClockIcon className="size-2.5" />
+              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#999" }}>
+                <ClockIcon style={{ width: 10, height: 10 }} />
                 {item.estimatedTime}
               </span>
             )}
@@ -527,34 +735,47 @@ function ChecklistItemCard({
         </div>
         {!isLocked && (
           <ChevronDownIcon
-            className={`size-4 text-muted-foreground transition-transform duration-200 ${
-              isExpanded ? "rotate-0" : "-rotate-90"
-            }`}
+            style={{
+              width: 16,
+              height: 16,
+              color: "#999",
+              transition: "transform 0.2s",
+              transform: isExpanded ? "rotate(0)" : "rotate(-90deg)",
+            }}
           />
         )}
       </button>
 
-      {/* Expanded content — iki katmanlı bilgi mimarisi */}
+      {/* Expanded content */}
       {isExpanded && !isLocked && (
-        <div className="border-t border-border/50">
-          {/* ── ÜST KATMAN: Doktor abi ─────────────────── */}
-          <div className="p-4 space-y-4">
-            {/* Description — 3 saniyede anlaşılır */}
-            <p className="text-sm leading-relaxed text-foreground/80">
+        <div style={{ borderTop: "1px solid #eee" }}>
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Description */}
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>
               {item.simpleDescription}
             </p>
 
-            {/* Competitor note — rakip motivasyonu */}
+            {/* Competitor note */}
             {item.competitorNote && (
-              <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
-                <TrophyIcon className="size-4 shrink-0 text-amber-500 mt-0.5" />
-                <p className="text-xs leading-relaxed text-foreground/80">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                  borderRadius: 12,
+                  border: "1px solid #fde68a",
+                  background: "#fffbeb",
+                  padding: 12,
+                }}
+              >
+                <TrophyIcon style={{ width: 16, height: 16, color: "#f59e0b", flexShrink: 0, marginTop: 2 }} />
+                <p style={{ fontSize: 12, lineHeight: 1.6, color: "#555" }}>
                   {item.competitorNote}
                 </p>
               </div>
             )}
 
-            {/* Adım adım yapayım — Opus ile dinamik rehber */}
+            {/* DIY Guide */}
             <DiyGuideSection
               brandId={brandId}
               itemId={item.id}
@@ -562,10 +783,8 @@ function ChecklistItemCard({
               plan={plan}
             />
 
-            {/* Completed confirmation + verification status */}
-            {isComplete && (
-              <CompletionStatus item={item} />
-            )}
+            {/* Completed confirmation */}
+            {isComplete && <CompletionStatus item={item} />}
 
             {/* Reminder */}
             {!isComplete && (
@@ -577,45 +796,74 @@ function ChecklistItemCard({
             )}
 
             {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, paddingTop: 4 }}>
               {isComplete ? (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={handleReset}
                   disabled={loading}
-                  className="gap-1.5"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    borderRadius: 9999,
+                    border: "1px solid #eee",
+                    background: "white",
+                    padding: "6px 14px",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
                 >
-                  <UndoIcon className="size-3.5" />
+                  <UndoIcon style={{ width: 14, height: 14 }} />
                   {loading ? "Sifirlaniyor..." : "Sifirla"}
-                </Button>
+                </button>
               ) : (
-                <Button
-                  size="sm"
+                <button
                   onClick={handleMarkDone}
                   disabled={loading}
-                  className="gap-1.5"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    borderRadius: 9999,
+                    background: "var(--foreground)",
+                    color: "var(--background)",
+                    border: "none",
+                    padding: "6px 14px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
                 >
-                  <CheckCircle2Icon className="size-3.5" />
-                  {loading ? "Kaydediliyor..." : "Tamamladım"}
-                </Button>
+                  <CheckCircle2Icon style={{ width: 14, height: 14 }} />
+                  {loading ? "Kaydediliyor..." : "Tamamladim"}
+                </button>
               )}
 
-              {item.canAgencyDo && item.agencyPrice && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  render={<Link href="/dashboard/ayarlar" />}
-                >
-                  <ZapIcon className="size-3.5" />
-                  Biz Yapalim — {item.agencyPrice}
-                </Button>
-              )}
+              {/* Agency service promotion button */}
+              <Link
+                href="/dashboard/paketler"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  borderRadius: 9999,
+                  border: "1px solid #eee",
+                  background: "white",
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "var(--foreground)",
+                  textDecoration: "none",
+                }}
+              >
+                <ZapIcon style={{ width: 14, height: 14 }} />
+                Bu adimi biz yapalim
+              </Link>
             </div>
           </div>
 
-          {/* ── ALT KATMAN: Teknik kişi ────────────────── */}
+          {/* Technical detail */}
           {item.technicalDetail && hasTechnicalScope(item.technicalDetail) && (
             <TechnicalDetailSection detail={item.technicalDetail} />
           )}
@@ -648,22 +896,44 @@ export function GelisimClient({
     if (itemParam) setExpandedItem(itemParam);
   }, [searchParams]);
 
-  // Empty state — no checklist items yet
+  // ── Empty state ──────────────────────────────────────
   if (data.total === 0) {
     return (
-      <div className="px-4 lg:px-6">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-foreground/5">
-            <TargetIcon className="size-8 text-foreground/60" />
+      <div style={{ padding: "0 16px" }}>
+        <div
+          className="kinde-card"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "60px 24px",
+            textAlign: "center",
+            maxWidth: 500,
+            margin: "40px auto",
+          }}
+        >
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 16,
+              background: "#f5f5f5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+            }}
+          >
+            <TargetIcon style={{ width: 32, height: 32, color: "#999" }} />
           </div>
-          <h2 className="text-lg font-bold">Gelisim Planini Baslat</h2>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Gelisim Planini Baslat</h2>
+          <p style={{ marginTop: 8, fontSize: 14, color: "#999", maxWidth: 400 }}>
             Yapay zeka gorunurlugunu adim adim artirmak icin kisisellestirilmis gelisim
             planini olustur. 15 kontrol noktasi ile nerelerde guclu, nerelerde
             zayif oldugunu gor.
           </p>
-          <Button
-            className="mt-6 gap-2"
+          <button
             onClick={async () => {
               setSeeding(true);
               try {
@@ -676,10 +946,24 @@ export function GelisimClient({
               }
             }}
             disabled={seeding}
+            style={{
+              marginTop: 24,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 9999,
+              background: "var(--foreground)",
+              color: "var(--background)",
+              border: "none",
+              padding: "10px 24px",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
           >
-            <TargetIcon className="size-4" />
+            <TargetIcon style={{ width: 16, height: 16 }} />
             {seeding ? "Hazirlaniyor..." : "Gelisim Planini Olustur"}
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -689,160 +973,228 @@ export function GelisimClient({
     data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
 
   return (
-    <div className="px-4 lg:px-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Gelisim Plani</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Yapay zeka gorunurlugunu 3 katmanda artirmak icin kontrol listesi.
-        </p>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {/* ── HERO SECTION ─────────────────────────────── */}
+      <HeroSection
+        label="GELİŞİM PLANI"
+        title={`${data.total} adimda yapay zekada\ngorunur ol`}
+        subtitle={`3 katmanda yapay zeka gorunurlugunu artirmak icin kontrol listesi.`}
+      >
+        {/* Animated counter */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 24,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-1px", color: "var(--foreground)" }}>
+              {data.completed}
+              <span style={{ fontSize: 16, fontWeight: 500, color: "#999" }}>/{data.total}</span>
+            </div>
+            <div style={{ fontSize: 12, color: "#999", marginTop: 2 }}>tamamlandi</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-1px", color: "var(--foreground)" }}>
+              %{progressPercent}
+            </div>
+            <div style={{ fontSize: 12, color: "#999", marginTop: 2 }}>ilerleme</div>
+          </div>
+        </div>
 
-      {/* Overall progress */}
-      <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">
-            Toplam Ilerleme
-          </p>
-          <p className="text-sm font-bold tabular-nums">
-            {data.completed}/{data.total}{" "}
-            <span className="font-normal text-muted-foreground">
-              (%{progressPercent})
-            </span>
-          </p>
+        {/* Animated progress bar */}
+        <div style={{ maxWidth: 400, margin: "0 auto" }}>
+          <AnimBar percent={progressPercent} color="#111" height={10} />
         </div>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-        <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-emerald-500" /> Tamamlandi
+
+        {/* Legend */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            marginTop: 12,
+            fontSize: 11,
+            color: "#999",
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} /> Tamamlandi
           </span>
-          <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-red-400" /> Eksik
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171" }} /> Eksik
           </span>
-          <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-amber-500" /> Uyari
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} /> Uyari
           </span>
           {isFree && (
-            <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-muted-foreground/30" /> Kilitli
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ddd" }} /> Kilitli
             </span>
           )}
         </div>
-      </div>
+      </HeroSection>
 
-      {/* Sort toggle */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">Sırala:</span>
-        {(["default", "easy", "impact"] as const).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => setSortMode(mode)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              sortMode === mode
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {mode === "default" ? "Varsayılan" : mode === "easy" ? "Kolay olanlar önce" : "Etkili olanlar önce"}
-          </button>
-        ))}
-      </div>
-
-      {/* Layer sections */}
-      {data.layers.map((layer) => {
-        const LayerIcon = LAYER_ICONS[layer.layer] ?? SearchIcon;
-        const layerColor = LAYER_COLORS[layer.layer] ?? LAYER_COLORS[1];
-        const layerProgress =
-          layer.total > 0
-            ? Math.round((layer.completed / layer.total) * 100)
-            : 0;
-
-        const layerContent = (
-          <div className={`rounded-xl border bg-gradient-to-b ${layerColor} overflow-hidden`}>
-            {/* Layer header */}
-            <div className="flex items-center justify-between p-5 pb-0">
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-background/80 shadow-sm">
-                  <LayerIcon className="size-4.5 text-foreground/70" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                    Katman {layer.layer}
-                  </p>
-                  <h2 className="text-sm font-bold">{layer.name}</h2>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-bold tabular-nums">
-                  {layer.completed}/{layer.total}
-                </p>
-                <p className="text-[10px] text-muted-foreground">%{layerProgress}</p>
-              </div>
-            </div>
-
-            {/* Layer progress bar */}
-            <div className="px-5 pt-3 pb-1">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-background/50">
-                <div
-                  className="h-full rounded-full bg-foreground/60 transition-all duration-500"
-                  style={{ width: `${layerProgress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Items */}
-            <div className="p-5 space-y-3">
-              {[...layer.items].sort((a, b) => {
-                if (sortMode === "easy") return b.feasibilityScore - a.feasibilityScore;
-                if (sortMode === "impact") {
-                  const impactOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
-                  return (impactOrder[b.impact] ?? 0) - (impactOrder[a.impact] ?? 0);
-                }
-                return 0; // default: itemNumber order
-              }).map((item) => (
-                <ChecklistItemCard
-                  key={item.id}
-                  item={item}
-                  brandId={brandId}
-                  plan={plan}
-                  isExpanded={expandedItem === item.itemNumber}
-                  onToggle={() =>
-                    setExpandedItem(
-                      expandedItem === item.itemNumber
-                        ? null
-                        : item.itemNumber,
-                    )
-                  }
-                />
-              ))}
-            </div>
+      {/* ── CONTENT AREA ──────────────────────────────── */}
+      <div style={{ padding: "0 16px", maxWidth: 800, margin: "0 auto", width: "100%" }}>
+        {/* Sort toggle — pill buttons */}
+        <PageSection>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+            <span style={{ fontSize: 12, color: "#999" }}>Sirala:</span>
+            {(["default", "easy", "impact"] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setSortMode(mode)}
+                style={{
+                  borderRadius: 9999,
+                  padding: "5px 14px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  border: "none",
+                  cursor: "pointer",
+                  background: sortMode === mode ? "var(--foreground)" : "#f3f4f6",
+                  color: sortMode === mode ? "var(--background)" : "#666",
+                  transition: "all 0.2s",
+                }}
+              >
+                {mode === "default" ? "Varsayilan" : mode === "easy" ? "Kolay olanlar once" : "Etkili olanlar once"}
+              </button>
+            ))}
           </div>
-        );
+        </PageSection>
 
-        return <React.Fragment key={layer.layer}>{layerContent}</React.Fragment>;
-      })}
+        {/* ── Layer sections ──────────────────────────── */}
+        {data.layers.map((layer, layerIdx) => {
+          const LayerIcon = LAYER_ICONS[layer.layer] ?? SearchIcon;
+          const layerProgress =
+            layer.total > 0 ? Math.round((layer.completed / layer.total) * 100) : 0;
 
-      {/* Pro CTA — sayfanın en altında, zaman bazlı */}
-      {isFree && (
-        <div className="rounded-2xl border border-border/50 bg-white p-8 text-center dark:bg-card">
-          <p className="text-lg font-semibold text-foreground">Yaptıklarının işe yaradığını gör</p>
-          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-            Gelişim planında adım tamamladın mı? Yapay zekanın fark edip etmediğini kontrol edelim.
-          </p>
-          <Link
-            href="/dashboard/ayarlar"
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-8 py-3 text-sm font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            İlerleme takibi başlat → 2.495₺/ay
-            <ArrowRightIcon className="size-4" />
-          </Link>
-        </div>
-      )}
+          return (
+            <PageSection key={layer.layer} className="mb-8">
+              <FadeIn delay={layerIdx * 100}>
+                {/* Section title + progress */}
+                <SectionTitle
+                  title={`Katman ${layer.layer}: ${layer.name}`}
+                  subtitle={`${layer.completed}/${layer.total} tamamlandi`}
+                />
+
+                {/* Layer progress bar */}
+                <div style={{ marginBottom: 16 }}>
+                  <AnimBar
+                    percent={layerProgress}
+                    color="#111"
+                    height={6}
+                    delay={layerIdx * 150}
+                  />
+                </div>
+
+                {/* Items */}
+                <Stagger className="flex flex-col gap-3">
+                  {[...layer.items]
+                    .sort((a, b) => {
+                      if (sortMode === "easy") return b.feasibilityScore - a.feasibilityScore;
+                      if (sortMode === "impact") {
+                        const impactOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+                        return (impactOrder[b.impact] ?? 0) - (impactOrder[a.impact] ?? 0);
+                      }
+                      return 0;
+                    })
+                    .map((item) => (
+                      <ChecklistItemCard
+                        key={item.id}
+                        item={item}
+                        brandId={brandId}
+                        plan={plan}
+                        isExpanded={expandedItem === item.itemNumber}
+                        onToggle={() =>
+                          setExpandedItem(
+                            expandedItem === item.itemNumber ? null : item.itemNumber,
+                          )
+                        }
+                      />
+                    ))}
+                </Stagger>
+              </FadeIn>
+            </PageSection>
+          );
+        })}
+
+        {/* ── Bottom CTA: Agency packages ─────────────── */}
+        <PageSection className="mb-12">
+          <FadeIn>
+            <div
+              className="kinde-card"
+              style={{
+                padding: "40px 24px",
+                textAlign: "center",
+              }}
+            >
+              <PackageIcon style={{ width: 32, height: 32, color: "#999", margin: "0 auto 12px" }} />
+              <p style={{ fontSize: 20, fontWeight: 700, color: "var(--foreground)" }}>
+                Hepsini biz yapalim
+              </p>
+              <p
+                style={{
+                  marginTop: 8,
+                  fontSize: 14,
+                  color: "#999",
+                  maxWidth: 440,
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  lineHeight: 1.6,
+                }}
+              >
+                Gelisim planindaki adimlari tek tek ugrasmak yerine, ajans paketlerimizle hepsini profesyonelce tamamlayalim.
+              </p>
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24 }}>
+                <Link
+                  href="/dashboard/paketler"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    borderRadius: 9999,
+                    background: "var(--foreground)",
+                    color: "var(--background)",
+                    padding: "10px 24px",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    transition: "transform 0.15s",
+                  }}
+                >
+                  Ajans paketlerini incele
+                  <ArrowRightIcon style={{ width: 16, height: 16 }} />
+                </Link>
+                {isFree && (
+                  <Link
+                    href="/dashboard/ayarlar"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      borderRadius: 9999,
+                      border: "1px solid #eee",
+                      background: "white",
+                      color: "var(--foreground)",
+                      padding: "10px 24px",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Pro ile devam et
+                  </Link>
+                )}
+              </div>
+            </div>
+          </FadeIn>
+        </PageSection>
+      </div>
     </div>
   );
 }

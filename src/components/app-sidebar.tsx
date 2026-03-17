@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { GH7Logo } from "@/components/gh7-logo";
@@ -12,12 +12,8 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarGroup,
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
@@ -30,10 +26,7 @@ import {
   ListChecksIcon,
   Settings2Icon,
   LogOutIcon,
-  ChevronDownIcon,
-  CheckCircle2Icon,
-  AlertTriangleIcon,
-  XCircleIcon,
+  SparklesIcon,
 } from "lucide-react";
 import type { ChecklistSummary } from "@/lib/dal/checklist";
 
@@ -74,18 +67,6 @@ function getNavItems(brandType: BrandType) {
   ];
 }
 
-// ── Status icon helper ──────────────────────────────────
-function StatusIcon({ status }: { status: string }) {
-  switch (status) {
-    case "complete":
-      return <CheckCircle2Icon className="size-3.5 shrink-0 text-emerald-500" />;
-    case "warning":
-      return <AlertTriangleIcon className="size-3.5 shrink-0 text-amber-500" />;
-    default:
-      return <XCircleIcon className="size-3.5 shrink-0 text-red-400" />;
-  }
-}
-
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user?: { name: string; email: string; avatarUrl?: string | null };
   brandType?: BrandType;
@@ -98,23 +79,14 @@ export function AppSidebar({
   user,
   brandType = "firma",
   plan = "free",
-  checklistSummary,
-  topCompetitor,
   ...props
 }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const navItems = getNavItems(brandType);
   const isFree = plan === "free";
-
-  // Gelişim Planı tree expand/collapse
-  const isGelisimPage = pathname === "/dashboard/gelisim";
-  const [gelisimOpen, setGelisimOpen] = React.useState(isGelisimPage);
-
-  React.useEffect(() => {
-    if (isGelisimPage) setGelisimOpen(true);
-  }, [isGelisimPage]);
+  const isPro = plan === "pro";
+  const isBusiness = plan === "business";
 
   async function handleLogout() {
     const supabase = createClient();
@@ -124,9 +96,31 @@ export function AppSidebar({
   }
 
   const initial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
-  const hasChecklist = checklistSummary && checklistSummary.total > 0;
-  const completedCount = checklistSummary?.completed ?? 0;
-  const totalCount = checklistSummary?.total ?? 0;
+
+  // Plan-aware CTA config
+  const ctaConfig = isFree
+    ? {
+        badge: "Free",
+        label: "Ücretsiz Plan",
+        desc: "Haftalık takip ve trend analizi",
+        buttonText: "Pro'ya Geç",
+        href: "/dashboard/ayarlar",
+      }
+    : isPro
+    ? {
+        badge: "Pro",
+        label: "Pro Plan",
+        desc: "Daha fazla marka ve gelişmiş analiz",
+        buttonText: "Business'a Geç",
+        href: "/dashboard/ayarlar",
+      }
+    : {
+        badge: "Business",
+        label: "Business Plan",
+        desc: "Tüm özellikler aktif",
+        buttonText: "Planlar",
+        href: "/dashboard/ayarlar",
+      };
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -134,11 +128,17 @@ export function AppSidebar({
       <SidebarHeader className="px-5 pt-5 pb-2">
         <Link href="/dashboard/genel" className="flex items-center gap-2">
           <GH7Logo size="default" />
-          {isFree && (
-            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Free
-            </span>
-          )}
+          <span
+            className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              isBusiness
+                ? "bg-emerald-100 text-emerald-700"
+                : isPro
+                ? "bg-amber-100 text-amber-700"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {ctaConfig.badge}
+          </span>
         </Link>
       </SidebarHeader>
 
@@ -171,117 +171,8 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Gelişim Planı Tree ─────────────────────── */}
-        {hasChecklist && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    tooltip="Gelişim Planı"
-                    isActive={isGelisimPage}
-                    onClick={() => setGelisimOpen(!gelisimOpen)}
-                    className={`rounded-xl text-[13px] font-medium ${
-                      isGelisimPage ? "bg-[#f5f5f5] font-semibold" : ""
-                    }`}
-                  >
-                    <ListChecksIcon className="size-[18px]" />
-                    <span className="flex-1">Gelişim</span>
-                    <ChevronDownIcon
-                      className={`size-4 text-muted-foreground transition-transform duration-200 ${
-                        gelisimOpen ? "rotate-0" : "-rotate-90"
-                      }`}
-                    />
-                  </SidebarMenuButton>
-                  <SidebarMenuBadge>
-                    <span className="text-[10px] tabular-nums text-muted-foreground">
-                      {completedCount}/{totalCount}
-                    </span>
-                  </SidebarMenuBadge>
-
-                  {/* Mini progress bars when collapsed */}
-                  {!gelisimOpen && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5">
-                      {[1, 2, 3, 4].map((week) => {
-                        const weekPct = Math.min(
-                          100,
-                          Math.round(
-                            (completedCount / Math.max(totalCount, 1)) * 100 * (week / 4)
-                          )
-                        );
-                        return (
-                          <div key={week} className="flex-1">
-                            <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                              <div
-                                className="h-full rounded-full bg-foreground/60 transition-all duration-500"
-                                style={{ width: `${weekPct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Tree layers */}
-                  {gelisimOpen && (
-                    <SidebarMenuSub>
-                      {checklistSummary!.layers.map((layer) => (
-                        <React.Fragment key={layer.layer}>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              size="sm"
-                              render={
-                                <Link
-                                  href={`/dashboard/gelisim?layer=${layer.layer}`}
-                                />
-                              }
-                              isActive={
-                                isGelisimPage &&
-                                searchParams.get("layer") === String(layer.layer)
-                              }
-                              className="font-semibold text-[11px] uppercase tracking-wide text-muted-foreground"
-                            >
-                              <span className="flex-1 truncate">{layer.name}</span>
-                              <span className="text-[10px] tabular-nums font-normal">
-                                {layer.completed}/{layer.total}
-                              </span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-
-                          {layer.items.map((item) => (
-                            <SidebarMenuSubItem key={item.id}>
-                              <SidebarMenuSubButton
-                                size="sm"
-                                render={
-                                  <Link
-                                    href={`/dashboard/gelisim?item=${item.itemNumber}`}
-                                  />
-                                }
-                                isActive={
-                                  isGelisimPage &&
-                                  searchParams.get("item") === item.itemNumber
-                                }
-                              >
-                                <StatusIcon status={item.status} />
-                                <span className="flex-1 truncate text-xs">
-                                  {item.simpleTitle}
-                                </span>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </React.Fragment>
-                      ))}
-                    </SidebarMenuSub>
-                  )}
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {/* ── Pro CTA card (free users) ───────────────── */}
-        {isFree && (
+        {/* ── Plan CTA card ───────────────────────────── */}
+        {!isBusiness && (
           <SidebarGroup>
             <SidebarGroupContent>
               <div
@@ -289,16 +180,41 @@ export function AppSidebar({
                 style={{ background: "#fafafa" }}
               >
                 <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Ücretsiz Plan
+                  {ctaConfig.label}
                 </p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  Haftalık takip ve trend analizi
+                  {ctaConfig.desc}
+                </p>
+                <Link
+                  href={ctaConfig.href}
+                  className="mt-3 inline-block rounded-full bg-foreground px-5 py-1.5 text-[11px] font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.98]"
+                >
+                  {ctaConfig.buttonText}
+                </Link>
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Business planında Planlar kartı */}
+        {isBusiness && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <div
+                className="mx-2 rounded-2xl border border-emerald-200 p-4 text-center"
+                style={{ background: "#f0fdf4" }}
+              >
+                <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
+                  Business Plan
+                </p>
+                <p className="mt-1 text-[11px] text-emerald-600">
+                  Tüm özellikler aktif
                 </p>
                 <Link
                   href="/dashboard/ayarlar"
-                  className="mt-3 inline-block rounded-full bg-foreground px-5 py-1.5 text-[11px] font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.98]"
+                  className="mt-3 inline-block rounded-full bg-emerald-700 px-5 py-1.5 text-[11px] font-bold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
                 >
-                  Pro&apos;ya Geç
+                  Planlar
                 </Link>
               </div>
             </SidebarGroupContent>
@@ -309,6 +225,23 @@ export function AppSidebar({
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* Ücretli Paketler */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Ücretli Paketler"
+                  isActive={pathname === "/dashboard/paketler"}
+                  render={<Link href="/dashboard/paketler" />}
+                  className={`rounded-xl text-[13px] font-medium ${
+                    pathname === "/dashboard/paketler"
+                      ? "bg-[#f5f5f5] font-semibold"
+                      : "text-muted-foreground hover:bg-[#f5f5f5] hover:text-foreground"
+                  }`}
+                >
+                  <SparklesIcon className="size-[18px]" />
+                  <span>Ücretli Paketler</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {/* Ayarlar */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Ayarlar"

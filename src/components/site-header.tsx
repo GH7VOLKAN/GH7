@@ -1,11 +1,10 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ScanButton } from "@/components/scan/scan-button";
 
 /* ─────────────────────────────────────────────────────
    Minimal Kinde-style header
-   Only: sidebar toggle (left) + scan button + avatar (right)
+   Only: sidebar toggle (left) + avatar (right)
    Sticky, backdrop-blur, nearly invisible
    ───────────────────────────────────────────────────── */
 
@@ -24,10 +23,6 @@ interface SiteHeaderProps {
 export function SiteHeader({
   userName,
   avatarUrl,
-  brandId,
-  lastScanAt,
-  scanRunning,
-  runningScanId,
 }: SiteHeaderProps) {
   const initial = userName?.charAt(0)?.toUpperCase() ?? "?";
 
@@ -36,16 +31,8 @@ export function SiteHeader({
       {/* Left: sidebar toggle */}
       <SidebarTrigger className="size-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" />
 
-      {/* Right: scan button (compact) + avatar */}
+      {/* Right: avatar only */}
       <div className="flex items-center gap-3">
-        {brandId && (
-          <ScanButton
-            brandId={brandId}
-            lastScanAt={lastScanAt ?? null}
-            initialRunning={scanRunning}
-            runningScanId={runningScanId}
-          />
-        )}
         {avatarUrl ? (
           <img
             src={avatarUrl}

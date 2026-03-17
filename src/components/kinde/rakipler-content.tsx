@@ -235,14 +235,14 @@ export function RakiplerContent({
         </PageSection>
       )}
 
-      {/* ── PLATFORM BAZLI SIRALAMA (4 cards) ─────────── */}
+      {/* ── PLATFORM BAZLI KARŞILAŞTIRMA (4 cards) ──── */}
       <PageSection className="mt-12">
         <SectionTitle
-          title="Platform Bazlı Sıralama"
-          subtitle="Her yapay zekada sen vs. rakiplerin"
+          title="Platform Bazlı Karşılaştırma"
+          subtitle="Her yapay zekada senin ve rakiplerinin bahsedilme oranları"
         />
         <Stagger
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3.5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
           staggerMs={80}
         >
           {PLATFORMS.map((platform) => {
@@ -250,7 +250,7 @@ export function RakiplerContent({
             const color = getPlatformColor(platform);
             const userScore = userRow?.platforms[platform] ?? 0;
 
-            // Find user rank among visible competitors for this platform
+            // Build sorted list of all participants for this platform
             const allScores = [
               { name: userName, score: userScore, isUser: true },
               ...visibleCompetitors.map((c) => ({
@@ -260,56 +260,108 @@ export function RakiplerContent({
               })),
             ].sort((a, b) => b.score - a.score);
 
-            const userRank =
-              allScores.findIndex((s) => s.isUser) + 1;
-            const topEntry = allScores[0];
+            const userRank = allScores.findIndex((s) => s.isUser) + 1;
+            const userIsOnPlatform = userScore > 0;
 
             return (
               <div
                 key={platform}
-                className="kinde-card p-5 lg:p-7 cursor-default"
+                className="kinde-card p-5 cursor-default"
                 style={{
-                  borderColor:
-                    userRank === 1 ? `${color}30` : undefined,
+                  borderColor: userRank === 1 ? `${color}30` : undefined,
                 }}
               >
-                <PlatformLogo
-                  platform={platform}
-                  size={36}
-                  mentioned={userScore > 0}
-                />
+                <div className="flex items-center gap-2 mb-3">
+                  <PlatformLogo
+                    platform={platform}
+                    size={28}
+                    mentioned={userIsOnPlatform}
+                  />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)" }}>
+                    {displayName}
+                  </span>
+                </div>
+
+                {/* Ranking list for this platform */}
+                <div className="flex flex-col gap-2">
+                  {allScores.map((entry, i) => (
+                    <div key={entry.name} className="flex items-center gap-2">
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: entry.isUser ? color : "var(--muted-foreground)",
+                          width: 18,
+                          textAlign: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {i + 1}.
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: entry.isUser ? 700 : 400,
+                              color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {entry.isUser ? `${entry.name} ✓` : entry.name}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
+                              flexShrink: 0,
+                              marginLeft: 4,
+                            }}
+                          >
+                            %{entry.score}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            height: 3,
+                            borderRadius: 2,
+                            background: "#f0f0f0",
+                            marginTop: 3,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${entry.score}%`,
+                              height: "100%",
+                              background: entry.isUser ? color : "#d4d4d4",
+                              borderRadius: 2,
+                              transition: "width 0.8s ease",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Bottom status */}
                 <p
                   style={{
-                    fontSize: 13,
+                    fontSize: 11,
+                    color: userIsOnPlatform ? color : "#ef4444",
                     fontWeight: 500,
-                    color: "var(--foreground)",
-                    marginTop: 12,
+                    marginTop: 8,
                   }}
                 >
-                  {displayName}
-                </p>
-                <p
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 800,
-                    color:
-                      userRank === 1 ? "var(--foreground)" : "#ddd",
-                    marginTop: 4,
-                    lineHeight: 1,
-                  }}
-                >
-                  #{userRank}
-                </p>
-                <p
-                  style={{
-                    fontSize: 12,
-                    color: "var(--muted-foreground)",
-                    marginTop: 6,
-                  }}
-                >
-                  {userRank === 1
-                    ? `%${userScore} ile lidersin`
-                    : `%${userScore} — Lider: ${topEntry.name} (%${topEntry.score})`}
+                  {userIsOnPlatform
+                    ? userRank === 1
+                      ? "Lidersin"
+                      : `${userRank}. sıradasın`
+                    : "Bu platformda yoksun ✗"}
                 </p>
               </div>
             );

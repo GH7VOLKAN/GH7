@@ -3,9 +3,7 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
-import { getLastScanInfo } from "@/lib/dal/scans";
 import { getChecklistSummary } from "@/lib/dal/checklist";
-import { getTopCompetitorChecklist } from "@/lib/dal/competitors";
 import { redirect } from "next/navigation";
 
 // Dashboard is always dynamic — requires auth + DB
@@ -27,11 +25,7 @@ export default async function DashboardLayout({
     redirect("/onboard");
   }
 
-  const [scanInfo, checklistSummary, topCompetitor] = await Promise.all([
-    brandId ? getLastScanInfo(brandId) : null,
-    brandId ? getChecklistSummary(brandId) : null,
-    brandId ? getTopCompetitorChecklist(brandId) : null,
-  ]);
+  const checklistSummary = brandId ? await getChecklistSummary(brandId) : null;
 
   return (
     <SidebarProvider
@@ -46,8 +40,6 @@ export default async function DashboardLayout({
         variant="inset"
         brandType={brandType}
         plan={plan}
-        checklistSummary={checklistSummary}
-        topCompetitor={topCompetitor}
         user={
           user
             ? { name: user.fullName, email: user.email, avatarUrl: user.avatarUrl }
@@ -58,11 +50,6 @@ export default async function DashboardLayout({
         <SiteHeader
           userName={user?.fullName ?? "D"}
           avatarUrl={user?.avatarUrl}
-          brandId={brandId}
-          brandType={brandType}
-          lastScanAt={scanInfo?.lastCompletedAt}
-          scanRunning={scanInfo?.isRunning}
-          runningScanId={scanInfo?.runningScanId}
         />
         {/* Kinde-style main content area — centered, max-width, fafafa bg */}
         <main className="flex-1 overflow-y-auto pb-20 md:pb-8">

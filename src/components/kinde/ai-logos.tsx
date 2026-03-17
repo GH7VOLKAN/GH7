@@ -1,7 +1,9 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 /* ─────────────────────────────────────────────────────
-   AI Platform Logos — SVG circle icons
+   AI Platform Logos — Real webp icons from /public/
    ChatGPT (#10a37f), Claude (#d97706), Gemini (#4285f4), Perplexity (#14b8a6)
    ───────────────────────────────────────────────────── */
 
@@ -29,40 +31,15 @@ export function getPlatformColor(platform: string): string {
   return "#888";
 }
 
-export function ChatGPTLogo({ size = 28, mentioned = true, className }: LogoProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 28 28" className={className} style={{ opacity: mentioned ? 1 : 0.25 }}>
-      <circle cx="14" cy="14" r="14" fill="#10a37f" />
-      <text x="14" y="18" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="DM Sans, sans-serif">G</text>
-    </svg>
-  );
-}
-
-export function ClaudeLogo({ size = 28, mentioned = true, className }: LogoProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 28 28" className={className} style={{ opacity: mentioned ? 1 : 0.25 }}>
-      <circle cx="14" cy="14" r="14" fill="#d97706" />
-      <text x="14" y="18" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="DM Sans, sans-serif">C</text>
-    </svg>
-  );
-}
-
-export function GeminiLogo({ size = 28, mentioned = true, className }: LogoProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 28 28" className={className} style={{ opacity: mentioned ? 1 : 0.25 }}>
-      <circle cx="14" cy="14" r="14" fill="#4285f4" />
-      <text x="14" y="18" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="DM Sans, sans-serif">G</text>
-    </svg>
-  );
-}
-
-export function PerplexityLogo({ size = 28, mentioned = true, className }: LogoProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 28 28" className={className} style={{ opacity: mentioned ? 1 : 0.25 }}>
-      <circle cx="14" cy="14" r="14" fill="#14b8a6" />
-      <text x="14" y="18" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="DM Sans, sans-serif">P</text>
-    </svg>
-  );
+/** Map platform key to its webp icon path */
+function getPlatformIconPath(platform: string): string {
+  const key = platform.toLowerCase();
+  if (key.includes("chatgpt") || key.includes("openai")) return "/chatgpt-icon.webp";
+  if (key.includes("claude") || key.includes("anthropic")) return "/claude-ai-icon.webp";
+  if (key.includes("gemini")) return "/google-gemini-icon.webp";
+  if (key.includes("google")) return "/google-gemini-icon.webp";
+  if (key.includes("perplexity")) return "/perplexity-ai-icon.webp";
+  return "/chatgpt-icon.webp";
 }
 
 /** Get the right logo component for a platform string */
@@ -72,21 +49,22 @@ export function PlatformLogo({
   mentioned = true,
   className,
 }: LogoProps & { platform: string }) {
-  const key = platform.toLowerCase();
-  if (key.includes("chatgpt") || key.includes("openai"))
-    return <ChatGPTLogo size={size} mentioned={mentioned} className={className} />;
-  if (key.includes("claude") || key.includes("anthropic"))
-    return <ClaudeLogo size={size} mentioned={mentioned} className={className} />;
-  if (key.includes("gemini") || key.includes("google"))
-    return <GeminiLogo size={size} mentioned={mentioned} className={className} />;
-  if (key.includes("perplexity"))
-    return <PerplexityLogo size={size} mentioned={mentioned} className={className} />;
-  // Fallback
+  const iconPath = getPlatformIconPath(platform);
+
   return (
-    <svg width={size} height={size} viewBox="0 0 28 28" className={className} style={{ opacity: mentioned ? 1 : 0.25 }}>
-      <circle cx="14" cy="14" r="14" fill="#888" />
-      <text x="14" y="18" textAnchor="middle" fill="white" fontSize="13" fontWeight="700" fontFamily="DM Sans, sans-serif">?</text>
-    </svg>
+    <img
+      src={iconPath}
+      alt={getPlatformDisplayName(platform)}
+      width={size}
+      height={size}
+      className={className}
+      style={{
+        opacity: mentioned ? 1 : 0.25,
+        borderRadius: "50%",
+        objectFit: "cover",
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
