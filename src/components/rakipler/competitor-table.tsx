@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +23,6 @@ import {
   Trash2Icon,
   SparklesIcon,
   UserIcon,
-  LockIcon,
 } from "lucide-react";
 import { platformLabels, type PlatformKey } from "@/lib/types";
 import { addCompetitor, removeCompetitor } from "@/lib/actions";
@@ -66,10 +64,6 @@ export function CompetitorTable({
 }: CompetitorTableProps) {
   const userRow = rows.find((r) => r.isUser) ?? null;
   const allCompetitorRows = rows.filter((r) => !r.isUser);
-
-  // Split visible vs locked competitors
-  const visibleCompetitors = allCompetitorRows.slice(0, maxVisibleCompetitors);
-  const lockedCompetitors = allCompetitorRows.slice(maxVisibleCompetitors);
 
   const [newName, setNewName] = useState("");
   const [newDomain, setNewDomain] = useState("");
@@ -139,57 +133,36 @@ export function CompetitorTable({
               {allCompetitorRows.length > 0 && " — satıra tıklayarak detayları görün"}
             </CardDescription>
           </div>
-          {canDiscover ? (
-            <DiscoverCompetitorsButton
-              brandId={brandId}
-              hasCompetitors={allCompetitorRows.length > 0}
-            />
-          ) : (
-            <Link href="/dashboard/ayarlar">
-              <Badge variant="outline" className="gap-1.5 text-xs cursor-pointer hover:bg-muted border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-                <LockIcon className="size-3" />
-                Yeni rakip keşfetmek Pro özelliği
-              </Badge>
-            </Link>
-          )}
+          <DiscoverCompetitorsButton
+            brandId={brandId}
+            hasCompetitors={allCompetitorRows.length > 0}
+          />
         </CardHeader>
         <CardContent>
-          {/* Manual add form — only for paid plans */}
-          {canAddManual ? (
-            <div className="mb-4 flex gap-2">
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Rakip adı"
-                className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
-              />
-              <input
-                value={newDomain}
-                onChange={(e) => setNewDomain(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                placeholder="domain.com"
-                className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
-              />
-              <Button
-                onClick={handleAdd}
-                disabled={isPending || !newName.trim()}
-                size="sm"
-              >
-                <PlusIcon className="mr-1 size-4" />
-                Ekle
-              </Button>
-            </div>
-          ) : (
-            <div className="mb-4 rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-3 text-center">
-              <p className="text-sm text-muted-foreground">
-                Yeni rakip eklemek ve rakipleri yeniden keşfetmek{" "}
-                <Link href="/dashboard/ayarlar" className="font-semibold text-foreground underline underline-offset-2">
-                  Pro, Business veya Ajans
-                </Link>{" "}
-                planlarına özel bir özelliktir.
-              </p>
-            </div>
-          )}
+          {/* Manual add form */}
+          <div className="mb-4 flex gap-2">
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Rakip adı"
+              className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+            />
+            <input
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              placeholder="domain.com"
+              className="flex-1 rounded-xl border-[1.5px] border-border bg-background px-4 py-2 text-sm focus:border-foreground focus:outline-none transition-colors"
+            />
+            <Button
+              onClick={handleAdd}
+              disabled={isPending || !newName.trim()}
+              size="sm"
+            >
+              <PlusIcon className="mr-1 size-4" />
+              Ekle
+            </Button>
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -205,7 +178,7 @@ export function CompetitorTable({
                       {platformLabels[p].name}
                     </TableHead>
                   ))}
-                  {canAddManual && <TableHead className="w-10" />}
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -240,12 +213,12 @@ export function CompetitorTable({
                         )}
                       </TableCell>
                     ))}
-                    {canAddManual && <TableCell />}
+                    <TableCell />
                   </TableRow>
                 )}
 
-                {/* Visible competitor rows */}
-                {visibleCompetitors.map((row) => (
+                {/* Competitor rows */}
+                {allCompetitorRows.map((row) => (
                   <TableRow
                     key={row.id}
                     className={`cursor-pointer hover:bg-accent/50 transition-colors ${deletingId === row.id ? "opacity-30" : ""}`}
@@ -303,8 +276,7 @@ export function CompetitorTable({
                         )}
                       </TableCell>
                     ))}
-                    {canAddManual && (
-                      <TableCell>
+                    <TableCell>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -315,57 +287,8 @@ export function CompetitorTable({
                           <Trash2Icon className="size-4" />
                         </Button>
                       </TableCell>
-                    )}
                   </TableRow>
                 ))}
-
-                {/* Locked competitor rows — blurred for free plan */}
-                {lockedCompetitors.length > 0 && (
-                  <>
-                    {lockedCompetitors.slice(0, 3).map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="pointer-events-none select-none"
-                      >
-                        <TableCell>
-                          <div className="blur-[4px] opacity-40">
-                            <span className="font-medium">{row.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="blur-[4px] opacity-40">
-                            <span className="text-sm">Öneriyor</span>
-                          </div>
-                        </TableCell>
-                        {platforms.map((p) => (
-                          <TableCell
-                            key={p}
-                            className="hidden lg:table-cell text-center"
-                          >
-                            <div className="blur-[4px] opacity-40">—</div>
-                          </TableCell>
-                        ))}
-                        {canAddManual && <TableCell />}
-                      </TableRow>
-                    ))}
-                    <TableRow>
-                      <TableCell colSpan={platforms.length + 3} className="text-center py-4">
-                        <div className="flex flex-col items-center gap-2">
-                          <LockIcon className="size-4 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
-                            Ücretsiz planda en güçlü 1 rakibini görebilirsin. {lockedCompetitors.length} rakip daha tespit edildi.
-                          </p>
-                          <Link
-                            href="/dashboard/ayarlar"
-                            className="text-sm font-semibold text-foreground underline underline-offset-2"
-                          >
-                            Haftalık takip ve tüm rakip analizi için Pro&apos;ya geç &rarr;
-                          </Link>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  </>
-                )}
 
                 {allCompetitorRows.length === 0 && (
                   <TableRow>

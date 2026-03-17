@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     for (const def of CHECKLIST_DEFAULTS) {
       let description = def.simpleDescription;
-      let status: string = isFree && def.layer === 3 ? "locked" : "missing";
+      let status: string = "missing";
 
       // Match audit failures to checklist items
       const relatedAuditIssue = findRelatedAuditIssue(def, failingChecks);

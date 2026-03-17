@@ -14,7 +14,13 @@ const PERPLEXITY_API = "https://api.perplexity.ai/chat/completions";
 
 async function querySonar(prompt: string): Promise<string> {
   const apiKey = process.env.PERPLEXITY_API_KEY;
-  if (!apiKey) throw new Error("Perplexity API key not configured");
+  if (!apiKey) {
+    console.error("[querySonar] PERPLEXITY_API_KEY is not set!");
+    throw new Error("Perplexity API key not configured");
+  }
+
+  console.log(`[querySonar] Calling Sonar API — prompt length: ${prompt.length} chars`);
+  const startTime = Date.now();
 
   const res = await fetch(PERPLEXITY_API, {
     method: "POST",
@@ -32,11 +38,15 @@ async function querySonar(prompt: string): Promise<string> {
   });
 
   if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    console.error(`[querySonar] API error ${res.status}: ${errBody.slice(0, 200)}`);
     throw new Error(`Perplexity API error: ${res.status}`);
   }
 
   const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
+  const content = data.choices?.[0]?.message?.content ?? "";
+  console.log(`[querySonar] OK — ${content.length} chars in ${Date.now() - startTime}ms`);
+  return content;
 }
 
 // ─── Types ─────────────────────────────────────────────

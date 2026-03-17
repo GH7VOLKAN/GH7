@@ -18,7 +18,6 @@ import {
   ShieldAlertIcon,
   SparklesIcon,
   ArrowRightIcon,
-  LockIcon,
 } from "lucide-react";
 
 interface CompetitorDetail {
@@ -73,25 +72,7 @@ export function GapAnalysisCard({ detail, userName, plan = "free" }: GapAnalysis
               Yapay zekalarda en güçlü rakibinle karşılaştırma
             </CardDescription>
           </div>
-          {isFree && (
-            <Link href="/dashboard/ayarlar">
-              <Badge variant="outline" className="gap-1 text-xs cursor-pointer hover:bg-muted shrink-0">
-                <LockIcon className="size-3" />
-                Ücretsiz planda en güçlü 1 rakip
-              </Badge>
-            </Link>
-          )}
         </div>
-        {isFree && (
-          <div className="mt-2 rounded-lg border border-dashed border-border/70 bg-muted/20 px-3 py-2">
-            <p className="text-xs text-muted-foreground">
-              Ücretsiz planda en güçlü rakibinle karşılaştırabilirsin. Tüm 10 rakibi görmek ve detaylı analiz için{" "}
-              <Link href="/dashboard/ayarlar" className="font-semibold text-foreground underline underline-offset-2">
-                Pro plana geç
-              </Link>.
-            </p>
-          </div>
-        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {/* Comparison hero — natural language */}

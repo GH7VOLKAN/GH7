@@ -17,7 +17,6 @@ import { runFreeToolQuery } from "@/lib/free-tool/action";
 import { ScoreRing } from "./score-ring";
 import { PlatformResultCard } from "./platform-result-card";
 import { FreeInsights } from "./free-insights";
-import { BlurredUpsell } from "./blurred-upsell";
 
 export function FreeToolWidget() {
   const [mode, setMode] = useState<FreeToolMode>("kisisel");
@@ -295,8 +294,6 @@ export function FreeToolWidget() {
             </div>
           </div>
 
-          {/* Blurred upsell */}
-          <BlurredUpsell result={result} />
 
           {/* Actions */}
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

@@ -7,7 +7,6 @@ import {
   CheckCircle2Icon,
   AlertTriangleIcon,
   XCircleIcon,
-  LockIcon,
   ChevronDownIcon,
   ClockIcon,
   ZapIcon,
@@ -367,8 +366,6 @@ function StatusIcon({ status, size = "md" }: { status: string; size?: "sm" | "md
       return <CheckCircle2Icon style={{ width: s, height: s, color: "#10b981", flexShrink: 0 }} />;
     case "warning":
       return <AlertTriangleIcon style={{ width: s, height: s, color: "#f59e0b", flexShrink: 0 }} />;
-    case "locked":
-      return <LockIcon style={{ width: s, height: s, color: "#ccc", flexShrink: 0 }} />;
     case "missing":
     default:
       return <XCircleIcon style={{ width: s, height: s, color: "#f87171", flexShrink: 0 }} />;
@@ -630,7 +627,6 @@ function ChecklistItemCard({
 }) {
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
-  const isLocked = item.status === "locked";
   const isComplete = item.status === "complete";
   const difficulty = DIFFICULTY_LABELS[item.difficulty] ?? DIFFICULTY_LABELS.MEDIUM;
   const impact = IMPACT_LABELS[item.impact] ?? IMPACT_LABELS.MEDIUM;
@@ -663,14 +659,12 @@ function ChecklistItemCard({
     <div
       className="kinde-card"
       style={{
-        opacity: isLocked ? 0.5 : 1,
         overflow: "hidden",
       }}
     >
       {/* Header */}
       <button
         onClick={onToggle}
-        disabled={isLocked}
         style={{
           display: "flex",
           width: "100%",
@@ -680,7 +674,7 @@ function ChecklistItemCard({
           textAlign: "left",
           background: "none",
           border: "none",
-          cursor: isLocked ? "default" : "pointer",
+          cursor: "pointer",
         }}
       >
         <StatusIcon status={item.status} />
@@ -733,8 +727,7 @@ function ChecklistItemCard({
             )}
           </div>
         </div>
-        {!isLocked && (
-          <ChevronDownIcon
+        <ChevronDownIcon
             style={{
               width: 16,
               height: 16,
@@ -743,11 +736,10 @@ function ChecklistItemCard({
               transform: isExpanded ? "rotate(0)" : "rotate(-90deg)",
             }}
           />
-        )}
       </button>
 
       {/* Expanded content */}
-      {isExpanded && !isLocked && (
+      {isExpanded && (
         <div style={{ borderTop: "1px solid #eee" }}>
           <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Description */}
@@ -1031,11 +1023,6 @@ export function GelisimClient({
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} /> Uyari
           </span>
-          {isFree && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ddd" }} /> Kilitli
-            </span>
-          )}
         </div>
       </HeroSection>
 

@@ -71,13 +71,11 @@ export function RakiplerContent({
 }: RakiplerContentProps) {
   const userRow = rows.find((r) => r.isUser);
   const competitorRows = rows.filter((r) => !r.isUser);
-  const visibleCompetitors = competitorRows.slice(0, maxVisibleCompetitors);
-  const blurredCount = competitorRows.length - visibleCompetitors.length;
 
-  // Sorted rows for the bar chart (user + visible competitors)
+  // Sorted rows for the bar chart (user + all competitors)
   const chartRows = [
     ...(userRow ? [userRow] : []),
-    ...visibleCompetitors,
+    ...competitorRows,
   ].sort((a, b) => b.mentionScore - a.mentionScore);
 
   const topCompetitor = competitorRows[0];
@@ -200,37 +198,6 @@ export function RakiplerContent({
               })}
             </div>
 
-            {/* Blurred rows hint */}
-            {blurredCount > 0 && (
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: "12px 16px",
-                  background: "#fafafa",
-                  borderRadius: 12,
-                  textAlign: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--muted-foreground)",
-                  }}
-                >
-                  +{blurredCount} rakip daha var.{" "}
-                  <a
-                    href="/dashboard/ayarlar"
-                    style={{
-                      fontWeight: 600,
-                      color: "var(--foreground)",
-                      textDecoration: "underline",
-                    }}
-                  >
-                    Pro ile tamamını gör
-                  </a>
-                </p>
-              </div>
-            )}
           </div>
         </PageSection>
       )}
@@ -253,7 +220,7 @@ export function RakiplerContent({
             // Build sorted list of all participants for this platform
             const allScores = [
               { name: userName, score: userScore, isUser: true },
-              ...visibleCompetitors.map((c) => ({
+              ...competitorRows.map((c) => ({
                 name: c.name,
                 score: c.platforms[platform] ?? 0,
                 isUser: false,
