@@ -103,7 +103,18 @@ export async function executeScan(
           // For each prompt, run all platforms in parallel
           const platformResults = await Promise.allSettled(
             providers.map(async (provider) => {
+              const platformTimer = Date.now();
               const aiResponse = await cachedSendPrompt(provider, prompt.text);
+
+              if (aiResponse.error) {
+                console.warn(
+                  `[scan-engine] ${provider.platform} ERROR for prompt ${globalIdx}: ${aiResponse.error}`,
+                );
+              } else {
+                console.log(
+                  `[scan-engine] ${provider.platform} OK for prompt ${globalIdx}: ${aiResponse.content.length} chars in ${Date.now() - platformTimer}ms`,
+                );
+              }
 
               let analysis: AnalysisResult;
               if (aiResponse.error) {

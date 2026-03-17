@@ -163,50 +163,76 @@ export function GenelBakisContent({
             subtitle="Yapay zekaların senin yerine önerdiği firmalar"
           />
           <div className="kinde-card p-6 lg:p-8" style={{ cursor: "default" }}>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-5">
               {competitorRanking.map((entry, i) => {
                 const maxMentions = Math.max(
                   ...competitorRanking.map((r) => r.mentionCount),
                   1
                 );
                 const pct = (entry.mentionCount / maxMentions) * 100;
+                const platforms = (["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]);
 
                 return (
-                  <div key={entry.name} className="flex items-center gap-3">
-                    <span
-                      style={{
-                        width: 140,
-                        fontSize: 13,
-                        fontWeight: entry.isUser ? 700 : 400,
-                        color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {entry.isUser ? `${entry.name} (Sen)` : entry.name}
-                    </span>
-                    <div className="flex-1">
-                      <AnimBar
-                        percent={pct}
-                        color={entry.isUser ? "#111" : "#d4d4d4"}
-                        height={entry.isUser ? 10 : 8}
-                        delay={i * 100}
-                      />
+                  <div key={entry.name}>
+                    <div className="flex items-center gap-3">
+                      <span
+                        style={{
+                          width: 140,
+                          fontSize: 13,
+                          fontWeight: entry.isUser ? 700 : 400,
+                          color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {entry.isUser ? `${entry.name} (Sen)` : entry.name}
+                      </span>
+                      <div className="flex-1">
+                        <AnimBar
+                          percent={pct}
+                          color={entry.isUser ? "#111" : "#d4d4d4"}
+                          height={entry.isUser ? 10 : 8}
+                          delay={i * 100}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
+                          width: 36,
+                          textAlign: "right",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {entry.mentionCount}
+                      </span>
                     </div>
-                    <span
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
-                        width: 36,
-                        textAlign: "right",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {entry.mentionCount}
-                    </span>
+                    {/* Per-platform breakdown */}
+                    <div className="flex items-center gap-2 mt-1.5" style={{ paddingLeft: 140 + 12 }}>
+                      {platforms.map((p) => {
+                        const stat = entry.perPlatform[p];
+                        const mentioned = stat?.mentioned ?? 0;
+                        const total = stat?.total ?? 0;
+                        const active = mentioned > 0;
+                        return (
+                          <div
+                            key={p}
+                            className="flex items-center gap-1"
+                            style={{
+                              fontSize: 11,
+                              color: active ? getPlatformColor(p) : "#ccc",
+                              fontWeight: active ? 600 : 400,
+                            }}
+                          >
+                            <PlatformLogo platform={p} size={14} mentioned={active} />
+                            <span>{mentioned}/{total}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}

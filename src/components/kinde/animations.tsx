@@ -26,6 +26,14 @@ export function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // If already in viewport on mount, show immediately
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -33,7 +41,7 @@ export function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
           observer.unobserve(el);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0 }
     );
     observer.observe(el);
     return () => observer.disconnect();

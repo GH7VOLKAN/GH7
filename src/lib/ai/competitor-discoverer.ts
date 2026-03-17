@@ -142,7 +142,9 @@ KURALLAR:
 - "indirect": Yakın/komşu kategoride, kısmen rekabet ediyor
 - Domain bulunamadıysa boş string ("") koy
 - Her rakibin GERÇEKTEN aynı ürünü/hizmeti sunduğundan EMİN OL
-- Türkiye pazarındaki firmalara ağırlık ver ama global markalar da dahil`;
+- Türkiye pazarındaki firmalara ağırlık ver ama global markalar da dahil
+- KRİTİK: ${brand.name} firmaSININ KENDİSİNİ rakip listesine KOYMA! Firma kendisinin rakibi olamaz.
+  Domain "${brand.domain}" olan firma da dahil — kendi markayı ASLA listeye ekleme.`;
 
   try {
     const response = await client.messages.create({
@@ -163,6 +165,24 @@ KURALLAR:
 
     const parsed = JSON.parse(jsonMatch[0]);
 
+    // Turkish-aware normalization for self-filter
+    const normTr = (s: string) =>
+      s.toLowerCase()
+        .replace(/ı/g, "i").replace(/İ/g, "i")
+        .replace(/ğ/g, "g").replace(/Ğ/g, "g")
+        .replace(/ü/g, "u").replace(/Ü/g, "u")
+        .replace(/ş/g, "s").replace(/Ş/g, "s")
+        .replace(/ö/g, "o").replace(/Ö/g, "o")
+        .replace(/ç/g, "c").replace(/Ç/g, "c")
+        .trim();
+
+    const brandNorm = normTr(brand.name);
+    const brandDomainClean = brand.domain
+      .toLowerCase()
+      .replace(/^www\./, "")
+      .replace(/\.(com|net|org|io|ai|tr|com\.tr)$/g, "")
+      .trim();
+
     const competitors: DiscoveredCompetitor[] = (parsed.competitors ?? [])
       .slice(0, 10)
       .map((c: Record<string, unknown>) => ({
@@ -172,7 +192,19 @@ KURALLAR:
         products: Array.isArray(c.products) ? c.products.map(String) : [],
         relevance: c.relevance === "indirect" ? "indirect" as const : "direct" as const,
       }))
-      .filter((c: DiscoveredCompetitor) => c.name.length > 0);
+      .filter((c: DiscoveredCompetitor) => c.name.length > 0)
+      .filter((c: DiscoveredCompetitor) => {
+        const cNorm = normTr(c.name);
+        const cDomain = c.domain.toLowerCase().replace(/^www\./, "");
+        // Exclude if competitor name matches brand name
+        if (cNorm === brandNorm) return false;
+        if (brandNorm.length > 3 && cNorm.includes(brandNorm)) return false;
+        if (cNorm.length > 3 && brandNorm.includes(cNorm)) return false;
+        // Exclude if competitor domain matches brand domain
+        if (cDomain && cDomain === brand.domain.toLowerCase().replace(/^www\./, "")) return false;
+        if (brandDomainClean.length > 3 && cNorm.includes(brandDomainClean)) return false;
+        return true;
+      });
 
     return {
       competitors,

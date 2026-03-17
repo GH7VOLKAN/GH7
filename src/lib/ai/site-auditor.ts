@@ -16,12 +16,20 @@ export interface AuditResult {
   categories: AuditCategoryResult[];
 }
 
+function normalizeDomain(raw: string): string {
+  let d = raw.trim();
+  d = d.replace(/^https?:\/\//, "");
+  d = d.replace(/^www\./, "");
+  d = d.replace(/\/+$/, "");
+  return d;
+}
+
 async function safeFetch(
   url: string,
 ): Promise<{ ok: boolean; text: string; status: number }> {
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; GH7Bot/1.0; +https://gh7.ai)",
@@ -30,7 +38,8 @@ async function safeFetch(
     });
     const text = await res.text();
     return { ok: res.ok, text, status: res.status };
-  } catch {
+  } catch (err) {
+    console.error(`[site-auditor] safeFetch failed for ${url}:`, err instanceof Error ? err.message : err);
     return { ok: false, text: "", status: 0 };
   }
 }
@@ -537,11 +546,27 @@ async function checkPerformance(domain: string): Promise<AuditCategoryResult> {
   return { name: "Performans", checks };
 }
 
-export async function runSiteAudit(domain: string): Promise<AuditResult> {
-  // Fetch homepage
-  const homeRes = await safeFetch(`https://${domain}`);
+export async function runSiteAudit(rawDomain: string): Promise<AuditResult> {
+  const domain = normalizeDomain(rawDomain);
+  console.log(`[site-auditor] Starting audit for "${domain}" (raw: "${rawDomain}")`);
+
+  // Try HTTPS first, then fall back to HTTP
+  let homeRes = await safeFetch(`https://${domain}`);
+  if (!homeRes.ok) {
+    console.log(`[site-auditor] HTTPS failed (${homeRes.status}), trying HTTP...`);
+    homeRes = await safeFetch(`http://${domain}`);
+  }
+  // Also try with www. prefix if bare domain failed
+  if (!homeRes.ok && !domain.startsWith("www.")) {
+    console.log(`[site-auditor] Trying with www. prefix...`);
+    homeRes = await safeFetch(`https://www.${domain}`);
+    if (!homeRes.ok) {
+      homeRes = await safeFetch(`http://www.${domain}`);
+    }
+  }
 
   if (!homeRes.ok) {
+    console.error(`[site-auditor] Site unreachable after all attempts: ${domain}`);
     // Site unreachable — return all fail
     const failCheck = (label: string, raas = false): AuditCheckResult =>
       check(label, "fail", "Site erişilemedi.", "Sitenizin erişilebilir olduğundan emin olun.", raas);
