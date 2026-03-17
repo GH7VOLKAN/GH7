@@ -12,7 +12,7 @@
 
 const PERPLEXITY_API = "https://api.perplexity.ai/chat/completions";
 
-async function querySonar(prompt: string): Promise<string> {
+export async function querySonar(prompt: string): Promise<string> {
   const apiKey = process.env.PERPLEXITY_API_KEY;
   if (!apiKey) {
     console.error("[querySonar] PERPLEXITY_API_KEY is not set!");

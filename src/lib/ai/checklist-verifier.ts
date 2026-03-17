@@ -9,8 +9,7 @@
  */
 
 import { prisma } from "@/lib/db";
-
-const PERPLEXITY_API = "https://api.perplexity.ai/chat/completions";
+import { querySonar } from "./sonar-research";
 
 // ─── Mode 1: Scan-sonrası doğrulama (hafif — API çağrısı yok) ──────
 
@@ -162,28 +161,6 @@ interface SonarVerificationResult {
   changed: boolean;
 }
 
-async function querySonar(prompt: string): Promise<string> {
-  const apiKey = process.env.PERPLEXITY_API_KEY;
-  if (!apiKey) throw new Error("Perplexity API key not configured");
-
-  const res = await fetch(PERPLEXITY_API, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "sonar",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 1024,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!res.ok) throw new Error(`Perplexity API error: ${res.status}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
-}
 
 /**
  * Haftalık cron job: Brand'in tüm missing/warning maddelerini Sonar ile doğrula.

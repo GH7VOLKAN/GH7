@@ -10,7 +10,7 @@
  * - Dağılım: %60 öneri, %20 karşılaştırma, %20 dolaylı
  * - businessArea + searchIntent etiketleri
  *
- * Free: 10 prompt (Sonnet, firma-bulma odaklı)
+ * Free: 20 prompt (Per-area Sonar + Sonnet, aynı Pro pipeline)
  * Pro: 50 prompt/marka (Per-area Sonar + Sonnet), 1 marka
  * Business: 50 prompt/marka × 3 marka (Per-area Sonar + Sonnet)
  * Agency: 50 prompt/marka × 25 marka (Per-area Sonar + Sonnet)
@@ -18,6 +18,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import {
+  querySonar,
   researchBusinessAreaQuestions,
   researchDigitalFootprint,
   type DigitalFootprint,
@@ -58,69 +59,12 @@ export async function generateSmartPrompts(
   brand: BrandInfo,
   count: number,
 ): Promise<GeneratedPrompt[]> {
-  // Free: 10 prompt (Sonnet, firma-bulma odaklı)
-  if (count <= 10) {
-    return generateFreePrompts(brand, count);
-  }
-
-  // Pro/Business/Agency (50 prompt/marka): Per-area Sonar + Sonnet
+  // Tüm planlar aynı Sonar + Sonnet pipeline kullanır
+  // Free: 20 prompt, Pro: 50 prompt — tek fark sayı
   if (brand.type === "firma") {
     return generateFirmaPrompts(brand, count);
   }
   return generateKisiselPrompts(brand, count);
-}
-
-// ─── Free Pipeline (Sonnet, 10 prompt) ────────────────────
-
-async function generateFreePrompts(
-  brand: BrandInfo,
-  count: number,
-): Promise<GeneratedPrompt[]> {
-  const sectorOrProfession = brand.type === "firma"
-    ? (brand.sector || "genel sektor")
-    : (brand.profession || "genel meslek");
-
-  const areas = brand.businessCategories?.length
-    ? brand.businessCategories
-    : brand.specialties?.length
-      ? brand.specialties
-      : [];
-  const areasText = areas.length > 0
-    ? `Faaliyet Alanlari: ${areas.join(", ")}\nHer alandan ESIT sayida soru uret.`
-    : "";
-
-  const systemPrompt = `${count} adet prompt üret. Her prompt MUTLAKA bir FİRMA veya UZMAN ÖNERİSİ almak için sorulmuş olmalı. Cevabı bir FİRMA ADI olan sorular üret.
-Tip: ${brand.type === "firma" ? "BUSINESS" : "PERSONAL"}
-Sektor/Meslek: ${sectorOrProfession}
-Sehir: ${brand.city || "belirtilmedi"}
-${areasText}
-
-AMAC: Gercek bir musteri yapay zekaya "bana iyi bir firma/uzman bul" diye soruyor. Bu tarz sorular uret.
-Firma/kisi adi KESINLIKLE icermesin — %100 markasiz olmali.
-
-ORNEK İYİ SORULAR:
-- "${brand.city || 'Istanbul'}'de en iyi ${sectorOrProfession} firmasi hangisi?"
-- "Bana guvenilir bir ${sectorOrProfession} firmasi onerir misin?"
-- "${sectorOrProfession} icin teklif nereden alabilirim?"
-- "Hangi ${sectorOrProfession} firmasini tercih etmeliyim?"
-
-DAGILIM:
-- %60 oneri sorusu ("bana firma oner", "en iyi firma hangisi", "firma tavsiye et")
-- %20 karsilastirma sorusu ("hangi firma daha iyi", "firma A mi B mi")
-- %20 dolayli soru ("bu hizmeti nereden yaptirabilirim" — AI firma onerir)
-
-KESINLIKLE URETME (YASAK):
-- "Kac yil dayanir", "omru ne kadar" → TEKNİK BİLGİ, YASAK
-- "Maliyeti ne kadar", "fiyati nedir" → SAF FİYAT, YASAK
-- "Nasil calisir", "ne ise yarar" → ANSİKLOPEDİK, YASAK
-- "Nedir", "ne demek" → TANIMLAMA, YASAK
-- "Avantajlari nelerdir" → BİLGİ SORUSU, YASAK
-- Kisacasi: cevabi bir FIRMA ADI olmayan her soru YASAK
-
-JSON formatinda dondur — baska hicbir sey yazma:
-[{"text": "soru metni", "category": "oneri|karsilastirma|lokasyon|sorun", "searchIntent": "recommendation|comparison|indirect", "businessArea": "faaliyet alani", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
-
-  return callClaude(systemPrompt, brand.name, count, "ai_generated", "sonnet");
 }
 
 // ─── Firma Pipeline (Per-Area Sonar + Sonnet) ────────────
@@ -452,23 +396,7 @@ async function generateExpandedPrompts(
   const expansionResults = await Promise.allSettled(
     expansionQueries.map(async (query) => {
       try {
-        const res = await fetch("https://api.perplexity.ai/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "sonar",
-            messages: [{ role: "user", content: query }],
-            max_tokens: 2048,
-            temperature: 0.7,
-          }),
-          signal: AbortSignal.timeout(30000),
-        });
-        if (!res.ok) return "";
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content ?? "";
+        return await querySonar(query);
       } catch {
         return "";
       }

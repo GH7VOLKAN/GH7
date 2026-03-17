@@ -30,7 +30,7 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
-    maxPrompts: 50,            // Spec: 50 soru — PRO ile aynı
+    maxPrompts: 20,            // Free: 20 soru (Sonar + Sonnet)
     manualPromptAdd: false,    // Prompt ekleme Pro+
     scanFrequency: "once",     // TEK FARK: 1 kez tarama
     competitorView: true,      // Her şey açık
@@ -44,7 +44,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     smsEnabled: false,
     maxBrands: 1,
     maxCompetitors: 10,        // Spec: 10 rakip — PRO ile aynı
-    useSonarResearch: false,   // Sonar araştırma Pro+
+    useSonarResearch: true,    // Sonar araştırma tüm planlarda
     checklistLayer3: true,     // Tüm katmanlar açık
     mentionRate: false,        // Trend yok — tek seferlik
     citationView: true,        // Kaynaklar açık

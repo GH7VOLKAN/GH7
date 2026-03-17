@@ -5,7 +5,7 @@
  * Guncelligini yitirmis sorulari isaretler, yeni trend sorular onerir.
  */
 
-const PERPLEXITY_API = "https://api.perplexity.ai/chat/completions";
+import { querySonar } from "./sonar-research";
 
 export interface FreshnessResult {
   promptId: string;
@@ -20,32 +20,6 @@ export interface FreshnessReport {
   staleCount: number;
   results: FreshnessResult[];
   newTrendPrompts: string[]; // yeni trend sorular
-}
-
-async function querySonar(prompt: string): Promise<string> {
-  const apiKey = process.env.PERPLEXITY_API_KEY;
-  if (!apiKey) throw new Error("Perplexity API key not configured");
-
-  const res = await fetch(PERPLEXITY_API, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "sonar",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 2048,
-      temperature: 0.7,
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Perplexity API error: ${res.status}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
 }
 
 /**
