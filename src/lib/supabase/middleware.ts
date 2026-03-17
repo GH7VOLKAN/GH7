@@ -30,6 +30,17 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // If OAuth error lands on root (bad_oauth_state etc.), redirect to login with error
+  const oauthError = request.nextUrl.searchParams.get("error");
+  if (oauthError && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.delete("error_code");
+    url.searchParams.delete("error_description");
+    url.searchParams.set("error", "auth");
+    return NextResponse.redirect(url);
+  }
+
   // If OAuth code lands on root, redirect to /auth/callback
   const code = request.nextUrl.searchParams.get("code");
   if (code && request.nextUrl.pathname === "/") {

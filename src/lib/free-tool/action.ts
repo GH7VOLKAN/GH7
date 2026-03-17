@@ -272,8 +272,11 @@ function generateInsights(
 export async function runFreeToolQuery(
   input: FreeToolInput,
 ): Promise<FreeToolResult> {
-  if (!input.name.trim() || !input.field.trim() || !input.city.trim()) {
-    throw new Error("Tüm alanları doldurun.");
+  if (!input.name.trim()) {
+    throw new Error("Lütfen gerekli alanları doldurun.");
+  }
+  if (input.mode === "kisisel" && !input.field.trim()) {
+    throw new Error("Lütfen meslek/uzmanlık alanını doldurun.");
   }
 
   if (recentQueries >= RATE_LIMIT_MAX) {

@@ -37,8 +37,8 @@ export function FreeToolWidget() {
         const res = await runFreeToolQuery({
           mode,
           name: name.trim(),
-          field: field.trim(),
-          city: city.trim(),
+          field: mode === "kisisel" ? field.trim() : "",
+          city: mode === "kisisel" ? city.trim() : "",
         });
         setResult(res);
       } catch (err) {
@@ -77,7 +77,7 @@ export function FreeToolWidget() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Kendi adımı test et
+            Kişisel
           </button>
           <button
             type="button"
@@ -91,7 +91,7 @@ export function FreeToolWidget() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Firmamı test et
+            Kurumsal
           </button>
         </div>
       </div>
@@ -99,53 +99,54 @@ export function FreeToolWidget() {
       {/* Form */}
       {!result && (
         <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-4">
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              {mode === "kisisel" ? "Ad Soyad" : "Firma Adı"}
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={
-                mode === "kisisel" ? "Ahmet Yılmaz" : "Acme Teknoloji"
-              }
-              required
-              className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
-            />
-          </div>
+          {mode === "kisisel" ? (
+            <>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                  Ad Soyad
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ahmet Yılmaz"
+                  required
+                  className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
+                />
+              </div>
 
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              {mode === "kisisel" ? "Meslek / Uzmanlık" : "Sektör"}
-            </label>
-            <input
-              type="text"
-              value={field}
-              onChange={(e) => setField(e.target.value)}
-              placeholder={
-                mode === "kisisel"
-                  ? "Diş Hekimi, Avukat, Yazılımcı..."
-                  : "SaaS, E-ticaret, Restoran..."
-              }
-              required
-              className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Şehir
-            </label>
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="İstanbul"
-              required
-              className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
-            />
-          </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                  Meslek / Uzmanlık
+                </label>
+                <input
+                  type="text"
+                  value={field}
+                  onChange={(e) => setField(e.target.value)}
+                  placeholder="Diş Hekimi, Avukat, Yazılımcı..."
+                  required
+                  className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Web Adresi
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="isitmax.com"
+                required
+                className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Firma adı, sektör ve konum bilgisi web sitenizden otomatik tespit edilir
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
@@ -182,7 +183,7 @@ export function FreeToolWidget() {
                 Yapay zekalar taraniyor...
               </span>
             ) : (
-              "Test Et"
+              "Ücretsiz Analiz Et"
             )}
           </button>
         </form>

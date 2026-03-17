@@ -19,6 +19,16 @@ export default function LoginPage() {
   const [cooldown, setCooldown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Show auth error from redirect (bad_oauth_state etc.)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "auth") {
+      setError("Giriş süresi doldu. Lütfen tekrar deneyin.");
+      // Clean URL
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
+
   // Cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -40,10 +50,17 @@ export default function LoginPage() {
     setError(null);
     try {
       const supabase = createClient();
+      // Use consistent origin to prevent state cookie mismatch
+      const redirectOrigin = typeof window !== "undefined" && window.location.hostname !== "localhost"
+        ? `https://${window.location.hostname}`
+        : window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${redirectOrigin}/auth/callback`,
+          queryParams: {
+            prompt: "select_account",
+          },
         },
       });
       if (error) {
