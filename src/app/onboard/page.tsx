@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createBrand } from "@/lib/actions";
 import { GH7Logo } from "@/components/gh7-logo";
@@ -16,6 +16,10 @@ import {
   SparklesIcon,
   GlobeIcon,
   ExternalLinkIcon,
+  BrainCircuitIcon,
+  ShieldCheckIcon,
+  ListChecksIcon,
+  SearchIcon,
 } from "lucide-react";
 
 type BrandType = "firma" | "kisisel";
@@ -26,7 +30,7 @@ type Step =
   | "analyzing"         // Sonar analiz ediliyor (geçiş ekranı)
   | "approval"          // Adım 3a: Firma onay
   | "approval-kisisel"  // Adım 3b: Kişisel onay
-  | "loading";          // Brand oluşturuluyor (geçiş ekranı)
+  | "full-analysis";    // Full pipeline running (loading screen)
 
 interface CompetitorEntry {
   name: string;
@@ -92,8 +96,15 @@ export default function OnboardPage() {
   const [newKisiselCompInput, setNewKisiselCompInput] = useState("");
 
   const [error, setError] = useState<string | null>(null);
-  const [loadingStep, setLoadingStep] = useState(0);
   const [analyzeLabel, setAnalyzeLabel] = useState("");
+
+  // ── Full analysis state ──
+  const [scanId, setScanId] = useState<string | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisPhase, setAnalysisPhase] = useState(0); // 0-5
+  const [phaseLabel, setPhaseLabel] = useState("");
+  const [resultCount, setResultCount] = useState(0);
+  const [totalExpected, setTotalExpected] = useState(0);
 
   function handleTypeSelect(type: BrandType) {
     setBrandType(type);
@@ -173,7 +184,7 @@ export default function OnboardPage() {
     });
   }
 
-  // ═══ Firma onay → brand oluştur ═══
+  // ═══ Firma onay → brand oluştur → full analysis ═══
   function handleFirmaApprovalSubmit() {
     const cleanDomain = domain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
     handleFinalSubmit({
@@ -191,7 +202,7 @@ export default function OnboardPage() {
     });
   }
 
-  // ═══ Kişisel onay → brand oluştur ═══
+  // ═══ Kişisel onay → brand oluştur → full analysis ═══
   function handleKisiselApprovalSubmit() {
     handleFinalSubmit({
       name: approvedKisiselName,
@@ -208,31 +219,103 @@ export default function OnboardPage() {
     });
   }
 
-  // ═══ Final brand creation ═══
+  // ═══ Final: brand creation → full analysis pipeline ═══
   function handleFinalSubmit(brandData: Parameters<typeof createBrand>[0]) {
-    setStep("loading");
-    setLoadingStep(1);
-    const timer1 = setTimeout(() => setLoadingStep(2), 3000);
-    const timer2 = setTimeout(() => setLoadingStep(3), 8000);
+    setStep("full-analysis");
+    setAnalysisPhase(1);
+    setAnalysisProgress(5);
+    setPhaseLabel("Profil oluşturuluyor ve sorular üretiliyor...");
 
     startTransition(async () => {
       try {
-        await createBrand(brandData);
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        setLoadingStep(3);
-        setTimeout(() => {
+        // Step 1: Create brand (prompts + checklist + audit fire-and-forget)
+        const result = await createBrand(brandData);
+
+        if (!result?.brandId) {
+          throw new Error("Brand oluşturulamadı");
+        }
+
+        setAnalysisPhase(2);
+        setAnalysisProgress(15);
+        setPhaseLabel("Yapay zekalara soruluyor...");
+
+        // Step 2: Start full analysis (scan + audit + action plan)
+        const scanRes = await fetch("/api/analysis/run-full", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brandId: result.brandId }),
+        });
+        const scanData = await scanRes.json();
+
+        if (scanRes.ok || scanRes.status === 409) {
+          setScanId(scanData.scanId);
+        } else {
+          // Even if scan fails to start, redirect to dashboard
+          console.error("[onboard] Scan start failed:", scanData);
           router.push("/dashboard/genel");
           router.refresh();
-        }, 500);
+        }
       } catch (err) {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+        console.error("[onboard] Full analysis failed:", err);
         setStep(brandType === "firma" ? "domain" : "kisisel-info");
         setError(err instanceof Error ? err.message : "Bir hata oluştu");
       }
     });
   }
+
+  // ═══ Poll scan status ═══
+  const pollStatus = useCallback(async () => {
+    if (!scanId) return;
+    try {
+      const res = await fetch(`/api/scans/${scanId}/status`);
+      const data = await res.json();
+
+      const resultsDone = data.resultCount ?? 0;
+      const totalExp = data.totalExpected ?? 80;
+      setResultCount(resultsDone);
+      setTotalExpected(totalExp);
+
+      if (data.status === "completed") {
+        setAnalysisPhase(4);
+        setAnalysisProgress(90);
+        setPhaseLabel("Site kontrolü ve gelişim planı hazırlanıyor...");
+
+        // Wait a bit for audit/action plan to finish, then redirect
+        setTimeout(() => {
+          setAnalysisPhase(5);
+          setAnalysisProgress(100);
+          setPhaseLabel("Her şey hazır!");
+          setTimeout(() => {
+            router.push("/dashboard/genel");
+            router.refresh();
+          }, 1500);
+        }, 5000);
+      } else if (data.status === "failed") {
+        // Still redirect — partial data is better than nothing
+        router.push("/dashboard/genel");
+        router.refresh();
+      } else {
+        // Running
+        const scanProgress = totalExp > 0 ? Math.round((resultsDone / totalExp) * 70) : 0;
+        setAnalysisProgress(15 + scanProgress); // 15-85%
+
+        if (resultsDone > 0) {
+          setAnalysisPhase(3);
+          setPhaseLabel(`Yapay zekalara soruluyor... (${resultsDone}/${totalExp})`);
+        }
+      }
+    } catch {
+      // Ignore poll errors
+    }
+  }, [scanId, router]);
+
+  useEffect(() => {
+    if (step !== "full-analysis" || !scanId) return;
+    const interval = setInterval(pollStatus, 3000);
+    // Initial poll
+    pollStatus();
+    return () => clearInterval(interval);
+  }, [step, scanId, pollStatus]);
 
   // ── Editable list helpers ──
   function addCategory() { const v = newCategoryInput.trim(); if (v && !approvedCategories.includes(v)) { setApprovedCategories((p) => [...p, v]); setNewCategoryInput(""); } }
@@ -265,7 +348,7 @@ export default function OnboardPage() {
               Yapay Zeka Seni<br /><span className="font-semibold">Tanıyor mu?</span>
             </h1>
             <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
-              Markanızın ChatGPT, Claude, Gemini ve Perplexity&apos;deki görünürlüğünü ölçün ve iyileştirin.
+              30 saniyede öğren. Markanızın ChatGPT, Claude, Gemini ve Perplexity&apos;deki görünürlüğünü ölçün.
             </p>
             <div className="mx-auto mt-14 grid max-w-xl gap-5 sm:grid-cols-2">
               <button type="button" onClick={() => handleTypeSelect("firma")} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white p-7 text-left shadow-sm transition-all hover:border-foreground hover:shadow-lg">
@@ -317,7 +400,7 @@ export default function OnboardPage() {
               </div>
               {error && <p className="rounded-xl bg-red-50 p-3.5 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">{error}</p>}
               <button type="submit" disabled={isPending || !domain.trim()} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">
-                {isPending ? "Analiz ediliyor..." : "Analiz Et"}
+                {isPending ? "Analiz ediliyor..." : "Tarama Başlat"}
               </button>
             </form>
           </div>
@@ -356,7 +439,7 @@ export default function OnboardPage() {
               </div>
               {error && <p className="rounded-xl bg-red-50 p-3.5 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">{error}</p>}
               <button type="submit" disabled={isPending || !kisiselName.trim() || !profession.trim()} className="w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">
-                {isPending ? "Analiz ediliyor..." : "Analiz Et"}
+                {isPending ? "Analiz ediliyor..." : "Tarama Başlat"}
               </button>
             </form>
           </div>
@@ -426,10 +509,8 @@ export default function OnboardPage() {
             </div>
 
             <div className="mt-8 space-y-6">
-              {/* Faaliyet Alanları */}
               <EditableChipSection title="Faaliyet Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedCategories} onRemove={removeCategory} inputValue={newCategoryInput} onInputChange={setNewCategoryInput} onAdd={addCategory} placeholder="Yeni alan ekle..." chipClass={chipClass} inputClass={inputClass} />
 
-              {/* Rakipler */}
               <div className="rounded-2xl border border-border/50 bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold tracking-[-0.01em]">Rakipler ({approvedCompetitors.length})</h2><p className="mt-0.5 text-xs text-muted-foreground">Bu markalarla kıyaslanacaksınız</p></div></div>
                 <div className="mt-4 space-y-2.5">
@@ -450,25 +531,22 @@ export default function OnboardPage() {
                 </div>
               </div>
 
-              {/* Hizmet Bölgeleri */}
               {approvedRegions.length > 0 && (
                 <EditableChipSection title="Hizmet Bölgeleri" subtitle="Konum bazlı sorularda kullanılacak" items={approvedRegions} onRemove={removeRegion} inputValue={newRegionInput} onInputChange={setNewRegionInput} onAdd={addRegion} placeholder="Yeni bölge ekle..." chipClass={chipClass} inputClass={inputClass} />
               )}
 
-              {/* Güçlü/Zayıf */}
               <StrengthsWeaknesses strengths={firmaAnalysis?.strengths ?? []} weaknesses={firmaAnalysis?.weaknesses ?? []} />
             </div>
 
-            {/* Soru bilgisi + Submit */}
             <div className="mt-8 rounded-2xl border border-border/50 bg-muted/10 p-5 text-center">
               <p className="text-sm text-muted-foreground">
                 Her faaliyet alanı için <span className="font-semibold text-foreground">10 soru</span> oluşturulacak.
-                {" "}Toplam: <span className="font-semibold text-foreground">{Math.min(promptCount, 50)} soru</span>
+                {" "}Toplam: <span className="font-semibold text-foreground">{Math.min(promptCount, 20)} soru</span>
               </p>
               <p className="mt-1.5 text-xs text-muted-foreground/60">Tüm sorular firma önerisi alma odaklı.</p>
             </div>
 
-            <button type="button" onClick={handleFirmaApprovalSubmit} disabled={isPending} className="mt-8 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Başla"}</button>
+            <button type="button" onClick={handleFirmaApprovalSubmit} disabled={isPending} className="mt-8 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Analizi Başlat"}</button>
             <p className="mt-4 text-center text-xs text-muted-foreground/50">Düzenlemeleriniz yapay zeka sorularının kalitesini doğrudan etkiler</p>
           </div>
         </div>
@@ -487,7 +565,6 @@ export default function OnboardPage() {
           <div className="w-full max-w-2xl">
             <button type="button" onClick={() => setStep("kisisel-info")} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeftIcon className="size-4" />Geri</button>
 
-            {/* Header */}
             <div className="flex items-center gap-3.5 rounded-2xl border border-emerald-200/60 bg-emerald-50/30 p-5 dark:border-emerald-800/30 dark:bg-emerald-900/10">
               <CheckIcon className="size-5 text-emerald-600" />
               <div>
@@ -496,7 +573,6 @@ export default function OnboardPage() {
               </div>
             </div>
 
-            {/* Ad + Meslek + Şehir */}
             <div className="mt-8 grid gap-5 sm:grid-cols-3">
               <div><label className="text-xs font-medium text-muted-foreground">Ad Soyad</label><input type="text" value={approvedKisiselName} onChange={(e) => setApprovedKisiselName(e.target.value)} className={`mt-1.5 ${inputClass}`} /></div>
               <div><label className="text-xs font-medium text-muted-foreground">Meslek</label><input type="text" value={approvedProfession} onChange={(e) => setApprovedProfession(e.target.value)} className={`mt-1.5 ${inputClass}`} /></div>
@@ -504,10 +580,8 @@ export default function OnboardPage() {
             </div>
 
             <div className="mt-8 space-y-6">
-              {/* Uzmanlık Alanları */}
               <EditableChipSection title="Uzmanlık Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedSpecialties} onRemove={removeSpecialty} inputValue={newSpecialtyInput} onInputChange={setNewSpecialtyInput} onAdd={addSpecialty} placeholder="Yeni uzmanlık ekle..." chipClass={chipClass} inputClass={inputClass} />
 
-              {/* Senin yerine önerilen kişiler */}
               <div className="rounded-2xl border border-border/50 bg-white p-6 shadow-sm">
                 <h2 className="text-sm font-semibold tracking-[-0.01em]">Senin Yerine Önerilen Kişiler ({approvedKisiselCompetitors.length})</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">Bu kişilerle kıyaslanacaksınız</p>
@@ -527,11 +601,10 @@ export default function OnboardPage() {
                 </div>
               </div>
 
-              {/* Güçlü/Zayıf */}
               <StrengthsWeaknesses strengths={kisiselAnalysis?.strengths ?? []} weaknesses={kisiselAnalysis?.weaknesses ?? []} />
             </div>
 
-            <button type="button" onClick={handleKisiselApprovalSubmit} disabled={isPending} className="mt-10 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Başla"}</button>
+            <button type="button" onClick={handleKisiselApprovalSubmit} disabled={isPending} className="mt-10 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Analizi Başlat"}</button>
             <p className="mt-4 text-center text-xs text-muted-foreground/50">Düzenlemeleriniz yapay zeka sorularının kalitesini doğrudan etkiler</p>
           </div>
         </div>
@@ -540,33 +613,131 @@ export default function OnboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
-  // GEÇİŞ: Brand oluşturuluyor
+  // FULL ANALYSIS — Animasyonlu Yükleme Ekranı
   // ═══════════════════════════════════════════════════════
-  if (step === "loading") {
-    const steps = [
-      { label: brandType === "firma" ? "Sektörünüz analiz ediliyor" : "Dijital iziniz araştırılıyor", done: loadingStep > 1, active: loadingStep === 1 },
-      { label: "Akıllı sorular üretiliyor", done: loadingStep > 2, active: loadingStep === 2 },
-      { label: "Sayfanız hazırlanıyor", done: loadingStep >= 3, active: loadingStep === 3 },
+  if (step === "full-analysis") {
+    const phases = [
+      {
+        icon: SparklesIcon,
+        label: "Profil oluşturuldu ve sorular üretiliyor",
+        done: analysisPhase > 1,
+        active: analysisPhase === 1,
+      },
+      {
+        icon: SearchIcon,
+        label: `${totalExpected > 0 ? `${Math.round(totalExpected / 4)} soru` : "Sorular"} oluşturuldu`,
+        done: analysisPhase > 2,
+        active: analysisPhase === 2,
+      },
+      {
+        icon: BrainCircuitIcon,
+        label: resultCount > 0
+          ? `Yapay zekalara soruluyor... (${resultCount}/${totalExpected})`
+          : "Yapay zekalara soruluyor...",
+        done: analysisPhase > 3,
+        active: analysisPhase === 3,
+      },
+      {
+        icon: ShieldCheckIcon,
+        label: "Site kontrolü ve rakip analizi",
+        done: analysisPhase > 4,
+        active: analysisPhase === 4,
+      },
+      {
+        icon: ListChecksIcon,
+        label: "Gelişim planı hazırlanıyor",
+        done: analysisPhase >= 5,
+        active: analysisPhase === 5,
+      },
     ];
+
     return (
       <div className="flex min-h-screen flex-col bg-white">
         <div className="flex items-center justify-between px-6 py-6 sm:px-10"><GH7Logo size="default" /></div>
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24">
           <div className="w-full max-w-md text-center">
-            <div className="mx-auto flex size-20 items-center justify-center rounded-2xl border border-border/50 bg-white shadow-sm"><Loader2Icon className="size-8 animate-spin text-foreground" /></div>
-            <h1 className="mt-10 font-inter text-3xl font-light tracking-[-0.04em] md:text-4xl">Hazırlanıyor</h1>
-            <p className="mt-4 text-base text-muted-foreground">Yapay zeka görünürlük altyapısı kuruluyor</p>
-            <div className="mx-auto mt-12 max-w-xs space-y-5 text-left">
-              {steps.map((s, i) => (
-                <div key={i} className={`flex items-center gap-3.5 transition-opacity duration-500 ${s.done || s.active ? "opacity-100" : "opacity-30"}`}>
-                  <div className={`flex size-7 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${s.done ? "bg-foreground text-background" : s.active ? "border-2 border-foreground" : "border border-border/50"}`}>
-                    {s.done ? <CheckIcon className="size-3.5" /> : s.active ? <Loader2Icon className="size-3.5 animate-spin" /> : <span className="text-[10px] text-muted-foreground">{i + 1}</span>}
-                  </div>
-                  <span className={`text-sm ${s.done ? "text-muted-foreground line-through" : s.active ? "font-medium" : ""}`}>{s.label}</span>
-                </div>
-              ))}
+            {/* Animated icon */}
+            <div className="mx-auto flex size-20 items-center justify-center rounded-2xl border border-border/50 bg-white shadow-sm">
+              {analysisPhase >= 5
+                ? <CheckIcon className="size-8 text-emerald-600" />
+                : <Loader2Icon className="size-8 animate-spin text-foreground" />
+              }
             </div>
-            <p className="mt-12 text-xs text-muted-foreground/50">Bu işlem 10-30 saniye sürebilir</p>
+
+            <h1 className="mt-10 font-inter text-3xl font-light tracking-[-0.04em] md:text-4xl">
+              {analysisPhase >= 5 ? "Her Şey Hazır!" : "Analiziniz Hazırlanıyor"}
+            </h1>
+            <p className="mt-4 text-base text-muted-foreground">
+              {analysisPhase >= 5
+                ? "Dashboard'ınız açılıyor..."
+                : phaseLabel || "Yapay zeka görünürlük analizi başlatıldı"
+              }
+            </p>
+
+            {/* Progress bar */}
+            <div className="mx-auto mt-8 max-w-xs">
+              <div className="flex items-center justify-between text-xs font-medium mb-2">
+                <span className="text-muted-foreground">İlerleme</span>
+                <span className="tabular-nums text-foreground">%{analysisProgress}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted/50">
+                <div
+                  className="h-full rounded-full bg-foreground transition-all duration-1000 ease-out"
+                  style={{ width: `${analysisProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Phase steps */}
+            <div className="mx-auto mt-10 max-w-sm space-y-4 text-left">
+              {phases.map((phase, i) => {
+                const Icon = phase.icon;
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-3.5 transition-opacity duration-500 ${
+                      phase.done || phase.active ? "opacity-100" : "opacity-25"
+                    }`}
+                  >
+                    <div
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+                        phase.done
+                          ? "bg-emerald-600 text-white"
+                          : phase.active
+                            ? "border-2 border-foreground"
+                            : "border border-border/50"
+                      }`}
+                    >
+                      {phase.done ? (
+                        <CheckIcon className="size-4" />
+                      ) : phase.active ? (
+                        <Loader2Icon className="size-4 animate-spin" />
+                      ) : (
+                        <Icon className="size-3.5 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    <span
+                      className={`text-sm ${
+                        phase.done
+                          ? "text-muted-foreground"
+                          : phase.active
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground/50"
+                      }`}
+                    >
+                      {phase.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="mt-10 text-xs text-muted-foreground/50">
+              {analysisPhase >= 5
+                ? ""
+                : "Bu işlem 2-3 dakika sürer. Sayfayı kapatmayın."
+              }
+            </p>
           </div>
         </div>
       </div>

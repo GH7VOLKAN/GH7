@@ -55,7 +55,7 @@ export async function createBrand(data: {
   if (!user) throw new Error("Unauthorized");
 
   if (!data.name.trim()) throw new Error("Marka adı gerekli");
-  if (!data.domain.trim()) throw new Error("Domain gerekli");
+  if (data.type === "firma" && !data.domain.trim()) throw new Error("Domain gerekli");
 
   // Get user's plan for prompt limits
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
@@ -248,8 +248,8 @@ export async function createBrand(data: {
     console.error("[createBrand] Checklist seed failed (non-fatal):", checklistErr);
   }
 
-  // Pro+ kullanicilar icin audit + action plan (non-fatal, background)
-  if (isPro(plan)) {
+  // Audit + action plan for ALL plans (non-fatal, background)
+  {
     // Fire and forget — onboarding'i yavaslamamasi icin
     (async () => {
       try {

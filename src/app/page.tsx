@@ -23,8 +23,8 @@ export default function LandingPage() {
           eyebrow="Yapay Zeka Taraması"
           title="4 yapay zekada nasıl göründüğünü hemen öğren"
           description="ChatGPT, Claude, Gemini ve Perplexity — hepsi aynı anda taranır. Seni tanıyorlar mı, ne söylüyorlar? Sonucu anında gör."
-          ctaText="Şimdi dene"
-          ctaHref="#hero"
+          ctaText="Ücretsiz başla"
+          ctaHref="/login"
           visual={<FeatureVisualScore />}
         />
 

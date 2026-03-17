@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
-type UpgradeType = "trend" | "verification" | "report" | "competitor";
+type UpgradeType = "trend" | "verification" | "report" | "competitor" | "guide";
 
 const messages: Record<UpgradeType, { title: string; desc: string; cta: string }> = {
   trend: {
@@ -23,6 +23,11 @@ const messages: Record<UpgradeType, { title: string; desc: string; cta: string }
     title: "Rakiplerini takipte tut",
     desc: "Rakiplerin yeni bir şey yaptığında hemen bildir. Geride kalma.",
     cta: "Rakip takibine başla",
+  },
+  guide: {
+    title: "Adım adım rehber ile gelişim planını uygula",
+    desc: "Pro'da her adımı sana özel hazırlarız ve yapay zekanın fark edip etmediğini kontrol ederiz.",
+    cta: "Pro ile rehberi aç",
   },
 };
 
