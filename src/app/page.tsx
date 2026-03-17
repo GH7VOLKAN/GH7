@@ -13,7 +13,7 @@ import { Footer } from "@/components/landing/footer";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div style={{ minHeight: "100vh", background: "#fff" }}>
       <Navbar />
       <HeroSection />
       <SocialProof />
@@ -48,7 +48,7 @@ export default function LandingPage() {
         />
 
         <FeatureSection
-          eyebrow="Yapılacaklar Listesi"
+          eyebrow="Gelişim Planı"
           title="Ne yapman gerektiğini adım adım gösterir"
           description="Neyi değiştirirsen yapay zekalarda daha çok görünürsün? Sana özel bir yapılacaklar listesi. Uygula, sonuçları takip et."
           ctaText="Planını al"

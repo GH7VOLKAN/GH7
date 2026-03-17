@@ -1,8 +1,8 @@
 const platformBars = [
-  { label: "ChatGPT", color: "bg-green-500", width: "w-[85%]", score: 85 },
-  { label: "Claude", color: "bg-orange-500", width: "w-[72%]", score: 72 },
-  { label: "Gemini", color: "bg-blue-500", width: "w-[55%]", score: 55 },
-  { label: "Perplexity", color: "bg-purple-500", width: "w-[90%]", score: 90 },
+  { label: "ChatGPT", icon: "/chatgpt-icon.webp", score: 85 },
+  { label: "Claude", icon: "/claude-ai-icon.webp", score: 72 },
+  { label: "Gemini", icon: "/google-gemini-icon.webp", score: 55 },
+  { label: "Perplexity", icon: "/perplexity-ai-icon.webp", score: 90 },
 ];
 
 export function FeatureVisualScore() {
@@ -11,55 +11,54 @@ export function FeatureVisualScore() {
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #eee",
+        borderRadius: 20,
+        padding: 32,
+      }}
+    >
       {/* Score Ring */}
-      <div className="flex justify-center">
-        <div className="relative">
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ position: "relative" }}>
           <svg width="140" height="140" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#f0f0f0" strokeWidth="8" />
             <circle
-              cx="60"
-              cy="60"
-              r="54"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="8"
-              className="text-muted/40"
-            />
-            <circle
-              cx="60"
-              cy="60"
-              r="54"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="8"
+              cx="60" cy="60" r="54"
+              fill="none" stroke="#111" strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
-              className="text-green-500"
               transform="rotate(-90 60 60)"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold">{score}</span>
-            <span className="text-[10px] text-muted-foreground">/100</span>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 32, fontWeight: 800, color: "#111" }}>{score}</span>
+            <span style={{ fontSize: 10, color: "#999" }}>/100</span>
           </div>
         </div>
       </div>
 
       {/* Platform bars */}
-      <div className="mt-6 space-y-3">
+      <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
         {platformBars.map((p) => (
-          <div key={p.label} className="flex items-center gap-3">
-            <span className="w-20 text-xs font-medium text-muted-foreground">
-              {p.label}
-            </span>
-            <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted/40">
-              <div
-                className={`absolute inset-y-0 left-0 rounded-full ${p.color}`}
-                style={{ width: `${p.score}%` }}
-              />
+          <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img src={p.icon} alt={p.label} style={{ width: 20, height: 20, borderRadius: 5 }} />
+            <span style={{ width: 72, fontSize: 12, fontWeight: 500, color: "#888" }}>{p.label}</span>
+            <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#f0f0f0", overflow: "hidden" }}>
+              <div style={{ width: `${p.score}%`, height: "100%", borderRadius: 3, background: "#111" }} />
             </div>
-            <span className="w-8 text-right text-xs font-bold tabular-nums">
+            <span style={{ width: 28, textAlign: "right", fontSize: 12, fontWeight: 700, color: "#111" }}>
               {p.score}
             </span>
           </div>

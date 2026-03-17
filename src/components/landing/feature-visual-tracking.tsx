@@ -10,61 +10,96 @@ const weekData = [
 
 export function FeatureVisualTracking() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-950">
-            <svg
-              className="size-3.5 text-blue-600 dark:text-blue-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-              />
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #eee",
+        borderRadius: 20,
+        padding: 32,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "#dbeafe",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
             </svg>
           </div>
-          <p className="text-sm font-bold">Haftalık Takip</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>Haftalık Takip</p>
         </div>
-        <span className="rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold text-green-700 dark:bg-green-950 dark:text-green-400">
+        <span
+          style={{
+            padding: "4px 12px",
+            borderRadius: 100,
+            background: "#f0fdf4",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#16a34a",
+          }}
+        >
           +12% bu hafta
         </span>
       </div>
 
       {/* Chart */}
-      <div className="flex h-32 items-end gap-2">
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
         {weekData.map((d, i) => (
-          <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
+          <div
+            key={d.day}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
             <div
-              className={`w-full rounded-t-md transition-all ${
-                i === weekData.length - 1
-                  ? "bg-foreground"
-                  : "bg-muted-foreground/15"
-              }`}
-              style={{ height: `${d.value}%` }}
+              style={{
+                width: "100%",
+                height: `${d.value}%`,
+                borderRadius: "6px 6px 0 0",
+                background: i === weekData.length - 1 ? "#111" : "#f0f0f0",
+                transition: "height 0.5s ease",
+              }}
             />
-            <span className="text-[10px] text-muted-foreground">{d.day}</span>
+            <span style={{ fontSize: 10, color: "#999" }}>{d.day}</span>
           </div>
         ))}
       </div>
 
       {/* Summary row */}
-      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-border pt-4">
-        <div className="text-center">
-          <p className="text-lg font-bold">65</p>
-          <p className="text-[10px] text-muted-foreground">Bu Hafta</p>
+      <div
+        style={{
+          marginTop: 16,
+          paddingTop: 16,
+          borderTop: "1px solid #f0f0f0",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 16,
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 800, color: "#111" }}>65</p>
+          <p style={{ fontSize: 10, color: "#999" }}>Bu Hafta</p>
         </div>
-        <div className="text-center">
-          <p className="text-lg font-bold">35</p>
-          <p className="text-[10px] text-muted-foreground">Geçen Hafta</p>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 800, color: "#111" }}>35</p>
+          <p style={{ fontSize: 10, color: "#999" }}>Geçen Hafta</p>
         </div>
-        <div className="text-center">
-          <p className="text-lg font-bold text-green-500">+30</p>
-          <p className="text-[10px] text-muted-foreground">Değişim</p>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 800, color: "#22c55e" }}>+30</p>
+          <p style={{ fontSize: 10, color: "#999" }}>Değişim</p>
         </div>
       </div>
     </div>

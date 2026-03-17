@@ -1,175 +1,200 @@
 import Link from "next/link";
-import { CheckIcon } from "lucide-react";
 
 interface PlanFeature {
   text: string;
 }
 
-const freePlan: PlanFeature[] = [
-  { text: "Adını yaz, sonucunu gör" },
-  { text: "4 yapay zekada tarama" },
-  { text: "Temel sonuç raporu" },
-];
-
-const proPlan: PlanFeature[] = [
-  { text: "Haftada 3 otomatik kontrol" },
-  { text: "50 soru takibi" },
-  { text: "Senin yerine kimin önerildiğini gör" },
-  { text: "Ne yapman gerektiğini öğren" },
-  { text: "Haftalık değişimleri takip et" },
-  { text: "Haftalık e-posta raporu" },
-];
-
-const businessPlan: PlanFeature[] = [
-  { text: "Pro'daki her şey" },
-  { text: "200 soru takibi" },
-  { text: "10 marka yönetimi" },
-  { text: "25 rakip analizi" },
-  { text: "Öncelikli destek" },
-];
-
-const agencyPlan: PlanFeature[] = [
-  { text: "Business'taki her şey" },
-  { text: "Günlük otomatik tarama" },
-  { text: "500 soru takibi" },
-  { text: "50 marka yönetimi" },
-  { text: "50 rakip analizi" },
-  { text: "Ajans paneli" },
+const plans = [
+  {
+    name: "Ücretsiz",
+    price: "0₺",
+    period: "Sonsuza kadar",
+    cta: "Ücretsiz Dene",
+    ctaStyle: "outline" as const,
+    popular: false,
+    features: [
+      { text: "Adını yaz, sonucunu gör" },
+      { text: "4 yapay zekada tarama" },
+      { text: "Temel sonuç raporu" },
+    ],
+  },
+  {
+    name: "Pro",
+    price: "2.495₺",
+    period: "7 gün ücretsiz deneme",
+    cta: "Takibe Başla",
+    ctaStyle: "solid" as const,
+    popular: true,
+    features: [
+      { text: "Haftada 3 otomatik kontrol" },
+      { text: "50 soru takibi" },
+      { text: "Senin yerine kimin önerildiğini gör" },
+      { text: "Ne yapman gerektiğini öğren" },
+      { text: "Haftalık değişimleri takip et" },
+      { text: "Haftalık e-posta raporu" },
+    ],
+  },
+  {
+    name: "Business",
+    price: "7.495₺",
+    period: "Çoklu marka yönetimi",
+    cta: "Başla",
+    ctaStyle: "outline" as const,
+    popular: false,
+    features: [
+      { text: "Pro'daki her şey" },
+      { text: "200 soru takibi" },
+      { text: "10 marka yönetimi" },
+      { text: "25 rakip analizi" },
+      { text: "Öncelikli destek" },
+    ],
+  },
+  {
+    name: "Ajans",
+    price: "19.995₺",
+    period: "Günlük tarama, sınırsız güç",
+    cta: "Bize Ulaşın",
+    ctaStyle: "outline" as const,
+    popular: false,
+    features: [
+      { text: "Business'taki her şey" },
+      { text: "Günlük otomatik tarama" },
+      { text: "500 soru takibi" },
+      { text: "50 marka yönetimi" },
+      { text: "50 rakip analizi" },
+      { text: "Ajans paneli" },
+    ],
+  },
 ];
 
 function FeatureItem({ feature }: { feature: PlanFeature }) {
   return (
-    <li className="flex items-center gap-3 text-sm">
-      <CheckIcon className="size-4 shrink-0 text-green-500" />
-      <span>{feature.text}</span>
+    <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+      <span style={{ color: "#555" }}>{feature.text}</span>
     </li>
   );
 }
 
 export function PricingSection() {
   return (
-    <section id="fiyatlandirma" className="py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+    <section id="fiyatlandirma" style={{ padding: "80px 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <div
+            style={{
+              display: "inline-block",
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: 2,
+              color: "#999",
+              padding: "4px 12px",
+              borderRadius: 100,
+              background: "#f5f5f5",
+              marginBottom: 16,
+            }}
+          >
             Fiyatlandırma
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
+          </div>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 3.5vw, 40px)",
+              fontWeight: 800,
+              letterSpacing: "-1.5px",
+              color: "#111",
+            }}
+          >
             Hemen başla, sonuçları gör
           </h2>
-          <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground">
+          <p style={{ fontSize: 15, color: "#888", marginTop: 12, maxWidth: 400, marginLeft: "auto", marginRight: "auto" }}>
             Ücretsiz dene. İstediğin zaman iptal et.
           </p>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Free plan */}
-          <div className="rounded-2xl border border-border p-7">
-            <p className="text-sm font-bold text-muted-foreground">Ücretsiz</p>
-            <p className="mt-2 text-3xl font-bold">0₺</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Sonsuza kadar
-            </p>
-
-            <ul className="mt-7 space-y-3.5">
-              {freePlan.map((f) => (
-                <FeatureItem key={f.text} feature={f} />
-              ))}
-            </ul>
-
-            <Link
-              href="/login"
-              className="mt-7 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 16,
+            maxWidth: 1100,
+            margin: "0 auto",
+          }}
+          className="grid-cols-1! sm:grid-cols-2! lg:grid-cols-4!"
+        >
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              style={{
+                position: "relative",
+                background: "#fff",
+                border: plan.popular ? "2px solid #111" : "1px solid #eee",
+                borderRadius: 20,
+                padding: 28,
+                display: "flex",
+                flexDirection: "column",
+              }}
             >
-              Ücretsiz Dene
-            </Link>
-          </div>
+              {plan.popular && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -14,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    padding: "5px 16px",
+                    borderRadius: 100,
+                    background: "#111",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  En Popüler
+                </div>
+              )}
 
-          {/* Pro plan */}
-          <div className="relative rounded-2xl border-2 border-foreground bg-foreground/[0.02] p-7">
-            {/* Popular badge */}
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-foreground px-4 py-1 text-xs font-bold text-background">
-              En Popüler
+              <p style={{ fontSize: 13, fontWeight: 700, color: plan.popular ? "#111" : "#888" }}>
+                {plan.name}
+              </p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: "#111", marginTop: 8 }}>
+                {plan.price}
+                {plan.price !== "0₺" && (
+                  <span style={{ fontSize: 14, fontWeight: 400, color: "#888" }}>/ay</span>
+                )}
+              </p>
+              <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>{plan.period}</p>
+
+              <ul style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+                {plan.features.map((f) => (
+                  <FeatureItem key={f.text} feature={f} />
+                ))}
+              </ul>
+
+              <Link
+                href="/login"
+                style={{
+                  marginTop: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "12px 24px",
+                  borderRadius: 100,
+                  background: plan.ctaStyle === "solid" ? "#111" : "transparent",
+                  color: plan.ctaStyle === "solid" ? "#fff" : "#111",
+                  border: plan.ctaStyle === "solid" ? "none" : "1px solid #eee",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                {plan.cta}
+              </Link>
             </div>
-
-            <p className="text-sm font-bold">Pro</p>
-            <p className="mt-2 text-3xl font-bold">
-              2.495₺
-              <span className="text-base font-normal text-muted-foreground">
-                /ay
-              </span>
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              7 gün ücretsiz deneme
-            </p>
-
-            <ul className="mt-7 space-y-3.5">
-              {proPlan.map((f) => (
-                <FeatureItem key={f.text} feature={f} />
-              ))}
-            </ul>
-
-            <Link
-              href="/login"
-              className="mt-7 flex w-full items-center justify-center rounded-lg bg-foreground px-6 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
-            >
-              Takibe Başla
-            </Link>
-          </div>
-
-          {/* Business plan */}
-          <div className="rounded-2xl border border-border p-7">
-            <p className="text-sm font-bold text-muted-foreground">Business</p>
-            <p className="mt-2 text-3xl font-bold">
-              7.495₺
-              <span className="text-base font-normal text-muted-foreground">
-                /ay
-              </span>
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Çoklu marka yönetimi
-            </p>
-
-            <ul className="mt-7 space-y-3.5">
-              {businessPlan.map((f) => (
-                <FeatureItem key={f.text} feature={f} />
-              ))}
-            </ul>
-
-            <Link
-              href="/login"
-              className="mt-7 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
-            >
-              Başla
-            </Link>
-          </div>
-
-          {/* Agency plan */}
-          <div className="rounded-2xl border border-border p-7">
-            <p className="text-sm font-bold text-muted-foreground">Ajans</p>
-            <p className="mt-2 text-3xl font-bold">
-              19.995₺
-              <span className="text-base font-normal text-muted-foreground">
-                /ay
-              </span>
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Günlük tarama, sınırsız güç
-            </p>
-
-            <ul className="mt-7 space-y-3.5">
-              {agencyPlan.map((f) => (
-                <FeatureItem key={f.text} feature={f} />
-              ))}
-            </ul>
-
-            <Link
-              href="/login"
-              className="mt-7 flex w-full items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
-            >
-              Bize Ulaş
-            </Link>
-          </div>
+          ))}
         </div>
       </div>
     </section>

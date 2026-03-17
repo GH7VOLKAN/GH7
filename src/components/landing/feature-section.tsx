@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
 
 interface FeatureSectionProps {
   eyebrow: string;
@@ -21,35 +20,86 @@ export function FeatureSection({
   reversed = false,
 }: FeatureSectionProps) {
   return (
-    <section className="py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          {/* Text side */}
-          <div className={reversed ? "lg:order-last" : ""}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              {eyebrow}
-            </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
-              {title}
-            </h2>
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
-              {description}
-            </p>
-            {ctaText && (
-              <Link
-                href={ctaHref}
-                className="mt-6 inline-flex items-center gap-2 text-sm font-bold transition-all hover:gap-3"
-              >
-                {ctaText}
-                <ArrowRightIcon className="size-4" />
-              </Link>
-            )}
+    <section style={{ padding: "80px 24px" }}>
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 64,
+          alignItems: "center",
+        }}
+        className="grid-cols-1! lg:grid-cols-2!"
+      >
+        {/* Text side */}
+        <div style={{ order: reversed ? 2 : 1 }} className={reversed ? "lg:order-2" : ""}>
+          <div
+            style={{
+              display: "inline-block",
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: 2,
+              color: "#999",
+              padding: "4px 12px",
+              borderRadius: 100,
+              background: "#f5f5f5",
+              marginBottom: 16,
+            }}
+          >
+            {eyebrow}
           </div>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 3.5vw, 40px)",
+              fontWeight: 800,
+              letterSpacing: "-1.5px",
+              lineHeight: 1.1,
+              color: "#111",
+            }}
+          >
+            {title}
+          </h2>
+          <p
+            style={{
+              fontSize: 15,
+              lineHeight: 1.7,
+              color: "#888",
+              marginTop: 16,
+              maxWidth: 440,
+            }}
+          >
+            {description}
+          </p>
+          {ctaText && (
+            <Link
+              href={ctaHref}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 24,
+                padding: "10px 24px",
+                borderRadius: 100,
+                background: "#111",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              {ctaText}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
+        </div>
 
-          {/* Visual side */}
-          <div className={reversed ? "lg:order-first" : ""}>
-            {visual}
-          </div>
+        {/* Visual side */}
+        <div style={{ order: reversed ? 1 : 2 }} className={reversed ? "lg:order-1" : ""}>
+          {visual}
         </div>
       </div>
     </section>

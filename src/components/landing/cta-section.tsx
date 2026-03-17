@@ -1,23 +1,71 @@
 export function CtaSection() {
   return (
-    <section className="py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-2xl bg-foreground p-10 text-center sm:p-16">
-          <h2 className="text-3xl font-bold tracking-[-0.03em] text-background sm:text-4xl">
-            Yapay zeka seni tanıyor mu?
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-background/60">
-            30 saniyede öğren. Ücretsiz.
-          </p>
+    <section style={{ padding: "0 24px 80px" }}>
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          borderRadius: 24,
+          background: "#111",
+          padding: "64px 40px",
+          textAlign: "center",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "clamp(28px, 3.5vw, 40px)",
+            fontWeight: 800,
+            letterSpacing: "-1.5px",
+            color: "#fff",
+            lineHeight: 1.1,
+          }}
+        >
+          Yapay zeka seni tanıyor mu?
+        </h2>
+        <p
+          style={{
+            fontSize: 15,
+            color: "rgba(255,255,255,0.5)",
+            marginTop: 12,
+            maxWidth: 400,
+            marginLeft: "auto",
+            marginRight: "auto",
+            lineHeight: 1.6,
+          }}
+        >
+          30 saniyede öğren. Tamamen ücretsiz.
+        </p>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a
-              href="#hero"
-              className="inline-flex items-center justify-center rounded-lg bg-background px-8 py-3.5 text-sm font-bold text-foreground transition-transform hover:scale-[1.03] active:scale-[0.97]"
-            >
-              Hemen Dene →
-            </a>
-          </div>
+        <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+          <a
+            href="#hero"
+            style={{
+              padding: "12px 32px",
+              borderRadius: 100,
+              background: "#fff",
+              color: "#111",
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Hemen Dene
+          </a>
+          <a
+            href="/login"
+            style={{
+              padding: "12px 32px",
+              borderRadius: 100,
+              background: "transparent",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              textDecoration: "none",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            Pro ile Başla
+          </a>
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const navLinks = [
   { label: "Nasıl Çalışır", href: "#nasil-calisir" },
+  { label: "Özellikler", href: "#ozellikler" },
   { label: "Fiyatlandırma", href: "#fiyatlandirma" },
 ];
 
@@ -15,31 +16,63 @@ export async function Navbar() {
     const { data: { user } } = await supabase.auth.getUser();
     isLoggedIn = !!user;
   } catch {
-    // Auth check failed — show logged-out state
+    // Auth check failed
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: "rgba(255,255,255,0.85)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: "1px solid #f0f0f0",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 24px",
+        }}
+      >
         <GH7Logo size="default" />
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden md:flex" style={{ gap: 32 }}>
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#888",
+                textDecoration: "none",
+              }}
             >
               {link.label}
             </a>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isLoggedIn ? (
             <Link
               href="/dashboard/genel"
-              className="rounded-lg bg-foreground px-6 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              style={{
+                padding: "9px 22px",
+                borderRadius: 100,
+                background: "#111",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
             >
               Kontrol Paneli
             </Link>
@@ -47,15 +80,29 @@ export async function Navbar() {
             <>
               <Link
                 href="/login"
-                className="px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                style={{
+                  padding: "9px 16px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#888",
+                  textDecoration: "none",
+                }}
               >
                 Giriş Yap
               </Link>
               <Link
                 href="/login"
-                className="rounded-lg bg-foreground px-6 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97]"
+                style={{
+                  padding: "9px 22px",
+                  borderRadius: 100,
+                  background: "#111",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
               >
-                Pro Başla
+                Ücretsiz Başla
               </Link>
             </>
           )}

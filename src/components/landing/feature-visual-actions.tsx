@@ -8,69 +8,78 @@ const actions = [
 
 export function FeatureVisualActions() {
   const completed = actions.filter((a) => a.done).length;
+  const pct = (completed / actions.length) * 100;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex size-6 items-center justify-center rounded-md bg-green-100 dark:bg-green-950">
-            <svg
-              className="size-3.5 text-green-600 dark:text-green-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #eee",
+        borderRadius: 20,
+        padding: 32,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "#f0fdf4",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-sm font-bold">Aksiyon Planı</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>Gelişim Planı</p>
         </div>
-        <span className="text-xs font-medium text-muted-foreground">
-          {completed}/{actions.length} tamamlandı
+        <span style={{ fontSize: 12, fontWeight: 600, color: "#888" }}>
+          {completed}/{actions.length}
         </span>
       </div>
 
       {/* Actions list */}
-      <div className="space-y-2.5">
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {actions.map((action, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              padding: "8px 0",
+            }}
           >
             <div
-              className={`flex size-5 shrink-0 items-center justify-center rounded border ${
-                action.done
-                  ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950"
-                  : "border-border"
-              }`}
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 6,
+                border: action.done ? "none" : "1.5px solid #e5e5e5",
+                background: action.done ? "#f0fdf4" : "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
             >
               {action.done && (
-                <svg
-                  className="size-3 text-green-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               )}
             </div>
             <p
-              className={`text-sm ${
-                action.done
-                  ? "text-muted-foreground line-through"
-                  : "text-foreground/80"
-              }`}
+              style={{
+                fontSize: 13,
+                color: action.done ? "#999" : "#444",
+                textDecoration: action.done ? "line-through" : "none",
+              }}
             >
               {action.text}
             </p>
@@ -79,13 +88,8 @@ export function FeatureVisualActions() {
       </div>
 
       {/* Progress bar */}
-      <div className="mt-5">
-        <div className="h-2 overflow-hidden rounded-full bg-muted/40">
-          <div
-            className="h-full rounded-full bg-green-500 transition-all"
-            style={{ width: `${(completed / actions.length) * 100}%` }}
-          />
-        </div>
+      <div style={{ marginTop: 20, height: 6, borderRadius: 3, background: "#f0f0f0", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: "#22c55e" }} />
       </div>
     </div>
   );
