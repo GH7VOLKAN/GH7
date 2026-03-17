@@ -95,9 +95,9 @@ export function GenelBakisContent({
         </div>
       </HeroSection>
 
-      {/* ── PLATFORM KARTLARI (4-col grid) ────────────── */}
+      {/* ── PLATFORM KARTLARI (5-col grid) ────────────── */}
       <PageSection className="mt-2">
-        <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-3.5" staggerMs={80}>
+        <Stagger className="grid grid-cols-2 lg:grid-cols-5 gap-3.5" staggerMs={80}>
           {platformStats.map((stat) => {
             const color = getPlatformColor(stat.platform);
             const displayName = getPlatformDisplayName(stat.platform);
@@ -170,7 +170,7 @@ export function GenelBakisContent({
                   1
                 );
                 const pct = (entry.mentionCount / maxMentions) * 100;
-                const platforms = (["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]);
+                const platforms = (["chatgpt", "claude", "gemini", "perplexity", "groq"] as PlatformKey[]);
 
                 return (
                   <div key={entry.name}>

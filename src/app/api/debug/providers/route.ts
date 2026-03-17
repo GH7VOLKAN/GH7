@@ -11,6 +11,7 @@ export async function GET() {
     ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
     GOOGLE_AI_API_KEY: !!process.env.GOOGLE_AI_API_KEY,
     PERPLEXITY_API_KEY: !!process.env.PERPLEXITY_API_KEY,
+    GROQ_API_KEY: !!process.env.GROQ_API_KEY,
   };
 
   // Quick live test: send a tiny prompt to each available provider
@@ -138,6 +139,37 @@ export async function GET() {
     }
   } else {
     tests.perplexity = { ok: false, error: "PERPLEXITY_API_KEY not set", ms: 0 };
+  }
+
+  // Test Groq
+  if (process.env.GROQ_API_KEY) {
+    const start = Date.now();
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: "Merhaba, 1+1=?" }],
+          max_tokens: 20,
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        tests.groq = { ok: false, error: `HTTP ${res.status}: ${JSON.stringify(data).slice(0, 200)}`, ms: Date.now() - start };
+      } else {
+        const content = data.choices?.[0]?.message?.content ?? "";
+        tests.groq = { ok: true, chars: content.length, ms: Date.now() - start };
+      }
+    } catch (err) {
+      tests.groq = { ok: false, error: err instanceof Error ? err.message : "Unknown", ms: Date.now() - start };
+    }
+  } else {
+    tests.groq = { ok: false, error: "GROQ_API_KEY not set", ms: 0 };
   }
 
   const allOk = Object.values(tests).every((t) => t.ok);

@@ -4,12 +4,14 @@ import { AnthropicProvider } from "./providers/anthropic";
 import { PerplexityProvider } from "./providers/perplexity";
 import { OpenAIProvider } from "./providers/openai";
 import { GoogleProvider } from "./providers/google";
+import { GroqProvider } from "./providers/groq";
 
 const allProviders: AIProvider[] = [
   new OpenAIProvider(),
   new AnthropicProvider(),
   new GoogleProvider(),
   new PerplexityProvider(),
+  new GroqProvider(),
 ];
 
 export function getAvailableProviders(): AIProvider[] {

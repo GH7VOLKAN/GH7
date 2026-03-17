@@ -7,7 +7,7 @@ export interface FreeToolInput {
   city: string;
 }
 
-export type PlatformId = "chatgpt" | "claude" | "gemini" | "perplexity";
+export type PlatformId = "chatgpt" | "claude" | "gemini" | "perplexity" | "groq";
 
 export interface PlatformResult {
   platform: PlatformId;

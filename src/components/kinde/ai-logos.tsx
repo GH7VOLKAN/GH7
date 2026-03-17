@@ -21,6 +21,8 @@ const PLATFORM_COLORS: Record<string, string> = {
   gemini: "#4285f4",
   google: "#4285f4",
   perplexity: "#14b8a6",
+  groq: "#f55036",
+  llama: "#f55036",
 };
 
 export function getPlatformColor(platform: string): string {
@@ -39,6 +41,7 @@ function getPlatformIconPath(platform: string): string {
   if (key.includes("gemini")) return "/google-gemini-icon.webp";
   if (key.includes("google")) return "/google-gemini-icon.webp";
   if (key.includes("perplexity")) return "/perplexity-ai-icon.webp";
+  if (key.includes("groq") || key.includes("llama")) return "/groq-icon.webp";
   return "/chatgpt-icon.webp";
 }
 
@@ -75,5 +78,6 @@ export function getPlatformDisplayName(platform: string): string {
   if (key.includes("claude") || key.includes("anthropic")) return "Claude";
   if (key.includes("gemini") || key.includes("google")) return "Gemini";
   if (key.includes("perplexity")) return "Perplexity";
+  if (key.includes("groq") || key.includes("llama")) return "Groq (Llama)";
   return platform;
 }

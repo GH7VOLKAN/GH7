@@ -114,13 +114,14 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       claude: { mentioned: 0, total: 0 },
       gemini: { mentioned: 0, total: 0 },
       perplexity: { mentioned: 0, total: 0 },
+      groq: { mentioned: 0, total: 0 },
     };
     for (const r of allResults) {
       if (!platCounts[r.platform]) continue;
       platCounts[r.platform].total++;
       if (r.mentioned) platCounts[r.platform].mentioned++;
     }
-    platformStats = (["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]).map((p) => ({
+    platformStats = (["chatgpt", "claude", "gemini", "perplexity", "groq"] as PlatformKey[]).map((p) => ({
       platform: p,
       mentioned: platCounts[p].mentioned,
       total: platCounts[p].total,
@@ -165,6 +166,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       claude: { mentioned: 0, total: recentScans.length },
       gemini: { mentioned: 0, total: recentScans.length },
       perplexity: { mentioned: 0, total: recentScans.length },
+      groq: { mentioned: 0, total: recentScans.length },
     },
   };
 
@@ -182,6 +184,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       claude: new Set(),
       gemini: new Set(),
       perplexity: new Set(),
+      groq: new Set(),
     };
 
     for (const r of weekResults) {
@@ -202,6 +205,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
         claude: { mentioned: platScanMentioned.claude.size, total: recentScans.length },
         gemini: { mentioned: platScanMentioned.gemini.size, total: recentScans.length },
         perplexity: { mentioned: platScanMentioned.perplexity.size, total: recentScans.length },
+        groq: { mentioned: platScanMentioned.groq.size, total: recentScans.length },
       },
     };
   }
@@ -214,7 +218,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     {
       name: brand?.name ?? "Siz",
       isUser: true,
-      platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0 },
+      platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, groq: 0 },
     },
     ...competitors.map((c) => ({
       name: c.name,
@@ -278,6 +282,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
               claude: { mentioned: 0, total: 0 },
               gemini: { mentioned: 0, total: 0 },
               perplexity: { mentioned: 0, total: 0 },
+      groq: { mentioned: 0, total: 0 },
             },
           };
         }
@@ -300,6 +305,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
         claude: platformStats.find((p) => p.platform === "claude") ?? { mentioned: 0, total: 0 } as never,
         gemini: platformStats.find((p) => p.platform === "gemini") ?? { mentioned: 0, total: 0 } as never,
         perplexity: platformStats.find((p) => p.platform === "perplexity") ?? { mentioned: 0, total: 0 } as never,
+        groq: platformStats.find((p) => p.platform === "groq") ?? { mentioned: 0, total: 0 } as never,
       },
     };
 

@@ -29,9 +29,10 @@ export function CompetitorRankingCard({ ranking, totalResults }: CompetitorRanki
     claude: [],
     gemini: [],
     perplexity: [],
+    groq: [],
   };
 
-  for (const plat of ["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]) {
+  for (const plat of ["chatgpt", "claude", "gemini", "perplexity", "groq"] as PlatformKey[]) {
     const sorted = [...ranking]
       .sort((a, b) => (b.perPlatform[plat]?.mentioned ?? 0) - (a.perPlatform[plat]?.mentioned ?? 0))
       .slice(0, 3);
@@ -84,7 +85,7 @@ export function CompetitorRankingCard({ ranking, totalResults }: CompetitorRanki
 
         {/* Platform bazlı top 3 sıralaması */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {(["chatgpt", "claude", "gemini", "perplexity"] as PlatformKey[]).map((plat) => {
+          {(["chatgpt", "claude", "gemini", "perplexity", "groq"] as PlatformKey[]).map((plat) => {
             const label = platformLabels[plat];
             const top3 = platformRanking[plat];
             return (

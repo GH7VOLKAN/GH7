@@ -33,6 +33,7 @@ const platformLabels: Record<PlatformId, string> = {
   claude: "Claude",
   gemini: "Gemini",
   perplexity: "Perplexity",
+  groq: "Groq (Llama)",
 };
 
 // ── Position to label map ───────────────────────────

@@ -29,7 +29,7 @@ import { addCompetitor, removeCompetitor } from "@/lib/actions";
 import { DiscoverCompetitorsButton } from "./discover-competitors-button";
 import { CompetitorDetailDialog } from "./competitor-detail-dialog";
 
-const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
+const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "groq"];
 
 interface CompetitorRow {
   id: string;

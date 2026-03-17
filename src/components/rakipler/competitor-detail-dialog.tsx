@@ -27,7 +27,7 @@ import { platformLabels, type PlatformKey } from "@/lib/types";
 import { getCompetitorAnalysis } from "@/lib/actions";
 import type { CompetitorAnalysis } from "@/lib/ai/competitor-analyzer";
 
-const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
+const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "groq"];
 
 interface CompetitorRow {
   id: string;

@@ -13,7 +13,7 @@ import { TrendingUpIcon, LayersIcon, SparklesIcon, SearchIcon, UserIcon } from "
 import { platformLabels, type PlatformKey } from "@/lib/types";
 import { PlatformIcon, PLATFORM_COLORS } from "@/components/platform-icon";
 
-const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity"];
+const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "groq"];
 
 interface PromptItem {
   visibility: number;
@@ -69,6 +69,7 @@ export function PromptStatsCards({
     claude: 0,
     gemini: 0,
     perplexity: 0,
+    groq: 0,
   };
   for (const item of promptItems) {
     for (const p of PLATFORMS) {

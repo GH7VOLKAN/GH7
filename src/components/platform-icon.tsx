@@ -64,6 +64,13 @@ export const PLATFORM_COLORS: Record<PlatformKey, {
     dot: "bg-[#20808D]",
     hex: "#20808D",
   },
+  groq: {
+    text: "text-[#f55036]",
+    bg: "bg-[#f55036]/8",
+    border: "border-[#f55036]/15",
+    dot: "bg-[#f55036]",
+    hex: "#f55036",
+  },
 };
 
 /** Platform badge — ikon + isim birlikte */
@@ -146,6 +153,13 @@ const PLATFORM_ICONS: Record<PlatformKey, {
         <path d="M7.547 2v6.2L4 5.267V12h3.547v6.8L4 15.867V22h3.547V15.867L11.094 22V15.333h1.812V22l3.547-6.133V22H20v-6.133l-3.547 2.933V12H20V5.267L16.453 8.2V2h-3.547v6.133l-3.547-3.2V2z" fill="#20808D" />
         <path d="M11.094 12V5.867L7.547 2v6.2m0 3.8h3.547m0 0h1.812m-1.812 0v3.333m1.812-3.333V5.867L16.453 2v6.2M16.453 12h-3.547m3.547 0V8.2L20 5.267V12m-3.547 0v6.8L20 15.867V22m-3.547-6.133V22h-3.547m3.547-6.133L20 22M7.547 12V8.2L4 5.267V12m3.547 0v6.8L4 15.867V22m3.547-6.133V22h3.547m-3.547-6.133L4 22m7.094-6.667V22l3.547-6.133" stroke="#20808D" strokeWidth="0.3" fill="none" />
       </>
+    ),
+  },
+  groq: {
+    label: "Groq (Llama)",
+    viewBox: "0 0 24 24",
+    paths: (
+      <text x="12" y="17" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#f55036">G</text>
     ),
   },
 };
