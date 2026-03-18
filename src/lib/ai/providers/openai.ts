@@ -36,7 +36,7 @@ export class OpenAIProvider implements AIProvider {
 
         // Web search model doesn't support temperature but supports web_search_options
         if (model.webSearch) {
-          params.web_search_options = { search_context_size: "medium" };
+          params.web_search_options = { search_context_size: "high" };
         } else {
           params.temperature = 0.7;
         }
