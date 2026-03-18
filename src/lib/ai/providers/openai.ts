@@ -42,7 +42,7 @@ export class OpenAIProvider implements AIProvider {
         }
 
         const response = await this.client.chat.completions.create(
-          params as Parameters<typeof this.client.chat.completions.create>[0],
+          params as unknown as Parameters<typeof this.client.chat.completions.create>[0],
         );
 
         const content = response.choices[0]?.message?.content ?? "";
