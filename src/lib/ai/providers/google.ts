@@ -21,7 +21,7 @@ export class GoogleProvider implements AIProvider {
     }
 
     // Try models in order — fall back on quota/rate limit errors
-    const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+    const models = ["gemini-2.5-flash", "gemini-2.0-flash-lite"];
 
     for (const modelName of models) {
       try {

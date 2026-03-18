@@ -8,6 +8,7 @@ import {
   SectionTitle,
 } from "@/components/kinde/animations";
 import { ProUpgradeCard } from "@/components/pro-upgrade-card";
+import { DualCTA } from "./dual-cta";
 import { AuditButton } from "@/components/site/audit-button";
 import type { AuditCategoryData } from "@/lib/dal/site-audit";
 import type { CheckStatus } from "@/lib/types";
@@ -155,6 +156,12 @@ export function SiteContent({
       <div className="mt-12">
         <ProUpgradeCard type="verification" plan={plan} />
       </div>
+
+      {/* ── DUAL CTA ──────────────────────────────────── */}
+      <DualCTA
+        contextMessage="Site değişikliklerinin etkisini haftalık takip et."
+        plan={plan}
+      />
     </div>
   );
 }

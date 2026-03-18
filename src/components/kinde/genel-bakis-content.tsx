@@ -15,6 +15,7 @@ import {
 } from "./animations";
 import { PlatformLogo, getPlatformColor, getPlatformDisplayName } from "./ai-logos";
 import { ProUpgradeCard } from "@/components/pro-upgrade-card";
+import { DualCTA } from "./dual-cta";
 import type { PlatformKey } from "@/lib/types";
 import type { CompetitorRankEntry, PlatformStat, RecentMention } from "@/lib/dal/overview";
 import {
@@ -356,6 +357,13 @@ export function GenelBakisContent({
       <div className="mt-12">
         <ProUpgradeCard type="trend" plan={plan} />
       </div>
+
+      {/* ── DUAL CTA ──────────────────────────────────── */}
+      <DualCTA
+        contextMessage="Durumun her hafta değişiyor. Takipte kal."
+        platformCount={platformsWithMentions}
+        plan={plan}
+      />
     </div>
   );
 }

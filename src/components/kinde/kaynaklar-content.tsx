@@ -10,6 +10,7 @@ import {
 } from "./animations";
 import { HeroSection } from "./hero-section";
 import { ProUpgradeCard } from "@/components/pro-upgrade-card";
+import { DualCTA } from "./dual-cta";
 import type { SourceType } from "@/lib/types";
 import { sourceTypeLabels } from "@/lib/types";
 import type { SourceDomainData } from "@/lib/dal/sources";
@@ -370,6 +371,12 @@ export function KaynaklarContent({
       <div className="mt-12">
         <ProUpgradeCard type="verification" plan={plan} />
       </div>
+
+      {/* ── DUAL CTA ──────────────────────────────────── */}
+      <DualCTA
+        contextMessage="Yeni kaynaklar ekledin mi? Etkisini takip et."
+        plan={plan}
+      />
     </div>
   );
 }

@@ -1,3 +1,6 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { querySonar } from "./sonar-research";
+
 export interface AuditCheckResult {
   label: string;
   status: "pass" | "fail" | "partial";
@@ -12,8 +15,31 @@ export interface AuditCategoryResult {
   checks: AuditCheckResult[];
 }
 
+export interface SonarWebPresence {
+  hasGoogleBusiness: boolean;
+  directories: string[];
+  thirdPartyContent: string[];
+  sonarSummary: string;
+}
+
+export interface OpusAnalysis {
+  overallScore: number;
+  summary: string;
+  topPriority: string[];
+  strengths: string[];
+  weaknesses: string[];
+  checkDetails: Array<{
+    label: string;
+    status: "PASS" | "WARNING" | "FAIL";
+    explanation: string;
+    recommendation: string;
+  }>;
+}
+
 export interface AuditResult {
   categories: AuditCategoryResult[];
+  sonarWebPresence?: SonarWebPresence;
+  opusAnalysis?: OpusAnalysis;
 }
 
 function normalizeDomain(raw: string): string {
@@ -546,6 +572,194 @@ async function checkPerformance(domain: string): Promise<AuditCategoryResult> {
   return { name: "Performans", checks };
 }
 
+/**
+ * Layer 3: Perplexity Sonar — Web varlığı kontrolü.
+ * Google Business, dizinler, üçüncü taraf içerik tarar.
+ */
+async function checkWebPresence(domain: string): Promise<SonarWebPresence> {
+  try {
+    const sonarSummary = await querySonar(
+      `${domain} web sitesi hakkında bilgi ver. Google Business profili var mı? ` +
+      `Hangi dizinlerde kayıtlı? Hakkında üçüncü taraf içerik (haber, röportaj) var mı?`
+    );
+
+    const lower = sonarSummary.toLowerCase();
+
+    // Google Business detection
+    const hasGoogleBusiness =
+      (lower.includes("google") && (lower.includes("business") || lower.includes("maps") || lower.includes("işletme") || lower.includes("isletme"))) ||
+      lower.includes("google my business") ||
+      lower.includes("google haritalar");
+
+    // Directory detection
+    const directoryPatterns = [
+      { pattern: /sikayetvar|şikayetvar/i, name: "ŞikayetVar" },
+      { pattern: /ekşi sözlük|eksisozluk/i, name: "Ekşi Sözlük" },
+      { pattern: /sahibinden/i, name: "Sahibinden" },
+      { pattern: /n11/i, name: "N11" },
+      { pattern: /hepsiburada/i, name: "Hepsiburada" },
+      { pattern: /trendyol/i, name: "Trendyol" },
+      { pattern: /yelp/i, name: "Yelp" },
+      { pattern: /foursquare/i, name: "Foursquare" },
+      { pattern: /tripadvisor/i, name: "TripAdvisor" },
+      { pattern: /doktortakvimi/i, name: "DoktorTakvimi" },
+      { pattern: /avukatara/i, name: "AvukatAra" },
+      { pattern: /bulmaca/i, name: "Bulmaca" },
+      { pattern: /enuygun/i, name: "EnUygun" },
+      { pattern: /gelbeseiten|yellow\s*pages|sarı\s*sayfalar/i, name: "Sarı Sayfalar" },
+      { pattern: /sektorel dizin|sektörel dizin|firma rehberi/i, name: "Sektörel Dizin" },
+    ];
+    const directories: string[] = [];
+    for (const dp of directoryPatterns) {
+      if (dp.pattern.test(sonarSummary)) {
+        directories.push(dp.name);
+      }
+    }
+
+    // Third party content detection
+    const thirdPartyContent: string[] = [];
+    const thirdPartyPatterns = [
+      { pattern: /haber|news|gazete/i, label: "Haber" },
+      { pattern: /röportaj|roportaj|interview|mülakat/i, label: "Röportaj" },
+      { pattern: /makale|article|blog\s*yazı/i, label: "Makale" },
+      { pattern: /podcast/i, label: "Podcast" },
+      { pattern: /konferans|conference|summit|etkinlik/i, label: "Konferans" },
+      { pattern: /akademik|yayın|araştırma|research/i, label: "Akademik Yayın" },
+      { pattern: /ödül|award|başarı/i, label: "Ödül/Başarı" },
+      { pattern: /youtube|video/i, label: "Video İçerik" },
+    ];
+    for (const tp of thirdPartyPatterns) {
+      if (tp.pattern.test(sonarSummary)) {
+        thirdPartyContent.push(tp.label);
+      }
+    }
+
+    return { hasGoogleBusiness, directories, thirdPartyContent, sonarSummary };
+  } catch (err) {
+    console.error("[site-auditor] Layer 3 (Sonar web presence) failed:", err);
+    return {
+      hasGoogleBusiness: false,
+      directories: [],
+      thirdPartyContent: [],
+      sonarSummary: "",
+    };
+  }
+}
+
+/**
+ * Layer 4: Claude Opus — Tüm audit verilerini sentezle ve 0-100 skor ver.
+ */
+async function analyzeWithOpus(
+  domain: string,
+  categories: AuditCategoryResult[],
+  sonarWebPresence: SonarWebPresence,
+): Promise<OpusAnalysis | null> {
+  try {
+    const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error("[site-auditor] Layer 4: Anthropic API key not configured");
+      return null;
+    }
+
+    const client = new Anthropic({ apiKey, timeout: 60_000 });
+
+    // Format layer 1+2 results for the prompt
+    const httpChecksText = categories
+      .map((cat) => {
+        const checksStr = cat.checks
+          .map((c) => `  - ${c.label}: ${c.status.toUpperCase()} — ${c.detail}`)
+          .join("\n");
+        return `[${cat.name}]\n${checksStr}`;
+      })
+      .join("\n\n");
+
+    // Format Sonar results
+    const sonarText = sonarWebPresence.sonarSummary
+      ? `Google Business: ${sonarWebPresence.hasGoogleBusiness ? "EVET" : "HAYIR"}
+Dizinler: ${sonarWebPresence.directories.length > 0 ? sonarWebPresence.directories.join(", ") : "Bulunamadı"}
+Üçüncü Taraf İçerik: ${sonarWebPresence.thirdPartyContent.length > 0 ? sonarWebPresence.thirdPartyContent.join(", ") : "Bulunamadı"}
+Sonar Özeti: ${sonarWebPresence.sonarSummary.slice(0, 2000)}`
+      : "Sonar verisi alınamadı";
+
+    const prompt = `Sen GH7.ai'nin site audit uzmanısın.
+
+SİTE: ${domain}
+HTTP KONTROLLER:
+${httpChecksText}
+
+WEB VARLIĞI:
+${sonarText}
+
+Tüm verileri analiz et ve 0-100 arası bir 'Yapay Zeka Hazırlık Skoru' ver.
+
+Her kontrol için:
+- Durum: PASS / WARNING / FAIL
+- Açıklama (doktor abi dili, teknik terim yok)
+- Öneri (ne yapılmalı)
+
+Ayrıca:
+- overallScore: 0-100
+- summary: 2-3 cümle genel değerlendirme
+- topPriority: en önemli 3 aksiyon
+- strengths: güçlü yanlar
+- weaknesses: zayıf yanlar
+
+SADECE JSON döndür — başka hiçbir şey yazma:
+{
+  "overallScore": 0-100,
+  "summary": "2-3 cümle genel değerlendirme",
+  "topPriority": ["aksiyon 1", "aksiyon 2", "aksiyon 3"],
+  "strengths": ["güçlü yan 1", "güçlü yan 2"],
+  "weaknesses": ["zayıf yan 1", "zayıf yan 2"],
+  "checkDetails": [
+    {
+      "label": "kontrol adı",
+      "status": "PASS|WARNING|FAIL",
+      "explanation": "açıklama",
+      "recommendation": "öneri"
+    }
+  ]
+}`;
+
+    const response = await client.messages.create({
+      model: "claude-opus-4-20250514",
+      max_tokens: 4096,
+      temperature: 0.7,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const text = response.content[0].type === "text" ? response.content[0].text : "";
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error("[site-auditor] Layer 4: Could not extract JSON from Opus response");
+      return null;
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    return {
+      overallScore: Math.min(100, Math.max(0, Number(parsed.overallScore) || 0)),
+      summary: String(parsed.summary ?? ""),
+      topPriority: Array.isArray(parsed.topPriority) ? parsed.topPriority.map(String).slice(0, 5) : [],
+      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.map(String).slice(0, 5) : [],
+      weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.map(String).slice(0, 5) : [],
+      checkDetails: Array.isArray(parsed.checkDetails)
+        ? parsed.checkDetails.map((d: Record<string, unknown>) => ({
+            label: String(d.label ?? ""),
+            status: (["PASS", "WARNING", "FAIL"].includes(String(d.status)) ? String(d.status) : "WARNING") as "PASS" | "WARNING" | "FAIL",
+            explanation: String(d.explanation ?? ""),
+            recommendation: String(d.recommendation ?? ""),
+          })).slice(0, 30)
+        : [],
+    };
+  } catch (err) {
+    console.error("[site-auditor] Layer 4 (Opus analysis) failed:", err);
+    return null;
+  }
+}
+
 export async function runSiteAudit(rawDomain: string): Promise<AuditResult> {
   const domain = normalizeDomain(rawDomain);
   console.log(`[site-auditor] Starting audit for "${domain}" (raw: "${rawDomain}")`);
@@ -640,14 +854,43 @@ export async function runSiteAudit(rawDomain: string): Promise<AuditResult> {
   // Re-run AI access with actual robotsText
   const aiAccessFinal = await checkAIAccess(domain, html, technicalResult.robotsText);
 
+  const categories = [
+    checkStructuredData(html),
+    checkContent(html),
+    technicalResult.category,
+    checkExternalPlatforms(html),
+    aiAccessFinal,
+    performance,
+  ];
+
+  // ── Layer 3: Perplexity Sonar web presence check ──
+  let sonarWebPresence: SonarWebPresence | undefined;
+  try {
+    sonarWebPresence = await checkWebPresence(domain);
+    console.log(`[site-auditor] Layer 3 complete — GBP: ${sonarWebPresence.hasGoogleBusiness}, dirs: ${sonarWebPresence.directories.length}, 3rd-party: ${sonarWebPresence.thirdPartyContent.length}`);
+  } catch (err) {
+    console.error("[site-auditor] Layer 3 failed, continuing without Sonar data:", err);
+  }
+
+  // ── Layer 4: Claude Opus analysis + scoring ──
+  let opusAnalysis: OpusAnalysis | undefined;
+  try {
+    const opusResult = await analyzeWithOpus(
+      domain,
+      categories,
+      sonarWebPresence ?? { hasGoogleBusiness: false, directories: [], thirdPartyContent: [], sonarSummary: "" },
+    );
+    if (opusResult) {
+      opusAnalysis = opusResult;
+      console.log(`[site-auditor] Layer 4 complete — overallScore: ${opusAnalysis.overallScore}`);
+    }
+  } catch (err) {
+    console.error("[site-auditor] Layer 4 failed, continuing without Opus analysis:", err);
+  }
+
   return {
-    categories: [
-      checkStructuredData(html),
-      checkContent(html),
-      technicalResult.category,
-      checkExternalPlatforms(html),
-      aiAccessFinal,
-      performance,
-    ],
+    categories,
+    ...(sonarWebPresence ? { sonarWebPresence } : {}),
+    ...(opusAnalysis ? { opusAnalysis } : {}),
   };
 }

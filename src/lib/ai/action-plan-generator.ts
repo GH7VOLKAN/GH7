@@ -48,7 +48,7 @@ export async function generateActionPlan(
   auditResult: AuditResult,
   mentionScore: number,
 ): Promise<{ generated: number }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
   const client = new Anthropic({ apiKey });
@@ -93,15 +93,19 @@ GOREV:
 Yukaridaki verileri analiz ederek yapay zeka gorunurlugunu artirmak icin en etkili aksiyonlari belirle.
 
 KURALLAR:
-1. Maksimum 15 aksiyon uret
+1. Tam olarak 22 aksiyon uret — 3 katmana dagit:
+   - Katman 1: BULUYOR MU? (7 aksiyon) — AI'nin markayi bulabilmesi icin temel adimlar
+   - Katman 2: GUVENIYOR MU? (8 aksiyon) — AI'nin markaya guven duymasi icin adimlar
+   - Katman 3: ONERIYOR MU? (7 aksiyon) — AI'nin markayi aktif olarak onermesi icin adimlar
 2. Her aksiyonu oncelik, zorluk ve etki bazinda degerlendir
 3. "canWeDoIt" = GH7.ai ekibinin bu isi musteri adina RaaS (Result as a Service) olarak yapip yapamayacagi
 4. "selfServiceSteps" = Musterinin kendisi yapmak isterse adim adim talimatlar
 5. "raasEligible" = RaaS kapsaminda sunulabilir mi
-6. Aksiyonlari oncelik sirasina gore sirala (high > medium > low)
+6. Katman 1 aksiyonlari once, sonra Katman 2, sonra Katman 3 gelsin
 7. Her aksiyonun gercekci bir tahmini suresi olsun
 8. Fail olan audit check'lerine ozel aksiyonlar uret
 9. Mention score dusukse gorunurluk artirici aksiyonlar ekle
+10. Her aksiyonun hangi katmana ait oldugunu title basinda belirt: "[K1] ...", "[K2] ...", "[K3] ..."
 
 ZORLUK SEVIYELERI:
 - EASY: Kullanici tek basina 30 dk icinde yapabilir
@@ -143,7 +147,7 @@ JSON formatinda dondur — baska hicbir sey yazma:
     // Yeni task'lari kaydet
     if (actions.length > 0) {
       await prisma.actionTask.createMany({
-        data: actions.slice(0, 15).map((a) => ({
+        data: actions.slice(0, 22).map((a) => ({
           brandId: brand.id,
           title: a.title,
           description: a.description,

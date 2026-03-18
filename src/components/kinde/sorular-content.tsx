@@ -5,6 +5,7 @@ import { HeroSection } from "./hero-section";
 import { FadeIn, Stagger, PageSection, SectionTitle } from "./animations";
 import { PlatformLogo, getPlatformDisplayName } from "./ai-logos";
 import { ProUpgradeCard } from "@/components/pro-upgrade-card";
+import { DualCTA } from "./dual-cta";
 import type { PromptItemData } from "@/lib/dal/prompts";
 import type { PlatformKey } from "@/lib/types";
 
@@ -105,6 +106,12 @@ export function SorularContent({
       <div className="mt-12">
         <ProUpgradeCard type="trend" plan={plan} />
       </div>
+
+      {/* ── DUAL CTA ──────────────────────────────────── */}
+      <DualCTA
+        contextMessage="Bu sorularda ilerliyor musun? Haftalık takip et."
+        plan={plan}
+      />
     </div>
   );
 }

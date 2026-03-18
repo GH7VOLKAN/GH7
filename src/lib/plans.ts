@@ -15,8 +15,11 @@ export interface PlanLimits {
   actionPlanView: boolean;
   trendView: boolean;
   weeklyReport: boolean;
+  monthlyReport: boolean;
   promptFreshness: boolean; // aylık soru güncellik kontrolü
   checklistAutoVerify: boolean; // haftalık gelişim planı doğrulama
+  verificationCheck: boolean;
+  newCompetitorAlert: boolean;
   smsEnabled: boolean;
   maxBrands: number;
   maxCompetitors: number;
@@ -26,6 +29,11 @@ export interface PlanLimits {
   citationView: boolean;      // Citation kaynakları görünümü
   shareOfVoice: boolean;      // Share of voice görünümü
   exportPDF: boolean;         // PDF export
+  brandComparison: boolean;   // Marka karşılaştırma (Business+)
+  whiteLabel: boolean;        // White label (Agency)
+  clientAccess: boolean;      // Müşteri erişimi (Agency)
+  apiAccess: boolean;         // API erişimi (Agency)
+  agencyPanel: boolean;       // Ajans paneli (Agency)
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
@@ -39,17 +47,25 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     actionPlanView: true,      // Gelişim planı açık
     trendView: false,          // Trend yok — tek seferlik
     weeklyReport: false,       // Haftalık rapor yok
+    monthlyReport: false,      // Aylık rapor yok
     promptFreshness: false,    // Aylık kontrol yok
     checklistAutoVerify: false, // "Tamamladım" doğrulama yok
+    verificationCheck: false,  // Doğrulama kontrolü yok
+    newCompetitorAlert: false, // Yeni rakip uyarısı yok
     smsEnabled: false,
     maxBrands: 1,
-    maxCompetitors: 10,        // Spec: 10 rakip — PRO ile aynı
+    maxCompetitors: 10,        // Spec: 10 rakip
     useSonarResearch: true,    // Sonar araştırma tüm planlarda
     checklistLayer3: true,     // Tüm katmanlar açık
-    mentionRate: false,        // Trend yok — tek seferlik
+    mentionRate: false,        // Mention rate yok
     citationView: true,        // Kaynaklar açık
     shareOfVoice: true,        // Görünürlük payı açık
-    exportPDF: false,          // PDF export Pro+
+    exportPDF: false,          // PDF export yok
+    brandComparison: false,
+    whiteLabel: false,
+    clientAccess: false,
+    apiAccess: false,
+    agencyPanel: false,
   },
   pro: {
     maxPrompts: 50,
@@ -61,17 +77,25 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     actionPlanView: true,
     trendView: true,
     weeklyReport: true,
+    monthlyReport: true,
     promptFreshness: true,
     checklistAutoVerify: true,
+    verificationCheck: true,
+    newCompetitorAlert: true,
     smsEnabled: true,
-    maxBrands: 3,
-    maxCompetitors: 10,
+    maxBrands: 1,              // Spec: PRO = 1 marka
+    maxCompetitors: 10,        // Spec: 10 rakip
     useSonarResearch: true,
     checklistLayer3: true,
     mentionRate: true,
     citationView: true,
     shareOfVoice: true,
     exportPDF: true,
+    brandComparison: false,    // Business+ özellik
+    whiteLabel: false,
+    clientAccess: false,
+    apiAccess: false,
+    agencyPanel: false,
   },
   business: {
     maxPrompts: 50,
@@ -83,39 +107,55 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     actionPlanView: true,
     trendView: true,
     weeklyReport: true,
+    monthlyReport: true,
     promptFreshness: true,
     checklistAutoVerify: true,
+    verificationCheck: true,
+    newCompetitorAlert: true,
     smsEnabled: true,
-    maxBrands: 3,
-    maxCompetitors: 25,
+    maxBrands: 3,              // Spec: 3 marka
+    maxCompetitors: 10,        // Spec: 10 rakip
     useSonarResearch: true,
     checklistLayer3: true,
     mentionRate: true,
     citationView: true,
     shareOfVoice: true,
     exportPDF: true,
+    brandComparison: true,     // Business+ özellik
+    whiteLabel: false,
+    clientAccess: false,
+    apiAccess: false,
+    agencyPanel: false,
   },
   agency: {
     maxPrompts: 50,
     manualPromptAdd: true,
-    scanFrequency: "daily",
+    scanFrequency: "thrice_weekly",
     competitorView: true,
     competitorAnalysis: true,
     auditView: true,
     actionPlanView: true,
     trendView: true,
     weeklyReport: true,
+    monthlyReport: true,
     promptFreshness: true,
     checklistAutoVerify: true,
+    verificationCheck: true,
+    newCompetitorAlert: true,
     smsEnabled: true,
-    maxBrands: 25,
-    maxCompetitors: 50,
+    maxBrands: 25,             // Spec: 25 marka
+    maxCompetitors: 10,        // Spec: 10 rakip
     useSonarResearch: true,
     checklistLayer3: true,
     mentionRate: true,
     citationView: true,
     shareOfVoice: true,
     exportPDF: true,
+    brandComparison: true,
+    whiteLabel: true,          // Agency özellik
+    clientAccess: true,        // Agency özellik
+    apiAccess: true,           // Agency özellik
+    agencyPanel: true,         // Agency özellik
   },
 };
 

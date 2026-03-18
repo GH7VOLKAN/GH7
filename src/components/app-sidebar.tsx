@@ -79,6 +79,7 @@ export function AppSidebar({
   user,
   brandType = "firma",
   plan = "free",
+  checklistSummary,
   ...props
 }: AppSidebarProps) {
   const pathname = usePathname();
@@ -163,6 +164,11 @@ export function AppSidebar({
                     >
                       {item.icon}
                       <span className="flex-1">{item.title}</span>
+                      {item.href === "/dashboard/gelisim" && checklistSummary && (
+                        <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          {checklistSummary.completed}/{checklistSummary.total}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

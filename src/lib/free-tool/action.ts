@@ -125,7 +125,7 @@ async function extractProInsights(
   platforms: PlatformResult[],
 ): Promise<ProInsights> {
   const empty: ProInsights = { competitors: [], whyNotFound: [], actionItems: [] };
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return empty;
 
   const combinedResponses = responses

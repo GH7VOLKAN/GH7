@@ -21,16 +21,18 @@ const { GoogleGenerativeAI } = await import("@google/generative-ai");
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 30000 })
   : null;
-const anthropic = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 30000 })
+const anthropicKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+const anthropic = anthropicKey
+  ? new Anthropic({ apiKey: anthropicKey, timeout: 30000 })
   : null;
 const google = process.env.GOOGLE_AI_API_KEY
   ? new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
   : null;
 const perplexityKey = process.env.PERPLEXITY_API_KEY || null;
 
-const analyzerClient = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 15000 })
+const analyzerKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+const analyzerClient = analyzerKey
+  ? new Anthropic({ apiKey: analyzerKey, timeout: 15000 })
   : null;
 
 async function sendToOpenAI(promptText) {
@@ -63,7 +65,7 @@ async function sendToClaude(promptText) {
 async function sendToGemini(promptText) {
   if (!google) return { platform: "gemini", content: "", error: "No key" };
   try {
-    const model = google.getGenerativeModel({ model: "gemini-2.0-flash", generationConfig: { maxOutputTokens: 2048 } });
+    const model = google.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig: { maxOutputTokens: 2048 } });
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 30000));
     const result = await Promise.race([model.generateContent(promptText), timeout]);
     return { platform: "gemini", content: result.response.text() };

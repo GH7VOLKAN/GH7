@@ -6,9 +6,16 @@ import { NextResponse } from "next/server";
  * DELETE THIS FILE AFTER DEBUGGING.
  */
 export async function GET() {
+  // Debug: check what the raw value looks like
+  const rawAnthropicKey = process.env.ANTHROPIC_API_KEY;
+  console.log("[debug] ANTHROPIC_API_KEY raw type:", typeof rawAnthropicKey, "length:", rawAnthropicKey?.length, "truthy:", !!rawAnthropicKey, "value start:", rawAnthropicKey?.substring(0, 10));
+  // List all env vars containing "ANTHROPIC"
+  const anthropicEnvs = Object.keys(process.env).filter(k => k.includes("ANTHROPIC"));
+  console.log("[debug] Env vars with ANTHROPIC:", anthropicEnvs);
+
   const envCheck = {
     OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
-    ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+    ANTHROPIC_API_KEY: !!(process.env.GH7_ANTHROPIC_API_KEY || (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.length > 0)),
     GOOGLE_AI_API_KEY: !!process.env.GOOGLE_AI_API_KEY,
     PERPLEXITY_API_KEY: !!process.env.PERPLEXITY_API_KEY,
     GROQ_API_KEY: !!process.env.GROQ_API_KEY,
@@ -49,14 +56,15 @@ export async function GET() {
   }
 
   // Test Anthropic
-  if (process.env.ANTHROPIC_API_KEY) {
+  const anthropicKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || "";
+  if (anthropicKey.length > 0) {
     const start = Date.now();
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
-          "x-api-key": process.env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2024-10-22",
+          "x-api-key": anthropicKey,
+          "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -85,7 +93,7 @@ export async function GET() {
     const start = Date.now();
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -174,10 +182,20 @@ export async function GET() {
 
   const allOk = Object.values(tests).every((t) => t.ok);
 
+  // Temp debug info
+  const debugAnthropicKey = process.env.ANTHROPIC_API_KEY;
+  const allEnvKeys = Object.keys(process.env).filter(k => k.includes("ANTHROPIC") || k.includes("API_KEY"));
+
   return NextResponse.json({
     status: allOk ? "ALL_OK" : "SOME_FAILED",
     envVars: envCheck,
     liveTests: tests,
+    _debug: {
+      anthropicKeyType: typeof debugAnthropicKey,
+      anthropicKeyLength: debugAnthropicKey?.length ?? null,
+      anthropicKeyStart: debugAnthropicKey?.substring(0, 8) ?? null,
+      envKeysWithAPIKEY: allEnvKeys,
+    },
     timestamp: new Date().toISOString(),
   });
 }

@@ -16,6 +16,7 @@ import {
   getPlatformColor,
 } from "@/components/kinde/ai-logos";
 import { ProUpgradeCard } from "@/components/pro-upgrade-card";
+import { DualCTA } from "./dual-cta";
 import type { PlatformKey } from "@/lib/types";
 import type {
   CompetitorRowData,
@@ -474,6 +475,12 @@ export function RakiplerContent({
           competitorName={topCompetitor?.name}
         />
       </div>
+
+      {/* ── DUAL CTA ──────────────────────────────────── */}
+      <DualCTA
+        contextMessage="Rakiplerin bu hafta ne yaptı? Takipte kal."
+        plan={plan}
+      />
     </div>
   );
 }

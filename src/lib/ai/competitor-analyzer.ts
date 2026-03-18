@@ -36,7 +36,7 @@ export async function analyzeWhyCompetitorAhead(
   promptAppearances: PromptAppearanceInput[],
   competitorOnlySources: string[],
 ): Promise<CompetitorAnalysis> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
   const client = new Anthropic({ apiKey, timeout: 60_000 });

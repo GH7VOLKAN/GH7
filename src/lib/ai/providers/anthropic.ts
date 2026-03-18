@@ -7,7 +7,12 @@ export class AnthropicProvider implements AIProvider {
   private client: Anthropic | null;
 
   constructor() {
-    const key = process.env.ANTHROPIC_API_KEY;
+    // Use GH7_ANTHROPIC_API_KEY first (avoids clash with Claude Code's own env),
+    // then fall back to ANTHROPIC_API_KEY if it has a real value.
+    const key = process.env.GH7_ANTHROPIC_API_KEY
+      || (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.length > 0
+        ? process.env.ANTHROPIC_API_KEY
+        : undefined);
     this.client = key ? new Anthropic({ apiKey: key, timeout: 30_000 }) : null;
   }
 
@@ -21,7 +26,7 @@ export class AnthropicProvider implements AIProvider {
     }
 
     // Try models in order — fall back if one fails
-    const models = ["claude-sonnet-4-20250514", "claude-3-5-haiku-20241022"];
+    const models = ["claude-sonnet-4-20250514", "claude-haiku-4-5-20251001"];
 
     for (const model of models) {
       try {

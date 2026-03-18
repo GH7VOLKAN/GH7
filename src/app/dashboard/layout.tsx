@@ -40,6 +40,7 @@ export default async function DashboardLayout({
         variant="inset"
         brandType={brandType}
         plan={plan}
+        checklistSummary={checklistSummary}
         user={
           user
             ? { name: user.fullName, email: user.email, avatarUrl: user.avatarUrl }
