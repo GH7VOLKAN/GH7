@@ -45,12 +45,18 @@ const tabs: TabItem[] = [
     icon: GlobeIcon,
   },
   {
-    label: "Gelişim",
+    label: "Gelisim",
     href: "/dashboard/gelisim",
     icon: ClipboardListIcon,
     showProgress: true,
   },
 ];
+
+function getProgressColorClass(completed: number): string {
+  if (completed >= 11) return "text-emerald-500";
+  if (completed >= 6) return "text-amber-500";
+  return "text-red-500";
+}
 
 export function MobileBottomNav({
   checklistProgress,
@@ -58,7 +64,7 @@ export function MobileBottomNav({
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-border/40 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+    <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div
         className="flex items-center justify-around h-[64px]"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
@@ -86,7 +92,12 @@ export function MobileBottomNav({
               <span className="flex items-center gap-0.5">
                 {tab.label}
                 {tab.showProgress && checklistProgress && checklistProgress.total > 0 && (
-                  <span className="text-[9px] text-muted-foreground">
+                  <span
+                    className={cn(
+                      "text-[9px] font-bold",
+                      getProgressColorClass(checklistProgress.completed)
+                    )}
+                  >
                     {checklistProgress.completed}/{checklistProgress.total}
                   </span>
                 )}

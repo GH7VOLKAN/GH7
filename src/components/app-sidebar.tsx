@@ -27,6 +27,10 @@ import {
   Settings2Icon,
   LogOutIcon,
   SparklesIcon,
+  ChevronDownIcon,
+  CheckCircle2Icon,
+  AlertTriangleIcon,
+  XCircleIcon,
 } from "lucide-react";
 import type { ChecklistSummary } from "@/lib/dal/checklist";
 
@@ -75,6 +79,28 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   topCompetitor?: { name: string; score: number } | null;
 }
 
+function getProgressColor(completed: number): string {
+  if (completed >= 11) return "text-emerald-500";
+  if (completed >= 6) return "text-amber-500";
+  return "text-red-500";
+}
+
+function getProgressBgColor(completed: number): string {
+  if (completed >= 11) return "bg-emerald-500/10 text-emerald-600";
+  if (completed >= 6) return "bg-amber-500/10 text-amber-600";
+  return "bg-red-500/10 text-red-600";
+}
+
+function getStatusIcon(status: string) {
+  if (status === "complete") {
+    return <CheckCircle2Icon className="size-3.5 text-emerald-500 shrink-0" />;
+  }
+  if (status === "warning") {
+    return <AlertTriangleIcon className="size-3.5 text-amber-500 shrink-0" />;
+  }
+  return <XCircleIcon className="size-3.5 text-red-400 shrink-0" />;
+}
+
 export function AppSidebar({
   user,
   brandType = "firma",
@@ -84,6 +110,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [gelisimOpen, setGelisimOpen] = React.useState(false);
   const navItems = getNavItems(brandType);
   const isFree = plan === "free";
   const isPro = plan === "pro";
@@ -150,27 +177,81 @@ export function AppSidebar({
             <SidebarMenu>
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
+                const isGelisim = item.href === "/dashboard/gelisim";
+
                 return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      isActive={isActive}
-                      render={<Link href={item.href} />}
-                      className={`rounded-xl text-[13px] font-medium transition-colors ${
-                        isActive
-                          ? "bg-[#f5f5f5] text-foreground font-semibold"
-                          : "text-muted-foreground hover:bg-[#f5f5f5] hover:text-foreground"
-                      }`}
-                    >
-                      {item.icon}
-                      <span className="flex-1">{item.title}</span>
-                      {item.href === "/dashboard/gelisim" && checklistSummary && (
-                        <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                          {checklistSummary.completed}/{checklistSummary.total}
-                        </span>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <React.Fragment key={item.href}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        isActive={isActive}
+                        render={isGelisim ? undefined : <Link href={item.href} />}
+                        onClick={
+                          isGelisim
+                            ? () => setGelisimOpen((prev) => !prev)
+                            : undefined
+                        }
+                        className={`rounded-xl text-[13px] font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#f5f5f5] text-foreground font-semibold"
+                            : "text-muted-foreground hover:bg-[#f5f5f5] hover:text-foreground"
+                        }`}
+                      >
+                        {item.icon}
+                        <span className="flex-1">{item.title}</span>
+                        {isGelisim && checklistSummary && (
+                          <span
+                            className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${getProgressBgColor(checklistSummary.completed)}`}
+                          >
+                            {checklistSummary.completed}/{checklistSummary.total}
+                          </span>
+                        )}
+                        {isGelisim && (
+                          <ChevronDownIcon
+                            className={`size-3.5 text-muted-foreground transition-transform duration-200 ${
+                              gelisimOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+
+                    {/* Collapsible Gelisim Plani detail */}
+                    {isGelisim && gelisimOpen && checklistSummary && (
+                      <div className="ml-4 mr-2 mb-1 overflow-hidden">
+                        {/* Link to full page */}
+                        <Link
+                          href="/dashboard/gelisim"
+                          className="block rounded-lg px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-[#f5f5f5] hover:text-foreground transition-colors mb-1"
+                        >
+                          Tum plani gor &rarr;
+                        </Link>
+                        {checklistSummary.layers.map((layer) => (
+                          <div key={layer.layer} className="mb-2">
+                            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">
+                              {layer.name}
+                            </p>
+                            <div className="space-y-0.5">
+                              {layer.items.slice(0, 5).map((item) => (
+                                <div
+                                  key={item.id}
+                                  className="flex items-center gap-1.5 px-3 py-0.5 text-[11px] text-muted-foreground"
+                                >
+                                  {getStatusIcon(item.status)}
+                                  <span className="truncate">{item.simpleTitle}</span>
+                                </div>
+                              ))}
+                              {layer.items.length > 5 && (
+                                <p className="px-3 text-[10px] text-muted-foreground/50">
+                                  +{layer.items.length - 5} daha...
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </SidebarMenu>

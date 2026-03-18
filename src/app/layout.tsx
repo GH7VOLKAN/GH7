@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -66,7 +72,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`${dmSans.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${dmSans.variable} font-sans antialiased`}>
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
