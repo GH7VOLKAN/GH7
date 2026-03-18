@@ -134,8 +134,9 @@ export async function executeScan(
                   prompt.text,
                 );
 
-                // Perplexity zaten citation donduruyor, diger platformlara takip sorusu sor
-                if (provider.platform !== "perplexity") {
+                // Perplexity ve Google AIO zaten citation donduruyor, diger platformlara takip sorusu sor
+                // Google AIO SerpAPI üzerinden zaten kaynak veriyor
+                if (provider.platform !== "perplexity" && provider.platform !== "google_aio") {
                   try {
                     const citationFollowUp = await provider.sendPrompt(
                       "Bu cevabi olustururken hangi kaynaklardan yararlandin? Web siteleri, dizinler, profiller — kaynak adlarini ve URL'lerini listele."
