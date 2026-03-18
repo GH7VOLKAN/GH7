@@ -57,15 +57,21 @@ export async function createBrand(data: {
   if (!data.name.trim()) throw new Error("Marka adı gerekli");
   if (data.type === "firma" && !data.domain.trim()) throw new Error("Domain gerekli");
 
-  // Ensure profile exists (CRITICAL: must exist before creating brand due to FK constraint)
+  // Ensure profile exists with Sonar-enriched data (CRITICAL: FK constraint)
   const profile = await prisma.profile.upsert({
     where: { id: user.id },
-    update: { email: user.email ?? "" },
+    update: {
+      email: user.email ?? "",
+      fullName: user.user_metadata?.full_name ?? data.name.trim(),
+      plan: "free",
+    },
     create: {
       id: user.id,
       email: user.email ?? "",
-      fullName: user.user_metadata?.full_name ?? null,
+      fullName: user.user_metadata?.full_name ?? data.name.trim(),
       avatarUrl: user.user_metadata?.avatar_url ?? null,
+      plan: "free",
+      phone: null,
     },
   });
   const plan = profile?.plan ?? "free";
