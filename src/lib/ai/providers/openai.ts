@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import type { ChatCompletion } from "openai/resources/chat/completions";
 import type { AIProvider } from "./base";
 import type { AIResponse } from "../types";
 
@@ -28,22 +29,27 @@ export class OpenAIProvider implements AIProvider {
 
     for (const model of models) {
       try {
-        const params: Record<string, unknown> = {
-          model: model.name,
-          max_tokens: 2048,
-          messages: [{ role: "user", content: promptText }],
-        };
+        let response: ChatCompletion;
 
-        // Web search model doesn't support temperature but supports web_search_options
         if (model.webSearch) {
-          params.web_search_options = { search_context_size: "high" };
+          // Web search model: no temperature, add web_search_options
+          response = await this.client.chat.completions.create({
+            model: model.name,
+            max_tokens: 2048,
+            stream: false,
+            messages: [{ role: "user", content: promptText }],
+            web_search_options: { search_context_size: "high" },
+          } as Parameters<typeof this.client.chat.completions.create>[0]) as ChatCompletion;
         } else {
-          params.temperature = 0.7;
+          // Standard model
+          response = await this.client.chat.completions.create({
+            model: model.name,
+            max_tokens: 2048,
+            temperature: 0.7,
+            stream: false,
+            messages: [{ role: "user", content: promptText }],
+          });
         }
-
-        const response = await this.client.chat.completions.create(
-          params as unknown as Parameters<typeof this.client.chat.completions.create>[0],
-        );
 
         const content = response.choices[0]?.message?.content ?? "";
 
