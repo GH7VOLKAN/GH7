@@ -38,7 +38,7 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
-    maxPrompts: 20,            // Free: 20 soru (Sonar + Sonnet)
+    maxPrompts: 10,            // Free: 10 soru (Sonar + Sonnet)
     manualPromptAdd: false,    // Prompt ekleme Pro+
     scanFrequency: "once",     // TEK FARK: 1 kez tarama
     competitorView: true,      // Her şey açık

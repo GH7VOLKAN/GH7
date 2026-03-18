@@ -15,7 +15,7 @@ const plans = [
     features: [
       { text: "Adını yaz, sonucunu gör" },
       { text: "4 yapay zekada tarama" },
-      { text: "Temel sonuç raporu" },
+      { text: "10 soru analizi" },
     ],
   },
   {
@@ -27,7 +27,7 @@ const plans = [
     popular: true,
     features: [
       { text: "1 marka takibi" },
-      { text: "50 soru takibi" },
+      { text: "50 soru (tamamı)" },
       { text: "10 rakip analizi" },
       { text: "Haftada 3 otomatik kontrol" },
       { text: "Haftalık değişimleri takip et" },
