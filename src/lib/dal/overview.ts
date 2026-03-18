@@ -34,6 +34,20 @@ export interface CompetitorRankEntry {
   perPlatform: Record<PlatformKey, { mentioned: number; total: number }>;
 }
 
+export interface WeeklyTrendPoint {
+  week: string; // "Hafta 1", "Hafta 2", ...
+  chatgpt: number;
+  claude: number;
+  gemini: number;
+  perplexity: number;
+  google_aio: number;
+}
+
+export interface ChecklistProgress {
+  total: number;
+  completed: number;
+}
+
 export interface DashboardOverview {
   mentionScore: number;
   mentionTrend: number;
@@ -59,6 +73,12 @@ export interface DashboardOverview {
   topCompetitorGap: number;
   /** Senin Yerine Kim — rakip sıralama (ScanResult.competitors'dan) */
   competitorRanking: CompetitorRankEntry[];
+  /** 4-week per-platform mention rate trend (%) */
+  weeklyTrend: WeeklyTrendPoint[];
+  /** Checklist (gelisim plani) progress */
+  checklistProgress: ChecklistProgress;
+  /** Total number of scans completed */
+  totalScanCount: number;
 }
 
 export const getOverviewData = cache(async (brandId: string): Promise<DashboardOverview> => {
@@ -341,6 +361,93 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     }
   }
 
+  // ── 4-Week per-platform trend ────────────────────────
+  const fourWeeksAgo = new Date();
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+  const trendScans = await prisma.scan.findMany({
+    where: { brandId, status: "completed", completedAt: { gte: fourWeeksAgo } },
+    orderBy: { completedAt: "asc" },
+    select: { id: true, completedAt: true },
+  });
+
+  // Bucket scans into 4 weeks
+  const platforms: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "google_aio"];
+  const weeklyTrend: WeeklyTrendPoint[] = [];
+
+  if (trendScans.length > 0) {
+    const now = new Date();
+    const weekBuckets: { scanIds: string[] }[] = [
+      { scanIds: [] },
+      { scanIds: [] },
+      { scanIds: [] },
+      { scanIds: [] },
+    ];
+    for (const scan of trendScans) {
+      const daysAgo = Math.floor((now.getTime() - (scan.completedAt?.getTime() ?? now.getTime())) / (1000 * 60 * 60 * 24));
+      const weekIndex = Math.min(3, Math.floor(daysAgo / 7));
+      weekBuckets[3 - weekIndex].scanIds.push(scan.id);
+    }
+
+    const allTrendScanIds = trendScans.map((s) => s.id);
+    const trendResults = allTrendScanIds.length > 0
+      ? await prisma.promptResult.findMany({
+          where: { scanId: { in: allTrendScanIds } },
+          select: { scanId: true, platform: true, mentioned: true },
+        })
+      : [];
+
+    // Group results by scanId for quick lookup
+    const resultsByScan = new Map<string, { platform: string; mentioned: boolean }[]>();
+    for (const r of trendResults) {
+      if (!resultsByScan.has(r.scanId)) resultsByScan.set(r.scanId, []);
+      resultsByScan.get(r.scanId)!.push(r);
+    }
+
+    for (let w = 0; w < 4; w++) {
+      const bucket = weekBuckets[w];
+      const point: WeeklyTrendPoint = {
+        week: `Hafta ${w + 1}`,
+        chatgpt: 0,
+        claude: 0,
+        gemini: 0,
+        perplexity: 0,
+        google_aio: 0,
+      };
+      if (bucket.scanIds.length > 0) {
+        for (const p of platforms) {
+          let mentioned = 0;
+          let total = 0;
+          for (const sid of bucket.scanIds) {
+            const results = resultsByScan.get(sid) ?? [];
+            for (const r of results) {
+              if (r.platform === p) {
+                total++;
+                if (r.mentioned) mentioned++;
+              }
+            }
+          }
+          point[p] = total > 0 ? Math.round((mentioned / total) * 100) : 0;
+        }
+      }
+      weeklyTrend.push(point);
+    }
+  }
+
+  // ── Checklist (gelisim plani) progress ─────────────────
+  const checklistItems = await prisma.checklistItem.findMany({
+    where: { brandId },
+    select: { status: true },
+  });
+  const checklistProgress: ChecklistProgress = {
+    total: checklistItems.length,
+    completed: checklistItems.filter((i) => i.status === "complete").length,
+  };
+
+  // ── Total scan count ───────────────────────────────────
+  const totalScanCount = await prisma.scan.count({
+    where: { brandId, status: "completed" },
+  });
+
   return {
     mentionScore,
     mentionTrend,
@@ -361,6 +468,9 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     topCompetitorName,
     topCompetitorGap,
     competitorRanking,
+    weeklyTrend,
+    checklistProgress,
+    totalScanCount,
   };
 });
 

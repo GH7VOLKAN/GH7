@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
@@ -13,48 +13,86 @@ import {
   activateTestPlan,
   regenerateApiKey,
   updateWebhookUrl,
+  addCompetitor,
+  removeCompetitor,
 } from "@/lib/actions";
 import { PlanSelector } from "@/components/payment/plan-selector";
 import { CheckoutModal } from "@/components/payment/checkout-modal";
-import { HeroSection } from "@/components/kinde/hero-section";
+import { FadeIn, PageSection, SectionTitle } from "@/components/kinde/animations";
 import {
-  FadeIn,
-  Stagger,
-  AnimBar,
-  PageSection,
-  SectionTitle,
-} from "@/components/kinde/animations";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import {
   UserIcon,
   BuildingIcon,
   CreditCardIcon,
   BellIcon,
-  RadarIcon,
+  CameraIcon,
   PlusIcon,
   TrashIcon,
-  StarIcon,
   CheckIcon,
   GlobeIcon,
   ZapIcon,
   ShieldCheckIcon,
   CrownIcon,
-  LockIcon,
+  XIcon,
+  ExternalLinkIcon,
+  AlertTriangleIcon,
+  Loader2Icon,
+  SaveIcon,
+  MailIcon,
   SunIcon,
   MoonIcon,
   MonitorIcon,
-  XIcon,
+  RadarIcon,
   KeyRoundIcon,
   CopyIcon,
   RefreshCwIcon,
   EyeIcon,
   EyeOffIcon,
-  ActivityIcon,
   LinkIcon,
   ArrowRightIcon,
   ChevronDownIcon,
+  StarIcon,
+  ActivityIcon,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+
+// ─── Types ────────────────────────────────────────────────
 
 type BrandType = "firma" | "kisisel";
+
+interface CompetitorItem {
+  id: string;
+  name: string;
+  domain: string;
+}
 
 interface BrandItem {
   id: string;
@@ -83,7 +121,11 @@ interface AyarlarClientProps {
   brandName: string;
   brandDomain: string;
   brandSector: string;
+  brandCity: string;
   brandType: BrandType;
+  businessCategories: string[];
+  serviceRegions: string[];
+  competitors: CompetitorItem[];
   autoScan: boolean;
   scanInterval: string;
   phone: string;
@@ -119,45 +161,100 @@ interface AyarlarClientProps {
   webhookUrl: string | null;
 }
 
-// ─── Plan comparison data ───
-const PLAN_COMPARISON = [
-  { feature: "Takip Edilen Soru", free: "5", pro: "50", business: "200", agency: "500" },
-  { feature: "Marka", free: "1", pro: "3", business: "10", agency: "50" },
-  { feature: "Rakip", free: "—", pro: "10", business: "25", agency: "50" },
-  { feature: "Tarama", free: "1 kez", pro: "Haftada 3x", business: "Haftada 3x", agency: "Her gün" },
-  { feature: "Rakip Analizi", free: "—", pro: "✓", business: "✓", agency: "✓" },
-  { feature: "Site Kontrolü", free: "—", pro: "✓", business: "✓", agency: "✓" },
-  { feature: "Aksiyon Planı", free: "—", pro: "✓", business: "✓", agency: "✓" },
-  { feature: "Haftalık Gelişim", free: "—", pro: "✓", business: "✓", agency: "✓" },
-  { feature: "Bildirimler", free: "—", pro: "✓", business: "✓", agency: "✓" },
-  { feature: "Gelişmiş Erişim", free: "—", pro: "—", business: "—", agency: "✓" },
-];
+// ─── Plan badge colors ──────────────────────────────────
 
-const PLAN_PRICES = {
-  pro: { monthly: 2495, yearly: 23950 },
-  business: { monthly: 7495, yearly: 71950 },
-  agency: { monthly: 19995, yearly: 191950 },
+const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string; icon: typeof UserIcon }> = {
+  free: { label: "FREE", color: "text-muted-foreground", bg: "bg-muted", icon: UserIcon },
+  pro: { label: "PRO", color: "text-blue-700 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-950", icon: ZapIcon },
+  business: { label: "BUSINESS", color: "text-purple-700 dark:text-purple-400", bg: "bg-purple-100 dark:bg-purple-950", icon: ShieldCheckIcon },
+  agency: { label: "AGENCY", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-950", icon: CrownIcon },
 };
+
+// ─── Section nav items ──────────────────────────────────
 
 const NAV_ITEMS = [
   { id: "profil", label: "Profil", icon: UserIcon },
-  { id: "markalar", label: "Markalar", icon: BuildingIcon },
-  { id: "plan", label: "Plan", icon: CreditCardIcon },
-  { id: "bildirimler", label: "Bildirimler", icon: BellIcon },
-  { id: "tarama", label: "Tarama", icon: RadarIcon },
+  { id: "marka", label: "Marka Bilgileri", icon: BuildingIcon },
+  { id: "rakipler", label: "Rakipler", icon: RadarIcon },
+  { id: "hesap", label: "Hesap", icon: CreditCardIcon },
+  { id: "tehlike", label: "Tehlikeli B\u00F6lge", icon: AlertTriangleIcon },
 ];
 
-const NAV_ITEMS_AGENCY = [
-  ...NAV_ITEMS,
-  { id: "entegrasyon", label: "Entegrasyon", icon: KeyRoundIcon },
-];
+// ─── Tag/Chip input component ───────────────────────────
+
+function TagInput({
+  tags,
+  onAdd,
+  onRemove,
+  placeholder,
+  disabled,
+}: {
+  tags: string[];
+  onAdd: (tag: string) => void;
+  onRemove: (tag: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+}) {
+  const [input, setInput] = useState("");
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if ((e.key === "Enter" || e.key === ",") && input.trim()) {
+      e.preventDefault();
+      const tag = input.trim().replace(/,/g, "");
+      if (tag && !tags.includes(tag)) {
+        onAdd(tag);
+      }
+      setInput("");
+    }
+    if (e.key === "Backspace" && !input && tags.length > 0) {
+      onRemove(tags[tags.length - 1]);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5 rounded-lg border border-input bg-transparent p-2 min-h-[42px] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 transition-colors">
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+        >
+          {tag}
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onRemove(tag)}
+              className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5 transition-colors"
+            >
+              <XIcon className="size-3" />
+            </button>
+          )}
+        </span>
+      ))}
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={tags.length === 0 ? placeholder : ""}
+        disabled={disabled}
+        className="flex-1 min-w-[120px] bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+      />
+    </div>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────
 
 export function AyarlarClient({
   brandId,
   brandName,
   brandDomain,
   brandSector,
+  brandCity,
   brandType: initialBrandType,
+  businessCategories: initialCategories,
+  serviceRegions: initialRegions,
+  competitors: initialCompetitors,
   autoScan: initialAutoScan,
   scanInterval: initialInterval,
   phone: initialPhone,
@@ -167,7 +264,7 @@ export function AyarlarClient({
   emailWeeklyReport: initialEmailWeeklyReport,
   userName,
   userEmail,
-  avatarUrl,
+  avatarUrl: initialAvatarUrl,
   plan,
   planLabel,
   planEndDate,
@@ -187,46 +284,58 @@ export function AyarlarClient({
   const paymentStatus = searchParams.get("payment");
   const { theme, setTheme } = useTheme();
 
-  // General state
-  const [brandType, setBrandType] = useState<BrandType>(initialBrandType);
+  // ── Brand info state ──
   const [name, setName] = useState(brandName);
   const [domain, setDomain] = useState(brandDomain);
   const [sector, setSector] = useState(brandSector);
+  const [city, setCity] = useState(brandCity);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
+  const [regions, setRegions] = useState<string[]>(initialRegions);
 
-  // Scan state
-  const [autoScan, setAutoScan] = useState(initialAutoScan);
-  const [scanInterval, setScanInterval] = useState(initialInterval);
+  // ── Competitor state ──
+  const [competitors, setCompetitors] = useState<CompetitorItem[]>(initialCompetitors);
+  const [newCompName, setNewCompName] = useState("");
+  const [newCompDomain, setNewCompDomain] = useState("");
 
-  // Notification state
+  // ── Notification state ──
   const [phone, setPhone] = useState(initialPhone);
   const [smsEnabled, setSmsEnabled] = useState(initialSmsEnabled);
   const [emailScanComplete, setEmailScanComplete] = useState(initialEmailScanComplete);
   const [emailScoreChange, setEmailScoreChange] = useState(initialEmailScoreChange);
   const [emailWeeklyReport, setEmailWeeklyReport] = useState(initialEmailWeeklyReport);
 
-  // Integration state
+  // ── Avatar state ──
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Integration state ──
   const [currentApiKey, setCurrentApiKey] = useState(initialApiKey);
   const [showApiKey, setShowApiKey] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState(initialWebhookUrl ?? "");
-  const [webhookEnabled, setWebhookEnabled] = useState(!!initialWebhookUrl);
 
-  // UI state
+  // ── UI state ──
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [activeSection, setActiveSection] = useState("profil");
   const [showPlanSelector, setShowPlanSelector] = useState(false);
   const [checkoutHtml, setCheckoutHtml] = useState<string | null>(null);
-  const [testPlanLoading, setTestPlanLoading] = useState<string | null>(null);
-  const [deletingBrand, setDeletingBrand] = useState<string | null>(null);
-  const [showNewBrand, setShowNewBrand] = useState(false);
-  const [newBrand, setNewBrand] = useState({ name: "", domain: "", sector: "", type: "firma" as BrandType });
-  const [activeSection, setActiveSection] = useState("profil");
-  const [showPlanTable, setShowPlanTable] = useState(false);
+  const [savingBrand, setSavingBrand] = useState(false);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [addingCompetitor, setAddingCompetitor] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
+  // ── Derived ──
   const isFree = plan === "free";
-  const initial = userName?.charAt(0)?.toUpperCase() ?? "?";
-  const navItems = plan === "agency" ? NAV_ITEMS_AGENCY : NAV_ITEMS;
+  const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
+  const PlanIcon = planConfig.icon;
+  const initials = userName
+    ? userName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+    : userEmail?.[0]?.toUpperCase() ?? "?";
 
-  // Section refs for scroll
+  // Section refs
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   function scrollToSection(id: string) {
@@ -234,11 +343,151 @@ export function AyarlarClient({
     sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function showToast(msg: string) {
-    setMessage(msg);
+  function showToast(text: string, type: "success" | "error" = "success") {
+    setMessage({ text, type });
     setTimeout(() => setMessage(null), 3000);
   }
 
+  const formattedEndDate = planEndDate
+    ? new Date(planEndDate).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  // ── Avatar upload handler ──
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("L\u00FCtfen bir resim dosyas\u0131 se\u00E7in", "error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Dosya boyutu 5MB'dan k\u00FC\u00E7\u00FCk olmal\u0131", "error");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Y\u00FCkleme ba\u015Far\u0131s\u0131z");
+      }
+
+      const data = await res.json();
+      setAvatarUrl(data.avatarUrl);
+      showToast("Profil foto\u011Fraf\u0131 g\u00FCncellendi");
+      router.refresh();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Hata olu\u015Ftu", "error");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  }
+
+  // ── Brand save handler ──
+  async function handleSaveBrand() {
+    setSavingBrand(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandId,
+          name: name.trim(),
+          domain: domain.trim(),
+          sector: sector.trim(),
+          city: city.trim(),
+          businessCategories: categories,
+          serviceRegions: regions,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "G\u00FCncelleme ba\u015Far\u0131s\u0131z");
+      }
+
+      showToast("Marka bilgileri g\u00FCncellendi");
+      router.refresh();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Hata olu\u015Ftu", "error");
+    } finally {
+      setSavingBrand(false);
+    }
+  }
+
+  // ── Notification save handler ──
+  async function handleSaveNotifications() {
+    setSavingNotifications(true);
+    try {
+      await updateNotificationPreferences({
+        phone,
+        smsEnabled,
+        emailScanComplete,
+        emailScoreChange,
+        emailWeeklyReport,
+      });
+      showToast("Bildirim tercihleri g\u00FCncellendi");
+    } catch {
+      showToast("Hata olu\u015Ftu", "error");
+    } finally {
+      setSavingNotifications(false);
+    }
+  }
+
+  // ── Competitor handlers ──
+  async function handleAddCompetitor() {
+    if (!newCompName.trim()) {
+      showToast("Rakip ad\u0131 gerekli", "error");
+      return;
+    }
+    if (competitors.length >= 10) {
+      showToast("En fazla 10 rakip ekleyebilirsiniz", "error");
+      return;
+    }
+
+    setAddingCompetitor(true);
+    try {
+      await addCompetitor(brandId, {
+        name: newCompName.trim(),
+        domain: newCompDomain.trim(),
+      });
+      setCompetitors((prev) => [
+        ...prev,
+        { id: Date.now().toString(), name: newCompName.trim(), domain: newCompDomain.trim() },
+      ]);
+      setNewCompName("");
+      setNewCompDomain("");
+      showToast("Rakip eklendi");
+      router.refresh();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Hata olu\u015Ftu", "error");
+    } finally {
+      setAddingCompetitor(false);
+    }
+  }
+
+  async function handleRemoveCompetitor(id: string) {
+    try {
+      await removeCompetitor(brandId, id);
+      setCompetitors((prev) => prev.filter((c) => c.id !== id));
+      showToast("Rakip kald\u0131r\u0131ld\u0131");
+      router.refresh();
+    } catch {
+      showToast("Hata olu\u015Ftu", "error");
+    }
+  }
+
+  // ── Checkout handler ──
   async function handleCheckout(selectedPlan: string, period: string) {
     try {
       const res = await fetch("/api/payment/create-checkout", {
@@ -251,245 +500,156 @@ export function AyarlarClient({
         setCheckoutHtml(data.checkoutFormContent);
         setShowPlanSelector(false);
       } else {
-        showToast("Ödeme formu oluşturulamadı");
+        showToast("\u00D6deme formu olu\u015Fturulamad\u0131", "error");
       }
     } catch {
-      showToast("Bir hata oluştu");
+      showToast("Bir hata olu\u015Ftu", "error");
     }
   }
 
-  async function handleTestActivation(testPlan: string) {
-    setTestPlanLoading(testPlan);
+  // ── Delete account (placeholder) ──
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
     try {
-      await activateTestPlan(testPlan);
-      showToast(`${testPlan.toUpperCase()} planı aktif edildi! Sayfa yenileniyor...`);
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Bilinmeyen hata";
-      showToast(`Hata: ${msg}`);
-      setTestPlanLoading(null);
-    }
-  }
-
-  async function handleDeleteBrand(id: string) {
-    if (!confirm("Bu markayı silmek istediğinize emin misiniz?")) return;
-    setDeletingBrand(id);
-    try {
-      await deleteBrand(id);
-      showToast("Marka silindi");
-      router.refresh();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Hata oluştu");
+      // TODO: Implement actual account deletion API
+      showToast("Hesap silme i\u015Flemi hen\u00FCz aktif de\u011Fil", "error");
     } finally {
-      setDeletingBrand(null);
+      setDeletingAccount(false);
+      setDeleteConfirmOpen(false);
     }
   }
-
-  async function handleSetDefault(id: string) {
-    startTransition(async () => {
-      try {
-        await setDefaultBrand(id);
-        showToast("Varsayılan marka değiştirildi");
-        router.refresh();
-      } catch {
-        showToast("Hata oluştu");
-      }
-    });
-  }
-
-  async function handleCreateBrand() {
-    if (!newBrand.name.trim() || !newBrand.domain.trim()) {
-      showToast("Ad ve domain gerekli");
-      return;
-    }
-    startTransition(async () => {
-      try {
-        const { createBrand } = await import("@/lib/actions");
-        await createBrand({
-          name: newBrand.name,
-          domain: newBrand.domain,
-          sector: newBrand.sector,
-          type: newBrand.type,
-        });
-        showToast("Marka oluşturuldu");
-        setShowNewBrand(false);
-        setNewBrand({ name: "", domain: "", sector: "", type: "firma" });
-        router.refresh();
-      } catch (err: unknown) {
-        showToast(err instanceof Error ? err.message : "Hata oluştu");
-      }
-    });
-  }
-
-  const formattedEndDate = planEndDate
-    ? new Date(planEndDate).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
-    : null;
-
-  const formattedStartDate = planStartDate
-    ? new Date(planStartDate).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
-    : null;
-
-  const planIcon = plan === "agency" ? CrownIcon : plan === "business" ? ShieldCheckIcon : plan === "pro" ? ZapIcon : UserIcon;
-  const PlanIcon = planIcon;
 
   return (
-    <div className="flex flex-col gap-0">
-      {/* Toast */}
+    <div className="flex flex-col gap-0 pb-12">
+      {/* ── Toast ── */}
       {message && (
         <div
-          className="fixed bottom-6 right-6 z-50"
-          style={{
-            background: "var(--foreground)",
-            color: "var(--background)",
-            padding: "12px 20px",
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 600,
-            boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-            animation: "fadeInUp 0.3s ease",
-          }}
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-300 ${
+            message.type === "error"
+              ? "bg-destructive text-destructive-foreground"
+              : "bg-foreground text-background"
+          }`}
         >
-          {message}
+          {message.type === "success" ? (
+            <CheckIcon className="size-4" />
+          ) : (
+            <AlertTriangleIcon className="size-4" />
+          )}
+          {message.text}
         </div>
       )}
 
-      {/* Payment feedback */}
+      {/* ── Payment feedback ── */}
       {paymentStatus === "success" && (
-        <div
-          className="kinde-card"
-          style={{ padding: "16px 20px", borderColor: "#22c55e30", background: "#f0fdf4", marginBottom: 12 }}
-        >
-          <div className="flex items-center gap-2">
-            <CheckIcon style={{ width: 16, height: 16, color: "#22c55e" }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#166534" }}>
-              Ödeme başarılı! Planınız aktif edildi.
+        <Card className="mb-4 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+          <CardContent className="flex items-center gap-2">
+            <CheckIcon className="size-4 text-green-600" />
+            <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+              \u00D6deme ba\u015Far\u0131l\u0131! Plan\u0131n\u0131z aktif edildi.
             </span>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
       {paymentStatus === "failed" && (
-        <div
-          className="kinde-card"
-          style={{ padding: "16px 20px", borderColor: "#ef444430", background: "#fef2f2", marginBottom: 12 }}
-        >
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#991b1b" }}>
-            Ödeme başarısız oldu. Lütfen tekrar deneyin.
-          </span>
-        </div>
+        <Card className="mb-4 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+          <CardContent>
+            <span className="text-sm font-semibold text-red-700 dark:text-red-400">
+              \u00D6deme ba\u015Far\u0131s\u0131z oldu. L\u00FCtfen tekrar deneyin.
+            </span>
+          </CardContent>
+        </Card>
       )}
 
-      {/* ── HERO ──────────────────────────────────────── */}
-      <div style={{ textAlign: "center", padding: "48px 24px 32px" }}>
-        {/* Avatar */}
-        <div className="flex justify-center mb-4">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={userName}
-              referrerPolicy="no-referrer"
-              style={{ width: 72, height: 72, borderRadius: 20, objectFit: "cover" }}
-            />
-          ) : (
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 20,
-                background: "#111",
-                color: "#fff",
-                fontSize: 28,
-                fontWeight: 700,
-              }}
-            >
-              {initial}
-            </div>
-          )}
-        </div>
-        <h1
-          style={{
-            fontSize: "clamp(28px, 4vw, 40px)",
-            fontWeight: 800,
-            letterSpacing: "-1.5px",
-            color: "var(--foreground)",
-            lineHeight: 1.1,
-          }}
-        >
-          {userName || "Hesabım"}
-        </h1>
-        <p style={{ fontSize: 14, color: "var(--muted-foreground)", marginTop: 8 }}>
-          {userEmail}
-        </p>
-        <div className="flex items-center justify-center gap-2 mt-3">
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "4px 12px",
-              borderRadius: 100,
-              background: isFree ? "#f5f5f5" : "#111",
-              color: isFree ? "#666" : "#fff",
-            }}
+      {/* ═══════════════════════════════════════════════════
+          SECTION 1: PROFILE HEADER
+          ═══════════════════════════════════════════════════ */}
+      <div className="flex flex-col items-center py-10 gap-4">
+        {/* Avatar with upload */}
+        <div className="relative group">
+          <div className="size-24 rounded-2xl overflow-hidden ring-2 ring-border/50 shadow-md">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={userName}
+                referrerPolicy="no-referrer"
+                className="size-full object-cover"
+              />
+            ) : (
+              <div className="size-full flex items-center justify-center bg-gradient-to-br from-foreground/90 to-foreground text-background text-2xl font-bold">
+                {initials}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
           >
-            <PlanIcon style={{ width: 12, height: 12 }} />
-            {planLabel}
-          </span>
+            {uploadingAvatar ? (
+              <Loader2Icon className="size-5 text-white animate-spin" />
+            ) : (
+              <CameraIcon className="size-5 text-white" />
+            )}
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+        </div>
+
+        {/* Name & Email */}
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            {userName || "Hesab\u0131m"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
+            <MailIcon className="size-3.5" />
+            {userEmail}
+          </p>
+        </div>
+
+        {/* Plan badge */}
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="secondary"
+            className={`${planConfig.bg} ${planConfig.color} gap-1 px-3 py-1 text-xs font-bold`}
+          >
+            <PlanIcon className="size-3" />
+            {planConfig.label}
+          </Badge>
           {!isFree && daysRemaining !== null && !isExpired && (
-            <span style={{ fontSize: 11, color: daysRemaining <= 7 ? "#ef4444" : "var(--muted-foreground)" }}>
-              {daysRemaining} gün kaldı
+            <span className={`text-xs ${daysRemaining <= 7 ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+              {daysRemaining} g\u00FCn kald\u0131
             </span>
           )}
           {isInGracePeriod && (
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                padding: "2px 8px",
-                borderRadius: 100,
-                background: "#fef2f2",
-                color: "#ef4444",
-              }}
-            >
-              Süresi doldu
-            </span>
+            <Badge variant="destructive" className="text-xs">
+              S\u00FCresi doldu
+            </Badge>
           )}
         </div>
       </div>
 
-      {/* ── SECTION NAV (horizontal pills) ────────── */}
-      <div style={{ position: "sticky", top: 48, zIndex: 20, background: "var(--background)" }}>
-        <div
-          className="flex gap-1 overflow-x-auto no-scrollbar"
-          style={{ padding: "8px 0 12px", borderBottom: "1px solid #eee" }}
-        >
-          {navItems.map((item) => {
+      {/* ── Section Nav (sticky pills) ── */}
+      <div className="sticky top-12 z-20 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar py-2">
+          {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "7px 14px",
-                  borderRadius: 100,
-                  fontSize: 12,
-                  fontWeight: isActive ? 700 : 500,
-                  background: isActive ? "#111" : "transparent",
-                  color: isActive ? "#fff" : "var(--muted-foreground)",
-                  border: isActive ? "none" : "1px solid #eee",
-                  whiteSpace: "nowrap",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  flexShrink: 0,
-                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
+                  isActive
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
               >
-                <Icon style={{ width: 14, height: 14 }} />
+                <Icon className="size-3.5" />
                 {item.label}
               </button>
             );
@@ -497,1079 +657,514 @@ export function AyarlarClient({
         </div>
       </div>
 
-      {/* ── SECTION 1: PROFİL ─────────────────────── */}
-      <div ref={(el) => { sectionRefs.current.profil = el; }} style={{ scrollMarginTop: 120 }}>
+      {/* ═══════════════════════════════════════════════════
+          SECTION 2: BRAND INFORMATION
+          ═══════════════════════════════════════════════════ */}
+      <div ref={(el) => { sectionRefs.current.profil = el; }} className="scroll-mt-28" />
+      <div ref={(el) => { sectionRefs.current.marka = el; }} className="scroll-mt-28">
         <PageSection className="mt-8">
-          <SectionTitle title="Profil" subtitle="Görünüm ve hesap türü tercihleri" />
+          <SectionTitle title="Marka Bilgileri" subtitle="Firman\u0131z\u0131n temel bilgilerini g\u00FCncelleyin" />
 
-          {/* Theme Picker */}
-          <div className="kinde-card p-6" style={{ cursor: "default" }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)", marginBottom: 16 }}>
-              Tema
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: "light", label: "Açık", icon: SunIcon },
-                { value: "dark", label: "Koyu", icon: MoonIcon },
-                { value: "system", label: "Sistem", icon: MonitorIcon },
-              ].map(({ value, label, icon: Icon }) => (
-                <button
-                  key={value}
-                  onClick={() => setTheme(value)}
-                  className="flex flex-col items-center gap-2"
-                  style={{
-                    padding: "20px 12px",
-                    borderRadius: 16,
-                    border: theme === value ? "2px solid #111" : "1px solid #eee",
-                    background: theme === value ? "#fafafa" : "transparent",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <Icon style={{ width: 22, height: 22, color: theme === value ? "#111" : "#999" }} />
-                  <span style={{ fontSize: 12, fontWeight: theme === value ? 700 : 500, color: theme === value ? "#111" : "#999" }}>
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Account Type */}
-          <div className="kinde-card p-6 mt-3" style={{ cursor: "default" }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-              Hesap Türü
-            </p>
-            <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4, marginBottom: 16 }}>
-              Takip tipinize göre arayüz ve içerik kişiselleştirilir
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                { value: "firma" as BrandType, title: "Firma", desc: "Kurumsal marka takibi, rakip analizi, site kontrolü", icon: BuildingIcon },
-                { value: "kisisel" as BrandType, title: "Kişisel", desc: "Kişisel tanınırlık, dijital iz takibi", icon: UserIcon },
-              ].map((option) => {
-                const Icon = option.icon;
-                const isSelected = brandType === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setBrandType(option.value);
-                      startTransition(async () => {
-                        try {
-                          await updateBrandType(brandId, option.value);
-                          showToast("Hesap türü güncellendi");
-                          router.refresh();
-                        } catch {
-                          showToast("Hata oluştu");
-                        }
-                      });
-                    }}
-                    disabled={isPending}
-                    className="flex items-start gap-3 text-left"
-                    style={{
-                      padding: 16,
-                      borderRadius: 16,
-                      border: isSelected ? "2px solid #111" : "1px solid #eee",
-                      background: isSelected ? "#fafafa" : "transparent",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <div
-                      className="flex items-center justify-center shrink-0"
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        background: isSelected ? "#11111110" : "#f5f5f5",
-                      }}
-                    >
-                      <Icon style={{ width: 18, height: 18, color: isSelected ? "#111" : "#999" }} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>{option.title}</p>
-                      <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2, lineHeight: 1.4 }}>
-                        {option.desc}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </PageSection>
-      </div>
-
-      {/* ── SECTION 2: MARKALAR ───────────────────── */}
-      <div ref={(el) => { sectionRefs.current.markalar = el; }} style={{ scrollMarginTop: 120 }}>
-        <PageSection className="mt-12">
-          <SectionTitle title="Markalar" subtitle="Markalarınızı yönetin ve yenilerini ekleyin" />
-
-          {/* Usage bar */}
-          <div className="kinde-card p-5" style={{ cursor: "default" }}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <span style={{ fontSize: 24, fontWeight: 800, color: "var(--foreground)" }}>
-                  {usage.totalBrands}
-                </span>
-                <span style={{ fontSize: 14, color: "var(--muted-foreground)" }}>
-                  {" "}/ {limits.maxBrands} marka
-                </span>
-              </div>
-              <button
-                onClick={() => setShowNewBrand(true)}
-                disabled={usage.totalBrands >= limits.maxBrands}
-                className="flex items-center gap-1.5"
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 100,
-                  background: "#111",
-                  color: "#fff",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: usage.totalBrands >= limits.maxBrands ? "not-allowed" : "pointer",
-                  opacity: usage.totalBrands >= limits.maxBrands ? 0.5 : 1,
-                  transition: "transform 0.15s",
-                }}
-              >
-                <PlusIcon style={{ width: 14, height: 14 }} />
-                Yeni Marka
-              </button>
-            </div>
-            <AnimBar
-              percent={(usage.totalBrands / limits.maxBrands) * 100}
-              color="#111"
-              height={6}
-            />
-          </div>
-
-          {/* New Brand Form */}
-          {showNewBrand && (
-            <FadeIn className="mt-3">
-              <div className="kinde-card p-6" style={{ cursor: "default" }}>
-                <div className="flex items-center justify-between mb-5">
-                  <p style={{ fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}>Yeni Marka Ekle</p>
-                  <button
-                    onClick={() => setShowNewBrand(false)}
-                    style={{ padding: 6, borderRadius: 8, cursor: "pointer", color: "#999" }}
-                  >
-                    <XIcon style={{ width: 16, height: 16 }} />
-                  </button>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField label="Marka Adı *" value={newBrand.name} onChange={(v) => setNewBrand({ ...newBrand, name: v })} placeholder="ISITMAX" />
-                  <InputField label="Domain *" value={newBrand.domain} onChange={(v) => setNewBrand({ ...newBrand, domain: v })} placeholder="isitmax.com" />
-                  <InputField label="Sektör" value={newBrand.sector} onChange={(v) => setNewBrand({ ...newBrand, sector: v })} placeholder="Elektrikli Yerden Isıtma" />
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                      Tür
-                    </label>
-                    <select
-                      value={newBrand.type}
-                      onChange={(e) => setNewBrand({ ...newBrand, type: e.target.value as BrandType })}
-                      style={{
-                        width: "100%",
-                        marginTop: 6,
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid #eee",
-                        background: "var(--background)",
-                        fontSize: 13,
-                        color: "var(--foreground)",
-                        outline: "none",
-                      }}
-                    >
-                      <option value="firma">Firma</option>
-                      <option value="kisisel">Kişisel</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCreateBrand}
-                  disabled={isPending}
-                  style={{
-                    marginTop: 20,
-                    padding: "10px 28px",
-                    borderRadius: 100,
-                    background: "#111",
-                    color: "#fff",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    opacity: isPending ? 0.5 : 1,
-                    transition: "transform 0.15s",
-                  }}
-                >
-                  {isPending ? "Oluşturuluyor..." : "Marka Oluştur"}
-                </button>
-              </div>
-            </FadeIn>
-          )}
-
-          {/* Brand Cards */}
-          <Stagger className="grid gap-3 sm:grid-cols-2 mt-3" staggerMs={80}>
-            {brands.map((b) => (
-              <div
-                key={b.id}
-                className="kinde-card p-5"
-                style={{
-                  cursor: "default",
-                  borderColor: b.isDefault ? "#11111130" : undefined,
-                  borderWidth: b.isDefault ? 2 : 1,
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>{b.name}</p>
-                      {b.isDefault && (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 3,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            padding: "2px 8px",
-                            borderRadius: 100,
-                            background: "#f5f5f5",
-                            color: "#666",
-                          }}
-                        >
-                          <StarIcon style={{ width: 10, height: 10 }} /> Varsayılan
-                        </span>
-                      )}
-                    </div>
-                    <p className="flex items-center gap-1" style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4 }}>
-                      <GlobeIcon style={{ width: 12, height: 12 }} />
-                      {b.domain}
-                    </p>
-                    {b.sector && (
-                      <p style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 2 }}>{b.sector}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-3" style={{ fontSize: 11, color: "var(--muted-foreground)" }}>
-                      <span>{b.promptCount} soru</span>
-                      <span>{b.competitorCount} rakip</span>
-                      {b.lastScanAt && (
-                        <span>
-                          Son: {new Date(b.lastScanAt).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0 ml-2">
-                    {!b.isDefault && (
-                      <IconButton onClick={() => handleSetDefault(b.id)} disabled={isPending} title="Varsayılan yap">
-                        <StarIcon style={{ width: 14, height: 14 }} />
-                      </IconButton>
-                    )}
-                    {brands.length > 1 && (
-                      <IconButton onClick={() => handleDeleteBrand(b.id)} disabled={deletingBrand === b.id} title="Sil" danger>
-                        <TrashIcon style={{ width: 14, height: 14 }} />
-                      </IconButton>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </Stagger>
-
-          {/* Active Brand Edit */}
-          <div className="kinde-card p-6 mt-3" style={{ cursor: "default" }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-              Aktif Marka Bilgileri
-            </p>
-            <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4, marginBottom: 16 }}>
-              &quot;{brandName}&quot; markasının temel bilgilerini güncelleyin
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <InputField label="Marka Adı" value={name} onChange={setName} />
-              <InputField label="Domain" value={domain} onChange={setDomain} />
-            </div>
-            <div className="mt-4">
-              <InputField label="Sektör" value={sector} onChange={setSector} />
-            </div>
-            <button
-              onClick={() => {
-                startTransition(async () => {
-                  try {
-                    await updateBrand(brandId, { name, domain, sector });
-                    showToast("Marka bilgileri güncellendi");
-                  } catch {
-                    showToast("Hata oluştu");
-                  }
-                });
-              }}
-              disabled={isPending}
-              style={{
-                marginTop: 20,
-                padding: "10px 28px",
-                borderRadius: 100,
-                background: "#111",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: "pointer",
-                opacity: isPending ? 0.5 : 1,
-              }}
-            >
-              {isPending ? "Kaydediliyor..." : "Kaydet"}
-            </button>
-          </div>
-        </PageSection>
-      </div>
-
-      {/* ── SECTION 3: PLAN & FATURALANDIRMA ──────── */}
-      <div ref={(el) => { sectionRefs.current.plan = el; }} style={{ scrollMarginTop: 120 }}>
-        <PageSection className="mt-12">
-          <SectionTitle title="Plan & Faturalandırma" subtitle="Abonelik yönetimi ve kullanım limitleri" />
-
-          {/* Current Plan Card */}
-          <div
-            className="kinde-card p-6"
-            style={{
-              cursor: "default",
-              borderColor: !isFree ? "#11111120" : undefined,
-              background: !isFree ? "linear-gradient(135deg, #fafafa 0%, #fff 100%)" : undefined,
-            }}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className="flex items-center justify-center"
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    background: plan === "agency" ? "#fef3c7" : plan === "business" ? "#f3e8ff" : plan === "pro" ? "#dbeafe" : "#f5f5f5",
-                  }}
-                >
-                  <PlanIcon
-                    style={{
-                      width: 24,
-                      height: 24,
-                      color: plan === "agency" ? "#b45309" : plan === "business" ? "#7c3aed" : plan === "pro" ? "#2563eb" : "#999",
-                    }}
-                  />
-                </div>
-                <div>
-                  <p style={{ fontSize: 18, fontWeight: 800, color: "var(--foreground)" }}>
-                    {planLabel}
-                  </p>
-                  {formattedStartDate && (
-                    <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>
-                      {formattedStartDate} — {formattedEndDate}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => setShowPlanSelector(true)}
-                className="flex items-center gap-2"
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: 100,
-                  background: "#111",
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  transition: "transform 0.15s",
-                }}
-              >
-                {isFree ? "Planı Yükselt" : "Planı Değiştir"}
-                <ArrowRightIcon style={{ width: 14, height: 14 }} />
-              </button>
-            </div>
-
-            {isInGracePeriod && (
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  background: "#fefce8",
-                  border: "1px solid #fde68a",
-                  fontSize: 12,
-                  color: "#92400e",
-                }}
-              >
-                Planınızın süresi doldu. {daysRemaining} gün içinde yenilenmezse ücretsiz plana düşeceksiniz.
-              </div>
-            )}
-          </div>
-
-          {/* Usage Metrics — 3 cards */}
-          <Stagger className="grid grid-cols-3 gap-3 mt-3" staggerMs={80}>
-            {[
-              { label: "Soru", used: usage.totalPrompts, max: limits.maxPrompts, icon: ZapIcon },
-              { label: "Marka", used: usage.totalBrands, max: limits.maxBrands, icon: BuildingIcon },
-              { label: "Rakip", used: usage.totalCompetitors, max: limits.maxCompetitors, icon: UserIcon },
-            ].map(({ label, used, max, icon: Icon }) => {
-              const pct = max > 0 ? Math.min(100, (used / max) * 100) : 0;
-              const isNear = pct >= 80;
-              return (
-                <div key={label} className="kinde-card p-4" style={{ cursor: "default" }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon style={{ width: 14, height: 14, color: "var(--muted-foreground)" }} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
-                      {label}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: 22, fontWeight: 800, color: isNear ? "#f59e0b" : "var(--foreground)" }}>
-                    {used}<span style={{ fontSize: 13, fontWeight: 500, color: "var(--muted-foreground)" }}>/{max}</span>
-                  </p>
-                  <div style={{ marginTop: 8 }}>
-                    <AnimBar percent={pct} color={isNear ? "#f59e0b" : "#111"} height={4} />
-                  </div>
-                </div>
-              );
-            })}
-          </Stagger>
-
-          {/* Plan Comparison (collapsible) */}
-          <div className="kinde-card mt-3 overflow-hidden" style={{ cursor: "default" }}>
-            <button
-              onClick={() => setShowPlanTable(!showPlanTable)}
-              className="flex items-center justify-between w-full p-5"
-              style={{ cursor: "pointer" }}
-            >
-              <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-                Plan Karşılaştırma
-              </p>
-              <ChevronDownIcon
-                style={{
-                  width: 18,
-                  height: 18,
-                  color: "var(--muted-foreground)",
-                  transform: showPlanTable ? "rotate(180deg)" : "rotate(0)",
-                  transition: "transform 0.3s ease",
-                }}
-              />
-            </button>
-            <div
-              style={{
-                maxHeight: showPlanTable ? 800 : 0,
-                overflow: "hidden",
-                transition: "max-height 0.4s ease",
-              }}
-            >
-              <div style={{ padding: "0 20px 20px", overflowX: "auto" }}>
-                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #eee" }}>
-                      <th style={{ padding: "10px 8px 10px 0", textAlign: "left", fontWeight: 600, color: "var(--muted-foreground)" }}>
-                        Özellik
-                      </th>
-                      {(["free", "pro", "business", "agency"] as const).map((p) => (
-                        <th
-                          key={p}
-                          style={{
-                            padding: "10px 8px",
-                            textAlign: "center",
-                            fontWeight: p === plan ? 800 : 600,
-                            color: p === plan ? "var(--foreground)" : "var(--muted-foreground)",
-                            background: p === plan ? "#fafafa" : "transparent",
-                            borderRadius: p === plan ? "8px 8px 0 0" : undefined,
-                          }}
-                        >
-                          {p === "free" ? "Ücretsiz" : p === "pro" ? "Pro" : p === "business" ? "Business" : "Ajans"}
-                          {p === plan && (
-                            <span
-                              style={{
-                                display: "block",
-                                fontSize: 9,
-                                fontWeight: 700,
-                                color: "#22c55e",
-                                marginTop: 2,
-                              }}
-                            >
-                              Mevcut
-                            </span>
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {PLAN_COMPARISON.map((row) => (
-                      <tr key={row.feature} style={{ borderBottom: "1px solid #f5f5f5" }}>
-                        <td style={{ padding: "8px 8px 8px 0", fontWeight: 500, color: "var(--foreground)" }}>
-                          {row.feature}
-                        </td>
-                        {(["free", "pro", "business", "agency"] as const).map((p) => (
-                          <td
-                            key={p}
-                            style={{
-                              padding: "8px",
-                              textAlign: "center",
-                              fontWeight: p === plan ? 600 : 400,
-                              color: p === plan ? "var(--foreground)" : "var(--muted-foreground)",
-                              background: p === plan ? "#fafafa" : "transparent",
-                            }}
-                          >
-                            {row[p] === "✓" ? (
-                              <CheckIcon style={{ width: 14, height: 14, color: "#22c55e", margin: "0 auto" }} />
-                            ) : row[p] === "—" ? (
-                              <span style={{ opacity: 0.3 }}>—</span>
-                            ) : (
-                              row[p]
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                    {/* Pricing row */}
-                    <tr style={{ borderTop: "2px solid #eee" }}>
-                      <td style={{ padding: "10px 8px 10px 0", fontWeight: 700, color: "var(--foreground)" }}>
-                        Aylık
-                      </td>
-                      <td style={{ padding: "10px 8px", textAlign: "center", color: "var(--muted-foreground)" }}>₺0</td>
-                      {(["pro", "business", "agency"] as const).map((p) => (
-                        <td
-                          key={p}
-                          style={{
-                            padding: "10px 8px",
-                            textAlign: "center",
-                            fontWeight: 700,
-                            color: p === plan ? "var(--foreground)" : "var(--muted-foreground)",
-                            background: p === plan ? "#fafafa" : "transparent",
-                          }}
-                        >
-                          ₺{PLAN_PRICES[p].monthly.toLocaleString("tr-TR")}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Test activation */}
-          <div className="kinde-card p-5 mt-3" style={{ cursor: "default" }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "var(--muted-foreground)", marginBottom: 12 }}>
-              Test Amaçlı Plan Değiştir (ödemesiz)
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {(["pro", "business", "agency"] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => handleTestActivation(p)}
-                  disabled={testPlanLoading !== null || plan === p}
-                  style={{
-                    padding: "7px 16px",
-                    borderRadius: 100,
-                    border: plan === p ? "2px solid #111" : "1px solid #eee",
-                    background: plan === p ? "#fafafa" : "transparent",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--foreground)",
-                    cursor: plan === p ? "default" : "pointer",
-                    opacity: testPlanLoading !== null ? 0.5 : 1,
-                  }}
-                >
-                  {testPlanLoading === p
-                    ? "Aktif ediliyor..."
-                    : plan === p
-                      ? `${p.charAt(0).toUpperCase() + p.slice(1)} (Mevcut)`
-                      : `${p.charAt(0).toUpperCase() + p.slice(1)} Test Et`}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment History */}
-          {paymentHistory.length > 0 && (
-            <div className="kinde-card p-5 mt-3" style={{ cursor: "default" }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)", marginBottom: 16 }}>
-                Ödeme Geçmişi
-              </p>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #eee" }}>
-                      <th style={{ padding: "8px 0", textAlign: "left", fontWeight: 600, color: "var(--muted-foreground)" }}>Tarih</th>
-                      <th style={{ padding: "8px 0", textAlign: "left", fontWeight: 600, color: "var(--muted-foreground)" }}>Plan</th>
-                      <th style={{ padding: "8px 0", textAlign: "left", fontWeight: 600, color: "var(--muted-foreground)" }}>Dönem</th>
-                      <th style={{ padding: "8px 0", textAlign: "right", fontWeight: 600, color: "var(--muted-foreground)" }}>Tutar</th>
-                      <th style={{ padding: "8px 0", textAlign: "right", fontWeight: 600, color: "var(--muted-foreground)" }}>Durum</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paymentHistory.map((p) => (
-                      <tr key={p.id} style={{ borderBottom: "1px solid #f5f5f5" }}>
-                        <td style={{ padding: "10px 0" }}>
-                          {new Date(p.createdAt).toLocaleDateString("tr-TR")}
-                        </td>
-                        <td style={{ padding: "10px 0", fontWeight: 600, textTransform: "capitalize" }}>
-                          {p.plan}
-                        </td>
-                        <td style={{ padding: "10px 0", color: "var(--muted-foreground)" }}>
-                          {p.period === "monthly" ? "Aylık" : "Yıllık"}
-                        </td>
-                        <td style={{ padding: "10px 0", textAlign: "right", fontWeight: 600 }}>
-                          {p.amount.toLocaleString("tr-TR")}₺
-                        </td>
-                        <td style={{ padding: "10px 0", textAlign: "right" }}>
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 700,
-                              padding: "3px 10px",
-                              borderRadius: 100,
-                              background: p.status === "success" ? "#f0fdf4" : "#fef2f2",
-                              color: p.status === "success" ? "#166534" : "#991b1b",
-                            }}
-                          >
-                            {p.status === "success" ? "Başarılı" : "Başarısız"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </PageSection>
-      </div>
-
-      {/* ── SECTION 4: BİLDİRİMLER ───────────────── */}
-      <div ref={(el) => { sectionRefs.current.bildirimler = el; }} style={{ scrollMarginTop: 120 }}>
-        <PageSection className="mt-12">
-          <SectionTitle title="Bildirimler" subtitle="Hangi durumlarda size haber verelim, siz seçin" />
-
-          <div className="kinde-card p-6" style={{ cursor: "default" }}>
-            {/* Email notifications */}
-            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--foreground)", marginBottom: 16 }}>
-              E-posta Bildirimleri
-            </p>
-
-            <ToggleRow
-              title="Tarama sonuçlarını gönderin"
-              desc="Her tarama bittiğinde sonuçları e-posta ile alın"
-              checked={emailScanComplete}
-              onChange={setEmailScanComplete}
-            />
-            <ToggleRow
-              title="Puan değişimlerinde bilgi verin"
-              desc="Puanınız yükseldiğinde veya düştüğünde haberdar olun"
-              checked={emailScoreChange}
-              onChange={setEmailScoreChange}
-            />
-            <ToggleRow
-              title="Haftalık raporu gönderin"
-              desc="Her hafta ilerlemenizi özetleyen bir e-posta alın"
-              checked={emailWeeklyReport}
-              onChange={setEmailWeeklyReport}
-              locked={isFree}
-              lockedLabel="Pro"
-            />
-
-            <div style={{ height: 1, background: "#eee", margin: "20px 0" }} />
-
-            {/* SMS */}
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "var(--foreground)" }}>SMS Bildirimleri</p>
-                  {isFree && <LockedBadge label="Pro" />}
-                </div>
-                <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>
-                  Tarama sonuçlarını telefonunuza da gönderin
-                </p>
-              </div>
-              <ToggleSwitch checked={smsEnabled} onChange={setSmsEnabled} disabled={isFree} />
-            </div>
-
-            {smsEnabled && !isFree && (
-              <div style={{ marginTop: 12 }}>
-                <InputField label="Telefon Numarası" value={phone} onChange={setPhone} placeholder="+90 5XX XXX XX XX" />
-              </div>
-            )}
-
-            <div style={{ height: 1, background: "#eee", margin: "20px 0" }} />
-
-            <button
-              onClick={() => {
-                startTransition(async () => {
-                  try {
-                    await updateNotificationPreferences({
-                      phone,
-                      smsEnabled,
-                      emailScanComplete,
-                      emailScoreChange,
-                      emailWeeklyReport,
-                    });
-                    showToast("Bildirim tercihleri güncellendi");
-                  } catch {
-                    showToast("Hata oluştu");
-                  }
-                });
-              }}
-              disabled={isPending}
-              style={{
-                padding: "10px 28px",
-                borderRadius: 100,
-                background: "#111",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: "pointer",
-                opacity: isPending ? 0.5 : 1,
-              }}
-            >
-              {isPending ? "Kaydediliyor..." : "Kaydet"}
-            </button>
-          </div>
-        </PageSection>
-      </div>
-
-      {/* ── SECTION 5: TARAMA AYARLARI ────────────── */}
-      <div ref={(el) => { sectionRefs.current.tarama = el; }} style={{ scrollMarginTop: 120 }}>
-        <PageSection className="mt-12">
-          <SectionTitle title="Tarama Ayarları" subtitle="Otomatik tarama zamanlamasını yapılandırın" />
-
-          <div className="kinde-card p-6" style={{ cursor: "default" }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>Otomatik Tarama</p>
-                <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>
-                  Taramalar belirtilen sıklıkta otomatik çalışır
-                </p>
-              </div>
-              <ToggleSwitch checked={autoScan} onChange={setAutoScan} />
-            </div>
-
-            {autoScan && (
-              <>
-                <div style={{ height: 1, background: "#eee", margin: "20px 0" }} />
-                <p style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>
-                  Tarama Sıklığı
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { value: "thrice_weekly", label: "Haftada 3x", desc: "Pzt, Çar, Cum taranır", available: true },
-                    { value: "daily", label: "Her gün", desc: "Her gün taranır", available: limits.scanFrequency === "daily" },
-                  ].map((opt) => {
-                    const isSelected = scanInterval === opt.value && opt.available;
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => opt.available && setScanInterval(opt.value)}
-                        disabled={!opt.available}
-                        style={{
-                          padding: 16,
-                          borderRadius: 16,
-                          border: isSelected ? "2px solid #111" : "1px solid #eee",
-                          background: isSelected ? "#fafafa" : "transparent",
-                          textAlign: "left",
-                          cursor: opt.available ? "pointer" : "not-allowed",
-                          opacity: opt.available ? 1 : 0.5,
-                          transition: "all 0.2s",
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>{opt.label}</p>
-                          {!opt.available && <LockedBadge label="Ajans" />}
-                        </div>
-                        <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4 }}>{opt.desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            <div style={{ height: 1, background: "#eee", margin: "20px 0" }} />
-
-            <button
-              onClick={() => {
-                startTransition(async () => {
-                  try {
-                    await updateScanSchedule(brandId, { autoScan, scanInterval });
-                    showToast("Tarama ayarları güncellendi");
-                  } catch {
-                    showToast("Hata oluştu");
-                  }
-                });
-              }}
-              disabled={isPending}
-              style={{
-                padding: "10px 28px",
-                borderRadius: 100,
-                background: "#111",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: "pointer",
-                opacity: isPending ? 0.5 : 1,
-              }}
-            >
-              {isPending ? "Kaydediliyor..." : "Kaydet"}
-            </button>
-          </div>
-        </PageSection>
-      </div>
-
-      {/* ── SECTION 6: ENTEGRASYON (Agency only) ──── */}
-      {plan === "agency" && (
-        <div ref={(el) => { sectionRefs.current.entegrasyon = el; }} style={{ scrollMarginTop: 120 }}>
-          <PageSection className="mt-12">
-            <SectionTitle title="Entegrasyon" subtitle="API erişimi ve webhook yapılandırması" />
-
-            {/* API Key */}
-            <div className="kinde-card p-6" style={{ cursor: "default" }}>
-              <div className="flex items-center gap-2 mb-1">
-                <KeyRoundIcon style={{ width: 16, height: 16, color: "var(--foreground)" }} />
-                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>Erişim Anahtarı</p>
-              </div>
-              <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginBottom: 16 }}>
-                GH7 verilerinize programatik erişim sağlayın
-              </p>
-
-              {currentApiKey ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="flex-1 min-w-0"
-                      style={{
-                        padding: "10px 16px",
-                        borderRadius: 12,
-                        background: "#f5f5f5",
-                        fontFamily: "monospace",
-                        fontSize: 13,
-                        color: "var(--foreground)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {showApiKey ? currentApiKey : `gh7_${"•".repeat(20)}...${currentApiKey.slice(-4)}`}
-                    </div>
-                    <IconButton onClick={() => setShowApiKey(!showApiKey)} title={showApiKey ? "Gizle" : "Göster"}>
-                      {showApiKey ? <EyeOffIcon style={{ width: 14, height: 14 }} /> : <EyeIcon style={{ width: 14, height: 14 }} />}
-                    </IconButton>
-                    <IconButton
-                      onClick={() => {
-                        navigator.clipboard.writeText(currentApiKey);
-                        showToast("Anahtar panoya kopyalandı");
-                      }}
-                      title="Kopyala"
-                    >
-                      <CopyIcon style={{ width: 14, height: 14 }} />
-                    </IconButton>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (!confirm("Mevcut anahtar geçersiz olacak. Yeni anahtar oluşturmak istediğinize emin misiniz?")) return;
-                      startTransition(async () => {
-                        try {
-                          const result = await regenerateApiKey(brandId);
-                          setCurrentApiKey(result.apiKey);
-                          setShowApiKey(true);
-                          showToast("Yeni erişim anahtarı oluşturuldu");
-                        } catch {
-                          showToast("Hata oluştu");
-                        }
-                      });
-                    }}
-                    disabled={isPending}
-                    className="flex items-center gap-1.5 mt-4"
-                    style={{
-                      padding: "7px 16px",
-                      borderRadius: 100,
-                      border: "1px solid #eee",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "var(--muted-foreground)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <RefreshCwIcon style={{ width: 12, height: 12 }} />
-                    {isPending ? "Oluşturuluyor..." : "Yeniden Oluştur"}
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => {
-                    startTransition(async () => {
-                      try {
-                        const result = await regenerateApiKey(brandId);
-                        setCurrentApiKey(result.apiKey);
-                        setShowApiKey(true);
-                        showToast("Erişim anahtarı oluşturuldu");
-                      } catch {
-                        showToast("Hata oluştu");
-                      }
-                    });
-                  }}
-                  disabled={isPending}
-                  className="flex items-center gap-2"
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: 100,
-                    background: "#111",
-                    color: "#fff",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    opacity: isPending ? 0.5 : 1,
-                  }}
-                >
-                  <KeyRoundIcon style={{ width: 14, height: 14 }} />
-                  {isPending ? "Oluşturuluyor..." : "Erişim Anahtarı Oluştur"}
-                </button>
-              )}
-            </div>
-
-            {/* Webhook */}
-            <div className="kinde-card p-6 mt-3" style={{ cursor: "default" }}>
-              <div className="flex items-center gap-2 mb-1">
-                <LinkIcon style={{ width: 16, height: 16, color: "var(--foreground)" }} />
-                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>Webhook</p>
-              </div>
-              <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginBottom: 16 }}>
-                Tarama sonuçlarının otomatik olarak gönderileceği URL
-              </p>
-
-              <div className="flex items-center justify-between mb-4">
-                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>Webhook Bildirimleri</p>
-                <ToggleSwitch
-                  checked={webhookEnabled}
-                  onChange={(checked) => {
-                    setWebhookEnabled(checked);
-                    if (!checked) {
-                      startTransition(async () => {
-                        try {
-                          await updateWebhookUrl(brandId, "");
-                          setWebhookUrl("");
-                          showToast("Webhook devre dışı bırakıldı");
-                        } catch {
-                          showToast("Hata oluştu");
-                        }
-                      });
-                    }
-                  }}
+          <Card>
+            <CardContent className="space-y-5 pt-2">
+              {/* Firma Adi */}
+              <div className="space-y-1.5">
+                <Label htmlFor="brand-name" className="text-xs text-muted-foreground uppercase tracking-wider">
+                  Firma Ad\u0131
+                </Label>
+                <Input
+                  id="brand-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Firma ad\u0131n\u0131z"
                 />
               </div>
 
-              {webhookEnabled && (
-                <>
-                  <InputField
-                    label="Webhook URL"
-                    value={webhookUrl}
-                    onChange={setWebhookUrl}
-                    placeholder="https://example.com/webhook/gh7"
-                    mono
+              {/* Domain */}
+              <div className="space-y-1.5">
+                <Label htmlFor="brand-domain" className="text-xs text-muted-foreground uppercase tracking-wider">
+                  Domain
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="brand-domain"
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value)}
+                    placeholder="ornek.com"
+                    className="flex-1"
                   />
-                  <p style={{ fontSize: 10, color: "var(--muted-foreground)", marginTop: 4 }}>
-                    URL https:// ile başlamalıdır
-                  </p>
-                  <button
-                    onClick={() => {
-                      startTransition(async () => {
-                        try {
-                          await updateWebhookUrl(brandId, webhookUrl);
-                          showToast("Webhook URL kaydedildi");
-                        } catch (err: unknown) {
-                          showToast(err instanceof Error ? err.message : "Hata oluştu");
-                        }
-                      });
-                    }}
-                    disabled={isPending}
-                    style={{
-                      marginTop: 16,
-                      padding: "10px 28px",
-                      borderRadius: 100,
-                      background: "#111",
-                      color: "#fff",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      opacity: isPending ? 0.5 : 1,
-                    }}
+                  {domain && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(`https://${domain.replace(/^https?:\/\//, "")}`, "_blank")}
+                    >
+                      <ExternalLinkIcon className="size-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Sector & City row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="brand-sector" className="text-xs text-muted-foreground uppercase tracking-wider">
+                    Sekt\u00F6r
+                  </Label>
+                  <Input
+                    id="brand-sector"
+                    value={sector}
+                    onChange={(e) => setSector(e.target.value)}
+                    placeholder="\u00D6rn: Teknoloji, Sa\u011Fl\u0131k"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="brand-city" className="text-xs text-muted-foreground uppercase tracking-wider">
+                    \u015Eehir
+                  </Label>
+                  <Input
+                    id="brand-city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="\u00D6rn: \u0130stanbul"
+                  />
+                </div>
+              </div>
+
+              {/* Faaliyet Alanlari */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                  Faaliyet Alanlar\u0131
+                </Label>
+                <TagInput
+                  tags={categories}
+                  onAdd={(tag) => setCategories((prev) => [...prev, tag])}
+                  onRemove={(tag) => setCategories((prev) => prev.filter((t) => t !== tag))}
+                  placeholder="Eklemek i\u00E7in yaz\u0131p Enter'a bas\u0131n"
+                />
+              </div>
+
+              {/* Hizmet Bolgeleri */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                  Hizmet B\u00F6lgeleri
+                </Label>
+                <TagInput
+                  tags={regions}
+                  onAdd={(tag) => setRegions((prev) => [...prev, tag])}
+                  onRemove={(tag) => setRegions((prev) => prev.filter((t) => t !== tag))}
+                  placeholder="Eklemek i\u00E7in yaz\u0131p Enter'a bas\u0131n"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="justify-end">
+              <Button
+                onClick={handleSaveBrand}
+                disabled={savingBrand}
+                className="gap-1.5"
+              >
+                {savingBrand ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <SaveIcon className="size-4" />
+                )}
+                Kaydet
+              </Button>
+            </CardFooter>
+          </Card>
+        </PageSection>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 3: COMPETITORS MANAGEMENT
+          ═══════════════════════════════════════════════════ */}
+      <div ref={(el) => { sectionRefs.current.rakipler = el; }} className="scroll-mt-28">
+        <PageSection className="mt-8">
+          <SectionTitle
+            title="Rakipler"
+            subtitle={`Rakiplerinizi y\u00F6netin (${competitors.length}/10)`}
+          />
+
+          <Card>
+            <CardContent className="space-y-3 pt-2">
+              {/* Competitor list */}
+              {competitors.length === 0 && (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  Hen\u00FCz rakip eklenmemi\u015F
+                </p>
+              )}
+              {competitors.slice(0, 10).map((comp) => (
+                <div
+                  key={comp.id}
+                  className="group flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-muted/30 px-4 py-3 transition-colors hover:bg-muted/60"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {comp.name}
+                    </p>
+                    {comp.domain && (
+                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                        <GlobeIcon className="size-3 shrink-0" />
+                        {comp.domain}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => handleRemoveCompetitor(comp.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                   >
-                    {isPending ? "Kaydediliyor..." : "Kaydet"}
-                  </button>
+                    <XIcon className="size-4" />
+                  </Button>
+                </div>
+              ))}
+
+              {/* Add competitor form */}
+              {competitors.length < 10 && (
+                <>
+                  <Separator className="my-2" />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      value={newCompName}
+                      onChange={(e) => setNewCompName(e.target.value)}
+                      placeholder="Rakip ad\u0131"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={newCompDomain}
+                      onChange={(e) => setNewCompDomain(e.target.value)}
+                      placeholder="domain.com"
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleAddCompetitor}
+                      disabled={addingCompetitor || !newCompName.trim()}
+                      className="gap-1.5 shrink-0"
+                    >
+                      {addingCompetitor ? (
+                        <Loader2Icon className="size-4 animate-spin" />
+                      ) : (
+                        <PlusIcon className="size-4" />
+                      )}
+                      Ekle
+                    </Button>
+                  </div>
                 </>
               )}
-            </div>
+            </CardContent>
+          </Card>
+        </PageSection>
+      </div>
 
-            {/* Usage Stats */}
-            <Stagger className="grid gap-3 sm:grid-cols-2 mt-3" staggerMs={80}>
-              <div className="kinde-card p-5" style={{ cursor: "default" }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <ActivityIcon style={{ width: 14, height: 14, color: "var(--muted-foreground)" }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
-                    Aylık İstek
-                  </span>
+      {/* ═══════════════════════════════════════════════════
+          SECTION 4: ACCOUNT SETTINGS
+          ═══════════════════════════════════════════════════ */}
+      <div ref={(el) => { sectionRefs.current.hesap = el; }} className="scroll-mt-28">
+        <PageSection className="mt-8">
+          <SectionTitle title="Hesap Ayarlar\u0131" subtitle="Bildirimler, plan ve fatura bilgileri" />
+
+          {/* Notification Preferences */}
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BellIcon className="size-4" />
+                Bildirim Tercihleri
+              </CardTitle>
+              <CardDescription>
+                Hangi bildirimleri almak istedi\u011Finizi se\u00E7in
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Weekly report */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Haftal\u0131k rapor e-posta</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Her hafta performans \u00F6zetinizi al\u0131n
+                  </p>
                 </div>
-                <p style={{ fontSize: 28, fontWeight: 800, color: "var(--foreground)" }}>0</p>
-                <p style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 4 }}>Bu ay yapılan toplam istek</p>
+                <Switch
+                  checked={emailWeeklyReport}
+                  onCheckedChange={setEmailWeeklyReport}
+                />
               </div>
-              <div className="kinde-card p-5" style={{ cursor: "default" }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <ZapIcon style={{ width: 14, height: 14, color: "var(--muted-foreground)" }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase" }}>
-                    Kalan Kota
-                  </span>
+
+              <Separator />
+
+              {/* New competitor notification */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Yeni rakip bildirimi</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Yeni bir rakip tespit edildi\u011Finde haber verin
+                  </p>
                 </div>
-                <p style={{ fontSize: 28, fontWeight: 800, color: "var(--foreground)" }}>10.000</p>
-                <AnimBar percent={0} color="#111" height={4} />
-                <p style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 8 }}>Aylık 10.000 istek hakkınız var</p>
+                <Switch
+                  checked={emailScoreChange}
+                  onCheckedChange={setEmailScoreChange}
+                />
               </div>
-            </Stagger>
-          </PageSection>
-        </div>
-      )}
 
-      {/* Bottom spacer */}
-      <div style={{ height: 40 }} />
+              <Separator />
 
-      {/* ── Plan Selector Modal ──────────────────── */}
-      {showPlanSelector && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
-        >
-          <div
-            style={{
-              maxHeight: "90vh",
-              width: "100%",
-              maxWidth: 900,
-              overflowY: "auto",
-              borderRadius: 24,
-              background: "var(--background)",
-              padding: 24,
-              boxShadow: "0 24px 80px rgba(0,0,0,0.15)",
-            }}
-          >
-            <button
-              onClick={() => setShowPlanSelector(false)}
-              style={{
-                position: "absolute",
-                right: 16,
-                top: 16,
-                padding: 8,
-                borderRadius: 10,
-                cursor: "pointer",
-                color: "var(--muted-foreground)",
-              }}
-            >
-              <XIcon style={{ width: 20, height: 20 }} />
-            </button>
-            <PlanSelector
-              currentPlan={plan}
-              onSelect={(selectedPlan, period) => handleCheckout(selectedPlan, period)}
-            />
-          </div>
-        </div>
-      )}
+              {/* Opportunity notification */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">F\u0131rsat bildirimi</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Tarama tamamland\u0131\u011F\u0131nda sonu\u00E7lar\u0131 g\u00F6nderin
+                  </p>
+                </div>
+                <Switch
+                  checked={emailScanComplete}
+                  onCheckedChange={setEmailScanComplete}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="justify-end">
+              <Button
+                onClick={handleSaveNotifications}
+                disabled={savingNotifications}
+                variant="outline"
+                className="gap-1.5"
+              >
+                {savingNotifications ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <SaveIcon className="size-4" />
+                )}
+                Kaydet
+              </Button>
+            </CardFooter>
+          </Card>
 
-      {/* Checkout Modal */}
+          {/* Plan Information */}
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CreditCardIcon className="size-4" />
+                Plan Bilgileri
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className={`${planConfig.bg} ${planConfig.color} gap-1 text-xs font-bold`}
+                    >
+                      <PlanIcon className="size-3" />
+                      {planLabel}
+                    </Badge>
+                    {isInGracePeriod && (
+                      <Badge variant="destructive" className="text-xs">S\u00FCresi doldu</Badge>
+                    )}
+                  </div>
+                  {formattedEndDate && (
+                    <p className="text-xs text-muted-foreground">
+                      Yenileme: {formattedEndDate}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={() => router.push("/dashboard/paketler")}
+                  variant="outline"
+                  className="gap-1.5"
+                >
+                  Plan De\u011Fi\u015Ftir
+                  <ArrowRightIcon className="size-4" />
+                </Button>
+              </div>
+
+              {/* Payment History */}
+              {paymentHistory.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-foreground mb-3">
+                    Fatura Ge\u00E7mi\u015Fi
+                  </h4>
+                  <div className="space-y-2">
+                    {paymentHistory.slice(0, 5).map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between rounded-lg border border-border/30 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`size-2 rounded-full ${
+                              p.status === "success"
+                                ? "bg-green-500"
+                                : p.status === "failed"
+                                ? "bg-red-500"
+                                : "bg-yellow-500"
+                            }`}
+                          />
+                          <span className="text-sm capitalize">{p.plan}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({p.period === "yearly" ? "Y\u0131ll\u0131k" : "Ayl\u0131k"})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium">
+                            {(p.amount / 100).toLocaleString("tr-TR")} {p.currency}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(p.createdAt).toLocaleDateString("tr-TR")}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Theme Picker */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <SunIcon className="size-4" />
+                G\u00F6r\u00FCn\u00FCm
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: "light", label: "A\u00E7\u0131k", icon: SunIcon },
+                  { value: "dark", label: "Koyu", icon: MoonIcon },
+                  { value: "system", label: "Sistem", icon: MonitorIcon },
+                ].map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setTheme(value)}
+                    className={`flex flex-col items-center gap-2 rounded-xl p-4 border transition-all cursor-pointer ${
+                      theme === value
+                        ? "border-foreground/30 bg-muted shadow-sm"
+                        : "border-border/50 hover:bg-muted/50"
+                    }`}
+                  >
+                    <Icon className={`size-5 ${theme === value ? "text-foreground" : "text-muted-foreground"}`} />
+                    <span className={`text-xs font-medium ${theme === value ? "text-foreground" : "text-muted-foreground"}`}>
+                      {label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </PageSection>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 5: DANGER ZONE
+          ═══════════════════════════════════════════════════ */}
+      <div ref={(el) => { sectionRefs.current.tehlike = el; }} className="scroll-mt-28">
+        <PageSection className="mt-8">
+          <SectionTitle title="Tehlikeli B\u00F6lge" subtitle="Geri al\u0131namaz i\u015Flemler" />
+
+          <Card className="border-destructive/30">
+            <CardContent className="space-y-4 pt-2">
+              {/* Reset Data */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/50 bg-muted/20 p-4">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    T\u00FCm Verileri S\u0131f\u0131rla
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Tarama sonu\u00E7lar\u0131, rakip analizleri ve istatistikler silinir
+                  </p>
+                </div>
+                <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+                  <DialogTrigger
+                    render={
+                      <Button variant="destructive" size="sm" className="gap-1.5 shrink-0" />
+                    }
+                  >
+                    <TrashIcon className="size-3.5" />
+                    S\u0131f\u0131rla
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Verileri S\u0131f\u0131rla</DialogTitle>
+                      <DialogDescription>
+                        Bu i\u015Flem geri al\u0131namaz. T\u00FCm tarama sonu\u00E7lar\u0131n\u0131z, rakip analizleriniz ve
+                        istatistikleriniz silinecektir.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <DialogClose
+                        render={<Button variant="outline" />}
+                      >
+                        Vazge\u00E7
+                      </DialogClose>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          showToast("S\u0131f\u0131rlama i\u015Flemi hen\u00FCz aktif de\u011Fil", "error");
+                          setResetConfirmOpen(false);
+                        }}
+                      >
+                        Evet, S\u0131f\u0131rla
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Delete Account */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-destructive">
+                    Hesab\u0131 Sil
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Hesab\u0131n\u0131z ve t\u00FCm verileriniz kal\u0131c\u0131 olarak silinir
+                  </p>
+                </div>
+                <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                  <DialogTrigger
+                    render={
+                      <Button variant="destructive" size="sm" className="gap-1.5 shrink-0" />
+                    }
+                  >
+                    <AlertTriangleIcon className="size-3.5" />
+                    Hesab\u0131 Sil
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Hesab\u0131 Sil</DialogTitle>
+                      <DialogDescription>
+                        Bu i\u015Flem geri al\u0131namaz. Hesab\u0131n\u0131z, t\u00FCm markalar\u0131n\u0131z ve
+                        verileriniz kal\u0131c\u0131 olarak silinecektir.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <DialogClose
+                        render={<Button variant="outline" />}
+                      >
+                        Vazge\u00E7
+                      </DialogClose>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount}
+                        className="gap-1.5"
+                      >
+                        {deletingAccount && <Loader2Icon className="size-4 animate-spin" />}
+                        Evet, Hesab\u0131 Sil
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        </PageSection>
+      </div>
+
+      {/* ── Checkout modal ── */}
       {checkoutHtml && (
         <CheckoutModal
           html={checkoutHtml}
@@ -1577,189 +1172,13 @@ export function AyarlarClient({
         />
       )}
 
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      {/* ── Plan selector modal ── */}
+      {showPlanSelector && (
+        <PlanSelector
+          currentPlan={plan}
+          onSelect={handleCheckout}
+        />
+      )}
     </div>
-  );
-}
-
-/* ── Reusable sub-components ─────────────────────── */
-
-function InputField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  mono,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  mono?: boolean;
-}) {
-  return (
-    <div>
-      <label
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: "var(--muted-foreground)",
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-      </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        style={{
-          width: "100%",
-          marginTop: 6,
-          padding: "10px 14px",
-          borderRadius: 12,
-          border: "1px solid #eee",
-          background: "var(--background)",
-          fontSize: 13,
-          fontFamily: mono ? "monospace" : "inherit",
-          color: "var(--foreground)",
-          outline: "none",
-        }}
-      />
-    </div>
-  );
-}
-
-function ToggleSwitch({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      onClick={() => !disabled && onChange(!checked)}
-      style={{
-        width: 44,
-        height: 24,
-        borderRadius: 12,
-        background: checked ? "#111" : "#e5e5e5",
-        position: "relative",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        transition: "background 0.2s",
-        flexShrink: 0,
-        border: "none",
-      }}
-    >
-      <div
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: 9,
-          background: "#fff",
-          position: "absolute",
-          top: 3,
-          left: checked ? 23 : 3,
-          transition: "left 0.2s",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-        }}
-      />
-    </button>
-  );
-}
-
-function ToggleRow({
-  title,
-  desc,
-  checked,
-  onChange,
-  locked,
-  lockedLabel,
-}: {
-  title: string;
-  desc: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  locked?: boolean;
-  lockedLabel?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between" style={{ padding: "12px 0" }}>
-      <div>
-        <div className="flex items-center gap-2">
-          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{title}</p>
-          {locked && lockedLabel && <LockedBadge label={lockedLabel} />}
-        </div>
-        <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>{desc}</p>
-      </div>
-      <ToggleSwitch checked={checked} onChange={onChange} disabled={locked} />
-    </div>
-  );
-}
-
-function LockedBadge({ label }: { label: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 3,
-        fontSize: 10,
-        fontWeight: 700,
-        padding: "2px 8px",
-        borderRadius: 100,
-        border: "1px solid #eee",
-        color: "var(--muted-foreground)",
-      }}
-    >
-      <LockIcon style={{ width: 9, height: 9 }} /> {label}
-    </span>
-  );
-}
-
-function IconButton({
-  onClick,
-  disabled,
-  title,
-  danger,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  title: string;
-  danger?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      style={{
-        padding: 8,
-        borderRadius: 10,
-        border: "1px solid #eee",
-        background: "transparent",
-        color: danger ? "#ef4444" : "var(--muted-foreground)",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        transition: "all 0.15s",
-      }}
-    >
-      {children}
-    </button>
   );
 }

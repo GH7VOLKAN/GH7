@@ -1,18 +1,28 @@
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getCurrentPlanInfo, getPaymentHistory, getUserBrands } from "@/lib/dal/payments";
 import { getPlanLimits } from "@/lib/plans";
+import { prisma } from "@/lib/db";
 import { AyarlarClient } from "./ayarlar-client";
 
 export default async function AyarlarPage() {
   const activeBrand = await getActiveBrand();
   const profileId = activeBrand?.profile?.id;
+  const brandId = activeBrand?.brand?.id;
   const plan = activeBrand?.plan ?? "free";
   const limits = getPlanLimits(plan);
 
-  const [planInfo, paymentHistory, userBrands] = await Promise.all([
+  const [planInfo, paymentHistory, userBrands, competitors] = await Promise.all([
     profileId ? getCurrentPlanInfo(profileId) : null,
     profileId ? getPaymentHistory(profileId) : Promise.resolve([]),
     profileId ? getUserBrands(profileId) : Promise.resolve([]),
+    brandId
+      ? prisma.competitor.findMany({
+          where: { brandId },
+          select: { id: true, name: true, domain: true },
+          orderBy: { createdAt: "asc" },
+          take: 10,
+        })
+      : Promise.resolve([]),
   ]);
 
   // Count total prompts & competitors across all brands
@@ -25,7 +35,11 @@ export default async function AyarlarPage() {
       brandName={activeBrand?.brand?.name ?? ""}
       brandDomain={activeBrand?.brand?.domain ?? ""}
       brandSector={activeBrand?.brand?.sector ?? ""}
+      brandCity={activeBrand?.brand?.city ?? ""}
       brandType={(activeBrand?.brand?.type as "firma" | "kisisel") ?? "firma"}
+      businessCategories={activeBrand?.brand?.businessCategories ?? []}
+      serviceRegions={activeBrand?.brand?.serviceRegions ?? []}
+      competitors={competitors}
       autoScan={activeBrand?.brand?.autoScan ?? true}
       scanInterval={activeBrand?.brand?.scanInterval ?? "daily"}
       phone={activeBrand?.profile?.phone ?? ""}
@@ -37,7 +51,7 @@ export default async function AyarlarPage() {
       userEmail={activeBrand?.profile?.email ?? ""}
       avatarUrl={activeBrand?.profile?.avatarUrl ?? null}
       plan={planInfo?.plan ?? "free"}
-      planLabel={planInfo?.planLabel ?? "Ücretsiz"}
+      planLabel={planInfo?.planLabel ?? "\u00DCcretsiz"}
       planEndDate={planInfo?.planEndDate?.toISOString() ?? null}
       planStartDate={planInfo?.planStartDate?.toISOString() ?? null}
       daysRemaining={planInfo?.daysRemaining ?? null}

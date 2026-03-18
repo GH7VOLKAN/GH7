@@ -42,6 +42,10 @@ export default async function GenelPage() {
       competitorRanking={data.competitorRanking}
       priorityActions={data.priorityActions}
       recentMentions={data.recentMentions}
+      weeklyTrend={data.weeklyTrend}
+      checklistProgress={data.checklistProgress}
+      totalScanCount={data.totalScanCount}
+      totalSourceCount={data.totalSourceCount}
       plan={plan}
     />
   );
