@@ -1,0 +1,70 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  Globe,
+  Scan,
+  HeartPulse,
+  ArrowLeft,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const NAV_ITEMS = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/brands", label: "Brands", icon: Globe },
+  { href: "/admin/scans", label: "Scans", icon: Scan },
+  { href: "/admin/health", label: "Health", icon: HeartPulse },
+];
+
+export function AdminSidebar({ email }: { email: string }) {
+  const pathname = usePathname();
+
+  return (
+    <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col border-r border-border/50 bg-card">
+      <div className="flex items-center gap-2 border-b border-border/50 px-4 py-4">
+        <span className="text-sm font-semibold text-foreground">
+          GH7 Admin
+        </span>
+      </div>
+
+      <nav className="flex-1 space-y-1 px-2 py-3">
+        {NAV_ITEMS.map((item) => {
+          const isActive =
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-primary/10 font-medium text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-border/50 px-4 py-3">
+        <p className="truncate text-xs text-muted-foreground">{email}</p>
+        <Link
+          href="/dashboard"
+          className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-3 w-3" />
+          Back to Dashboard
+        </Link>
+      </div>
+    </aside>
+  );
+}
