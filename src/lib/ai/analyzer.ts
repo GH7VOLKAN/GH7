@@ -12,7 +12,7 @@ function getAnalyzerClient(apiKey: string): Anthropic {
 
 // ── Turkish character normalization ──────────────────
 // Fixes: "Isıtmax" vs "ISITMAX" — Turkish ı/i and İ/I don't match with simple toLowerCase()
-function normalizeTurkish(text: string): string {
+export function normalizeTurkish(text: string): string {
   return text
     .replace(/İ/g, "I")
     .replace(/ı/g, "i")

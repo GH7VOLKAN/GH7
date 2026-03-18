@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { captureError } from "@/lib/monitoring";
 import { getAvailableProviders } from "./provider-registry";
 import { analyzeResponse } from "./analyzer";
 import { calculateAndStoreScore } from "./score-calculator";
@@ -193,7 +194,7 @@ export async function executeScan(
           const failed = platformResults.filter((r) => r.status === "rejected");
           totalErrors += failed.length;
           for (const f of failed) {
-            console.error(`[scan-engine] Prompt ${globalIdx} platform error:`, f.reason);
+            captureError(f.reason, { context: "scan-engine-platform", scanId, promptIndex: globalIdx });
           }
         }),
       );
@@ -265,6 +266,6 @@ export async function executeScan(
       where: { id: scanId },
       data: { status: "failed", completedAt: new Date() },
     });
-    console.error("[scan-engine] Scan failed:", error);
+    captureError(error, { context: "scan-engine", scanId, brandId });
   }
 }

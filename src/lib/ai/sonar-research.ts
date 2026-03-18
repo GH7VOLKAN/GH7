@@ -10,6 +10,8 @@
  * Free: 0 sorgu (Haiku direkt üretir)
  */
 
+import { captureError } from "@/lib/monitoring";
+
 const PERPLEXITY_API = "https://api.perplexity.ai/chat/completions";
 
 export async function querySonar(prompt: string): Promise<string> {
@@ -39,8 +41,9 @@ export async function querySonar(prompt: string): Promise<string> {
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
-    console.error(`[querySonar] API error ${res.status}: ${errBody.slice(0, 200)}`);
-    throw new Error(`Perplexity API error: ${res.status}`);
+    const err = new Error(`Perplexity API error: ${res.status}`);
+    captureError(err, { context: "querySonar", status: res.status, body: errBody.slice(0, 200) });
+    throw err;
   }
 
   const data = await res.json();
@@ -497,7 +500,7 @@ function extractCompanyName(text: string, domain: string): string | null {
  * - "| Firma Adı | domain.com |"  (markdown tablo)
  * - "**Firma Adı** — domain.com"
  */
-function extractCompetitorsWithDomains(text: string): Array<{ name: string; domain: string | null }> {
+export function extractCompetitorsWithDomains(text: string): Array<{ name: string; domain: string | null }> {
   const results: Array<{ name: string; domain: string | null }> = [];
   const lines = text.split("\n").filter((l) => l.trim());
 
@@ -523,7 +526,7 @@ function extractCompetitorsWithDomains(text: string): Array<{ name: string; doma
     if (!cleaned || cleaned.length < 3) continue;
 
     // Skip header/description/explanation lines (Turkish + English)
-    if (/^(firma|şirket|ad[ıi]|web|domain|sıra|#|---)/i.test(cleaned)) continue;
+    if (/^(firma adı|firma\s*$|şirket adı|şirket\s*$|ad[ıi]\s*$|web\s*$|domain\s*$|sıra\s*$|#|---)/i.test(cleaned)) continue;
     if (/^(aşağıda|yukarıda|bunlar|şunlar|sıralama|alfabetik|arama sonuç)/i.test(cleaned)) continue;
     if (/^(tanımlanan|listelenen|belirlenen|tespit edilen|bulunan|mevcut|maalesef|ne yazık)/i.test(cleaned)) continue;
     if (/^(to help|i would|search result|however|note|information|competitive|consult|review|details|comparable)/i.test(cleaned)) continue;
@@ -744,7 +747,7 @@ export async function researchSectorBehavior(
 /** Sonar cevabından coğrafi bölge/şehir/il bilgilerini çıkar.
  *  Business category değil, gerçek coğrafi lokasyonlar döndürür.
  */
-function extractServiceRegions(text: string): string[] {
+export function extractServiceRegions(text: string): string[] {
   if (!text) return [];
 
   // Bilinen Türk şehirleri ve bölgeleri
@@ -752,9 +755,9 @@ function extractServiceRegions(text: string): string[] {
     { pattern: /türkiye\s*geneli/i, label: "Türkiye geneli" },
     { pattern: /tüm\s*türkiye/i, label: "Türkiye geneli" },
     { pattern: /yurt\s*geneli/i, label: "Türkiye geneli" },
-    { pattern: /istanbul/i, label: "İstanbul" },
+    { pattern: /[iİ]stanbul/i, label: "İstanbul" },
     { pattern: /ankara/i, label: "Ankara" },
-    { pattern: /izmir/i, label: "İzmir" },
+    { pattern: /[iİ]zmir/i, label: "İzmir" },
     { pattern: /antalya/i, label: "Antalya" },
     { pattern: /bursa/i, label: "Bursa" },
     { pattern: /adana/i, label: "Adana" },

@@ -14,6 +14,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/db";
+import { captureError } from "@/lib/monitoring";
 import { activatePlan, deactivatePlan } from "@/lib/iyzico/activate-plan";
 import { PLAN_PRICES, type PlanPeriod } from "@/lib/iyzico/plans";
 import type { PlanType } from "@/lib/plans";
@@ -375,7 +376,7 @@ export async function POST(request: Request) {
     // Always return 200 to acknowledge receipt
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("[webhook/iyzico] Unhandled error:", err);
+    captureError(err, { context: "webhook/iyzico", phase: "main-handler" });
     // Still return 200 to prevent Iyzico from retrying indefinitely
     return NextResponse.json({ received: true, error: "Internal error" }, { status: 200 });
   }
