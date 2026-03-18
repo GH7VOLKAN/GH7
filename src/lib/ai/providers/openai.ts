@@ -20,23 +20,47 @@ export class OpenAIProvider implements AIProvider {
       return { platform: "chatgpt", content: "", error: "API key not configured" };
     }
 
-    try {
-      const response = await this.client.chat.completions.create({
-        model: "gpt-4o-mini",
-        max_tokens: 2048,
-        temperature: 0.7,
-        messages: [{ role: "user", content: promptText }],
-      });
+    // Try web search model first (like real ChatGPT experience), then fallback
+    const models = [
+      { name: "gpt-4o-search-preview", webSearch: true },
+      { name: "gpt-4o-mini", webSearch: false },
+    ];
 
-      const content = response.choices[0]?.message?.content ?? "";
+    for (const model of models) {
+      try {
+        const params: Record<string, unknown> = {
+          model: model.name,
+          max_tokens: 2048,
+          messages: [{ role: "user", content: promptText }],
+        };
 
-      return { platform: "chatgpt", content };
-    } catch (err) {
-      return {
-        platform: "chatgpt",
-        content: "",
-        error: err instanceof Error ? err.message : "Unknown error",
-      };
+        // Web search model doesn't support temperature but supports web_search_options
+        if (model.webSearch) {
+          params.web_search_options = { search_context_size: "medium" };
+        } else {
+          params.temperature = 0.7;
+        }
+
+        const response = await this.client.chat.completions.create(
+          params as Parameters<typeof this.client.chat.completions.create>[0],
+        );
+
+        const content = response.choices[0]?.message?.content ?? "";
+
+        if (content.length > 0) {
+          return { platform: "chatgpt", content };
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.warn(`[openai-provider] ${model.name} failed: ${msg}`);
+        continue;
+      }
     }
+
+    return {
+      platform: "chatgpt",
+      content: "",
+      error: "All ChatGPT models failed",
+    };
   }
 }
