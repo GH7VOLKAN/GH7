@@ -57,8 +57,17 @@ export async function createBrand(data: {
   if (!data.name.trim()) throw new Error("Marka adı gerekli");
   if (data.type === "firma" && !data.domain.trim()) throw new Error("Domain gerekli");
 
-  // Get user's plan for prompt limits
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } });
+  // Ensure profile exists (CRITICAL: must exist before creating brand due to FK constraint)
+  const profile = await prisma.profile.upsert({
+    where: { id: user.id },
+    update: { email: user.email ?? "" },
+    create: {
+      id: user.id,
+      email: user.email ?? "",
+      fullName: user.user_metadata?.full_name ?? null,
+      avatarUrl: user.user_metadata?.avatar_url ?? null,
+    },
+  });
   const plan = profile?.plan ?? "free";
   const limits = getPlanLimits(plan);
 
