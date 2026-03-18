@@ -257,10 +257,10 @@ export async function researchOnboardingDomain(
 }> {
   // ═══ AŞAMA 1: Firma analizi + güçlü/zayıf yönler (paralel) ═══
   const phase1Queries = [
-    // Sorgu 1 (firma analizi)
-    `${domain} web sitesini analiz et. Bu firma ne yapıyor? Firma adı, faaliyet alanları, ürün/hizmet kategorileri, hizmet verdiği bölgeler, sektör, hedef kitle kim?`,
-    // Sorgu 2 (öne çıkan alanlar)
-    `${domain} Google'da hangi konularda öne çıkıyor? En çok trafik alan sayfaları, güçlü olduğu alanlar, zayıf olduğu alanlar neler?`,
+    // Sorgu 1 (firma analizi) — Spec E.0 birebir
+    `${domain} web sitesini analiz et. Firma adı, faaliyet alanları, ürün/hizmet kategorileri, hizmet verdiği bölgeler (hangi şehirler/iller), sektör, hedef kitle?`,
+    // Sorgu 2 (güçlü/zayıf yönler) — Spec E.0 birebir
+    `${domain} Google'da hangi konularda öne çıkıyor? Güçlü yönleri neler (en az 5 madde)? Zayıf yönleri ve geliştirilebilir alanları neler (en az 5 madde)? Rakiplerine göre avantajları ve dezavantajları neler?`,
   ];
 
   console.log(`[sonar-research] Phase 1: Running 2 analysis queries for domain: ${domain}...`);
@@ -291,10 +291,10 @@ export async function researchOnboardingDomain(
 
   // ═══ AŞAMA 2: Rakip bulma — Sonar'ın gerçek ürün tanımıyla (paralel) ═══
   const phase2Queries = [
-    // Sorgu 3a: Sonar Phase 1 özeti + "benzer firmalar" — en isabetli sorgu
-    `Şu firmanın Türkiye'deki doğrudan rakiplerini bul:\n\n${firmaSummary}\n\nBu firmayla AYNI ÜRÜN/HİZMETLERİ sunan, benzer ölçekte 10 TÜRK firma ve web sitelerini listele. ${domain} hariç. Genel sektör devleri (Baymak, Vaillant, Demirdöküm gibi) YAZMA. Sadece aynı niş alanda faaliyet gösteren firmalar.`,
-    // Sorgu 3b: Domain bazlı — Sonar zaten domain'i tanıyor
-    `${domain} ile aynı ürün ve hizmetleri sunan Türkiye'deki rakip firmalar hangileri? ${domain}'un yaptığı işi yapan diğer TÜRK firmalar. Büyük holding veya genel sektör markaları DEĞİL, aynı niş pazarda aynı müşteriye hizmet veren benzer ölçekte 10 firma ve web siteleri listele.`,
+    // Sorgu 3a (doğrudan rakipler) — Spec E.0 birebir: "10 firma ve web siteleri listele"
+    `${domain}'un Türkiye'deki doğrudan rakipleri kimler? 10 firma ve web siteleri listele.\n\nFirma tanımı:\n${firmaSummary}\n\nÖNEMLİ: Her firma için "1. Firma Adı - domain.com" formatında yaz. ${domain} hariç. Büyük holding/genel sektör markaları DEĞİL, aynı niş alanda faaliyet gösteren firmalar.`,
+    // Sorgu 3b (sektörel rakipler) — Spec E.0: sektördeki diğer öne çıkan firmalar
+    `${detectedSector || firmaSummary.slice(0, 200)} sektöründe Türkiye'de öne çıkan firmalar? ${domain} hariç. 10 firma ve web sitelerini "1. Firma Adı - domain.com" formatında listele. Sadece Türkiye pazarında aktif olan firmalar.`,
   ];
 
   console.log(`[sonar-research] Phase 2: Running 2 competitor queries...`);
@@ -342,14 +342,8 @@ export async function researchOnboardingDomain(
   }
   const competitorEntries = filterTurkishCompetitors([...merged.values()]).slice(0, 10);
 
-  // Parse bölgeler (Sorgu 1'den — faaliyet bölgeleri)
-  const regionText = fulfilled[0] + " " + fulfilled[3];
-  const serviceRegions = extractListItems(regionText).filter((item) => {
-    const lower = item.toLowerCase();
-    return lower.includes("türkiye") || lower.includes("istanbul") || lower.includes("ankara") ||
-      lower.includes("izmir") || lower.includes("bölge") || lower.includes("il") ||
-      lower.includes("geneli") || lower.length < 30;
-  }).slice(0, 5);
+  // Parse bölgeler (Sorgu 1'den — coğrafi bölgeler, şehirler, iller)
+  const serviceRegions = extractServiceRegions(fulfilled[0]);
 
   // Sector: already detected from phase 1
   const sector = detectedSector;
@@ -734,6 +728,89 @@ export async function researchSectorBehavior(
   }
 }
 
+// ─── Region Extraction ────────────────────────────────
+
+/** Sonar cevabından coğrafi bölge/şehir/il bilgilerini çıkar.
+ *  Business category değil, gerçek coğrafi lokasyonlar döndürür.
+ */
+function extractServiceRegions(text: string): string[] {
+  if (!text) return [];
+
+  // Bilinen Türk şehirleri ve bölgeleri
+  const knownRegions: Array<{ pattern: RegExp; label: string }> = [
+    { pattern: /türkiye\s*geneli/i, label: "Türkiye geneli" },
+    { pattern: /tüm\s*türkiye/i, label: "Türkiye geneli" },
+    { pattern: /yurt\s*geneli/i, label: "Türkiye geneli" },
+    { pattern: /istanbul/i, label: "İstanbul" },
+    { pattern: /ankara/i, label: "Ankara" },
+    { pattern: /izmir/i, label: "İzmir" },
+    { pattern: /antalya/i, label: "Antalya" },
+    { pattern: /bursa/i, label: "Bursa" },
+    { pattern: /adana/i, label: "Adana" },
+    { pattern: /konya/i, label: "Konya" },
+    { pattern: /gaziantep/i, label: "Gaziantep" },
+    { pattern: /kayseri/i, label: "Kayseri" },
+    { pattern: /mersin/i, label: "Mersin" },
+    { pattern: /eskişehir/i, label: "Eskişehir" },
+    { pattern: /samsun/i, label: "Samsun" },
+    { pattern: /trabzon/i, label: "Trabzon" },
+    { pattern: /denizli/i, label: "Denizli" },
+    { pattern: /diyarbakır/i, label: "Diyarbakır" },
+    { pattern: /erzurum/i, label: "Erzurum" },
+    { pattern: /muğla/i, label: "Muğla" },
+    { pattern: /bodrum/i, label: "Bodrum" },
+    { pattern: /marmara\s*bölge/i, label: "Marmara Bölgesi" },
+    { pattern: /ege\s*bölge/i, label: "Ege Bölgesi" },
+    { pattern: /akdeniz\s*bölge/i, label: "Akdeniz Bölgesi" },
+    { pattern: /karadeniz\s*bölge/i, label: "Karadeniz Bölgesi" },
+    { pattern: /iç\s*anadolu/i, label: "İç Anadolu Bölgesi" },
+    { pattern: /doğu\s*anadolu/i, label: "Doğu Anadolu Bölgesi" },
+    { pattern: /güneydoğu\s*anadolu/i, label: "Güneydoğu Anadolu Bölgesi" },
+    { pattern: /avrupa\s*yakası/i, label: "Avrupa Yakası" },
+    { pattern: /anadolu\s*yakası/i, label: "Anadolu Yakası" },
+    { pattern: /uluslararası/i, label: "Uluslararası" },
+    { pattern: /yurt\s*dışı/i, label: "Yurt dışı" },
+  ];
+
+  const found = new Set<string>();
+  for (const region of knownRegions) {
+    if (region.pattern.test(text)) {
+      found.add(region.label);
+    }
+  }
+
+  // Also look for "bölge" section in the text and extract listed regions
+  const bolgeIdx = text.toLowerCase().indexOf("bölge");
+  const hizmetBolgeIdx = text.toLowerCase().indexOf("hizmet ver");
+  const startIdx = Math.max(bolgeIdx, hizmetBolgeIdx);
+  if (startIdx > -1) {
+    // Grab a window around the "bölge" or "hizmet ver" keyword
+    const window = text.slice(Math.max(0, startIdx - 50), startIdx + 300);
+    const listItems = extractListItems(window);
+    for (const item of listItems) {
+      // Only include if it looks geographic (short, contains a known city/region word)
+      if (item.length < 40) {
+        const lower = item.toLowerCase();
+        const isGeographic = knownRegions.some((r) => r.pattern.test(lower)) ||
+          /il\b|şehir|bölge|geneli|yakası/i.test(lower);
+        if (isGeographic) {
+          found.add(item);
+        }
+      }
+    }
+  }
+
+  // If nothing found, default to "Türkiye geneli"
+  if (found.size === 0) {
+    // Check if "Türkiye" is mentioned at all
+    if (/türkiye/i.test(text)) {
+      found.add("Türkiye geneli");
+    }
+  }
+
+  return Array.from(found).slice(0, 8);
+}
+
 // ─── Helpers ──────────────────────────────────────────
 
 function extractListItems(text: string, _hint?: string): string[] {
@@ -759,20 +836,52 @@ function extractListItems(text: string, _hint?: string): string[] {
 
 function extractStrengths(text: string): string[] {
   const lower = text.toLowerCase();
-  const idx = lower.indexOf("güçlü");
-  if (idx === -1) return extractListItems(text).slice(0, 3);
+
+  // Try multiple keywords for the "strengths" section
+  const strengthKeywords = ["güçlü yön", "güçlü alan", "avantaj", "öne çıkan", "güçlü"];
+  let idx = -1;
+  for (const kw of strengthKeywords) {
+    const found = lower.indexOf(kw);
+    if (found !== -1) { idx = found; break; }
+  }
+  if (idx === -1) return extractListItems(text).slice(0, 5);
 
   const afterStrengths = text.slice(idx);
-  const weakIdx = afterStrengths.toLowerCase().indexOf("zayıf");
+  // End section at weaknesses/disadvantages heading
+  const weakKeywords = ["zayıf", "dezavantaj", "geliştirilebilir", "eksik"];
+  let weakIdx = -1;
+  for (const kw of weakKeywords) {
+    const found = afterStrengths.toLowerCase().indexOf(kw);
+    if (found > 50) { // Must be at least 50 chars after strengths header
+      weakIdx = weakIdx === -1 ? found : Math.min(weakIdx, found);
+    }
+  }
   const strengthSection = weakIdx > 0 ? afterStrengths.slice(0, weakIdx) : afterStrengths;
-  return extractListItems(strengthSection).slice(0, 3);
+  return extractListItems(strengthSection).slice(0, 5);
 }
 
 function extractWeaknesses(text: string): string[] {
   const lower = text.toLowerCase();
-  const idx = lower.indexOf("zayıf");
+
+  // Try multiple keywords for the "weaknesses" section
+  const weakKeywords = ["zayıf yön", "zayıf alan", "dezavantaj", "geliştirilebilir", "zayıf"];
+  let idx = -1;
+  for (const kw of weakKeywords) {
+    const found = lower.indexOf(kw);
+    if (found !== -1) { idx = found; break; }
+  }
   if (idx === -1) return [];
 
   const afterWeaknesses = text.slice(idx);
-  return extractListItems(afterWeaknesses).slice(0, 3);
+  // End section at next heading (a new keyword that's not about weaknesses)
+  const endKeywords = ["sonuç olarak", "özetle", "sonuç:", "kaynaklar", "güçlü yön"];
+  let endIdx = afterWeaknesses.length;
+  for (const kw of endKeywords) {
+    const found = afterWeaknesses.toLowerCase().indexOf(kw, 50);
+    if (found > 0) {
+      endIdx = Math.min(endIdx, found);
+    }
+  }
+  const weakSection = afterWeaknesses.slice(0, endIdx);
+  return extractListItems(weakSection).slice(0, 5);
 }
