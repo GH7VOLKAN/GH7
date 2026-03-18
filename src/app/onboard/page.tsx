@@ -540,10 +540,8 @@ export default function OnboardPage() {
 
             <div className="mt-8 rounded-2xl border border-border/50 bg-muted/10 p-5 text-center">
               <p className="text-sm text-muted-foreground">
-                Her faaliyet alanı için <span className="font-semibold text-foreground">10 soru</span> oluşturulacak.
-                {" "}Toplam: <span className="font-semibold text-foreground">{Math.min(promptCount, 20)} soru</span>
+                20 sektörel gerçek kullanıcı araştırma soruları ile yapay zeka araçlarında görünürlüğünüzü araştırmaya başlıyoruz.
               </p>
-              <p className="mt-1.5 text-xs text-muted-foreground/60">Tüm sorular firma önerisi alma odaklı.</p>
             </div>
 
             <button type="button" onClick={handleFirmaApprovalSubmit} disabled={isPending} className="mt-8 w-full rounded-xl bg-foreground py-4 text-base font-semibold text-background transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50">{isPending ? "Hazırlanıyor..." : "Onayla ve Analizi Başlat"}</button>

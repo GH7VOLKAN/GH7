@@ -292,12 +292,19 @@ export async function researchOnboardingDomain(
 
   console.log(`[sonar-research] Detected sector: "${detectedSector || 'bilinmiyor'}" — searching competitors with actual product description...`);
 
-  // ═══ AŞAMA 2: Rakip bulma — Sonar'ın gerçek ürün tanımıyla (paralel) ═══
+  // ═══ AŞAMA 2: Rakip bulma — faaliyet alanları (ürün/hizmet) bazlı (paralel) ═══
+  // KRİTİK: Genel sektör etiketi (ör. "Isıtma & Soğutma") ile arama YAPMA!
+  // Faaliyet alanlarını (businessCategories) kullan — bunlar spesifik ürün/hizmetler.
+  const detectedCategories = extractListItems(firmaText).slice(0, 5);
+  const categoryText = detectedCategories.length > 0
+    ? detectedCategories.join(", ")
+    : firmaSummary.slice(0, 200);
+
   const phase2Queries = [
-    // Sorgu 3a (doğrudan rakipler) — Spec E.0 birebir: "10 firma ve web siteleri listele"
-    `${domain}'un Türkiye'deki doğrudan rakipleri kimler? 10 firma ve web siteleri listele.\n\nFirma tanımı:\n${firmaSummary}\n\nÖNEMLİ: Her firma için "1. Firma Adı - domain.com" formatında yaz. ${domain} hariç. Büyük holding/genel sektör markaları DEĞİL, aynı niş alanda faaliyet gösteren firmalar.`,
-    // Sorgu 3b (sektörel rakipler) — Spec E.0: sektördeki diğer öne çıkan firmalar
-    `${detectedSector || firmaSummary.slice(0, 200)} sektöründe Türkiye'de öne çıkan firmalar? ${domain} hariç. 10 firma ve web sitelerini "1. Firma Adı - domain.com" formatında listele. Sadece Türkiye pazarında aktif olan firmalar.`,
+    // Sorgu 3a (doğrudan rakipler) — faaliyet alanlarına göre, sektör etiketine göre DEĞİL
+    `Türkiye'de ${categoryText} üreten veya satan firmalar kimler? ${domain} hariç. 10 firma ve web siteleri listele.\n\nFirma tanımı:\n${firmaSummary}\n\nÖNEMLİ: Her firma için "1. Firma Adı - domain.com" formatında yaz. ${domain} hariç. Büyük holding/genel sektör markaları DEĞİL, aynı niş alanda (aynı ürünleri üreten/satan) firmalar.`,
+    // Sorgu 3b (doğrudan rakipler, filtrelemeli) — genel markaları açıkça dışla
+    `${domain} firmasının DOĞRUDAN rakipleri — aynı ürünleri üreten/satan Türkiye'deki firmalar. Faaliyet alanları: ${categoryText}. ${domain} hariç.\n\nÖNEMLİ: Genel ısıtma firmaları (Baymak, Demirdöküm gibi kombi/radyatör üreticileri) DAHİL ETMEYİN. Sadece aynı niş ürünlerde (${categoryText}) faaliyet gösteren 10 firma ve web sitelerini "1. Firma Adı - domain.com" formatında listele.`,
   ];
 
   console.log(`[sonar-research] Phase 2: Running 2 competitor queries...`);
@@ -473,12 +480,16 @@ export async function researchOnboardingPersonal(input: {
 /** Sonar cevabından firma adı çıkar */
 function extractCompanyName(text: string, domain: string): string | null {
   // Try to find a proper name from the text
-  const domainBase = domain.replace(/\.(com|net|org|com\.tr|tr|io)$/i, "").replace(/\./g, " ");
+  // Strip "www." prefix and domain extensions to get clean base name
+  const domainBase = domain
+    .replace(/^www\./i, "")
+    .replace(/\.(com|net|org|com\.tr|tr|io)$/i, "")
+    .replace(/\./g, " ");
 
   // Look for patterns like "ISITMAX", "XYZ Firması", etc.
   const namePatterns = [
     /(?:firma(?:sı)?|şirket(?:i)?|marka(?:sı)?)\s+(?:olan\s+)?[""]?([A-ZÇĞIİÖŞÜ][A-Za-zçğıiöşü\s&.]+?)[""]?(?:\s*[,.]|\s+(?:olarak|bir|şirket|firma))/,
-    /([A-ZÇĞIİÖŞÜ][A-ZÇĞIİÖŞÜa-zçğıiöşü\s&.]{2,30}?)(?:\s*\(?\s*(?:${domain.replace(".", "\\.")})\)?)/i,
+    new RegExp(`([A-ZÇĞIİÖŞÜ][A-ZÇĞIİÖŞÜa-zçğıiöşü\\s&.]{2,30}?)(?:\\s*\\(?\\s*(?:${domain.replace(/^www\./i, "").replace(/\./g, "\\.")}))\\)?`, "i"),
   ];
 
   for (const pattern of namePatterns) {
@@ -489,8 +500,8 @@ function extractCompanyName(text: string, domain: string): string | null {
     }
   }
 
-  // Fallback: capitalize domain base
-  return domainBase.charAt(0).toUpperCase() + domainBase.slice(1);
+  // Fallback: UPPERCASE the domain base (e.g. "isitmax" → "ISITMAX")
+  return domainBase.toUpperCase();
 }
 
 /** Sonar cevabından rakip isim + domain çıkar
