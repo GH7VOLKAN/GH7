@@ -11,8 +11,8 @@ describe("PLAN_LIMITS", () => {
       expect(free.maxBrands).toBe(1);
     });
 
-    it("maxPrompts = 20", () => {
-      expect(free.maxPrompts).toBe(20);
+    it("maxPrompts = 10", () => {
+      expect(free.maxPrompts).toBe(10);
     });
 
     it('scanFrequency = "once"', () => {
@@ -119,7 +119,7 @@ describe("getPlanLimits", () => {
   it("returns free limits for unknown plan", () => {
     const limits = getPlanLimits("unknown");
     expect(limits.maxBrands).toBe(1);
-    expect(limits.maxPrompts).toBe(20);
+    expect(limits.maxPrompts).toBe(10);
   });
 
   it("returns correct limits for each plan name", () => {

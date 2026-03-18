@@ -10,7 +10,7 @@
  * - Dağılım: %60 öneri, %20 karşılaştırma, %20 dolaylı
  * - businessArea + searchIntent etiketleri
  *
- * Free: 20 prompt (Per-area Sonar + Sonnet, aynı Pro pipeline)
+ * Free: 10 prompt (Per-area Sonar + Sonnet, aynı Pro pipeline)
  * Pro: 50 prompt/marka (Per-area Sonar + Sonnet), 1 marka
  * Business: 50 prompt/marka × 3 marka (Per-area Sonar + Sonnet)
  * Agency: 50 prompt/marka × 25 marka (Per-area Sonar + Sonnet)
@@ -60,7 +60,7 @@ export async function generateSmartPrompts(
   count: number,
 ): Promise<GeneratedPrompt[]> {
   // Tüm planlar aynı Sonar + Sonnet pipeline kullanır
-  // Free: 20 prompt, Pro: 50 prompt — tek fark sayı
+  // Free: 10 prompt, Pro: 50 prompt — tek fark sayı
   if (brand.type === "firma") {
     return generateFirmaPrompts(brand, count);
   }

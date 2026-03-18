@@ -290,14 +290,24 @@ export async function researchOnboardingDomain(
     .slice(0, 500)
     .trim();
 
-  console.log(`[sonar-research] Detected sector: "${detectedSector || 'bilinmiyor'}" — searching competitors with actual product description...`);
+  // Parse Sorgu 1 early: faaliyet alanları (needed for phase 2 queries)
+  const businessCategories = extractListItems(firmaText).slice(0, 8);
 
-  // ═══ AŞAMA 2: Rakip bulma — Sonar'ın gerçek ürün tanımıyla (paralel) ═══
+  console.log(`[sonar-research] Detected sector: "${detectedSector || 'bilinmiyor'}" — searching competitors with product categories: [${businessCategories.slice(0, 3).join(", ")}]...`);
+
+  // ═══ AŞAMA 2: Rakip bulma — ürün/hizmet bazlı (sektör değil) ═══
+  // KRİTİK: Genel sektör etiketi ("Isıtma & Soğutma") yerine Sonar'ın bulduğu
+  // gerçek ürün/hizmet kategorilerini kullan. Bu sayede "kombi firması" değil
+  // "elektrikli yerden ısıtma kablosu üreten firma" gibi niş rakipler bulunur.
+  const businessCats = businessCategories.length > 0
+    ? businessCategories.slice(0, 3).join(", ")
+    : firmaSummary.slice(0, 200);
+
   const phase2Queries = [
-    // Sorgu 3a (doğrudan rakipler) — Spec E.0 birebir: "10 firma ve web siteleri listele"
+    // Sorgu 3a (doğrudan rakipler) — ürün/hizmet tanımıyla
     `${domain}'un Türkiye'deki doğrudan rakipleri kimler? 10 firma ve web siteleri listele.\n\nFirma tanımı:\n${firmaSummary}\n\nÖNEMLİ: Her firma için "1. Firma Adı - domain.com" formatında yaz. ${domain} hariç. Büyük holding/genel sektör markaları DEĞİL, aynı niş alanda faaliyet gösteren firmalar.`,
-    // Sorgu 3b (sektörel rakipler) — Spec E.0: sektördeki diğer öne çıkan firmalar
-    `${detectedSector || firmaSummary.slice(0, 200)} sektöründe Türkiye'de öne çıkan firmalar? ${domain} hariç. 10 firma ve web sitelerini "1. Firma Adı - domain.com" formatında listele. Sadece Türkiye pazarında aktif olan firmalar.`,
+    // Sorgu 3b (ürün/hizmet bazlı rakipler) — faaliyet alanlarıyla arama
+    `Türkiye'de ${businessCats} alanında faaliyet gösteren firmalar kimler? ${domain} hariç. 10 firma ve web sitelerini "1. Firma Adı - domain.com" formatında listele. Sadece bu spesifik ürün/hizmet alanında çalışan Türk firmalar. Genel sektör devleri (Baymak, Demirdöküm gibi) DEĞİL, aynı niş ürünleri üreten/satan firmalar.`,
   ];
 
   console.log(`[sonar-research] Phase 2: Running 2 competitor queries...`);
@@ -309,9 +319,6 @@ export async function researchOnboardingDomain(
 
   const successCount = [...phase1Results, ...phase2Results].filter((r) => r.status === "fulfilled").length;
   console.log(`[sonar-research] Onboarding: Got ${successCount}/4 results`);
-
-  // Parse Sorgu 1: faaliyet alanları + firma adı + sektör
-  const businessCategories = extractListItems(fulfilled[0]).slice(0, 8);
 
   // Extract company name from first response
   const companyName = extractCompanyName(fulfilled[0], domain);
@@ -484,13 +491,35 @@ function extractCompanyName(text: string, domain: string): string | null {
   for (const pattern of namePatterns) {
     const match = text.match(pattern);
     if (match?.[1]) {
-      const name = match[1].trim();
+      let name = match[1].trim();
+      // Clean up www. / Www prefixes from extracted name
+      name = cleanCompanyName(name);
       if (name.length > 1 && name.length < 50) return name;
     }
   }
 
-  // Fallback: capitalize domain base
-  return domainBase.charAt(0).toUpperCase() + domainBase.slice(1);
+  // Fallback: capitalize domain base (without www.)
+  const cleanDomainBase = domainBase.replace(/^www\s*/i, "").trim();
+  const fallback = cleanDomainBase.charAt(0).toUpperCase() + cleanDomainBase.slice(1);
+  return cleanCompanyName(fallback);
+}
+
+/** Clean up company name: remove www prefix, capitalize properly */
+function cleanCompanyName(name: string): string {
+  // Remove "www." or "Www " or "WWW " prefix
+  let cleaned = name
+    .replace(/^www\.\s*/i, "")
+    .replace(/^www\s+/i, "")
+    .trim();
+
+  if (!cleaned) return name;
+
+  // If the name is all lowercase (like "isitmax"), uppercase it
+  if (cleaned === cleaned.toLowerCase() && cleaned.length <= 20) {
+    cleaned = cleaned.toUpperCase();
+  }
+
+  return cleaned;
 }
 
 /** Sonar cevabından rakip isim + domain çıkar
