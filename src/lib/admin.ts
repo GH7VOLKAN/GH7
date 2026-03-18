@@ -4,6 +4,7 @@ export const ADMIN_EMAILS = [
   "info@gh7.ai",
   "kaizen.isitmax@gmail.com",
   "volkan@isitmax.com",
+  "info@isitmax.com",
 ];
 
 /**
@@ -17,7 +18,7 @@ export async function getAdminUser() {
   } = await supabase.auth.getUser();
 
   if (!user?.email) return null;
-  if (!ADMIN_EMAILS.includes(user.email)) return null;
+  if (!ADMIN_EMAILS.some(e => e.toLowerCase() === user.email!.toLowerCase())) return null;
 
   return user;
 }

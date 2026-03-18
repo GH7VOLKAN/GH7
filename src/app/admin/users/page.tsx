@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -42,6 +43,7 @@ const PLAN_COLORS: Record<string, "default" | "secondary" | "destructive" | "out
 const PLANS = ["", "free", "pro", "business", "agency"];
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   const [data, setData] = useState<UsersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -135,6 +137,7 @@ export default function AdminUsersPage() {
                 <TableHead>Brands</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Last Updated</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -155,6 +158,16 @@ export default function AdminUsersPage() {
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {new Date(user.updatedAt).toLocaleDateString("tr-TR")}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/admin/users/${user.id}`)}
+                    >
+                      <ExternalLink className="mr-1 h-3 w-3" />
+                      Detail
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
