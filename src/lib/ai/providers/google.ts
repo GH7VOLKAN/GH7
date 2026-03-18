@@ -48,7 +48,7 @@ export class GoogleProvider implements AIProvider {
         }
 
         const model = this.genAI.getGenerativeModel(
-          modelOptions as Parameters<typeof this.genAI.getGenerativeModel>[0],
+          modelOptions as unknown as Parameters<typeof this.genAI.getGenerativeModel>[0],
         );
 
         // Wrap with timeout since Google SDK doesn't have built-in timeout
