@@ -43,14 +43,14 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "groq"];
+const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "google_aio"];
 
 const PLATFORM_COLORS: Record<PlatformKey, { bg: string; text: string; label: string }> = {
   chatgpt: { bg: PCOLORS.chatgpt.bg, text: PCOLORS.chatgpt.text, label: "GPT" },
   claude: { bg: PCOLORS.claude.bg, text: PCOLORS.claude.text, label: "C" },
   gemini: { bg: PCOLORS.gemini.bg, text: PCOLORS.gemini.text, label: "G" },
   perplexity: { bg: PCOLORS.perplexity.bg, text: PCOLORS.perplexity.text, label: "P" },
-  groq: { bg: PCOLORS.groq.bg, text: PCOLORS.groq.text, label: "GQ" },
+  google_aio: { bg: PCOLORS.google_aio.bg, text: PCOLORS.google_aio.text, label: "AIO" },
 };
 
 const INTENT_LABELS: Record<string, { label: string; color: string }> = {

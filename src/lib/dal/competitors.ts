@@ -85,7 +85,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     orderBy: { completedAt: "desc" },
   });
 
-  const userPlatforms: Record<PlatformKey, number> = { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, groq: 0 };
+  const userPlatforms: Record<PlatformKey, number> = { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, google_aio: 0 };
 
   // Fetch scan results once and reuse for user platforms, competitor scores, and SoV
   const scanResults = latestScan
@@ -150,7 +150,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
         }
       }
 
-      const platforms: Record<PlatformKey, number> = { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, groq: 0 };
+      const platforms: Record<PlatformKey, number> = { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, google_aio: 0 };
       for (const [plat, counts] of Object.entries(platCounts)) {
         platforms[plat as PlatformKey] = counts.total > 0
           ? Math.round((counts.mentioned / counts.total) * 100)
@@ -188,6 +188,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
         claude: 0,
         gemini: 0,
         perplexity: 0,
+        google_aio: 0,
       },
       reason: c.reason,
       products: c.products ?? [],

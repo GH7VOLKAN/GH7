@@ -29,6 +29,34 @@ export class AnthropicProvider implements AIProvider {
     const models = ["claude-sonnet-4-20250514", "claude-haiku-4-5-20251001"];
 
     for (const model of models) {
+      // First attempt: with web_search tool for real-time web results
+      try {
+        const response = await this.client.messages.create({
+          model,
+          max_tokens: 2048,
+          temperature: 0.7,
+          tools: [
+            {
+              type: "web_search_20250305" as never,
+              name: "web_search",
+              max_uses: 3,
+            } as never,
+          ],
+          messages: [{ role: "user", content: promptText }],
+        });
+
+        const text = this.extractTextContent(response);
+        if (text) {
+          return { platform: "claude", content: text };
+        }
+      } catch (err) {
+        console.warn(
+          `[anthropic-provider] ${model} with web_search failed:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+
+      // Fallback: without web_search tool
       try {
         const response = await this.client.messages.create({
           model,
@@ -37,15 +65,15 @@ export class AnthropicProvider implements AIProvider {
           messages: [{ role: "user", content: promptText }],
         });
 
-        const text = response.content
-          .filter((b): b is Anthropic.TextBlock => b.type === "text")
-          .map((b) => b.text)
-          .join("\n");
-
-        return { platform: "claude", content: text };
+        const text = this.extractTextContent(response);
+        if (text) {
+          return { platform: "claude", content: text };
+        }
       } catch (err) {
-        console.warn(`[anthropic-provider] ${model} failed:`, err instanceof Error ? err.message : err);
-        // Try next model
+        console.warn(
+          `[anthropic-provider] ${model} fallback failed:`,
+          err instanceof Error ? err.message : err,
+        );
         continue;
       }
     }
@@ -55,5 +83,20 @@ export class AnthropicProvider implements AIProvider {
       content: "",
       error: "All Claude models failed",
     };
+  }
+
+  private extractTextContent(response: Anthropic.Message): string {
+    // Extract text from both regular text blocks and web_search result blocks
+    const parts: string[] = [];
+
+    for (const block of response.content) {
+      if (block.type === "text") {
+        parts.push(block.text);
+      }
+      // web_search tool results may produce text blocks already,
+      // but handle any other content block types gracefully
+    }
+
+    return parts.join("\n");
   }
 }

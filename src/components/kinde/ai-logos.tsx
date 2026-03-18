@@ -21,8 +21,7 @@ const PLATFORM_COLORS: Record<string, string> = {
   gemini: "#4285f4",
   google: "#4285f4",
   perplexity: "#14b8a6",
-  groq: "#f55036",
-  llama: "#f55036",
+  google_aio: "#4285f4",
 };
 
 export function getPlatformColor(platform: string): string {
@@ -38,10 +37,10 @@ function getPlatformIconPath(platform: string): string {
   const key = platform.toLowerCase();
   if (key.includes("chatgpt") || key.includes("openai")) return "/chatgpt-icon.webp";
   if (key.includes("claude") || key.includes("anthropic")) return "/claude-ai-icon.webp";
+  if (key.includes("google_aio")) return "/google-icon.webp";
   if (key.includes("gemini")) return "/google-gemini-icon.webp";
   if (key.includes("google")) return "/google-gemini-icon.webp";
   if (key.includes("perplexity")) return "/perplexity-ai-icon.webp";
-  if (key.includes("groq") || key.includes("llama")) return "/groq-icon.webp";
   return "/chatgpt-icon.webp";
 }
 
@@ -76,8 +75,8 @@ export function getPlatformDisplayName(platform: string): string {
   const key = platform.toLowerCase();
   if (key.includes("chatgpt") || key.includes("openai")) return "ChatGPT";
   if (key.includes("claude") || key.includes("anthropic")) return "Claude";
+  if (key.includes("google_aio")) return "Google AIO";
   if (key.includes("gemini") || key.includes("google")) return "Gemini";
   if (key.includes("perplexity")) return "Perplexity";
-  if (key.includes("groq") || key.includes("llama")) return "Groq (Llama)";
   return platform;
 }

@@ -1,4 +1,4 @@
-export type PlatformKey = "chatgpt" | "claude" | "gemini" | "perplexity" | "groq";
+export type PlatformKey = "chatgpt" | "claude" | "gemini" | "perplexity" | "google_aio";
 export type SourceType = "kurumsal" | "dizin" | "ugc" | "referans" | "medya";
 export type CheckStatus = "pass" | "fail" | "partial";
 export type Priority = "high" | "medium" | "low";
@@ -9,7 +9,7 @@ export const platformLabels: Record<PlatformKey, { name: string; company: string
   claude: { name: "Claude", company: "Anthropic" },
   gemini: { name: "Gemini", company: "Google" },
   perplexity: { name: "Perplexity", company: "Perplexity AI" },
-  groq: { name: "Groq (Llama)", company: "Meta / Groq" },
+  google_aio: { name: "Google AIO", company: "Google" },
 };
 
 export const sourceTypeLabels: Record<SourceType, string> = {

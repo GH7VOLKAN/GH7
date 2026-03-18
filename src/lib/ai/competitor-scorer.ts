@@ -62,7 +62,7 @@ export async function updateCompetitorScores(
           domain: "",
           mentionScore: 0,
           readinessScore: 0,
-          platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, groq: 0 },
+          platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, google_aio: 0 },
           source: "scan_discovered",
           reason: "Tarama sonuçlarında otomatik tespit edildi",
           products: [],

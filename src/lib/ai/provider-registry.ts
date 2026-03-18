@@ -4,7 +4,7 @@ import { AnthropicProvider } from "./providers/anthropic";
 import { PerplexityProvider } from "./providers/perplexity";
 import { OpenAIProvider } from "./providers/openai";
 import { GoogleProvider } from "./providers/google";
-import { GroqProvider } from "./providers/groq";
+import { GoogleAIOProvider } from "./providers/google-aio";
 
 // Lazy initialization — create providers at request time, not at module load time.
 // This ensures process.env vars from .env.local are available.
@@ -14,7 +14,7 @@ function getAllProviders(): AIProvider[] {
     new AnthropicProvider(),
     new GoogleProvider(),
     new PerplexityProvider(),
-    new GroqProvider(),
+    new GoogleAIOProvider(),
   ];
 }
 
@@ -28,7 +28,7 @@ export function getAvailableProviders(): AIProvider[] {
       `[provider-registry] UNAVAILABLE providers (missing API keys): ${unavailable.map((p) => p.platform).join(", ")}`,
     );
     console.warn(
-      `[provider-registry] Check env vars: OPENAI_API_KEY=${!!process.env.OPENAI_API_KEY}, GH7_ANTHROPIC_API_KEY=${!!process.env.GH7_ANTHROPIC_API_KEY}, ANTHROPIC_API_KEY=${!!process.env.ANTHROPIC_API_KEY}, GOOGLE_AI_API_KEY=${!!process.env.GOOGLE_AI_API_KEY}, PERPLEXITY_API_KEY=${!!process.env.PERPLEXITY_API_KEY}`,
+      `[provider-registry] Check env vars: OPENAI_API_KEY=${!!process.env.OPENAI_API_KEY}, GH7_ANTHROPIC_API_KEY=${!!process.env.GH7_ANTHROPIC_API_KEY}, ANTHROPIC_API_KEY=${!!process.env.ANTHROPIC_API_KEY}, GOOGLE_AI_API_KEY=${!!process.env.GOOGLE_AI_API_KEY}, PERPLEXITY_API_KEY=${!!process.env.PERPLEXITY_API_KEY}, SERPAPI_KEY=${!!process.env.SERPAPI_KEY}`,
     );
   }
   console.log(

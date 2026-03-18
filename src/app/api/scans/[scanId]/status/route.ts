@@ -34,7 +34,7 @@ export async function GET(
     where: { brandId: scan.brandId, isActive: true },
   });
 
-  const totalExpected = promptCount * 5; // 5 platforms (chatgpt, claude, gemini, perplexity, groq)
+  const totalExpected = promptCount * 5; // 5 platforms (chatgpt, claude, gemini, perplexity, google_aio)
   const resultCount = scan._count.results;
 
   // Calculate progress percentage

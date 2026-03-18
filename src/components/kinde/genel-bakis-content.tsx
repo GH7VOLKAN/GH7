@@ -171,7 +171,7 @@ export function GenelBakisContent({
                   1
                 );
                 const pct = (entry.mentionCount / maxMentions) * 100;
-                const platforms = (["chatgpt", "claude", "gemini", "perplexity", "groq"] as PlatformKey[]);
+                const platforms = (["chatgpt", "claude", "gemini", "perplexity", "google_aio"] as PlatformKey[]);
 
                 return (
                   <div key={entry.name}>

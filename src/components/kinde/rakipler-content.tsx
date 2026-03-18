@@ -52,7 +52,7 @@ interface RakiplerContentProps {
   maxVisibleCompetitors: number;
 }
 
-const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "groq"];
+const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "google_aio"];
 
 /* ─────────────────────────────────────────────────────
    Main component

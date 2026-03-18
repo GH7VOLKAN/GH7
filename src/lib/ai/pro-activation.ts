@@ -155,7 +155,7 @@ export async function triggerProActivation(brandId: string): Promise<void> {
           domain: c.domain,
           mentionScore: 0,
           readinessScore: 0,
-          platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, groq: 0 },
+          platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, google_aio: 0 },
           reason: c.reason,
           products: c.products,
           relevance: c.relevance,

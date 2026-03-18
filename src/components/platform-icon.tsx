@@ -64,12 +64,12 @@ export const PLATFORM_COLORS: Record<PlatformKey, {
     dot: "bg-[#20808D]",
     hex: "#20808D",
   },
-  groq: {
-    text: "text-[#f55036]",
-    bg: "bg-[#f55036]/8",
-    border: "border-[#f55036]/15",
-    dot: "bg-[#f55036]",
-    hex: "#f55036",
+  google_aio: {
+    text: "text-[#4285f4]",
+    bg: "bg-[#4285f4]/8",
+    border: "border-[#4285f4]/15",
+    dot: "bg-[#4285f4]",
+    hex: "#4285f4",
   },
 };
 
@@ -155,11 +155,11 @@ const PLATFORM_ICONS: Record<PlatformKey, {
       </>
     ),
   },
-  groq: {
-    label: "Groq (Llama)",
+  google_aio: {
+    label: "Google AIO",
     viewBox: "0 0 24 24",
     paths: (
-      <text x="12" y="17" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#f55036">G</text>
+      <text x="12" y="17" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#4285f4">G</text>
     ),
   },
 };

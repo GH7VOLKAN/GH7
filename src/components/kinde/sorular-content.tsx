@@ -38,7 +38,7 @@ function matchCategory(item: PromptItemData, key: string): boolean {
   return true;
 }
 
-const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "groq"];
+const PLATFORMS: PlatformKey[] = ["chatgpt", "claude", "gemini", "perplexity", "google_aio"];
 
 export function SorularContent({
   promptItems,

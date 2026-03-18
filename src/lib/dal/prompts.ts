@@ -60,7 +60,7 @@ export const getPromptsData = cache(async (brandId: string) => {
       claude: false,
       gemini: false,
       perplexity: false,
-      groq: false,
+      google_aio: false,
     };
     const platformResults: PlatformResult[] = [];
     let bestPosition = "—";

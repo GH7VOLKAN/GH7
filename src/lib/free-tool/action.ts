@@ -33,7 +33,7 @@ const platformLabels: Record<PlatformId, string> = {
   claude: "Claude",
   gemini: "Gemini",
   perplexity: "Perplexity",
-  groq: "Groq (Llama)",
+  google_aio: "Google AIO",
 };
 
 // ── Position to label map ───────────────────────────
