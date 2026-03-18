@@ -528,11 +528,16 @@ function extractCompetitorsWithDomains(text: string): Array<{ name: string; doma
     if (/^(tanımlanan|listelenen|belirlenen|tespit edilen|bulunan|mevcut|maalesef|ne yazık)/i.test(cleaned)) continue;
     if (/^(to help|i would|search result|however|note|information|competitive|consult|review|details|comparable)/i.test(cleaned)) continue;
     if (/^(bu |bu firmalar|gereklidir|gerekli|yeterli|sorgunuz|recommendation)/i.test(cleaned)) continue;
-    // Skip lines that are clearly explanatory sentences (contain ":" after a phrase)
+    // Skip lines that are clearly explanatory sentences or descriptions
     if (/^[A-Za-zÇĞIİÖŞÜçğıiöşü\s]{20,}:/.test(cleaned)) continue;
 
     // Step 2: Domain pattern
     const domainPattern = /([a-zA-Z0-9][-a-zA-Z0-9]*\.(?:com\.tr|com|net|org|tr|io|co)(?:\.[a-z]{2})?)/i;
+
+    // Skip lines that look like category/description, not firm names (too many words, no domain)
+    if (cleaned.split(/\s+/).length > 6 && !domainPattern.test(cleaned)) continue;
+    // Skip lines containing keywords that indicate descriptions, not company names
+    if (/\b(listesi|sağlayıcıları|üreticileri|firmaları|sistemleri sağ|kabloları,)\b/i.test(cleaned) && !domainPattern.test(cleaned)) continue;
     const domainMatch = cleaned.match(domainPattern);
 
     if (domainMatch) {
@@ -561,14 +566,20 @@ function extractCompetitorsWithDomains(text: string): Array<{ name: string; doma
       }
     } else {
       // Domain yok — sadece isim
-      const namePart = cleaned
+      let namePart = cleaned
         .replace(/[-–—]+.*$/, "")
-        .replace(/\s*\(.*?\)\s*/g, " ")  // Parantez içi açıklamaları kaldır
+        .replace(/:.*$/, "")              // "Firma: açıklama" → "Firma"
+        .replace(/,.*$/, "")              // "Firma, açıklama" → "Firma"
+        .replace(/\s*\(.*?\)\s*/g, " ")   // Parantez içi açıklamaları kaldır
         .replace(/\[\d+\]/g, "")          // Citation refs [1][2]
         .trim();
-      if (namePart && namePart.length >= 3 && namePart.length < 80) {
-        // "Bu firmalar," gibi açıklama cümlelerini atla
-        if (!/^(bu|bu firmalar|bunlar|yukarıda|aşağıda|not|kaynak)/i.test(namePart)) {
+      // Max 4 kelime — firma adı genelde kısa olur
+      if (namePart.split(/\s+/).length > 4) {
+        namePart = namePart.split(/\s+/).slice(0, 3).join(" ");
+      }
+      if (namePart && namePart.length >= 3 && namePart.length < 60) {
+        // Açıklama cümlelerini atla
+        if (!/^(bu|bu firmalar|bunlar|yukarıda|aşağıda|not|kaynak|türkiye|elektrikli|yerden|ısıtma|sektör)/i.test(namePart)) {
           results.push({ name: namePart, domain: null });
         }
       }
