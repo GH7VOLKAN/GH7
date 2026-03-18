@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, Search, Play, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Play, Loader2, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Brand {
   id: string;
@@ -52,6 +53,7 @@ const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "o
 const PLANS = ["", "free", "pro", "business", "agency"];
 
 export default function AdminBrandsPage() {
+  const router = useRouter();
   const [data, setData] = useState<BrandsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -175,7 +177,14 @@ export default function AdminBrandsPage() {
             <TableBody>
               {data.brands.map((brand) => (
                 <TableRow key={brand.id}>
-                  <TableCell className="font-medium">{brand.name}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => router.push(`/admin/brands/${brand.id}`)}
+                      className="font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      {brand.name}
+                    </button>
+                  </TableCell>
                   <TableCell className="font-mono text-xs">
                     {brand.domain}
                   </TableCell>

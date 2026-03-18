@@ -5,19 +5,29 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  Globe,
-  Scan,
-  HeartPulse,
+  Building2,
+  Search,
+  DollarSign,
+  BarChart3,
+  Bell,
+  Handshake,
+  Heart,
+  Settings,
   ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/brands", label: "Brands", icon: Globe },
-  { href: "/admin/scans", label: "Scans", icon: Scan },
-  { href: "/admin/health", label: "Health", icon: HeartPulse },
+  { href: "/admin/users", label: "Kullan\u0131c\u0131lar", icon: Users },
+  { href: "/admin/brands", label: "Markalar", icon: Building2 },
+  { href: "/admin/scans", label: "Taramalar", icon: Search },
+  { href: "/admin/revenue", label: "Gelir", icon: DollarSign },
+  { href: "/admin/costs", label: "Maliyetler", icon: BarChart3 },
+  { href: "/admin/notifications", label: "Bildirimler", icon: Bell },
+  { href: "/admin/agency", label: "Ajans", icon: Handshake },
+  { href: "/admin/health", label: "Sa\u011fl\u0131k", icon: Heart },
+  { href: "/admin/settings", label: "Ayarlar", icon: Settings },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {
@@ -31,7 +41,7 @@ export function AdminSidebar({ email }: { email: string }) {
         </span>
       </div>
 
-      <nav className="flex-1 space-y-1 px-2 py-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/admin"
@@ -62,7 +72,7 @@ export function AdminSidebar({ email }: { email: string }) {
           className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3 w-3" />
-          Back to Dashboard
+          Dashboard&apos;a D\u00f6n
         </Link>
       </div>
     </aside>
