@@ -21,8 +21,8 @@ export default function LandingPage() {
       <div id="ozellikler">
         <FeatureSection
           eyebrow="Yapay Zeka Taraması"
-          title="4 yapay zekada nasıl göründüğünü hemen öğren"
-          description="ChatGPT, Claude, Gemini ve Perplexity — hepsi aynı anda taranır. Seni tanıyorlar mı, ne söylüyorlar? Sonucu anında gör."
+          title="5 yapay zekada nasıl göründüğünü hemen öğren"
+          description="ChatGPT, Claude, Gemini, Perplexity ve Google AI — hepsi aynı anda taranır. Seni tanıyorlar mı, ne söylüyorlar? Sonucu anında gör."
           ctaText="Ücretsiz başla"
           ctaHref="/login"
           visual={<FeatureVisualScore />}

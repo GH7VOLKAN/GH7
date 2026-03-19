@@ -14,10 +14,13 @@ interface WelcomeHeroProps {
   brandId: string;
   brandName: string;
   activePromptCount: number;
+  scanAlreadyRunning?: boolean;
 }
 
-export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHeroProps) {
-  const [status, setStatus] = useState<"idle" | "running" | "completed" | "failed">("idle");
+export function WelcomeHero({ brandId, brandName, activePromptCount, scanAlreadyRunning }: WelcomeHeroProps) {
+  const [status, setStatus] = useState<"idle" | "running" | "completed" | "failed">(
+    scanAlreadyRunning ? "running" : "idle"
+  );
   const [scanId, setScanId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
@@ -42,26 +45,46 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
   }
 
   const checkStatus = useCallback(async () => {
-    if (!scanId) return;
-    try {
-      const res = await fetch(`/api/scans/${scanId}/status`);
-      const data = await res.json();
-      if (data.progress) setProgress(data.progress);
-      if (data.status === "completed") {
-        setStatus("completed");
-        setProgress(100);
-        setTimeout(() => window.location.reload(), 1500);
-      } else if (data.status === "failed") {
-        setStatus("failed");
+    if (scanId) {
+      // Poll by scanId (started from this component)
+      try {
+        const res = await fetch(`/api/scans/${scanId}/status`);
+        const data = await res.json();
+        if (data.progress) setProgress(data.progress);
+        if (data.status === "completed") {
+          setStatus("completed");
+          setProgress(100);
+          setTimeout(() => window.location.reload(), 1500);
+        } else if (data.status === "failed") {
+          setStatus("failed");
+        }
+      } catch {
+        // Ignore poll errors
       }
-    } catch {
-      // Ignore poll errors
+    } else if (scanAlreadyRunning) {
+      // Poll by brandId (scan started from onboarding)
+      try {
+        const res = await fetch(`/api/scan/status?brandId=${brandId}`);
+        const data = await res.json();
+        if (data.status === "completed" || data.status === "idle") {
+          setStatus("completed");
+          setProgress(100);
+          setTimeout(() => window.location.reload(), 1500);
+        } else if (data.total > 0 && data.completed > 0) {
+          setProgress(Math.round((data.completed / data.total) * 85));
+        }
+      } catch {
+        // Ignore poll errors
+      }
     }
-  }, [scanId]);
+  }, [scanId, scanAlreadyRunning, brandId]);
 
   useEffect(() => {
-    if (status !== "running" || !scanId) return;
+    if (status !== "running") return;
+    if (!scanId && !scanAlreadyRunning) return;
     const interval = setInterval(checkStatus, 3000);
+    // Initial check
+    checkStatus();
     // Fake progress animation
     const progressTimer = setInterval(() => {
       setProgress((p) => Math.min(p + 2, 90));
@@ -70,7 +93,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
       clearInterval(interval);
       clearInterval(progressTimer);
     };
-  }, [status, scanId, checkStatus]);
+  }, [status, scanId, scanAlreadyRunning, checkStatus]);
 
   const steps = [
     {
@@ -108,7 +131,7 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
         </p>
         <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground leading-relaxed">
           <span className="font-medium text-foreground">{brandName}</span> için{" "}
-          {activePromptCount} soru hazır. 4 yapay zekada markanızın ne kadar
+          {activePromptCount} soru hazır. 5 yapay zekada markanızın ne kadar
           tanındığını öğrenin.
         </p>
 

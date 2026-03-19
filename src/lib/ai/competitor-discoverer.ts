@@ -11,7 +11,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { querySonar } from "./sonar-research";
+import { querySonar, isOwnBrand, isValidCompetitorName } from "./sonar-research";
 
 // ─── Types ───────────────────────────────────────────
 
@@ -204,7 +204,10 @@ KURALLAR:
         if (cDomain && cDomain === brand.domain.toLowerCase().replace(/^www\./, "")) return false;
         if (brandDomainClean.length > 3 && cNorm.includes(brandDomainClean)) return false;
         return true;
-      });
+      })
+      // Additional own-brand and validation filters
+      .filter((c: DiscoveredCompetitor) => isValidCompetitorName(c.name))
+      .filter((c: DiscoveredCompetitor) => !isOwnBrand(c.name, brand.name, brand.domain));
 
     return {
       competitors,

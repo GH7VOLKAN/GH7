@@ -22,7 +22,7 @@ export const PLAN_PRICES: Record<Exclude<PlanType, "free">, PlanPrice> = {
 export const PLAN_FEATURES: Record<Exclude<PlanType, "free">, string[]> = {
   pro: [
     "50 takip edilen soru",
-    "4 yapay zekada tarama",
+    "5 yapay zekada tarama",
     "Rakip analizi",
     "Site kontrolu",
     "Aksiyon plani",

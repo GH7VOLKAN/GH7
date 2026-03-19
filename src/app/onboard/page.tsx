@@ -219,12 +219,12 @@ export default function OnboardPage() {
     });
   }
 
-  // ═══ Final: brand creation → full analysis pipeline ═══
+  // ═══ Final: brand creation → fire-and-forget analysis → immediate redirect ═══
   function handleFinalSubmit(brandData: Parameters<typeof createBrand>[0]) {
     setStep("full-analysis");
     setAnalysisPhase(1);
     setAnalysisProgress(5);
-    setPhaseLabel("Profil oluşturuluyor ve sorular üretiliyor...");
+    setPhaseLabel("Profil oluşturuluyor...");
 
     startTransition(async () => {
       try {
@@ -235,28 +235,20 @@ export default function OnboardPage() {
           throw new Error("Brand oluşturulamadı");
         }
 
-        setAnalysisPhase(2);
-        setAnalysisProgress(15);
-        setPhaseLabel("Yapay zekalara soruluyor...");
-
-        // Step 2: Start full analysis (scan + audit + action plan)
-        const scanRes = await fetch("/api/analysis/run-full", {
+        // Step 2: Start full analysis — fire-and-forget (API runs in background via after())
+        fetch("/api/analysis/run-full", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ brandId: result.brandId }),
+        }).catch((err) => {
+          console.error("[onboard] Scan start failed (non-fatal):", err);
         });
-        const scanData = await scanRes.json();
 
-        if (scanRes.ok || scanRes.status === 409) {
-          setScanId(scanData.scanId);
-        } else {
-          // Even if scan fails to start, redirect to dashboard
-          console.error("[onboard] Scan start failed:", scanData);
-          router.push("/dashboard/genel");
-          router.refresh();
-        }
+        // Step 3: Redirect IMMEDIATELY to dashboard — AnalysisBanner shows progress
+        router.push("/dashboard/genel");
+        router.refresh();
       } catch (err) {
-        console.error("[onboard] Full analysis failed:", err);
+        console.error("[onboard] Brand creation failed:", err);
         setStep(brandType === "firma" ? "domain" : "kisisel-info");
         setError(err instanceof Error ? err.message : "Bir hata oluştu");
       }
@@ -348,7 +340,7 @@ export default function OnboardPage() {
               Yapay Zeka Seni<br /><span className="font-semibold">Tanıyor mu?</span>
             </h1>
             <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
-              30 saniyede öğren. Markanızın ChatGPT, Claude, Gemini ve Perplexity&apos;deki görünürlüğünü ölçün.
+              1-2 dakikada öğren. Markanızın ChatGPT, Claude, Gemini, Perplexity ve Google AI&apos;daki görünürlüğünü ölçün.
             </p>
             <div className="mx-auto mt-14 grid max-w-xl gap-5 sm:grid-cols-2">
               <button type="button" onClick={() => handleTypeSelect("firma")} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white p-7 text-left shadow-sm transition-all hover:border-foreground hover:shadow-lg">

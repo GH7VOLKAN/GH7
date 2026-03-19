@@ -13,8 +13,8 @@ const plans = [
     ctaStyle: "outline" as const,
     popular: false,
     features: [
-      { text: "Adını yaz, sonucunu gör" },
-      { text: "4 yapay zekada tarama" },
+      { text: "Adını veya firmanı yaz, sonucunu gör" },
+      { text: "5 yapay zekada tarama" },
       { text: "10 soru analizi" },
     ],
   },

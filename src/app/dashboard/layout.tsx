@@ -1,6 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SiteHeader } from "@/components/site-header";
+import { AnalysisBanner } from "@/components/analysis-banner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { getChecklistSummary } from "@/lib/dal/checklist";
@@ -52,6 +53,8 @@ export default async function DashboardLayout({
           userName={user?.fullName ?? "D"}
           avatarUrl={user?.avatarUrl}
         />
+        {/* Analysis progress banner — shows only during active scans */}
+        {brandId && <AnalysisBanner brandId={brandId} />}
         {/* Kinde-style main content area — centered, max-width, fafafa bg */}
         <main className="flex-1 overflow-y-auto pb-20 md:pb-8">
           <div className="mx-auto w-full max-w-[880px] px-4 lg:px-6">

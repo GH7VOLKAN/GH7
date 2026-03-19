@@ -28,7 +28,7 @@ export function scanCompleteTemplate(
     </div>
 
     <p style="margin:0 0 20px;font-size:14px;color:#71717a;line-height:1.6;">
-      4 yapay zeka sizi taradı. Sonuçlarınızı ve ne yapmanız gerektiğini
+      5 yapay zeka sizi taradı. Sonuçlarınızı ve ne yapmanız gerektiğini
       kontrol panelinde görebilirsiniz.
     </p>
 
