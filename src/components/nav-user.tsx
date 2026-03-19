@@ -1,5 +1,7 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import {
   Avatar,
   AvatarFallback,
@@ -32,6 +34,31 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+
+  async function handleSignOut() {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+
+      // Clear all Supabase cookies to prevent stale sessions
+      document.cookie.split(";").forEach((c) => {
+        const name = c.split("=")[0].trim()
+        if (name.startsWith("sb-")) {
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+        }
+      })
+
+      // Redirect to login page with logout flag
+      router.push("/login?logout=true")
+      router.refresh()
+    } catch (err) {
+      console.error("Sign out error:", err)
+      // Force redirect even if signOut fails
+      window.location.href = "/login?logout=true"
+    }
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -94,7 +121,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOutIcon
               />
               Çıkış Yap

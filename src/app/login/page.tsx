@@ -17,7 +17,39 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [sessionCleared, setSessionCleared] = useState(false);
+  const [existingEmail, setExistingEmail] = useState<string | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // On page load: check for existing session and handle ?logout=true
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldLogout = params.get("logout") === "true";
+    const supabase = createClient();
+
+    async function handleSessionCleanup() {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (shouldLogout && session) {
+        // User explicitly wants to log out — clear session
+        await supabase.auth.signOut();
+        // Clear all Supabase cookies
+        document.cookie.split(";").forEach((c) => {
+          const name = c.split("=")[0].trim();
+          if (name.startsWith("sb-")) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          }
+        });
+        setSessionCleared(true);
+        window.history.replaceState({}, "", "/login");
+      } else if (session) {
+        // There's an existing session — show which account is logged in
+        setExistingEmail(session.user.email ?? null);
+      }
+    }
+
+    handleSessionCleanup();
+  }, []);
 
   // Show auth error from redirect (bad_oauth_state etc.)
   useEffect(() => {
@@ -50,6 +82,11 @@ export default function LoginPage() {
     setError(null);
     try {
       const supabase = createClient();
+
+      // Always sign out existing session before starting a new Google login
+      // This prevents the old session from persisting after OAuth redirect
+      await supabase.auth.signOut();
+
       // Use consistent origin to prevent state cookie mismatch
       const redirectOrigin = typeof window !== "undefined" && window.location.hostname !== "localhost"
         ? `https://${window.location.hostname}`
@@ -81,6 +118,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      // Sign out any existing session before email login
+      const supabase = createClient();
+      await supabase.auth.signOut();
+
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,8 +171,11 @@ export default function LoginPage() {
           return;
         }
 
-        // Use tokenHash to create Supabase session
+        // Sign out any existing session before creating the new one
         const supabase = createClient();
+        await supabase.auth.signOut();
+
+        // Use tokenHash to create Supabase session
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.tokenHash,
           type: "magiclink",
@@ -257,6 +301,37 @@ export default function LoginPage() {
               </>
             )}
           </div>
+
+          {sessionCleared && (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400">
+              Oturum kapatıldı. Yeni hesapla giriş yapabilirsiniz.
+            </div>
+          )}
+
+          {existingEmail && !sessionCleared && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
+              <p>
+                Şu anda <span className="font-medium">{existingEmail}</span> olarak giriş yapılmış.
+              </p>
+              <button
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
+                  document.cookie.split(";").forEach((c) => {
+                    const name = c.split("=")[0].trim();
+                    if (name.startsWith("sb-")) {
+                      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                    }
+                  });
+                  setExistingEmail(null);
+                  setSessionCleared(true);
+                }}
+                className="mt-1 text-xs font-medium underline hover:text-amber-900 dark:hover:text-amber-300"
+              >
+                Farklı hesapla giriş yap
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
