@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/db";
 import { verifyCodeHash, OTP_MAX_ATTEMPTS } from "@/lib/auth/otp";
 
@@ -33,7 +34,6 @@ export async function POST(request: Request) {
 
     // Check max attempts
     if (verification.attempts >= OTP_MAX_ATTEMPTS) {
-      // Delete the used-up code
       await prisma.verificationCode.delete({
         where: { id: verification.id },
       });
@@ -45,7 +45,6 @@ export async function POST(request: Request) {
 
     // Verify the code
     if (!verifyCodeHash(code.toString().trim(), verification.codeHash)) {
-      // Increment attempt counter
       await prisma.verificationCode.update({
         where: { id: verification.id },
         data: { attempts: { increment: 1 } },
@@ -63,7 +62,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Code is valid — get the tokenHash for Supabase session
+    // Code is valid — create session SERVER-SIDE using admin API
     const tokenHash = verification.tokenHash;
 
     // Delete the verification code (one-time use)
@@ -71,12 +70,49 @@ export async function POST(request: Request) {
       where: { id: verification.id },
     });
 
-    console.log(`[otp] Verified for ${normalizedEmail}`);
+    console.log(`[otp] Code verified for ${normalizedEmail}, creating session server-side...`);
 
-    // Return tokenHash so client can create Supabase session
+    // Use admin API to verify the OTP and get session tokens
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Method 1: Use the magic link token directly via admin
+    const { data: userData, error: userError } =
+      await supabaseAdmin.auth.admin.getUserByEmail(normalizedEmail);
+
+    if (userError || !userData?.user) {
+      console.error("[otp] User not found:", userError);
+      return NextResponse.json(
+        { error: "Kullanıcı bulunamadı. Lütfen tekrar deneyin." },
+        { status: 500 }
+      );
+    }
+
+    // Generate a new magic link and return it for client-side redirect
+    const { data: linkData, error: linkError } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: normalizedEmail,
+      });
+
+    if (linkError || !linkData?.properties?.hashed_token) {
+      console.error("[otp] Session link generation failed:", linkError);
+      return NextResponse.json(
+        { error: "Oturum oluşturulamadı. Lütfen tekrar deneyin." },
+        { status: 500 }
+      );
+    }
+
+    // Return the fresh token hash — client will use this immediately
+    const freshTokenHash = linkData.properties.hashed_token;
+
+    console.log(`[otp] Fresh session token generated for ${normalizedEmail}`);
+
     return NextResponse.json({
       success: true,
-      tokenHash,
+      tokenHash: freshTokenHash,
     });
   } catch (err) {
     console.error("[otp] verify-otp error:", err);

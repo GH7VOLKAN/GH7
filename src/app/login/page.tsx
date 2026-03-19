@@ -252,18 +252,26 @@ export default function LoginPage() {
           return;
         }
 
-        // Sign out any existing session before creating the new one
+        // Create Supabase session with fresh token from server
         const supabase = createClient();
-        await supabase.auth.signOut();
 
-        // Use tokenHash to create Supabase session
+        // Clear any stale cookies first (without calling signOut which invalidates tokens)
+        document.cookie.split(";").forEach((c) => {
+          const name = c.split("=")[0].trim();
+          if (name.startsWith("sb-")) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          }
+        });
+
+        // Use the fresh tokenHash from server to create session
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.tokenHash,
           type: "magiclink",
         });
 
         if (verifyError) {
-          setError("Oturum oluşturulamadı. Lütfen tekrar deneyin.");
+          console.error("[login] verifyOtp error:", verifyError);
+          setError("Oturum oluşturulamadı. Lütfen tekrar deneyin. (" + verifyError.message + ")");
           setLoading(false);
           return;
         }
