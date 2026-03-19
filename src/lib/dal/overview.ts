@@ -62,6 +62,7 @@ export interface AiResponseExcerpt {
   platform: PlatformKey;
   promptText: string;
   excerpt: string;
+  brandName: string;
 }
 
 /** Checklist item summary for overview */
@@ -148,8 +149,8 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     where: { brandId, isActive: true },
   });
 
-  // Source domains count
-  const totalSourceCount = await prisma.sourceDomain.count({
+  // Source domains count — will be recalculated later with unique citation domains
+  let totalSourceCount = await prisma.sourceDomain.count({
     where: { brandId },
   });
 
@@ -390,7 +391,33 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       }))
       .sort((a, b) => b.mentionCount - a.mentionCount);
 
-    // Merge: insert brand at correct position and take top 5
+    // Also include Sonar-discovered competitors from the competitors table
+    // that may not appear in scan results yet
+    for (const comp of competitors) {
+      const normalizedName = comp.name.trim();
+      if (!normalizedName) continue;
+      if (!compCounts[normalizedName]) {
+        // Competitor exists in DB but was not found in scan results — add with 0 mentions
+        compEntries.push({
+          name: normalizedName,
+          mentionCount: 0,
+          totalResults: totalResultCount,
+          isUser: false,
+          perPlatform: {
+            chatgpt: { mentioned: 0, total: 0 },
+            claude: { mentioned: 0, total: 0 },
+            gemini: { mentioned: 0, total: 0 },
+            perplexity: { mentioned: 0, total: 0 },
+            google_aio: { mentioned: 0, total: 0 },
+          },
+        });
+      }
+    }
+
+    // Re-sort after adding DB competitors
+    compEntries.sort((a, b) => b.mentionCount - a.mentionCount);
+
+    // Merge: insert brand at correct position and take top 10
     const merged = [...compEntries];
     // Find where brand should be inserted
     const brandPos = merged.findIndex((c) => c.mentionCount <= totalMentionCount);
@@ -399,9 +426,9 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     } else {
       merged.splice(brandPos, 0, brandEntry);
     }
-    competitorRanking = merged.slice(0, 5);
+    competitorRanking = merged.slice(0, 10);
 
-    // If brand is not in top 5, add it anyway
+    // If brand is not in top 10, add it anyway
     if (!competitorRanking.some((c) => c.isUser)) {
       competitorRanking.push(brandEntry);
     }
@@ -507,6 +534,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
         mentioned: true,
         excerpt: true,
         fullResponse: true,
+        citationSources: true,
         prompt: { select: { text: true } },
       },
     });
@@ -566,23 +594,46 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       const responseText = r.fullResponse ?? r.excerpt ?? "";
       if (!responseText) continue;
 
-      // Find a snippet around the brand name
+      // Find a snippet around the brand name — provide longer context
       const lowerResponse = responseText.toLowerCase();
       const brandIdx = lowerResponse.indexOf(brandNameLower);
       let snippet = "";
       if (brandIdx >= 0) {
-        const start = Math.max(0, brandIdx - 60);
-        const end = Math.min(responseText.length, brandIdx + brandName.length + 120);
+        const start = Math.max(0, brandIdx - 100);
+        const end = Math.min(responseText.length, brandIdx + brandName.length + 250);
         snippet = (start > 0 ? "..." : "") + responseText.slice(start, end).trim() + (end < responseText.length ? "..." : "");
       } else {
-        snippet = responseText.slice(0, 180).trim() + (responseText.length > 180 ? "..." : "");
+        snippet = responseText.slice(0, 350).trim() + (responseText.length > 350 ? "..." : "");
       }
 
       aiResponseExcerpts.push({
         platform: r.platform as PlatformKey,
         promptText: r.prompt.text,
         excerpt: snippet,
+        brandName,
       });
+    }
+
+    // Recalculate totalSourceCount as unique citation source domains
+    const uniqueDomains = new Set<string>();
+    for (const r of promptResultsWithText) {
+      const sources = r.citationSources;
+      if (Array.isArray(sources)) {
+        for (const s of sources) {
+          const domain = (s as { domain?: string; url?: string })?.domain
+            ?? (() => {
+              try {
+                return new URL((s as { url?: string })?.url ?? "").hostname;
+              } catch {
+                return null;
+              }
+            })();
+          if (domain) uniqueDomains.add(domain);
+        }
+      }
+    }
+    if (uniqueDomains.size > 0) {
+      totalSourceCount = uniqueDomains.size;
     }
   }
 
@@ -599,13 +650,48 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     orderBy: { feasibilityScore: "desc" },
   });
 
-  const easiestChecklistItems: ChecklistOverviewItem[] = allChecklistItems
-    .sort((a, b) => b.feasibilityScore - a.feasibilityScore)
-    .slice(0, 3);
+  // Easiest: sort by feasibilityScore DESC (highest = easiest)
+  const sortedByEasiest = [...allChecklistItems].sort(
+    (a, b) => b.feasibilityScore - a.feasibilityScore,
+  );
+  const easiestChecklistItems: ChecklistOverviewItem[] = sortedByEasiest.slice(0, 3);
 
-  const highImpactChecklistItems: ChecklistOverviewItem[] = [...allChecklistItems]
-    .filter((i) => i.impact === "HIGH")
-    .slice(0, 3);
+  // Highest impact: HIGH impact first, then by estimatedTime (shorter first)
+  // Exclude items already in "easiest" to ensure different lists
+  const easiestTitles = new Set(easiestChecklistItems.map((i) => i.simpleTitle));
+  const sortedByImpact = [...allChecklistItems]
+    .filter((i) => i.impact === "HIGH" && !easiestTitles.has(i.simpleTitle))
+    .sort((a, b) => {
+      // Sort by estimated time — parse "5 dk", "1 saat" etc.
+      const parseTime = (t: string | null): number => {
+        if (!t) return 999;
+        const match = t.match(/(\d+)/);
+        const num = match ? parseInt(match[1], 10) : 999;
+        if (t.includes("saat")) return num * 60;
+        return num;
+      };
+      return parseTime(a.estimatedTime) - parseTime(b.estimatedTime);
+    });
+
+  // If not enough HIGH impact items after excluding easiest ones, include non-HIGH too
+  let highImpactChecklistItems: ChecklistOverviewItem[] = sortedByImpact.slice(0, 3);
+  if (highImpactChecklistItems.length < 3) {
+    const usedTitles = new Set([
+      ...easiestTitles,
+      ...highImpactChecklistItems.map((i) => i.simpleTitle),
+    ]);
+    const remaining = allChecklistItems
+      .filter((i) => !usedTitles.has(i.simpleTitle))
+      .sort((a, b) => {
+        // Prefer MEDIUM over LOW
+        const impactOrder: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+        return (impactOrder[a.impact] ?? 2) - (impactOrder[b.impact] ?? 2);
+      });
+    highImpactChecklistItems = [
+      ...highImpactChecklistItems,
+      ...remaining.slice(0, 3 - highImpactChecklistItems.length),
+    ];
+  }
 
   // ── Source map for overview ─────────────────────────────
   const sourceDomains = await prisma.sourceDomain.findMany({

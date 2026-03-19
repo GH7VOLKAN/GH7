@@ -174,72 +174,77 @@ export function GenelBakisContent({
 
       {/* ── Platform cards row ──────────────────────────── */}
       <PageSection className="mt-2">
-        <Stagger className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5 sm:gap-3.5 sm:pb-0" staggerMs={80}>
-          {platformStats.map((stat) => {
-            const color = getPlatformColor(stat.platform);
-            const displayName = getPlatformDisplayName(stat.platform);
-            const isActive = stat.mentioned > 0;
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:gap-3.5 sm:pb-0">
+          <Stagger className="contents" staggerMs={80}>
+            {platformStats.map((stat) => {
+              const color = getPlatformColor(stat.platform);
+              const displayName = getPlatformDisplayName(stat.platform);
+              const isActive = stat.mentioned > 0;
+              const isError = stat.total === 0 && !isActive;
 
-            return (
-              <div
-                key={stat.platform}
-                className="kinde-card p-4 sm:p-5 lg:p-7 cursor-default min-w-[160px] sm:min-w-0 shrink-0 sm:shrink"
-                style={{
-                  borderColor: isActive ? `${color}30` : undefined,
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <PlatformLogo
-                    platform={stat.platform}
-                    size={36}
-                    mentioned={isActive}
-                  />
-                  <div
+              return (
+                <div
+                  key={stat.platform}
+                  className="kinde-card p-4 sm:p-5 lg:p-7 cursor-default flex-shrink-0 min-w-[120px] sm:min-w-0"
+                  style={{
+                    borderColor: isActive ? `${color}30` : undefined,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <PlatformLogo
+                      platform={stat.platform}
+                      size={36}
+                      mentioned={isActive}
+                    />
+                    <div
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        background: isActive ? "#22c55e" : isError ? "#f59e0b" : "#ef4444",
+                        flexShrink: 0,
+                      }}
+                    />
+                  </div>
+                  <p
                     style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      background: isActive ? "#22c55e" : "#ef4444",
-                      flexShrink: 0,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
+                      marginTop: 12,
                     }}
-                  />
+                  >
+                    {displayName}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 32,
+                      fontWeight: 800,
+                      color: isActive ? "var(--foreground)" : "#ddd",
+                      marginTop: 4,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {stat.mentioned}/{stat.total}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: isError ? "#f59e0b" : "var(--muted-foreground)",
+                      marginTop: 6,
+                    }}
+                  >
+                    {isActive
+                      ? `${stat.total} sorunun ${stat.mentioned}'${stat.mentioned > 1 ? "i" : "u"}nde oneriyor`
+                      : isError
+                        ? "Hata"
+                        : "Henuz tanimiyor"}
+                  </p>
                 </div>
-                <p
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
-                    marginTop: 12,
-                  }}
-                >
-                  {displayName}
-                </p>
-                <p
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 800,
-                    color: isActive ? "var(--foreground)" : "#ddd",
-                    marginTop: 4,
-                    lineHeight: 1,
-                  }}
-                >
-                  {stat.mentioned}/{stat.total}
-                </p>
-                <p
-                  style={{
-                    fontSize: 12,
-                    color: "var(--muted-foreground)",
-                    marginTop: 6,
-                  }}
-                >
-                  {isActive
-                    ? `${stat.total} sorunun ${stat.mentioned}'${stat.mentioned > 1 ? "i" : "u"}nde oneriyor`
-                    : "Henuz tanimiyor"}
-                </p>
-              </div>
-            );
-          })}
-        </Stagger>
+              );
+            })}
+          </Stagger>
+        </div>
       </PageSection>
 
       {/* ══════════════════════════════════════════════════════
@@ -290,14 +295,11 @@ export function GenelBakisContent({
                           </span>
                           <div className="flex items-center gap-1">
                             {PLATFORMS.map((plat) => (
-                              <div
+                              <PlatformLogo
                                 key={plat}
-                                style={{
-                                  width: 6,
-                                  height: 6,
-                                  borderRadius: "50%",
-                                  background: p.platformResults[plat] ? "#22c55e" : "#e5e5e5",
-                                }}
+                                platform={plat}
+                                size={16}
+                                mentioned={p.platformResults[plat]}
                               />
                             ))}
                           </div>
@@ -347,15 +349,11 @@ export function GenelBakisContent({
                           </span>
                           <div className="flex items-center gap-1">
                             {PLATFORMS.map((plat) => (
-                              <div
+                              <PlatformLogo
                                 key={plat}
-                                style={{
-                                  width: 6,
-                                  height: 6,
-                                  borderRadius: "50%",
-                                  background: "#ef4444",
-                                  opacity: 0.3,
-                                }}
+                                platform={plat}
+                                size={16}
+                                mentioned={false}
                               />
                             ))}
                           </div>
@@ -385,13 +383,13 @@ export function GenelBakisContent({
         <PageSection className="mt-12">
           <SectionTitle
             title="Senin yerine kim oneriliyor?"
-            subtitle="Yapay zekalarin senin yerine onerdigi ilk 5 firma"
+            subtitle="Yapay zekalarin senin yerine onerdigi firmalar"
           />
           <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
             <div className="flex flex-col gap-4 sm:gap-5">
-              {competitorRanking.slice(0, 5).map((entry, i) => {
+              {competitorRanking.slice(0, 10).map((entry, i) => {
                 const maxMentions = Math.max(
-                  ...competitorRanking.slice(0, 5).map((r) => r.mentionCount),
+                  ...competitorRanking.slice(0, 10).map((r) => r.mentionCount),
                   1
                 );
                 const pct = (entry.mentionCount / maxMentions) * 100;
@@ -512,38 +510,36 @@ export function GenelBakisContent({
             subtitle="Seni oneren platformlarin gercek yanitlarindan ornekler"
           />
           <div className="flex flex-col gap-4">
-            {aiResponseExcerpts.slice(0, 2).map((item, i) => {
+            {aiResponseExcerpts.slice(0, 3).map((item, i) => {
               const color = getPlatformColor(item.platform);
               const name = getPlatformDisplayName(item.platform);
+              // Bold the brand name in the excerpt
+              const brandRegex = item.brandName
+                ? new RegExp(`(${item.brandName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")
+                : null;
+              const excerptParts = brandRegex
+                ? item.excerpt.split(brandRegex)
+                : [item.excerpt];
+
               return (
-                <div key={i} className="kinde-card p-4 sm:p-6 lg:p-7 cursor-default">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <PlatformLogo platform={item.platform} size={24} mentioned />
-                    <p style={{ fontSize: 13, fontWeight: 600, color }}>
+                <div key={i} className="kinde-card border rounded-xl p-4 sm:p-6 lg:p-7 cursor-default">
+                  <div className="text-xs text-neutral-500 mb-2">Soru:</div>
+                  <p className="text-sm font-medium mb-3">
+                    &ldquo;{item.promptText}&rdquo;
+                  </p>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <PlatformLogo platform={item.platform} size={20} mentioned />
+                    <span className="text-xs font-medium" style={{ color }}>
                       {name} diyor ki:
-                    </p>
+                    </span>
                   </div>
-                  <div
-                    style={{
-                      background: "#f8f8f8",
-                      borderRadius: 12,
-                      padding: "14px 18px",
-                      borderLeft: `3px solid ${color}`,
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontSize: 13,
-                        color: "var(--foreground)",
-                        lineHeight: 1.7,
-                        fontStyle: "italic",
-                      }}
-                    >
-                      &ldquo;{item.excerpt}&rdquo;
-                    </p>
-                  </div>
-                  <p style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 8 }}>
-                    Soru: &ldquo;{item.promptText.length > 60 ? item.promptText.slice(0, 60) + "..." : item.promptText}&rdquo;
+                  <p className="text-sm text-neutral-600 leading-relaxed">
+                    &ldquo;{excerptParts.map((part, pi) =>
+                      brandRegex && part.toLowerCase() === item.brandName.toLowerCase()
+                        ? <strong key={pi}>{part}</strong>
+                        : <span key={pi}>{part}</span>
+                    )}&rdquo;
                   </p>
                 </div>
               );
