@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey, Sentiment } from "@/lib/types";
+import { extractCompetitorNames } from "@/lib/ai/types";
 
 export interface PlatformResult {
   platform: PlatformKey;
@@ -91,7 +92,7 @@ export const getPromptsData = cache(async (brandId: string) => {
     // Find top competitor for this prompt (from scan results)
     const allCompetitors: string[] = [];
     for (const r of p.results) {
-      const comps = Array.isArray(r.competitors) ? (r.competitors as string[]) : [];
+      const comps = extractCompetitorNames(r.competitors);
       allCompetitors.push(...comps);
     }
     const compCounts: Record<string, number> = {};

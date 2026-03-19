@@ -398,7 +398,7 @@ export default function LoginPage() {
 
             {step === "input" ? (
               <>
-                <h1 className="mt-6 text-2xl font-light tracking-[-0.04em]">
+                <h1 className="mt-6 text-xl sm:text-2xl font-light tracking-[-0.04em]">
                   Hesabınıza giriş yapın
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -407,7 +407,7 @@ export default function LoginPage() {
               </>
             ) : (
               <>
-                <h1 className="mt-6 text-2xl font-light tracking-[-0.04em]">
+                <h1 className="mt-6 text-xl sm:text-2xl font-light tracking-[-0.04em]">
                   Doğrulama kodu gönderildi
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -589,7 +589,7 @@ export default function LoginPage() {
           ) : (
             <>
               {/* OTP Verification */}
-              <div className="flex justify-center gap-2.5">
+              <div className="flex justify-center gap-1.5 sm:gap-2.5">
                 {otpDigits.map((digit, i) => (
                   <input
                     key={i}
@@ -603,7 +603,7 @@ export default function LoginPage() {
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
                     disabled={loading}
-                    className="h-14 w-11 rounded-xl border-[1.5px] border-border bg-background text-center text-xl font-bold transition-colors focus:border-foreground focus:outline-none disabled:opacity-50 sm:h-16 sm:w-12"
+                    className="h-12 w-10 rounded-lg border-[1.5px] border-border bg-background text-center text-lg font-bold transition-colors focus:border-foreground focus:outline-none disabled:opacity-50 sm:h-16 sm:w-12 sm:rounded-xl sm:text-xl"
                   />
                 ))}
               </div>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { extractCompetitorNames } from "./types";
 
 // Turkish character normalization — matches analyzer.ts
 function normalizeTurkish(text: string): string {
@@ -38,7 +39,7 @@ export async function updateCompetitorScores(
 
   const newCompNames = new Map<string, number>(); // name → mention count
   for (const r of results) {
-    const comps = Array.isArray(r.competitors) ? (r.competitors as string[]) : [];
+    const comps = extractCompetitorNames(r.competitors);
     for (const name of comps) {
       const trimmed = name.trim();
       if (!trimmed || trimmed.toLowerCase() === brandNameLower) continue;
@@ -101,7 +102,7 @@ export async function updateCompetitorScores(
       const inText = normalizeTurkish(textToSearch).includes(nameNorm);
 
       // Also check the competitors array from the analyzer
-      const inCompetitors = (Array.isArray(r.competitors) ? (r.competitors as string[]) : [])
+      const inCompetitors = extractCompetitorNames(r.competitors)
         .some((c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c)));
 
       if (inText || inCompetitors) {

@@ -146,8 +146,8 @@ export function RakiplerContent({
             title="Genel Sıralama"
             subtitle="Tüm platformlardaki toplam bahsedilme oranı"
           />
-          <div className="kinde-card p-6 lg:p-8" style={{ cursor: "default" }}>
-            <div className="flex flex-col gap-4">
+          <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
+            <div className="flex flex-col gap-3 sm:gap-4">
               {chartRows.map((row, i) => {
                 const maxScore = Math.max(
                   ...chartRows.map((r) => r.mentionScore),
@@ -157,8 +157,9 @@ export function RakiplerContent({
                 const position = i + 1;
 
                 return (
-                  <div key={row.id} className="flex items-center gap-3">
+                  <div key={row.id} className="flex items-center gap-2 sm:gap-3">
                     <span
+                      className="w-[80px] sm:w-[140px]"
                       style={{
                         width: 24,
                         fontSize: 12,
@@ -236,7 +237,7 @@ export function RakiplerContent({
           subtitle="Her yapay zekada senin ve rakiplerinin bahsedilme oranları"
         />
         <Stagger
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+          className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4 sm:gap-3.5 sm:pb-0"
           staggerMs={80}
         >
           {PLATFORMS.map((platform) => {
@@ -260,7 +261,7 @@ export function RakiplerContent({
             return (
               <div
                 key={platform}
-                className="kinde-card p-5 cursor-default"
+                className="kinde-card p-4 sm:p-5 cursor-default min-w-[220px] sm:min-w-0 shrink-0 sm:shrink"
                 style={{
                   borderColor: userRank === 1 ? `${color}30` : undefined,
                 }}
@@ -434,7 +435,7 @@ export function RakiplerContent({
             title="Ses Payı"
             subtitle="Yapay zekaların karar verirken kimi ne kadar öneriyor"
           />
-          <div className="kinde-card p-6 lg:p-8" style={{ cursor: "default" }}>
+          <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
             {/* Stacked bar */}
             <div
               style={{

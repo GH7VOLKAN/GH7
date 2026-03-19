@@ -112,8 +112,8 @@ export function GenelBakisContent({
       >
         {/* Large progress indicator */}
         <div className="flex flex-col items-center gap-3">
-          <div className="relative" style={{ width: 200, height: 200 }}>
-            <svg viewBox="0 0 200 200" width="200" height="200">
+          <div className="relative w-[160px] h-[160px] sm:w-[200px] sm:h-[200px]">
+            <svg viewBox="0 0 200 200" className="w-full h-full">
               {/* Background circle */}
               <circle
                 cx="100"
@@ -140,7 +140,7 @@ export function GenelBakisContent({
             <div
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
-              <span style={{ fontSize: 40, fontWeight: 800, color: "var(--foreground)", lineHeight: 1 }}>
+              <span className="text-[32px] sm:text-[40px]" style={{ fontWeight: 800, color: "var(--foreground)", lineHeight: 1 }}>
                 %<AnimatedNumber value={mentionRate} />
               </span>
               <span style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4 }}>
@@ -153,7 +153,7 @@ export function GenelBakisContent({
 
       {/* ── Platform cards row ──────────────────────────── */}
       <PageSection className="mt-2">
-        <Stagger className="grid grid-cols-2 lg:grid-cols-5 gap-3.5" staggerMs={80}>
+        <Stagger className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5 sm:gap-3.5 sm:pb-0" staggerMs={80}>
           {platformStats.map((stat) => {
             const color = getPlatformColor(stat.platform);
             const displayName = getPlatformDisplayName(stat.platform);
@@ -162,7 +162,7 @@ export function GenelBakisContent({
             return (
               <div
                 key={stat.platform}
-                className="kinde-card p-5 lg:p-7 cursor-default"
+                className="kinde-card p-4 sm:p-5 lg:p-7 cursor-default min-w-[160px] sm:min-w-0 shrink-0 sm:shrink"
                 style={{
                   borderColor: isActive ? `${color}30` : undefined,
                 }}
@@ -231,7 +231,7 @@ export function GenelBakisContent({
           subtitle="Son 4 haftada yapay zekalarin seni ne kadar tanidigi"
         />
         {isPro ? (
-          <div className="kinde-card p-6 lg:p-8" style={{ cursor: "default" }}>
+          <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
             {weeklyTrend.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={weeklyTrend} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
@@ -338,8 +338,8 @@ export function GenelBakisContent({
             title="Senin yerine kim oneriliyor?"
             subtitle="Yapay zekalarin senin yerine onerdigi ilk 3 firma"
           />
-          <div className="kinde-card p-6 lg:p-8" style={{ cursor: "default" }}>
-            <div className="flex flex-col gap-5">
+          <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
+            <div className="flex flex-col gap-4 sm:gap-5">
               {competitorRanking.slice(0, 3).map((entry, i) => {
                 const maxMentions = Math.max(
                   ...competitorRanking.slice(0, 3).map((r) => r.mentionCount),
@@ -368,9 +368,25 @@ export function GenelBakisContent({
                         {i + 1}
                       </span>
                       <span
+                        className="hidden sm:inline"
                         style={{
                           width: 120,
                           fontSize: 13,
+                          fontWeight: entry.isUser ? 700 : 400,
+                          color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {entry.isUser ? `${entry.name} (Sen)` : entry.name}
+                      </span>
+                      <span
+                        className="sm:hidden"
+                        style={{
+                          width: 80,
+                          fontSize: 12,
                           fontWeight: entry.isUser ? 700 : 400,
                           color: entry.isUser ? "var(--foreground)" : "var(--muted-foreground)",
                           overflow: "hidden",
@@ -403,7 +419,7 @@ export function GenelBakisContent({
                       </span>
                     </div>
                     {/* Per-platform mini logos */}
-                    <div className="flex items-center gap-2 mt-1.5" style={{ paddingLeft: 24 + 120 + 24 }}>
+                    <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 overflow-x-auto" style={{ paddingLeft: 36 }}>
                       {PLATFORMS.map((p) => {
                         const stat = entry.perPlatform[p];
                         const mentioned = stat?.mentioned ?? 0;
@@ -451,7 +467,7 @@ export function GenelBakisContent({
             subtitle="En cok etki yaratacak adim"
           />
           <div
-            className="kinde-card p-6 lg:p-8 flex flex-col sm:flex-row items-start gap-4"
+            className="kinde-card p-4 sm:p-6 lg:p-8 flex flex-col sm:flex-row items-start gap-3 sm:gap-4"
             style={{ cursor: "default" }}
           >
             <div
@@ -491,10 +507,10 @@ export function GenelBakisContent({
         />
         {isPro ? (
           <div
-            className="kinde-card p-6 lg:p-8"
+            className="kinde-card p-4 sm:p-6 lg:p-8"
             style={{ cursor: "default" }}
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
               <div
                 className="flex items-center justify-center rounded-2xl shrink-0"
                 style={{ width: 48, height: 48, background: "#f0f0f0" }}
@@ -625,7 +641,7 @@ function QuickStatCard({
   suffix?: string;
 }) {
   return (
-    <div className="kinde-card p-5 lg:p-6 cursor-default">
+    <div className="kinde-card p-4 sm:p-5 lg:p-6 cursor-default">
       <div
         className="flex items-center justify-center rounded-xl"
         style={{ width: 34, height: 34, background: "#f5f5f5" }}
@@ -643,8 +659,8 @@ function QuickStatCard({
         {label}
       </p>
       <p
+        className="text-[24px] sm:text-[28px]"
         style={{
-          fontSize: 28,
           fontWeight: 800,
           color: "var(--foreground)",
           marginTop: 2,

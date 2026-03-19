@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey, Sentiment } from "@/lib/types";
+import { extractCompetitorNames } from "@/lib/ai/types";
 
 export interface RecentMention {
   id: string;
@@ -290,7 +291,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     // Count how many times each competitor name appears across all results
     const compCounts: Record<string, { total: number; perPlatform: Record<PlatformKey, { mentioned: number; total: number }> }> = {};
     for (const r of allScanResults) {
-      const comps = Array.isArray(r.competitors) ? (r.competitors as string[]) : [];
+      const comps = extractCompetitorNames(r.competitors);
       for (const name of comps) {
         const key = name.trim();
         if (!key) continue;

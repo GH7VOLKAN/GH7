@@ -336,27 +336,27 @@ export default function OnboardPage() {
         </div>
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24">
           <div className="w-full max-w-2xl text-center">
-            <h1 className="font-inter text-4xl font-light tracking-[-0.04em] text-foreground md:text-5xl lg:text-6xl">
+            <h1 className="font-inter text-2xl font-light tracking-[-0.04em] text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
               Yapay Zeka Seni<br /><span className="font-semibold">Tanıyor mu?</span>
             </h1>
             <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
               1-2 dakikada öğren. Markanızın ChatGPT, Claude, Gemini, Perplexity ve Google AI&apos;daki görünürlüğünü ölçün.
             </p>
-            <div className="mx-auto mt-14 grid max-w-xl gap-5 sm:grid-cols-2">
-              <button type="button" onClick={() => handleTypeSelect("firma")} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white p-7 text-left shadow-sm transition-all hover:border-foreground hover:shadow-lg">
+            <div className="mx-auto mt-8 sm:mt-14 grid max-w-xl gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2">
+              <button type="button" onClick={() => handleTypeSelect("firma")} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white p-5 sm:p-7 text-left shadow-sm transition-all hover:border-foreground hover:shadow-lg">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-foreground/5 transition-colors group-hover:bg-foreground group-hover:text-background"><BuildingIcon className="size-6" /></div>
                 <h3 className="mt-5 text-lg font-semibold tracking-[-0.02em]">Şirket / Kurum</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Şirket, marka veya kurum için yapay zeka görünürlük takibi</p>
                 <ArrowRightIcon className="absolute right-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/20 transition-all group-hover:right-4 group-hover:text-foreground" />
               </button>
-              <button type="button" onClick={() => handleTypeSelect("kisisel")} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white p-7 text-left shadow-sm transition-all hover:border-foreground hover:shadow-lg">
+              <button type="button" onClick={() => handleTypeSelect("kisisel")} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white p-5 sm:p-7 text-left shadow-sm transition-all hover:border-foreground hover:shadow-lg">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-foreground/5 transition-colors group-hover:bg-foreground group-hover:text-background"><UserIcon className="size-6" /></div>
                 <h3 className="mt-5 text-lg font-semibold tracking-[-0.02em]">Kişisel Marka</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Bireysel tanınırlık ve kişisel görünürlük analizi</p>
                 <ArrowRightIcon className="absolute right-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/20 transition-all group-hover:right-4 group-hover:text-foreground" />
               </button>
             </div>
-            <div className="mt-14 flex flex-wrap items-center justify-center gap-7 text-xs text-muted-foreground/50">
+            <div className="mt-8 sm:mt-14 flex flex-wrap items-center justify-center gap-4 sm:gap-7 text-xs text-muted-foreground/50">
               <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />Ücretsiz başla</span>
               <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />Kredi kartı gerekmez</span>
               <span className="flex items-center gap-1.5"><CheckIcon className="size-3.5" />2 dakikada kurulum</span>
@@ -451,7 +451,7 @@ export default function OnboardPage() {
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24">
           <div className="w-full max-w-md text-center">
             <div className="mx-auto flex size-20 items-center justify-center rounded-2xl border border-border/50 bg-white shadow-sm"><SparklesIcon className="size-8 animate-pulse text-foreground" /></div>
-            <h1 className="mt-10 font-inter text-3xl font-light tracking-[-0.04em] md:text-4xl">{isFirma ? "Siteniz Analiz Ediliyor" : "Profiliniz Araştırılıyor"}</h1>
+            <h1 className="mt-8 sm:mt-10 font-inter text-2xl font-light tracking-[-0.04em] sm:text-3xl md:text-4xl">{isFirma ? "Siteniz Analiz Ediliyor" : "Profiliniz Araştırılıyor"}</h1>
             <p className="mt-4 text-base text-muted-foreground">
               <span className="font-medium text-foreground">{isFirma ? domain : kisiselName}</span> yapay zeka ile araştırılıyor
             </p>
@@ -502,7 +502,7 @@ export default function OnboardPage() {
             <div className="mt-8 space-y-6">
               <EditableChipSection title="Faaliyet Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedCategories} onRemove={removeCategory} inputValue={newCategoryInput} onInputChange={setNewCategoryInput} onAdd={addCategory} placeholder="Yeni alan ekle..." chipClass={chipClass} inputClass={inputClass} />
 
-              <div className="rounded-2xl border border-border/50 bg-white p-6 shadow-sm">
+              <div className="rounded-2xl border border-border/50 bg-white p-4 sm:p-6 shadow-sm">
                 <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold tracking-[-0.01em]">Rakipler ({approvedCompetitors.length})</h2><p className="mt-0.5 text-xs text-muted-foreground">Bu markalarla kıyaslanacaksınız</p></div></div>
                 <div className="mt-4 space-y-2.5">
                   {approvedCompetitors.map((comp, i) => (
@@ -515,10 +515,10 @@ export default function OnboardPage() {
                   ))}
                   {approvedCompetitors.length === 0 && <p className="text-xs text-muted-foreground/50">Rakip bulunamadı</p>}
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <input type="text" value={newCompetitorName} onChange={(e) => setNewCompetitorName(e.target.value)} placeholder="Rakip adı" className="flex-1 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
-                  <input type="text" value={newCompetitorDomain} onChange={(e) => setNewCompetitorDomain(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCompetitor())} placeholder="domain.com" className="w-36 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
-                  <button type="button" onClick={addCompetitor} className="flex items-center gap-1.5 rounded-xl border border-border/50 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50"><PlusIcon className="size-3.5" />Ekle</button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <input type="text" value={newCompetitorName} onChange={(e) => setNewCompetitorName(e.target.value)} placeholder="Rakip adı" className="flex-1 min-w-[120px] rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
+                  <input type="text" value={newCompetitorDomain} onChange={(e) => setNewCompetitorDomain(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCompetitor())} placeholder="domain.com" className="w-full sm:w-36 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
+                  <button type="button" onClick={addCompetitor} className="flex items-center gap-1.5 rounded-xl border border-border/50 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50 w-full sm:w-auto justify-center"><PlusIcon className="size-3.5" />Ekle</button>
                 </div>
               </div>
 
@@ -562,7 +562,7 @@ export default function OnboardPage() {
               </div>
             </div>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-3">
+            <div className="mt-8 grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-3">
               <div><label className="text-xs font-medium text-muted-foreground">Ad Soyad</label><input type="text" value={approvedKisiselName} onChange={(e) => setApprovedKisiselName(e.target.value)} className={`mt-1.5 ${inputClass}`} /></div>
               <div><label className="text-xs font-medium text-muted-foreground">Meslek</label><input type="text" value={approvedProfession} onChange={(e) => setApprovedProfession(e.target.value)} className={`mt-1.5 ${inputClass}`} /></div>
               <div><label className="text-xs font-medium text-muted-foreground">Şehir</label><input type="text" value={approvedCity} onChange={(e) => setApprovedCity(e.target.value)} className={`mt-1.5 ${inputClass}`} /></div>
@@ -571,7 +571,7 @@ export default function OnboardPage() {
             <div className="mt-8 space-y-6">
               <EditableChipSection title="Uzmanlık Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedSpecialties} onRemove={removeSpecialty} inputValue={newSpecialtyInput} onInputChange={setNewSpecialtyInput} onAdd={addSpecialty} placeholder="Yeni uzmanlık ekle..." chipClass={chipClass} inputClass={inputClass} />
 
-              <div className="rounded-2xl border border-border/50 bg-white p-6 shadow-sm">
+              <div className="rounded-2xl border border-border/50 bg-white p-4 sm:p-6 shadow-sm">
                 <h2 className="text-sm font-semibold tracking-[-0.01em]">Senin Yerine Önerilen Kişiler ({approvedKisiselCompetitors.length})</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">Bu kişilerle kıyaslanacaksınız</p>
                 <div className="mt-4 space-y-2.5">
@@ -584,9 +584,9 @@ export default function OnboardPage() {
                   ))}
                   {approvedKisiselCompetitors.length === 0 && <p className="text-xs text-muted-foreground/50">Henüz kimse bulunamadı</p>}
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <input type="text" value={newKisiselCompInput} onChange={(e) => setNewKisiselCompInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKisiselComp())} placeholder="Kişi adı ekle..." className="flex-1 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
-                  <button type="button" onClick={addKisiselComp} className="flex items-center gap-1.5 rounded-xl border border-border/50 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50"><PlusIcon className="size-3.5" />Ekle</button>
+                <div className="mt-4 flex flex-wrap sm:flex-nowrap gap-2">
+                  <input type="text" value={newKisiselCompInput} onChange={(e) => setNewKisiselCompInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKisiselComp())} placeholder="Kişi adı ekle..." className="flex-1 min-w-0 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
+                  <button type="button" onClick={addKisiselComp} className="flex items-center gap-1.5 rounded-xl border border-border/50 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50 shrink-0"><PlusIcon className="size-3.5" />Ekle</button>
                 </div>
               </div>
 
@@ -653,7 +653,7 @@ export default function OnboardPage() {
               }
             </div>
 
-            <h1 className="mt-10 font-inter text-3xl font-light tracking-[-0.04em] md:text-4xl">
+            <h1 className="mt-8 sm:mt-10 font-inter text-2xl font-light tracking-[-0.04em] sm:text-3xl md:text-4xl">
               {analysisPhase >= 5 ? "Her Şey Hazır!" : "Analiziniz Hazırlanıyor"}
             </h1>
             <p className="mt-4 text-base text-muted-foreground">
@@ -743,7 +743,7 @@ function EditableChipSection({ title, subtitle, items, onRemove, inputValue, onI
   placeholder: string; chipClass: string; inputClass: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/50 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-border/50 bg-white p-4 sm:p-6 shadow-sm">
       <h2 className="text-sm font-semibold tracking-[-0.01em]">{title}</h2>
       <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -755,9 +755,9 @@ function EditableChipSection({ title, subtitle, items, onRemove, inputValue, onI
         ))}
         {items.length === 0 && <span className="text-xs text-muted-foreground/50">Henüz bulunamadı</span>}
       </div>
-      <div className="mt-4 flex gap-2">
-        <input type="text" value={inputValue} onChange={(e) => onInputChange(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onAdd())} placeholder={placeholder} className="flex-1 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
-        <button type="button" onClick={onAdd} className="flex items-center gap-1.5 rounded-xl border border-border/50 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50"><PlusIcon className="size-3.5" />Ekle</button>
+      <div className="mt-4 flex flex-wrap sm:flex-nowrap gap-2">
+        <input type="text" value={inputValue} onChange={(e) => onInputChange(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onAdd())} placeholder={placeholder} className="flex-1 min-w-0 rounded-xl border border-border/60 bg-white px-3.5 py-2.5 text-sm focus:border-foreground focus:ring-2 focus:ring-foreground/5 focus:outline-none transition-all" />
+        <button type="button" onClick={onAdd} className="flex items-center gap-1.5 rounded-xl border border-border/50 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/50 shrink-0"><PlusIcon className="size-3.5" />Ekle</button>
       </div>
     </div>
   );

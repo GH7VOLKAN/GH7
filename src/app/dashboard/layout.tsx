@@ -56,7 +56,7 @@ export default async function DashboardLayout({
         {/* Analysis progress banner — shows only during active scans */}
         {brandId && <AnalysisBanner brandId={brandId} />}
         {/* Kinde-style main content area — centered, max-width, fafafa bg */}
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
           <div className="mx-auto w-full max-w-[880px] px-4 lg:px-6">
             {children}
           </div>

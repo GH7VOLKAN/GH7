@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey } from "@/lib/types";
+import { extractCompetitorNames } from "@/lib/ai/types";
 
 // Turkish character normalization — consistent with analyzer.ts
 function normalizeTurkish(text: string): string {
@@ -140,9 +141,9 @@ export const getCompetitorsData = cache(async (brandId: string) => {
         const inText = normalizeTurkish(textToSearch).includes(nameNorm);
 
         // Also check the competitors array from the analyzer
-        const inCompetitors = (r.competitors as string[])?.some(
+        const inCompetitors = extractCompetitorNames(r.competitors).some(
           (c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c))
-        ) ?? false;
+        );
 
         if (inText || inCompetitors) {
           platCounts[r.platform].mentioned++;
@@ -276,9 +277,9 @@ export const getCompetitorsData = cache(async (brandId: string) => {
       const count = allResults.filter((r) => {
         const textToSearch = r.fullResponse ?? r.excerpt ?? "";
         const inText = normalizeTurkish(textToSearch).includes(nameNorm);
-        const inCompetitors = (r.competitors as string[])?.some(
+        const inCompetitors = extractCompetitorNames(r.competitors).some(
           (c: string) => normalizeTurkish(c).includes(nameNorm) || nameNorm.includes(normalizeTurkish(c))
-        ) ?? false;
+        );
         return inText || inCompetitors;
       }).length;
       competitorSovEntries.push({ name: comp.name, count });
@@ -351,7 +352,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
       }
       entry.platforms.push(r.platform);
       if (r.mentioned) entry.mentioned = true;
-      for (const comp of r.competitors) {
+      for (const comp of extractCompetitorNames(r.competitors)) {
         entry.competitorCounts.set(comp, (entry.competitorCounts.get(comp) ?? 0) + 1);
       }
     }
