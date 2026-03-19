@@ -48,12 +48,12 @@ export function ProUpgradeCard({ type, plan, competitorName }: ProUpgradeCardPro
     : msg.desc;
 
   return (
-    <div className="mx-4 lg:mx-6 rounded-2xl border border-border/50 bg-white p-8 text-center dark:bg-card">
-      <p className="text-lg font-semibold text-foreground">{msg.title}</p>
+    <div className="rounded-2xl border border-border/50 bg-white p-5 sm:p-8 text-center dark:bg-card">
+      <p className="text-base sm:text-lg font-semibold text-foreground">{msg.title}</p>
       <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">{desc}</p>
       <Link
         href="/dashboard/ayarlar"
-        className="mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-8 py-3 text-sm font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-6 sm:px-8 py-3 text-xs sm:text-sm font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
       >
         {msg.cta} → 2.495₺/ay
         <ArrowRightIcon className="size-4" />

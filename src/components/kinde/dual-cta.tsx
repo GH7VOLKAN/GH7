@@ -47,8 +47,8 @@ export function DualCTA({ contextMessage, platformCount, plan }: DualCTAProps) {
                 background: "#fff",
                 border: "1px solid #eee",
                 borderRadius: 20,
-                padding: 24,
               }}
+              className="p-4 sm:p-6"
             >
               <p
                 style={{
@@ -118,6 +118,7 @@ export function DualCTA({ contextMessage, platformCount, plan }: DualCTAProps) {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   gap: 6,
                   background: "#111",
                   color: "#fff",
@@ -128,7 +129,7 @@ export function DualCTA({ contextMessage, platformCount, plan }: DualCTAProps) {
                   textDecoration: "none",
                   transition: "transform 0.15s ease",
                 }}
-                className="hover:scale-[1.02] active:scale-[0.98]"
+                className="hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
               >
                 Takibe başla →
               </Link>
@@ -140,8 +141,8 @@ export function DualCTA({ contextMessage, platformCount, plan }: DualCTAProps) {
                 background: "#f8f8f8",
                 border: "1px solid #eee",
                 borderRadius: 20,
-                padding: 24,
               }}
+              className="p-4 sm:p-6"
             >
               <p
                 style={{
@@ -185,6 +186,7 @@ export function DualCTA({ contextMessage, platformCount, plan }: DualCTAProps) {
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
+                    justifyContent: "center",
                     gap: 6,
                     background: "#111",
                     color: "#fff",
@@ -196,7 +198,7 @@ export function DualCTA({ contextMessage, platformCount, plan }: DualCTAProps) {
                     cursor: "pointer",
                     transition: "transform 0.15s ease",
                   }}
-                  className="hover:scale-[1.02] active:scale-[0.98]"
+                  className="hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
                 >
                   Sizi Arayalım
                 </button>
@@ -257,12 +259,12 @@ function CallRequestPopup({ onClose }: { onClose: () => void }) {
         style={{
           background: "#fff",
           borderRadius: 20,
-          padding: 32,
           maxWidth: 384,
           width: "100%",
           margin: "0 16px",
           position: "relative",
         }}
+        className="p-5 sm:p-8"
       >
         {!submitted ? (
           <>

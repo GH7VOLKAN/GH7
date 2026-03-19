@@ -128,7 +128,7 @@ export function PaketlerContent({ plan }: PaketlerContentProps) {
             return (
               <div
                 key={pkg.name}
-                className="kinde-card p-6 flex flex-col relative"
+                className="kinde-card p-4 sm:p-6 flex flex-col relative"
                 style={{
                   borderColor: pkg.popular ? "#111" : undefined,
                   borderWidth: pkg.popular ? 2 : 1,
@@ -216,7 +216,7 @@ export function PaketlerContent({ plan }: PaketlerContentProps) {
           {ADD_ON_SERVICES.map((svc) => {
             const Icon = svc.icon;
             return (
-              <div key={svc.name} className="kinde-card p-5 flex items-start gap-4">
+              <div key={svc.name} className="kinde-card p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
                 <div
                   className="flex items-center justify-center rounded-xl shrink-0"
                   style={{ width: 40, height: 40, background: "#f5f5f5" }}
@@ -247,7 +247,7 @@ export function PaketlerContent({ plan }: PaketlerContentProps) {
 
       {/* ── CTA ───────────────────────────────────────── */}
       <FadeIn className="mt-12">
-        <div className="kinde-card p-8 text-center" style={{ cursor: "default" }}>
+        <div className="kinde-card p-5 sm:p-8 text-center" style={{ cursor: "default" }}>
           <p style={{ fontSize: 20, fontWeight: 700, color: "var(--foreground)" }}>
             Hangi paket size uygun?
           </p>

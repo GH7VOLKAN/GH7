@@ -110,9 +110,21 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
   html {
     @apply font-sans;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+}
+
+/* Mobile: break long words/URLs */
+@media (max-width: 640px) {
+  * {
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }
 

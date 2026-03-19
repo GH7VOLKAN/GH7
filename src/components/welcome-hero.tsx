@@ -98,12 +98,12 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
 
   return (
     <div className="px-4 lg:px-6">
-      <div className="mx-auto max-w-2xl py-16 text-center">
+      <div className="mx-auto max-w-2xl py-10 sm:py-16 text-center">
         {/* Hero */}
-        <h1 className="text-4xl font-light tracking-[-0.04em] md:text-5xl">
+        <h1 className="text-2xl sm:text-4xl font-light tracking-[-0.04em] md:text-5xl">
           Hoş Geldiniz!
         </h1>
-        <p className="mt-3 text-xl font-semibold tracking-tight md:text-2xl">
+        <p className="mt-3 text-lg sm:text-xl font-semibold tracking-tight md:text-2xl">
           İlk Taramanızı Başlatın
         </p>
         <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground leading-relaxed">
@@ -113,13 +113,13 @@ export function WelcomeHero({ brandId, brandName, activePromptCount }: WelcomeHe
         </p>
 
         {/* 3-Step Visual */}
-        <div className="mx-auto mt-14 grid max-w-xl gap-4 sm:grid-cols-3">
+        <div className="mx-auto mt-8 sm:mt-14 grid max-w-xl gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           {steps.map((s, i) => {
             const Icon = s.icon;
             return (
               <div
                 key={i}
-                className={`relative rounded-2xl border p-6 text-center transition-all ${
+                className={`relative rounded-2xl border p-4 sm:p-6 text-center transition-all ${
                   s.done
                     ? "border-foreground/20 bg-foreground/[0.03]"
                     : s.active
