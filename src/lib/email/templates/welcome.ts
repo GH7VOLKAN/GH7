@@ -35,7 +35,7 @@ export function welcomeTemplate(name?: string): string {
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr>
               <td style="width:28px;height:28px;background-color:#f4f4f5;border-radius:50%;text-align:center;vertical-align:middle;font-size:12px;font-weight:700;color:#71717a;">2</td>
-              <td style="padding-left:12px;font-size:13px;color:#09090b;font-weight:600;">4 yapay zekadaki sonuçlarınızı görün</td>
+              <td style="padding-left:12px;font-size:13px;color:#09090b;font-weight:600;">5 yapay zekadaki sonuçlarınızı görün</td>
             </tr>
           </table>
         </td>

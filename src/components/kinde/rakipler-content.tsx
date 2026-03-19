@@ -71,9 +71,10 @@ export function RakiplerContent({
   maxVisibleCompetitors,
 }: RakiplerContentProps) {
   const userRow = rows.find((r) => r.isUser);
-  const competitorRows = rows.filter((r) => !r.isUser);
+  const competitorRows = rows.filter((r) => !r.isUser)
+    .sort((a, b) => b.mentionScore - a.mentionScore);
 
-  // Sorted rows for the bar chart (user + all competitors)
+  // Sorted rows for the bar chart (user + all competitors), sorted by mentions descending
   const chartRows = [
     ...(userRow ? [userRow] : []),
     ...competitorRows,
@@ -153,25 +154,51 @@ export function RakiplerContent({
                   1
                 );
                 const pct = (row.mentionScore / maxScore) * 100;
+                const position = i + 1;
 
                 return (
                   <div key={row.id} className="flex items-center gap-2 sm:gap-3">
                     <span
                       className="w-[80px] sm:w-[140px]"
                       style={{
-                        fontSize: 13,
-                        fontWeight: row.isUser ? 700 : 400,
-                        color: row.isUser
-                          ? "var(--foreground)"
-                          : "var(--muted-foreground)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        width: 24,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: row.isUser ? "var(--foreground)" : "var(--muted-foreground)",
+                        textAlign: "center",
                         flexShrink: 0,
                       }}
                     >
-                      {row.isUser ? `${row.name} (Sen)` : row.name}
+                      {position}.
                     </span>
+                    <div style={{ width: 140, flexShrink: 0 }}>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: row.isUser ? 700 : 400,
+                          color: row.isUser
+                            ? "var(--foreground)"
+                            : "var(--muted-foreground)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          display: "block",
+                        }}
+                      >
+                        {row.isUser ? `${row.name} (Sen)` : row.name}
+                      </span>
+                      {row.domain && (
+                        <a
+                          href={`https://${row.domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-neutral-500 hover:text-neutral-900 underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {row.domain} &#x2197;
+                        </a>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <AnimBar
                         percent={pct}

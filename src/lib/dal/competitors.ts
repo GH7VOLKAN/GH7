@@ -163,7 +163,7 @@ export const getCompetitorsData = cache(async (brandId: string) => {
     }
   }
 
-  const rows: CompetitorRowData[] = [
+  const unsortedRows: CompetitorRowData[] = [
     {
       id: "user",
       name: brand?.name ?? "Siz",
@@ -197,6 +197,9 @@ export const getCompetitorsData = cache(async (brandId: string) => {
       source: c.source ?? "manual",
     })),
   ];
+
+  // Sort all rows (user + competitors) by mention score descending
+  const rows = unsortedRows.sort((a, b) => b.mentionScore - a.mentionScore);
 
   // Populate readiness gaps from audit checks that are failing/partial
   const failingChecks = await prisma.auditCheck.findMany({

@@ -658,16 +658,16 @@ export default function LoginPage() {
           </h2>
 
           <p className="mt-4 text-sm leading-relaxed text-background/50">
-            Müşterilerin artık yapay zekaya soruyor. ChatGPT, Claude, Gemini ve
-            Perplexity — seni öneriyorlar mı?
+            Müşterilerin artık yapay zekaya soruyor. ChatGPT, Claude, Gemini,
+            Perplexity ve Google AI — seni öneriyorlar mı?
           </p>
 
           <div className="mt-10 space-y-5">
             {[
               {
                 step: "1",
-                title: "Adını yaz",
-                desc: "30 saniyede 4 yapay zekaya sorarız.",
+                title: "Adını veya firmanı yaz",
+                desc: "1-2 dakikada 5 yapay zekaya sorarız.",
               },
               {
                 step: "2",
@@ -698,8 +698,8 @@ export default function LoginPage() {
 
           <div className="mt-10 flex items-center gap-6 border-t border-background/10 pt-8">
             {[
-              { label: "Yapay Zeka", value: "4" },
-              { label: "Sonuç Süresi", value: "30sn" },
+              { label: "Yapay Zeka", value: "5" },
+              { label: "Sonuç Süresi", value: "1-2 dk" },
               { label: "Ücretsiz", value: "Başla" },
             ].map((stat) => (
               <div key={stat.label}>

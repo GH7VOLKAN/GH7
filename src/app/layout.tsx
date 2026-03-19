@@ -20,7 +20,7 @@ const dmSans = DM_Sans({
 const siteUrl = "https://app.gh7.ai";
 const siteTitle = "GH7.ai — Yapay Zeka Seni Tanıyor mu?";
 const siteDescription =
-  "Yapay zekaların sizi ne kadar tanıdığını öğrenin. ChatGPT, Claude, Gemini ve Perplexity'de görünürlüğünüzü takip edin.";
+  "Yapay zekaların sizi ne kadar tanıdığını öğrenin. ChatGPT, Claude, Gemini, Perplexity ve Google AI'da görünürlüğünüzü takip edin.";
 
 export const metadata: Metadata = {
   title: siteTitle,

@@ -138,7 +138,7 @@ export function PromptStatsCards({
               {promptItems.length} prompt üzerinden hesaplandı
             </div>
             <div className="text-muted-foreground">
-              4 yapay zekada ortalama bahsedilme oranı
+              5 yapay zekada ortalama bahsedilme oranı
             </div>
           </CardFooter>
         </Card>

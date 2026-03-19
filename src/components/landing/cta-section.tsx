@@ -33,7 +33,7 @@ export function CtaSection() {
             lineHeight: 1.6,
           }}
         >
-          30 saniyede öğren. Tamamen ücretsiz.
+          1-2 dakikada öğren. Tamamen ücretsiz.
         </p>
 
         <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>

@@ -282,7 +282,7 @@ function buildVerificationPrompt(
     "2.6": `"${entity}" hakkında müşteri yorumları var mı? Google Reviews, Trustpilot vb.`,
     "2.7": `"${domain}" web sitesinde güvenilirlik işaretleri (hakkımızda, iletişim, sertifikalar) var mı?`,
     "2.8": `"${entity}" hakkında güvenilir kaynaklarda (haber, sektörel yayın) bahsediliyor mu?`,
-    "3.1": `"${entity}" ChatGPT, Claude, Gemini ve Perplexity'de sorgulandığında bahsediliyor mu?`,
+    "3.1": `"${entity}" ChatGPT, Claude, Gemini, Perplexity ve Google AI'da sorgulandığında bahsediliyor mu?`,
     "3.2": `"${entity}" rakiplerine kıyasla daha çok mu kaynağı var?`,
     "3.3": `"${entity}" yapay zeka cevaplarında kaynak olarak gösteriliyor mu (citation)?`,
     "3.4": `"${entity}" sektöründe otorite/uzman olarak kabul ediliyor mu?`,

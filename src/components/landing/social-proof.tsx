@@ -1,8 +1,8 @@
 "use client";
 
 const stats = [
-  { value: "4", label: "Yapay Zeka Platformu" },
-  { value: "30sn", label: "Sonuç Süresi" },
+  { value: "5", label: "Yapay Zeka Platformu" },
+  { value: "1-2 dk", label: "Sonuç Süresi" },
   { value: "1,247+", label: "Aktif Kullanıcı" },
   { value: "%99", label: "Doğruluk Oranı" },
 ];

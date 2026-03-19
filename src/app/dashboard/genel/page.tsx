@@ -2,6 +2,7 @@ import { WelcomeHero } from "@/components/welcome-hero";
 import { GenelBakisContent } from "@/components/kinde/genel-bakis-content";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getOverviewData } from "@/lib/dal/overview";
+import { getLastScanInfo } from "@/lib/dal/scans";
 
 export default async function GenelPage() {
   const activeBrand = await getActiveBrand();
@@ -21,11 +22,13 @@ export default async function GenelPage() {
 
   // Show welcome state if no scan has ever been run
   if (data.totalResultCount === 0) {
+    const scanInfo = await getLastScanInfo(brandId);
     return (
       <WelcomeHero
         brandId={brandId}
         brandName={brandName}
         activePromptCount={data.activePromptCount}
+        scanAlreadyRunning={scanInfo.isRunning}
       />
     );
   }

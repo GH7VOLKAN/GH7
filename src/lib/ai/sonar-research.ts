@@ -350,7 +350,10 @@ export async function researchOnboardingDomain(
       merged.set(key, c);
     }
   }
-  const competitorEntries = filterTurkishCompetitors([...merged.values()]).slice(0, 10);
+  const competitorEntries = filterTurkishCompetitors([...merged.values()])
+    .filter((c) => isValidCompetitorName(c.name))
+    .filter((c) => !isOwnBrand(c.name, companyName || domain, domain))
+    .slice(0, 10);
 
   // Parse bölgeler (Sorgu 1'den — coğrafi bölgeler, şehirler, iller)
   const serviceRegions = extractServiceRegions(fulfilled[0]);
@@ -436,7 +439,10 @@ export async function researchOnboardingPersonal(input: {
 
   const strengths = extractStrengths(fulfilled[1]);
   const weaknesses = extractWeaknesses(fulfilled[1]);
-  const competitorNames = extractListItems(fulfilled[2]).slice(0, 10);
+  const competitorNames = extractListItems(fulfilled[2])
+    .filter((name) => isValidCompetitorName(name))
+    .filter((name) => !isOwnBrand(name, input.name || '', undefined))
+    .slice(0, 10);
   const competitors = competitorNames.map((name) => ({ name }));
 
   // Extract name/profession/city from Sonar if LinkedIn was used
@@ -593,7 +599,7 @@ export function extractCompetitorsWithDomains(text: string): Array<{ name: strin
         namePart = namePart.charAt(0).toUpperCase() + namePart.slice(1);
       }
 
-      if (namePart && namePart.length >= 2 && namePart.length < 80) {
+      if (namePart && namePart.length >= 2 && namePart.length < 80 && isValidCompetitorName(namePart)) {
         results.push({ name: namePart, domain });
       }
     } else {
@@ -609,7 +615,7 @@ export function extractCompetitorsWithDomains(text: string): Array<{ name: strin
       if (namePart.split(/\s+/).length > 4) {
         namePart = namePart.split(/\s+/).slice(0, 3).join(" ");
       }
-      if (namePart && namePart.length >= 3 && namePart.length < 60) {
+      if (namePart && namePart.length >= 3 && namePart.length < 60 && isValidCompetitorName(namePart)) {
         // Açıklama cümlelerini atla
         if (!/^(bu|bu firmalar|bunlar|yukarıda|aşağıda|not|kaynak|türkiye|elektrikli|yerden|ısıtma|sektör)/i.test(namePart)) {
           results.push({ name: namePart, domain: null });
@@ -852,6 +858,51 @@ export function extractServiceRegions(text: string): string[] {
   }
 
   return Array.from(found).slice(0, 8);
+}
+
+// ─── Own Brand Filter (BUG 3) ─────────────────────────
+
+/**
+ * Detects if a competitor name actually matches the user's own brand.
+ * Prevents the user's own brand from appearing as a competitor.
+ */
+export function isOwnBrand(competitorName: string, brandName: string, domain?: string): boolean {
+  const normalize = (s: string) => s.toLowerCase()
+    .replace(/[^a-zğüşıöç0-9]/g, '')
+    .replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+    .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
+
+  const comp = normalize(competitorName);
+  const own = normalize(brandName);
+  const domainClean = domain ? normalize(domain.replace(/\.(com|com\.tr|net|org|io).*$/, '')) : '';
+
+  if (!comp || !own) return false;
+
+  return comp.includes(own) || own.includes(comp) ||
+         (domainClean.length > 2 && (comp.includes(domainClean) || domainClean.includes(comp)));
+}
+
+// ─── Competitor Name Validation (BUG 4) ──────────────
+
+/**
+ * Validates that a competitor name is a real company/person name,
+ * not a junk string parsed from Sonar responses.
+ */
+export function isValidCompetitorName(name: string): boolean {
+  const trimmed = name.trim();
+  if (trimmed.length < 3) return false;
+  if (trimmed.split(' ').length > 5) return false;
+  if (trimmed.endsWith(':')) return false;
+  if (trimmed.endsWith('.')) return false;
+  const junkWords = ['bilinen', 'benzer', 'diğer', 'ayrıca', 'bunlar', 'örneğin',
+                      'listesi', 'üreticileri', 'sağlayıcıları', 'firmaları',
+                      'türkiye', 'sektör', 'firma', 'şirket'];
+  const lower = trimmed.toLowerCase();
+  if (junkWords.some(w => lower.startsWith(w))) return false;
+  // Names that are just descriptions
+  if (lower.includes('kablosu') && lower.includes('listesi')) return false;
+  if (lower.includes('sistemleri') && lower.includes('sağlayıcı')) return false;
+  return true;
 }
 
 // ─── Helpers ──────────────────────────────────────────
