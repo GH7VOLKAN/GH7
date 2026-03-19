@@ -72,25 +72,12 @@ export async function POST(request: Request) {
 
     console.log(`[otp] Code verified for ${normalizedEmail}, creating session server-side...`);
 
-    // Use admin API to verify the OTP and get session tokens
+    // Generate a FRESH magic link token for immediate use
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Method 1: Use the magic link token directly via admin
-    const { data: userData, error: userError } =
-      await supabaseAdmin.auth.admin.getUserByEmail(normalizedEmail);
-
-    if (userError || !userData?.user) {
-      console.error("[otp] User not found:", userError);
-      return NextResponse.json(
-        { error: "Kullanıcı bulunamadı. Lütfen tekrar deneyin." },
-        { status: 500 }
-      );
-    }
-
-    // Generate a new magic link and return it for client-side redirect
     const { data: linkData, error: linkError } =
       await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
