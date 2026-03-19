@@ -121,12 +121,15 @@ export async function executeScan(
               if (aiResponse.error) {
                 analysis = {
                   mentioned: false,
+                  mentionType: "none",
                   position: null,
                   sentiment: null,
                   excerpt: `[API ERROR] ${aiResponse.error}`.slice(0, 200),
                   citations: [],
                   competitors: [],
                   citationSources: [],
+                  mentionContext: null,
+                  competitorAdvantage: null,
                 };
               } else {
                 analysis = await analyzeResponse(
@@ -180,8 +183,11 @@ export async function executeScan(
                   excerpt: analysis.excerpt,
                   fullResponse: aiResponse.error ? `[ERROR] ${aiResponse.error}` : aiResponse.content.slice(0, 3000),
                   citations: analysis.citations,
-                  competitors: analysis.competitors,
+                  competitors: analysis.competitors.length > 0 ? JSON.parse(JSON.stringify(analysis.competitors)) : undefined,
                   citationSources: analysis.citationSources.length > 0 ? JSON.parse(JSON.stringify(analysis.citationSources)) : undefined,
+                  mentionType: analysis.mentionType,
+                  mentionContext: analysis.mentionContext,
+                  competitorAdvantage: analysis.competitorAdvantage,
                   scanWeek,
                   scanDay,
                 },

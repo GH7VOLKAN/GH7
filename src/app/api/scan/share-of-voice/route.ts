@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
 import { getPlanLimits } from "@/lib/plans";
+import { extractCompetitorNames } from "@/lib/ai/types";
 
 /**
  * GET /api/scan/share-of-voice
@@ -101,7 +102,7 @@ export async function GET() {
   }
 
   for (const result of allResults) {
-    const mentionedCompetitors = (result.competitors ?? []) as string[];
+    const mentionedCompetitors = extractCompetitorNames(result.competitors);
     for (const compName of mentionedCompetitors) {
       // Match against known competitors (case-insensitive)
       const known = competitors.find(

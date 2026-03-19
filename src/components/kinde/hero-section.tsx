@@ -38,8 +38,8 @@ export function HeroSection({
     <div
       style={{
         textAlign: "center",
-        padding: "60px 24px 40px",
       }}
+      className="px-4 pt-8 pb-6 sm:px-6 sm:pt-[60px] sm:pb-10"
     >
       {/* Top label */}
       <div
@@ -58,9 +58,9 @@ export function HeroSection({
       {/* Main title */}
       <h1
         style={{
-          fontSize: "clamp(36px, 5vw, 56px)",
+          fontSize: "clamp(28px, 5vw, 56px)",
           fontWeight: 800,
-          letterSpacing: "-2px",
+          letterSpacing: "-1.5px",
           color: "var(--foreground)",
           lineHeight: 1.1,
           margin: "0 auto",

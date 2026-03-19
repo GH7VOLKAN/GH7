@@ -1027,10 +1027,10 @@ export function GelisimClient({
       </HeroSection>
 
       {/* ── CONTENT AREA ──────────────────────────────── */}
-      <div style={{ padding: "0 16px", maxWidth: 800, margin: "0 auto", width: "100%" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", width: "100%" }} className="px-0 sm:px-4">
         {/* Sort toggle — pill buttons */}
         <PageSection>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12, color: "#999" }}>Sirala:</span>
             {(["default", "easy", "impact"] as const).map((mode) => (
               <button
@@ -1114,9 +1114,8 @@ export function GelisimClient({
         <PageSection className="mb-12">
           <FadeIn>
             <div
-              className="kinde-card"
+              className="kinde-card p-5 sm:p-10"
               style={{
-                padding: "40px 24px",
                 textAlign: "center",
               }}
             >
@@ -1137,7 +1136,7 @@ export function GelisimClient({
               >
                 Gelisim planindaki adimlari tek tek ugrasmak yerine, ajans paketlerimizle hepsini profesyonelce tamamlayalim.
               </p>
-              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24 }}>
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
                 <Link
                   href="/dashboard/paketler"
                   style={{

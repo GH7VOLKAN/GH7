@@ -108,7 +108,7 @@ export function KaynaklarContent({
             return (
               <div
                 key={source.id}
-                className="kinde-card p-5 lg:p-7 cursor-default"
+                className="kinde-card p-4 sm:p-5 lg:p-7 cursor-default"
                 style={{
                   borderColor: isActive ? `${config.color}30` : undefined,
                   position: "relative",
@@ -259,7 +259,7 @@ export function KaynaklarContent({
           title="Doluluk Durumu"
           subtitle="Kaynaklar\u0131n ne kadar\u0131 aktif olarak kullan\u0131l\u0131yor"
         />
-        <div className="kinde-card p-6 lg:p-8" style={{ cursor: "default" }}>
+        <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
           {/* Main stat */}
           <div
             style={{
