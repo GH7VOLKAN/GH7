@@ -20,6 +20,15 @@ export default function Error({
       <p className="text-muted-foreground text-center max-w-md">
         Sayfa yüklenirken bir hata oluştu. Lütfen tekrar deneyin.
       </p>
+      {process.env.NODE_ENV !== "production" || true ? (
+        <details className="mt-4 max-w-lg text-left">
+          <summary className="text-xs text-muted-foreground cursor-pointer">Hata detayı</summary>
+          <pre className="mt-2 text-xs text-red-500 bg-red-50 p-3 rounded overflow-auto max-h-40">
+            {error?.message || "Bilinmeyen hata"}
+            {error?.digest ? `\nDigest: ${error.digest}` : ""}
+          </pre>
+        </details>
+      ) : null}
       <div className="flex gap-3">
         <button
           onClick={reset}
