@@ -141,8 +141,11 @@ model PromptResult {
   excerpt         String?
   fullResponse    String?  @map("full_response")
   citations       Json?    // string[] of cited URLs
-  competitors     String[] // competitor names detected in response
+  competitors     Json?    // CompetitorDetail[] — [{name, position, sentiment}]
   citationSources Json?    @map("citation_sources") // [{name, url, type}]
+  mentionType          String?  @map("mention_type")          // direct, indirect, none
+  mentionContext       String?  @map("mention_context")       // kısa alıntı — nerede bahsedildiği
+  competitorAdvantage  String?  @map("competitor_advantage")  // rakip neden önde analizi
   createdAt       DateTime @default(now()) @map("created_at")
   scanWeek        Int?     @map("scan_week")
   scanDay         Int?     @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
