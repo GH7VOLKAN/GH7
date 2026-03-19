@@ -49,6 +49,37 @@ export interface ChecklistProgress {
   completed: number;
 }
 
+/** Prompt summary for overview — best/worst performing questions */
+export interface PromptSummaryItem {
+  promptText: string;
+  mentionedPlatforms: number;
+  totalPlatforms: number;
+  platformResults: Record<PlatformKey, boolean>;
+}
+
+/** AI response excerpt where brand is mentioned */
+export interface AiResponseExcerpt {
+  platform: PlatformKey;
+  promptText: string;
+  excerpt: string;
+}
+
+/** Checklist item summary for overview */
+export interface ChecklistOverviewItem {
+  simpleTitle: string;
+  feasibilityScore: number;
+  estimatedTime: string | null;
+  impact: string;
+  difficulty: string;
+}
+
+/** Source map entry for overview */
+export interface SourceMapEntry {
+  domain: string;
+  type: string;
+  exists: boolean;
+}
+
 export interface DashboardOverview {
   mentionScore: number;
   mentionTrend: number;
@@ -80,6 +111,20 @@ export interface DashboardOverview {
   checklistProgress: ChecklistProgress;
   /** Total number of scans completed */
   totalScanCount: number;
+  /** Top performing prompts (best mention rate) */
+  bestPrompts: PromptSummaryItem[];
+  /** Worst performing prompts (zero mentions) */
+  worstPrompts: PromptSummaryItem[];
+  /** AI response excerpts where brand is mentioned */
+  aiResponseExcerpts: AiResponseExcerpt[];
+  /** Easiest checklist items (highest feasibility, not complete) */
+  easiestChecklistItems: ChecklistOverviewItem[];
+  /** Highest impact checklist items (not complete) */
+  highImpactChecklistItems: ChecklistOverviewItem[];
+  /** Source map for overview */
+  sourceMap: SourceMapEntry[];
+  /** Brand domain */
+  brandDomain: string;
 }
 
 export const getOverviewData = cache(async (brandId: string): Promise<DashboardOverview> => {
@@ -449,6 +494,146 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     where: { brandId, status: "completed" },
   });
 
+  // ── Prompt summary (best/worst performing) ─────────────
+  let bestPrompts: PromptSummaryItem[] = [];
+  let worstPrompts: PromptSummaryItem[] = [];
+  let aiResponseExcerpts: AiResponseExcerpt[] = [];
+
+  if (latestScan) {
+    const promptResultsWithText = await prisma.promptResult.findMany({
+      where: { scanId: latestScan.id },
+      select: {
+        platform: true,
+        mentioned: true,
+        excerpt: true,
+        fullResponse: true,
+        prompt: { select: { text: true } },
+      },
+    });
+
+    // Group by prompt text
+    const promptGroups = new Map<
+      string,
+      { platforms: Record<PlatformKey, boolean>; mentionedCount: number; totalCount: number }
+    >();
+    for (const r of promptResultsWithText) {
+      const key = r.prompt.text;
+      let group = promptGroups.get(key);
+      if (!group) {
+        group = {
+          platforms: { chatgpt: false, claude: false, gemini: false, perplexity: false, google_aio: false },
+          mentionedCount: 0,
+          totalCount: 0,
+        };
+        promptGroups.set(key, group);
+      }
+      const plat = r.platform as PlatformKey;
+      group.totalCount++;
+      if (r.mentioned) {
+        group.platforms[plat] = true;
+        group.mentionedCount++;
+      }
+    }
+
+    const promptSummaries: PromptSummaryItem[] = [];
+    for (const [text, group] of promptGroups) {
+      promptSummaries.push({
+        promptText: text,
+        mentionedPlatforms: group.mentionedCount,
+        totalPlatforms: group.totalCount,
+        platformResults: group.platforms,
+      });
+    }
+
+    // Best: sorted by most mentions first
+    bestPrompts = promptSummaries
+      .filter((p) => p.mentionedPlatforms > 0)
+      .sort((a, b) => b.mentionedPlatforms - a.mentionedPlatforms)
+      .slice(0, 3);
+
+    // Worst: zero mentions
+    worstPrompts = promptSummaries
+      .filter((p) => p.mentionedPlatforms === 0)
+      .slice(0, 3);
+
+    // AI response excerpts — find results where brand is mentioned, extract excerpt
+    const brandName = brand?.name ?? "";
+    const brandNameLower = brandName.toLowerCase();
+    for (const r of promptResultsWithText) {
+      if (!r.mentioned) continue;
+      if (aiResponseExcerpts.length >= 3) break;
+
+      const responseText = r.fullResponse ?? r.excerpt ?? "";
+      if (!responseText) continue;
+
+      // Find a snippet around the brand name
+      const lowerResponse = responseText.toLowerCase();
+      const brandIdx = lowerResponse.indexOf(brandNameLower);
+      let snippet = "";
+      if (brandIdx >= 0) {
+        const start = Math.max(0, brandIdx - 60);
+        const end = Math.min(responseText.length, brandIdx + brandName.length + 120);
+        snippet = (start > 0 ? "..." : "") + responseText.slice(start, end).trim() + (end < responseText.length ? "..." : "");
+      } else {
+        snippet = responseText.slice(0, 180).trim() + (responseText.length > 180 ? "..." : "");
+      }
+
+      aiResponseExcerpts.push({
+        platform: r.platform as PlatformKey,
+        promptText: r.prompt.text,
+        excerpt: snippet,
+      });
+    }
+  }
+
+  // ── Checklist items for overview (easiest + highest impact) ──
+  const allChecklistItems = await prisma.checklistItem.findMany({
+    where: { brandId, status: { not: "complete" } },
+    select: {
+      simpleTitle: true,
+      feasibilityScore: true,
+      estimatedTime: true,
+      impact: true,
+      difficulty: true,
+    },
+    orderBy: { feasibilityScore: "desc" },
+  });
+
+  const easiestChecklistItems: ChecklistOverviewItem[] = allChecklistItems
+    .sort((a, b) => b.feasibilityScore - a.feasibilityScore)
+    .slice(0, 3);
+
+  const highImpactChecklistItems: ChecklistOverviewItem[] = [...allChecklistItems]
+    .filter((i) => i.impact === "HIGH")
+    .slice(0, 3);
+
+  // ── Source map for overview ─────────────────────────────
+  const sourceDomains = await prisma.sourceDomain.findMany({
+    where: { brandId },
+    select: { domain: true, type: true },
+  });
+
+  // Standard source categories to check
+  const brandDomain = brand?.domain ?? "";
+  const sourceMap: SourceMapEntry[] = [];
+
+  // Check which standard categories exist
+  const hasDomain = sourceDomains.some((s) => s.domain.includes(brandDomain.replace(/^www\./, "")));
+  const hasDirectory = sourceDomains.some((s) => s.type === "directory");
+  const hasGoogleBusiness = sourceDomains.some((s) =>
+    s.domain.includes("google") && (s.type === "directory" || s.type === "profile")
+  );
+  const hasLinkedIn = sourceDomains.some((s) => s.domain.includes("linkedin"));
+  const hasNews = sourceDomains.some((s) => s.type === "news" || s.type === "article");
+
+  sourceMap.push(
+    { domain: brandDomain || "Web sitesi", type: "website", exists: hasDomain },
+    { domain: "Dizin kaydi", type: "directory", exists: hasDirectory },
+    { domain: "Google Business", type: "profile", exists: hasGoogleBusiness },
+    { domain: "LinkedIn", type: "profile", exists: hasLinkedIn },
+    { domain: "Haber/roportaj", type: "news", exists: hasNews },
+  );
+
   return {
     mentionScore,
     mentionTrend,
@@ -472,6 +657,13 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     weeklyTrend,
     checklistProgress,
     totalScanCount,
+    bestPrompts,
+    worstPrompts,
+    aiResponseExcerpts,
+    easiestChecklistItems,
+    highImpactChecklistItems,
+    sourceMap,
+    brandDomain,
   };
 });
 

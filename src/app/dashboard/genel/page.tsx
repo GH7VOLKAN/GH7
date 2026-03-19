@@ -50,6 +50,13 @@ export default async function GenelPage() {
       totalScanCount={data.totalScanCount}
       totalSourceCount={data.totalSourceCount}
       plan={plan}
+      bestPrompts={data.bestPrompts}
+      worstPrompts={data.worstPrompts}
+      aiResponseExcerpts={data.aiResponseExcerpts}
+      easiestChecklistItems={data.easiestChecklistItems}
+      highImpactChecklistItems={data.highImpactChecklistItems}
+      sourceMap={data.sourceMap}
+      brandDomain={data.brandDomain}
     />
   );
 }
