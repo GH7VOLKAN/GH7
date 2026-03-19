@@ -25,63 +25,61 @@ export class AnthropicProvider implements AIProvider {
       return { platform: "claude", content: "", error: "API key not configured" };
     }
 
-    // Try models in order — fall back if one fails
-    const models = ["claude-sonnet-4-20250514", "claude-haiku-4-5-20251001"];
+    const errors: string[] = [];
+    const model = "claude-haiku-4-5-20251001";
 
-    for (const model of models) {
-      // First attempt: with web_search tool for real-time web results
-      try {
-        const response = await this.client.messages.create({
-          model,
-          max_tokens: 2048,
-          temperature: 0.7,
-          tools: [
-            {
-              type: "web_search_20250305" as never,
-              name: "web_search",
-              max_uses: 3,
-            } as never,
-          ],
-          messages: [{ role: "user", content: promptText }],
-        });
+    // Step 1: Try with web_search tool for real-time results
+    try {
+      const response = await this.client.messages.create({
+        model,
+        max_tokens: 2048,
+        temperature: 0.7,
+        tools: [
+          {
+            type: "web_search_20250305" as never,
+            name: "web_search",
+            max_uses: 3,
+          } as never,
+        ],
+        messages: [{ role: "user", content: promptText }],
+      });
 
-        const text = this.extractTextContent(response);
-        if (text) {
-          return { platform: "claude", content: text };
-        }
-      } catch (err) {
-        console.warn(
-          `[anthropic-provider] ${model} with web_search failed:`,
-          err instanceof Error ? err.message : err,
-        );
+      const text = this.extractTextContent(response);
+      if (text) {
+        return { platform: "claude", content: text };
       }
-
-      // Fallback: without web_search tool
-      try {
-        const response = await this.client.messages.create({
-          model,
-          max_tokens: 2048,
-          temperature: 0.7,
-          messages: [{ role: "user", content: promptText }],
-        });
-
-        const text = this.extractTextContent(response);
-        if (text) {
-          return { platform: "claude", content: text };
-        }
-      } catch (err) {
-        console.warn(
-          `[anthropic-provider] ${model} fallback failed:`,
-          err instanceof Error ? err.message : err,
-        );
-        continue;
-      }
+      errors.push(`${model} with web_search returned empty`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[anthropic-provider] ${model} with web_search failed: ${msg}`);
+      errors.push(`${model}+web_search: ${msg}`);
     }
 
+    // Step 2: Fallback WITHOUT web_search tool (must work if API key is valid)
+    try {
+      const response = await this.client.messages.create({
+        model,
+        max_tokens: 2048,
+        temperature: 0.7,
+        messages: [{ role: "user", content: promptText }],
+      });
+
+      const text = this.extractTextContent(response);
+      if (text) {
+        return { platform: "claude", content: text };
+      }
+      errors.push(`${model} without web_search returned empty`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[anthropic-provider] ${model} fallback (no web_search) failed: ${msg}`);
+      errors.push(`${model}: ${msg}`);
+    }
+
+    console.error(`[anthropic-provider] All attempts failed. Errors: ${errors.join(" | ")}`);
     return {
       platform: "claude",
       content: "",
-      error: "All Claude models failed",
+      error: `All Claude models failed: ${errors.join(" | ")}`,
     };
   }
 

@@ -20,71 +20,89 @@ export class GoogleProvider implements AIProvider {
       return { platform: "gemini", content: "", error: "API key not configured" };
     }
 
-    // Try models in order — with Google Search grounding for real results
-    const models = [
-      { name: "gemini-2.5-flash", useGrounding: true },
-      { name: "gemini-2.0-flash-lite", useGrounding: false },
-    ];
+    const errors: string[] = [];
 
-    for (const modelConfig of models) {
-      try {
-        const modelOptions: Record<string, unknown> = {
-          model: modelConfig.name,
-          generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
-        };
-
-        // Add Google Search grounding tool for better real-world results
-        if (modelConfig.useGrounding) {
-          modelOptions.tools = [
-            {
-              googleSearchRetrieval: {
-                dynamicRetrievalConfig: {
-                  mode: DynamicRetrievalMode.MODE_DYNAMIC,
-                  dynamicThreshold: 0.3, // Low threshold = search more often
-                },
-              },
-            },
-          ];
-        }
-
-        const model = this.genAI.getGenerativeModel(
-          modelOptions as unknown as Parameters<typeof this.genAI.getGenerativeModel>[0],
-        );
-
-        // Wrap with timeout since Google SDK doesn't have built-in timeout
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Gemini API timeout (30s)")), 30_000)
-        );
-
-        const result = await Promise.race([
-          model.generateContent(promptText),
-          timeoutPromise,
-        ]);
-
-        const content = result.response.text();
-
+    // Step 1: Try gemini-2.0-flash with Google Search grounding
+    try {
+      const content = await this.tryModel("gemini-2.0-flash", promptText, true);
+      if (content.length > 0) {
         return { platform: "gemini", content };
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        console.warn(`[gemini-provider] ${modelConfig.name} failed: ${msg}`);
-        // If rate limited (429), try next model
-        if (msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")) {
-          continue;
-        }
-        // If grounding not supported, try without
-        if (msg.includes("grounding") || msg.includes("googleSearchRetrieval") || msg.includes("tool")) {
-          console.warn(`[gemini-provider] Grounding not supported, trying without...`);
-          continue;
-        }
-        // Other errors — don't retry
-        return { platform: "gemini", content: "", error: msg };
       }
+      errors.push("gemini-2.0-flash with grounding returned empty");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error(`[gemini-provider] gemini-2.0-flash with grounding failed: ${msg}`);
+      errors.push(`gemini-2.0-flash+grounding: ${msg}`);
     }
 
+    // Step 2: Try gemini-2.0-flash WITHOUT grounding (in case grounding causes error)
+    try {
+      const content = await this.tryModel("gemini-2.0-flash", promptText, false);
+      if (content.length > 0) {
+        return { platform: "gemini", content };
+      }
+      errors.push("gemini-2.0-flash without grounding returned empty");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error(`[gemini-provider] gemini-2.0-flash without grounding failed: ${msg}`);
+      errors.push(`gemini-2.0-flash: ${msg}`);
+    }
+
+    // Step 3: Fallback to gemini-1.5-flash (stable, no grounding)
+    try {
+      const content = await this.tryModel("gemini-1.5-flash", promptText, false);
+      if (content.length > 0) {
+        return { platform: "gemini", content };
+      }
+      errors.push("gemini-1.5-flash returned empty");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error(`[gemini-provider] gemini-1.5-flash fallback failed: ${msg}`);
+      errors.push(`gemini-1.5-flash: ${msg}`);
+    }
+
+    console.error(`[gemini-provider] All models failed. Errors: ${errors.join(" | ")}`);
     return {
       platform: "gemini",
       content: "",
-      error: "All Gemini models failed (quota exceeded — check Google AI billing)",
+      error: `All Gemini models failed: ${errors.join(" | ")}`,
     };
+  }
+
+  private async tryModel(modelName: string, promptText: string, useGrounding: boolean): Promise<string> {
+    if (!this.genAI) throw new Error("genAI not initialized");
+
+    const modelOptions: Record<string, unknown> = {
+      model: modelName,
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+    };
+
+    if (useGrounding) {
+      modelOptions.tools = [
+        {
+          googleSearchRetrieval: {
+            dynamicRetrievalConfig: {
+              mode: DynamicRetrievalMode.MODE_DYNAMIC,
+              dynamicThreshold: 0.3,
+            },
+          },
+        },
+      ];
+    }
+
+    const model = this.genAI.getGenerativeModel(
+      modelOptions as unknown as Parameters<typeof this.genAI.getGenerativeModel>[0],
+    );
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Gemini API timeout (30s) for ${modelName}`)), 30_000)
+    );
+
+    const result = await Promise.race([
+      model.generateContent(promptText),
+      timeoutPromise,
+    ]);
+
+    return result.response.text();
   }
 }
