@@ -7,12 +7,15 @@ import { GH7Logo } from "@/components/gh7-logo";
 import { GH7Icon } from "@/components/gh7-icon";
 import { createClient } from "@/lib/supabase/client";
 
-type Step = "email" | "otp";
+type Step = "input" | "otp";
+type LoginMethod = "email" | "phone";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("email");
+  const [step, setStep] = useState<Step>("input");
+  const [method, setMethod] = useState<LoginMethod>("email");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +78,31 @@ export default function LoginPage() {
     }
   }, [step]);
 
+  // ─── Phone formatting ──────────────────────────────
+
+  function formatPhoneDisplay(value: string): string {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, "");
+
+    // Format as 5XX XXX XX XX (max 10 digits)
+    const limited = digits.slice(0, 10);
+    if (limited.length <= 3) return limited;
+    if (limited.length <= 6) return `${limited.slice(0, 3)} ${limited.slice(3)}`;
+    if (limited.length <= 8)
+      return `${limited.slice(0, 3)} ${limited.slice(3, 6)} ${limited.slice(6)}`;
+    return `${limited.slice(0, 3)} ${limited.slice(3, 6)} ${limited.slice(6, 8)} ${limited.slice(8)}`;
+  }
+
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/\D/g, "");
+    setPhone(formatPhoneDisplay(raw));
+  }
+
+  // Get the raw phone digits for API calls (with +90 prefix)
+  function getRawPhone(): string {
+    return "+90" + phone.replace(/\D/g, "");
+  }
+
   // ─── Google Login ─────────────────────────────────
 
   async function handleGoogleLogin() {
@@ -110,9 +138,9 @@ export default function LoginPage() {
     }
   }
 
-  // ─── Send OTP ─────────────────────────────────────
+  // ─── Send Email OTP ─────────────────────────────────
 
-  async function handleSendOtp(e: React.FormEvent) {
+  async function handleSendEmailOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -144,7 +172,49 @@ export default function LoginPage() {
     setLoading(false);
   }
 
-  // ─── Verify OTP ───────────────────────────────────
+  // ─── Send SMS OTP ───────────────────────────────────
+
+  async function handleSendSmsOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const rawPhone = getRawPhone();
+    const digits = rawPhone.replace(/\D/g, "");
+
+    if (digits.length < 12) {
+      setError("Geçerli bir telefon numarası girin");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+
+      const res = await fetch("/api/auth/send-sms-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: rawPhone }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "SMS gönderilemedi");
+        setLoading(false);
+        return;
+      }
+
+      setStep("otp");
+      setCooldown(60);
+    } catch {
+      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
+    }
+    setLoading(false);
+  }
+
+  // ─── Verify OTP (both email and SMS) ────────────────
 
   const handleVerifyOtp = useCallback(
     async (digits: string[]) => {
@@ -155,10 +225,21 @@ export default function LoginPage() {
       setError(null);
 
       try {
-        const res = await fetch("/api/auth/verify-otp", {
+        // Choose the right verify endpoint based on login method
+        const endpoint =
+          method === "phone"
+            ? "/api/auth/verify-sms-otp"
+            : "/api/auth/verify-otp";
+
+        const body =
+          method === "phone"
+            ? { phone: getRawPhone(), code }
+            : { email, code };
+
+        const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, code }),
+          body: JSON.stringify(body),
         });
 
         const data = await res.json();
@@ -194,7 +275,8 @@ export default function LoginPage() {
         setLoading(false);
       }
     },
-    [email, router]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [email, phone, method, router]
   );
 
   // ─── OTP Input Handlers ───────────────────────────
@@ -247,10 +329,17 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/send-otp", {
+      const endpoint =
+        method === "phone" ? "/api/auth/send-sms-otp" : "/api/auth/send-otp";
+      const body =
+        method === "phone"
+          ? { phone: getRawPhone() }
+          : { email };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -268,7 +357,26 @@ export default function LoginPage() {
     setLoading(false);
   }
 
+  // ─── Switch method helper ─────────────────────────
+
+  function switchMethod(newMethod: LoginMethod) {
+    setMethod(newMethod);
+    setError(null);
+    setStep("input");
+    setOtpDigits(["", "", "", "", "", ""]);
+  }
+
   // ─── Render ───────────────────────────────────────
+
+  const otpDestination =
+    method === "phone"
+      ? `+90 ${phone}`
+      : email;
+
+  const otpDestinationLabel =
+    method === "phone"
+      ? "numarasına 6 haneli SMS kodu gönderdik"
+      : "adresine 6 haneli kod gönderdik";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -280,7 +388,7 @@ export default function LoginPage() {
               <GH7Logo size="default" />
             </Link>
 
-            {step === "email" ? (
+            {step === "input" ? (
               <>
                 <h1 className="mt-6 text-2xl font-light tracking-[-0.04em]">
                   Hesabınıza giriş yapın
@@ -295,8 +403,10 @@ export default function LoginPage() {
                   Doğrulama kodu gönderildi
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{email}</span>{" "}
-                  adresine 6 haneli kod gönderdik
+                  <span className="font-medium text-foreground">
+                    {otpDestination}
+                  </span>{" "}
+                  {otpDestinationLabel}
                 </p>
               </>
             )}
@@ -339,7 +449,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {step === "email" ? (
+          {step === "input" ? (
             <>
               {/* Google Login */}
               <button
@@ -380,31 +490,93 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Email OTP Form */}
-              <form onSubmit={handleSendOtp} className="space-y-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                    E-posta
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="ornek@firma.com"
-                    required
-                    autoFocus
-                    className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
-                  />
-                </div>
-
+              {/* Method Toggle: E-posta | Telefon */}
+              <div className="flex rounded-lg border border-border p-1">
                 <button
-                  type="submit"
-                  disabled={loading || !email}
-                  className="w-full rounded-lg bg-foreground px-4 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
+                  type="button"
+                  onClick={() => switchMethod("email")}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    method === "email"
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  {loading ? "Gönderiliyor..." : "Doğrulama Kodu Gönder"}
+                  E-posta
                 </button>
-              </form>
+                <button
+                  type="button"
+                  onClick={() => switchMethod("phone")}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    method === "phone"
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Telefon
+                </button>
+              </div>
+
+              {/* Email OTP Form */}
+              {method === "email" && (
+                <form onSubmit={handleSendEmailOtp} className="space-y-4">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                      E-posta
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="ornek@firma.com"
+                      required
+                      autoFocus
+                      className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading || !email}
+                    className="w-full rounded-lg bg-foreground px-4 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {loading ? "Gönderiliyor..." : "Doğrulama Kodu Gönder"}
+                  </button>
+                </form>
+              )}
+
+              {/* Phone OTP Form */}
+              {method === "phone" && (
+                <form onSubmit={handleSendSmsOtp} className="space-y-4">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                      Telefon Numarası
+                    </label>
+                    <div className="mt-1 flex items-center rounded-xl border-[1.5px] border-border bg-background transition-colors focus-within:border-foreground">
+                      <span className="pl-4 text-sm text-muted-foreground select-none">
+                        +90
+                      </span>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        placeholder="5XX XXX XX XX"
+                        required
+                        autoFocus
+                        maxLength={13}
+                        className="w-full bg-transparent px-2 py-3 text-sm focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading || phone.replace(/\D/g, "").length < 10}
+                    className="w-full rounded-lg bg-foreground px-4 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {loading ? "Gönderiliyor..." : "SMS Kodu Gönder"}
+                  </button>
+                </form>
+              )}
             </>
           ) : (
             <>
@@ -440,13 +612,15 @@ export default function LoginPage() {
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <button
                   onClick={() => {
-                    setStep("email");
+                    setStep("input");
                     setError(null);
                     setOtpDigits(["", "", "", "", "", ""]);
                   }}
                   className="underline hover:text-foreground"
                 >
-                  ← Farklı e-posta
+                  {method === "phone"
+                    ? "← Farklı numara"
+                    : "← Farklı e-posta"}
                 </button>
 
                 <button
