@@ -15,8 +15,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUserProfile();
-  const activeBrand = await getActiveBrand();
+  let user: Awaited<ReturnType<typeof getUserProfile>> = null;
+  let activeBrand: Awaited<ReturnType<typeof getActiveBrand>> = null;
+
+  try {
+    user = await getUserProfile();
+    activeBrand = await getActiveBrand();
+  } catch (err) {
+    console.error("[dashboard-layout] Auth/DB error:", err);
+    redirect("/login?logout=true");
+  }
+
+  // If no user at all, redirect to login
+  if (!user && !activeBrand?.profile) {
+    redirect("/login");
+  }
+
   const brandId = activeBrand?.brand?.id;
   const brandType = (activeBrand?.brand?.type as "firma" | "kisisel") ?? "firma";
   const plan = activeBrand?.plan ?? "free";
