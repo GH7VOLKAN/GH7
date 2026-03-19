@@ -2,24 +2,25 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/db";
 import { verifyCodeHash, OTP_MAX_ATTEMPTS } from "@/lib/auth/otp";
+import { normalizePhoneNumber } from "@/lib/sms/netgsm";
 
 export async function POST(request: Request) {
   try {
-    const { email, code } = await request.json();
+    const { phone, code } = await request.json();
 
-    if (!email || !code) {
+    if (!phone || !code) {
       return NextResponse.json(
-        { error: "E-posta ve doğrulama kodu gerekli" },
+        { error: "Telefon numarası ve doğrulama kodu gerekli" },
         { status: 400 }
       );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedPhone = normalizePhoneNumber(phone);
 
-    // Find the most recent non-expired verification code
+    // Find the most recent non-expired verification code for this phone
     const verification = await prisma.verificationCode.findFirst({
       where: {
-        email: normalizedEmail,
+        phone: normalizedPhone,
         expiresAt: { gte: new Date() },
       },
       orderBy: { createdAt: "desc" },
@@ -62,47 +63,59 @@ export async function POST(request: Request) {
       );
     }
 
-    // Code is valid — create session SERVER-SIDE using admin API
+    // Code is valid — get the tokenHash for Supabase session
     const tokenHash = verification.tokenHash;
+
+    // Ensure the user profile exists with this phone number
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Find or create profile for this phone user
+    const existingProfile = await prisma.profile.findFirst({
+      where: { phone: normalizedPhone },
+    });
+
+    if (!existingProfile) {
+      // The Supabase user was created by generateLink in send-sms-otp
+      // We need to find the Supabase user and create a profile
+      const syntheticEmail = `phone_${normalizedPhone}@gh7.ai`;
+      const { data: userData } =
+        await supabaseAdmin.auth.admin.listUsers();
+
+      const supabaseUser = userData?.users?.find(
+        (u) => u.email === syntheticEmail
+      );
+
+      if (supabaseUser) {
+        await prisma.profile.create({
+          data: {
+            id: supabaseUser.id,
+            email: syntheticEmail,
+            phone: normalizedPhone,
+          },
+        });
+        console.log(
+          `[sms-otp] Created profile for phone user: ${normalizedPhone.slice(0, 4)}****`
+        );
+      }
+    }
 
     // Delete the verification code (one-time use)
     await prisma.verificationCode.delete({
       where: { id: verification.id },
     });
 
-    console.log(`[otp] Code verified for ${normalizedEmail}, creating session server-side...`);
+    console.log(`[sms-otp] Verified for ${normalizedPhone.slice(0, 4)}****`);
 
-    // Generate a FRESH magic link token for immediate use
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    const { data: linkData, error: linkError } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: normalizedEmail,
-      });
-
-    if (linkError || !linkData?.properties?.hashed_token) {
-      console.error("[otp] Session link generation failed:", linkError);
-      return NextResponse.json(
-        { error: "Oturum oluşturulamadı. Lütfen tekrar deneyin." },
-        { status: 500 }
-      );
-    }
-
-    // Return the fresh token hash — client will use this immediately
-    const freshTokenHash = linkData.properties.hashed_token;
-
-    console.log(`[otp] Fresh session token generated for ${normalizedEmail}`);
-
+    // Return tokenHash so client can create Supabase session
     return NextResponse.json({
       success: true,
-      tokenHash: freshTokenHash,
+      tokenHash,
     });
   } catch (err) {
-    console.error("[otp] verify-otp error:", err);
+    console.error("[sms-otp] verify-sms-otp error:", err);
     return NextResponse.json(
       { error: "Bir hata oluştu. Lütfen tekrar deneyin." },
       { status: 500 }

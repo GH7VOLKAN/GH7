@@ -276,7 +276,8 @@ model Notification {
 
 model VerificationCode {
   id        String   @id @default(cuid())
-  email     String
+  email     String?
+  phone     String?
   codeHash  String   @map("code_hash")
   tokenHash String   @map("token_hash")
   attempts  Int      @default(0)
