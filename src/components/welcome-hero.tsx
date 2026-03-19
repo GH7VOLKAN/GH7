@@ -99,14 +99,14 @@ export function WelcomeHero({ brandId, brandName, activePromptCount, scanAlready
     {
       icon: PlayIcon,
       title: "Taramayı Başlatın",
-      desc: `${activePromptCount} soru, 4 platformda test edilecek`,
+      desc: `${activePromptCount} soru, 5 platformda test edilecek`,
       active: status === "idle",
       done: status === "running" || status === "completed",
     },
     {
       icon: BrainCircuitIcon,
       title: "Yapay Zekalar Analiz Etsin",
-      desc: "ChatGPT, Claude, Gemini, Perplexity",
+      desc: "ChatGPT, Claude, Gemini, Perplexity, Google AI",
       active: status === "running",
       done: status === "completed",
     },
