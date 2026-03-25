@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/landing/navbar";
 import { HeroSection } from "@/components/landing/hero-section";
 import { SocialProof } from "@/components/landing/social-proof";
+import { ShowcaseSection } from "@/components/landing/showcase-section";
 import { FeatureSection } from "@/components/landing/feature-section";
 import { FeatureVisualScore } from "@/components/landing/feature-visual-score";
 import { FeatureVisualCompetitors } from "@/components/landing/feature-visual-competitors";
@@ -17,6 +18,7 @@ export default function LandingPage() {
       <Navbar />
       <HeroSection />
       <SocialProof />
+      <ShowcaseSection />
 
       <div id="ozellikler">
         <FeatureSection

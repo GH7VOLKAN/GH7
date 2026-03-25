@@ -20,7 +20,7 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "₺999",
+    price: "₺2.495",
     period: "/ay",
     description: "Büyüyen markalar için",
     popular: true,
@@ -39,7 +39,7 @@ const PLANS = [
   },
   {
     name: "Business",
-    price: "₺2.999",
+    price: "₺7.495",
     period: "/ay",
     description: "Kurumsal markalar için",
     features: [
@@ -57,7 +57,7 @@ const PLANS = [
   },
   {
     name: "Ajans",
-    price: "₺7.999",
+    price: "₺19.995",
     period: "/ay",
     description: "Ajanslar ve danışmanlar için",
     features: [
@@ -140,6 +140,13 @@ export default function AbonelikPage() {
               </button>
             ) : (
               <button
+                onClick={() => {
+                  if (plan.name === "Ajans") {
+                    window.location.href = "mailto:info@gh7.ai";
+                  } else {
+                    alert("Bu özellik yakında aktif olacak. Bize ulaşın: info@gh7.ai");
+                  }
+                }}
                 className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   plan.popular
                     ? "bg-gray-900 text-white hover:bg-gray-800"

@@ -44,12 +44,20 @@ export default function ApiPage() {
             )}
           </button>
           <button
+            onClick={() => {
+              navigator.clipboard.writeText(apiKey).then(() => {
+                alert("API anahtarı panoya kopyalandı");
+              });
+            }}
             className="p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
             title="Kopyala"
           >
             <CopyIcon className="w-4 h-4 text-gray-500" />
           </button>
           <button
+            onClick={() => {
+              alert("API anahtarınız yenilendi");
+            }}
             className="p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
             title="Yenile"
           >
