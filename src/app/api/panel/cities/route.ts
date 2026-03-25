@@ -24,7 +24,7 @@ export async function GET() {
         scan: { brandId: brand.id, status: "completed" },
       },
       select: {
-        response: true,
+        fullResponse: true,
         mentioned: true,
       },
     });
@@ -36,7 +36,7 @@ export async function GET() {
       let mentionedInCity = 0;
 
       for (const r of results) {
-        const text = (r.response ?? "").toLowerCase();
+        const text = (r.fullResponse ?? "").toLowerCase();
         if (text.includes(cityLower)) {
           totalMentions++;
           if (r.mentioned) {
