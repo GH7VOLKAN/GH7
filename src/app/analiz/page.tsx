@@ -3,11 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  DEMO_METRICS,
-  DEMO_AI_RESPONSES,
-  DEMO_PLATFORM_DISTRIBUTION,
   DEMO_COMPETITORS,
-  getScoreColor,
 } from "@/data/demo-data";
 import {
   DEMO_PERSONAL_KEYWORDS,
@@ -21,9 +17,14 @@ import {
   FileText,
   CheckCircle,
   X,
+  Shield,
+  TrendingUp,
+  AlertTriangle,
+  Lightbulb,
 } from "lucide-react";
-import { TurkeyMap } from "@/components/panel/turkey-map";
 import { GH7Logo } from "@/components/gh7-logo";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -111,41 +112,6 @@ const LOADING_STEPS = [
   { text: "Google AI Overview taranıyor...", duration: 1000, icon: MessageSquare },
   { text: "Rakipleriniz tespit ediliyor...", duration: 800, icon: BarChart3 },
   { text: "Raporunuz hazırlanıyor...", duration: 800, icon: FileText },
-];
-
-const PLATFORM_SCORES = [
-  { name: "ChatGPT", score: 68, color: "#10A37F" },
-  { name: "Gemini", score: 72, color: "#8B5CF6" },
-  { name: "AI Overview", score: 74, color: "#4285F4" },
-  { name: "Perplexity", score: 65, color: "#22D3EE" },
-  { name: "Claude", score: 58, color: "#D97706" },
-];
-
-const METRIC_CARDS = [
-  {
-    label: "Ses Payi",
-    value: `%${DEMO_METRICS.shareOfVoice}`,
-    change: DEMO_METRICS.changes.shareOfVoice,
-    description: "AI yanıtlarında pazar payı",
-  },
-  {
-    label: "Kapsam",
-    value: `%${DEMO_METRICS.coverage}`,
-    change: DEMO_METRICS.changes.coverage,
-    description: "Aramalarda görünme oranı",
-  },
-  {
-    label: "Ort. Sira",
-    value: DEMO_METRICS.avgPosition.toFixed(1),
-    change: DEMO_METRICS.changes.avgPosition,
-    description: "Kaynaklarda sıralama",
-  },
-  {
-    label: "Algi Skoru",
-    value: DEMO_METRICS.sentiment.toFixed(2),
-    change: DEMO_METRICS.changes.sentiment,
-    description: "Marka algı skoru",
-  },
 ];
 
 const EXTRA_COMPETITORS = [
@@ -263,45 +229,6 @@ function StepIndicator({ currentStep }: { currentStep: Step }) {
           )}
         </div>
       ))}
-    </div>
-  );
-}
-
-function ScoreGauge({ score }: { score: number }) {
-  const color = getScoreColor(score);
-  const circumference = 2 * Math.PI * 54;
-  const progress = (score / 100) * circumference;
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-40 h-40">
-        <svg className="w-40 h-40 -rotate-90" viewBox="0 0 120 120">
-          <circle
-            cx="60"
-            cy="60"
-            r="54"
-            fill="none"
-            stroke="#E5E7EB"
-            strokeWidth="8"
-          />
-          <circle
-            cx="60"
-            cy="60"
-            r="54"
-            fill="none"
-            stroke={color}
-            strokeWidth="8"
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference - progress}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-bold text-gray-900">{score}</span>
-          <span className="text-sm text-gray-500">GEO Score</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -1122,6 +1049,61 @@ export default function AnalizPage() {
   );
 
   const renderResults = () => {
+    /* Platform key mapping for AIPlatformIcon */
+    const platformKeyMap: Record<string, AIPlatform> = {
+      ChatGPT: "chatgpt",
+      Gemini: "gemini",
+      "AI Overview": "google_aio",
+      Perplexity: "perplexity",
+      Claude: "claude",
+    };
+
+    /* ---------- LAYER 3 DATA: Competitor rankings per platform ---------- */
+    const competitorRankings = [
+      { platform: "ChatGPT", ranks: [displayName || "Isıtmax", "Warmup", "Viessmann"] },
+      { platform: "Gemini", ranks: [displayName || "Isıtmax", "RezistansMarket", "Danfoss"] },
+      { platform: "AI Overview", ranks: ["Warmup", displayName || "Isıtmax", "Viessmann"] },
+      { platform: "Perplexity", ranks: [displayName || "Isıtmax", "EnerSerji", "Warmup"] },
+      { platform: "Claude", ranks: ["Warmup", "Viessmann", displayName || "Isıtmax"] },
+    ];
+
+    const emptySlotQueries = [
+      "endüstriyel ısıtma çözümleri karşılaştırma",
+      "akıllı termostat yerden ısıtma entegrasyonu",
+      "enerji verimli bina ısıtma danışmanlığı",
+    ];
+
+    /* ---------- LAYER 4 DATA: Digital footprint ---------- */
+    const digitalSources = [
+      { icon: "🌐", name: "Website", status: "active" as const, detail: "isitmax.com" },
+      { icon: "in", name: "LinkedIn", status: "active" as const, detail: "Şirket sayfası aktif" },
+      { icon: "G", name: "Google Business", status: "active" as const, detail: "Profil doğrulanmış" },
+      { icon: "📋", name: "Rehberler", status: "missing" as const, detail: "Sektör rehberlerinde yok" },
+      { icon: "📰", name: "Haberler", status: "active" as const, detail: "3 haber kaynağı" },
+      { icon: "📱", name: "Sosyal Medya", status: "missing" as const, detail: "Aktif profil bulunamadı" },
+    ];
+    const activeSources = digitalSources.filter((s) => s.status === "active").length;
+
+    /* ---------- LAYER 5 DATA: Site audit ---------- */
+    const siteAuditChecks = [
+      { name: "Schema Markup", status: "ok" as const, description: "Yapılandırılmış veri mevcut", score: null },
+      { name: "robots.txt", status: "ok" as const, description: "AI botlarına erişim açık", score: null },
+      { name: "llms.txt", status: "missing" as const, description: "AI için özel talimat dosyası eksik", score: null },
+      { name: "SSL Sertifikası", status: "ok" as const, description: "HTTPS aktif ve geçerli", score: null },
+      { name: "Sitemap.xml", status: "ok" as const, description: "XML sitemap mevcut", score: null },
+      { name: "Meta Tags", status: "warning" as const, description: "Bazı sayfalarda açıklama eksik", score: null },
+      { name: "PageSpeed", status: "ok" as const, description: "Sayfa hızı iyi seviyede", score: 85 },
+    ];
+    const auditScore = Math.round(
+      (siteAuditChecks.filter((c) => c.status === "ok").length / siteAuditChecks.length) * 100
+    );
+
+    const statusIcon = (status: "ok" | "warning" | "missing") => {
+      if (status === "ok") return <span className="text-green-500 text-lg">✅</span>;
+      if (status === "warning") return <span className="text-yellow-500 text-lg">⚠️</span>;
+      return <span className="text-red-500 text-lg">❌</span>;
+    };
+
     return (
       <div className="max-w-4xl mx-auto px-4 pb-20">
         <StepIndicator currentStep={3} />
@@ -1136,307 +1118,439 @@ export default function AnalizPage() {
           </p>
         </div>
 
-        {/* GEO Score */}
-        <div className="flex justify-center mb-10">
-          <div className="border border-gray-200 rounded-xl p-8 inline-flex flex-col items-center">
-            <ScoreGauge score={DEMO_METRICS.geoScore} />
-            <p className="text-sm text-gray-500 mt-3">
-              Genel AI Görünürlük Skoru
+        {/* ================================================================ */}
+        {/* LAYER 1 — AI Sizi Nasıl Görüyor                                  */}
+        {/* ================================================================ */}
+        <section>
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            AI Sizi Nasıl Görüyor
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">
+            Her platformun markanız hakkındaki gerçek yanıtları
+          </p>
+
+          <div className="space-y-5">
+            {DEMO_PLATFORM_RESPONSES.map((resp, idx) => {
+              const pKey = platformKeyMap[resp.provider] ?? "chatgpt";
+              const mentioned = resp.brandMentioned;
+              return (
+                <div
+                  key={idx}
+                  className="border border-gray-200 rounded-xl p-6"
+                >
+                  {/* Platform header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <AIPlatformIcon platform={pKey} size="lg" />
+                      <span className="text-base font-semibold text-gray-900">
+                        {resp.provider}
+                      </span>
+                    </div>
+                    {mentioned ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-50 text-green-700 px-2.5 py-1 rounded-full">
+                        Bahsediliyor ✓
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-600 px-2.5 py-1 rounded-full">
+                        Bahsedilmiyor ✗
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Keyword / prompt */}
+                  <p className="text-xs text-gray-400 mb-3 italic">
+                    Soru: &quot;{resp.keyword}&quot;
+                  </p>
+
+                  {/* Full AI response */}
+                  <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                    {resp.response}
+                  </p>
+
+                  {/* Sources */}
+                  <div className="border-t border-gray-100 pt-3">
+                    <p className="text-xs text-gray-400 mb-2">Kaynaklar:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {resp.sources.map((src, i) => (
+                        <span
+                          key={i}
+                          className={`text-xs px-2.5 py-1 rounded-full ${
+                            src.includes(
+                              formData.domain.split(".")[0]?.toLowerCase() ?? ""
+                            ) || src === "isitmax.com"
+                              ? "bg-green-50 text-green-700 font-medium"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {src}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="border-t border-gray-100 my-12" />
+
+        {/* ================================================================ */}
+        {/* LAYER 2 — Opus Analizi                                           */}
+        {/* ================================================================ */}
+        <section>
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            Opus Analizi — Kişiselleştirilmiş Değerlendirme
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">
+            Tüm platform yanıtları analiz edildi
+          </p>
+
+          <div className="border border-gray-200 rounded-xl p-6 space-y-6">
+            {/* Güçlü Yanlar */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900">Güçlü Yanlar</h4>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed pl-9">
+                {displayName || "Isıtmax"}, 5 AI platformunun 4&apos;ünde doğrudan bahsediliyor. Özellikle &quot;yerden ısıtma&quot; ve &quot;sera ısıtma&quot; sorgularında güçlü bir kaynak otoritesi oluşturulmuş. Web sitesi düzenli olarak referans gösterilmekte ve marka adı yanıtlarda doğal biçimde geçmektedir. Sektörde AI görünürlüğü açısından lider konumdasınız.
+              </p>
+            </div>
+
+            {/* Zayıf Yanlar */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900">Zayıf Yanlar</h4>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed pl-9">
+                Claude platformunda marka bahsedilme oranı düşük; yanıtlarda rakipler daha ön plana çıkıyor. Endüstriyel ürün kategorisinde (varil ısıtma, heat trace) içerik derinliği yetersiz kalıyor. Blog ve teknik doküman sayısı rakiplere kıyasla az olduğundan, AI modelleri bazı sorgularda alternatif kaynakları tercih ediyor.
+              </p>
+            </div>
+
+            {/* Fırsatlar */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-yellow-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900">Fırsatlar</h4>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed pl-9">
+                &quot;Akıllı termostat entegrasyonu&quot; ve &quot;enerji verimli bina ısıtma&quot; gibi yükselen sorgularda henüz güçlü bir rakip yok. Bu alanlarda kapsamlı teknik içerik üretilmesi, AI yanıtlarında birinci kaynak olma şansı yaratır. Ayrıca llms.txt dosyası eklenerek AI botlarına özel talimatlar verilebilir.
+              </p>
+            </div>
+
+            {/* Riskler */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-blue-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900">Riskler</h4>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed pl-9">
+                Warmup ve Viessmann gibi uluslararası markalar AI içerik stratejilerine yatırım yapıyor. Önlem alınmazsa, 3-6 ay içinde mevcut sıralama avantajı kaybedilebilir. Ayrıca Google AI Overview algoritma güncellemeleri, kaynak önceliklerini değiştirebilir — düzenli takip kritik önem taşımaktadır.
+              </p>
+            </div>
+
+            <p className="text-xs text-gray-400 pt-2 border-t border-gray-100">
+              Bu analiz Claude Opus tarafından üretilmiştir
             </p>
           </div>
-        </div>
+        </section>
 
-        {/* Metric Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {METRIC_CARDS.map((m) => (
-            <div
-              key={m.label}
-              className="border border-gray-200 rounded-xl p-4"
-            >
-              <p className="text-xs text-gray-500 mb-1">{m.label}</p>
-              <p className="text-2xl font-bold text-gray-900">{m.value}</p>
-              <div className="flex items-center gap-1 mt-1">
-                {m.change > 0 ? (
-                  <span className="text-xs text-green-600">+{m.change}</span>
-                ) : m.change < 0 ? (
-                  <span className="text-xs text-red-500">{m.change}</span>
-                ) : (
-                  <span className="text-xs text-gray-400">-</span>
-                )}
-                <span className="text-xs text-gray-400">{m.description}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <div className="border-t border-gray-100 my-12" />
 
-        {/* 5 Platform Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {PLATFORM_SCORES.map((p) => (
-            <div
-              key={p.name}
-              className="border border-gray-200 rounded-xl p-4 text-center"
-            >
-              <div
-                className="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center"
-                style={{ backgroundColor: `${p.color}20` }}
-              >
-                <span
-                  className="text-xs font-bold"
-                  style={{ color: p.color }}
-                >
-                  {p.name.charAt(0)}
-                </span>
-              </div>
-              <p className="text-sm font-medium text-gray-900">{p.name}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {p.score}
-              </p>
-              <p className="text-xs text-gray-400">GEO Score</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Turkey Map */}
-        <div className="mb-8 border border-gray-200 rounded-xl p-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">
-            Seçilen İllerde Görünürlük
+        {/* ================================================================ */}
+        {/* LAYER 3 — Senin Yerine Kim Öneriliyor                            */}
+        {/* ================================================================ */}
+        <section>
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            Senin Yerine Kim Öneriliyor?
           </h3>
-          <TurkeyMap
-            cityData={Object.fromEntries([
-              ...formData.cities.map((city) => [
-                city,
-                { score: 75, status: "strong" },
-              ]),
-              ...ALL_CITIES.filter((c) => !formData.cities.includes(c)).map(
-                (city) => [city, { score: 0, status: "not-tracked" }]
-              ),
-            ])}
-            className="max-h-[250px]"
-          />
-        </div>
+          <p className="text-sm text-gray-500 mb-6">
+            AI platformlarında sizi ve rakiplerinizi kıyaslıyoruz
+          </p>
 
-        {/* Competitor Detection */}
-        <div className="border border-gray-200 rounded-xl p-6 mb-8">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">
-            {isFirma ? "Rakip Tespiti" : "Meslektaşlarınızla Kıyaslama"}
-          </h3>
-          <div className="space-y-3">
-            {allCompetitors.map((c, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-sm text-gray-700 w-40 truncate">
-                  {c.name}
-                </span>
-                <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${c.share * 2}%`,
-                      backgroundColor:
-                        "color" in c ? (c as { color: string }).color : "#6B7280",
-                      maxWidth: "100%",
-                    }}
-                  />
-                </div>
-                <span className="text-sm text-gray-500 w-10 text-right">
-                  %{c.share}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Example AI Responses — one per platform */}
-        <div className="space-y-4 mb-8">
-          <h3 className="text-sm font-medium text-gray-900">
-            Platform Yanıtları
-          </h3>
-          {DEMO_PLATFORM_RESPONSES.map((resp, idx) => {
-            const platformColor =
-              PLATFORM_SCORES.find((p) => p.name === resp.provider)?.color ??
-              "#6B7280";
-            return (
-              <div
-                key={idx}
-                className="border border-gray-200 rounded-xl p-6"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <div
-                    className="w-6 h-6 rounded flex items-center justify-center"
-                    style={{ backgroundColor: `${platformColor}20` }}
-                  >
-                    <span
-                      className="text-xs font-bold"
-                      style={{ color: platformColor }}
-                    >
-                      {resp.provider.charAt(0)}
+          {/* Horizontal bar chart */}
+          <div className="border border-gray-200 rounded-xl p-6 mb-6">
+            <p className="text-sm font-medium text-gray-900 mb-4">Bahsedilme Oranları</p>
+            <div className="space-y-3">
+              {allCompetitors.map((c, i) => {
+                const isUser = c.name === (displayName || "ISITMAX") || c.name === "ISITMAX";
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className={`text-sm w-40 truncate ${isUser ? "font-bold text-gray-900" : "text-gray-700"}`}>
+                      {c.name}
                     </span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">
-                    {resp.provider}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mb-2">
-                  &quot;{resp.keyword}&quot;
-                </p>
-                <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                  {resp.response}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {resp.sources.map((src, i) => (
-                    <span
-                      key={i}
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        src.includes(
-                          formData.domain.split(".")[0]?.toLowerCase() ?? ""
-                        ) || src === "isitmax.com"
-                          ? "bg-green-50 text-green-700 font-medium"
-                          : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {src}
-                    </span>
-                  ))}
-                </div>
-                {resp.brandMentioned && (
-                  <div className="flex items-center gap-1.5 mt-3">
-                    <svg
-                      className="w-4 h-4 text-green-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(c.share * 2, 100)}%`,
+                          backgroundColor: isUser ? "#18181B" : ("color" in c ? (c as { color: string }).color : "#9CA3AF"),
+                          maxWidth: "100%",
+                        }}
                       />
-                    </svg>
-                    <span className="text-xs text-green-700 font-medium">
-                      {isFirma
-                        ? "Markanız bu yanıtta referans gösterildi"
-                        : "İsminiz bu yanıtta geçti"}
+                    </div>
+                    <span className={`text-sm w-10 text-right ${isUser ? "font-bold text-gray-900" : "text-gray-500"}`}>
+                      %{c.share}
                     </span>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </div>
 
-        {/* Kisisel extra sections */}
-        {!isFirma && (
-          <>
-            {/* AI sizi nasil tanimliyor */}
-            <div className="border border-gray-200 rounded-xl p-6 mb-8">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">
-                AI sizi nasıl tanımlıyor
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {formData.fullName}, {formData.profession} alanında faaliyet
-                gösteren bir uzman olarak tanımlanmaktadır.{" "}
-                {formData.cities.length > 0 &&
-                  `${formData.cities.join(", ")} bölgesinde aktif olarak görünmektedir.`}{" "}
-                AI platformları genel olarak olumlu bir profil çizmekte,
-                ancak dijital içerik üretimi arttırılarak görünürlük
-                iyileştirilebilir.
+          {/* Platform ranking table */}
+          <div className="border border-gray-200 rounded-xl p-6 mb-6 overflow-x-auto">
+            <p className="text-sm font-medium text-gray-900 mb-4">Platform Bazında Sıralama</p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 pr-4 text-gray-500 font-medium">Platform</th>
+                  <th className="text-left py-2 px-4 text-gray-500 font-medium">1. Sıra</th>
+                  <th className="text-left py-2 px-4 text-gray-500 font-medium">2. Sıra</th>
+                  <th className="text-left py-2 px-4 text-gray-500 font-medium">3. Sıra</th>
+                </tr>
+              </thead>
+              <tbody>
+                {competitorRankings.map((row) => {
+                  const pKey = platformKeyMap[row.platform] ?? "chatgpt";
+                  return (
+                    <tr key={row.platform} className="border-b border-gray-50">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <AIPlatformIcon platform={pKey} size="sm" />
+                          <span className="text-gray-900 font-medium">{row.platform}</span>
+                        </div>
+                      </td>
+                      {row.ranks.map((name, ri) => {
+                        const isUser = name === (displayName || "Isıtmax");
+                        return (
+                          <td key={ri} className="py-3 px-4">
+                            <span className={isUser ? "font-bold text-gray-900 bg-yellow-50 px-2 py-0.5 rounded" : "text-gray-600"}>
+                              {name}
+                            </span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Boş Alan Fırsatları */}
+          <div className="border border-gray-200 rounded-xl p-6">
+            <p className="text-sm font-medium text-gray-900 mb-3">Boş Alan Fırsatları</p>
+            <p className="text-xs text-gray-500 mb-4">
+              Bu sorgularda henüz güçlü bir marka yok — içerik üretirseniz ilk sırada yer alabilirsiniz.
+            </p>
+            <div className="space-y-2">
+              {emptySlotQueries.map((q, i) => (
+                <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2.5">
+                  <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0" />
+                  <span className="text-sm text-gray-700">{q}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="border-t border-gray-100 my-12" />
+
+        {/* ================================================================ */}
+        {/* LAYER 4 — Dijital İziniz                                         */}
+        {/* ================================================================ */}
+        <section>
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            Dijital İziniz
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">
+            Markanızın internet genelindeki varlığı
+          </p>
+
+          <div className="border border-gray-200 rounded-xl p-6">
+            {/* Progress indicator */}
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-sm font-medium text-gray-900">
+                Doluluk: {activeSources}/6 kaynak aktif
               </p>
+              <div className="flex-1 max-w-[200px] ml-4 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div
+                  className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                  style={{ width: `${(activeSources / 6) * 100}%` }}
+                />
+              </div>
             </div>
 
-            {/* Dijital iz analizi */}
-            <div className="border border-gray-200 rounded-xl p-6 mb-8">
-              <h3 className="text-sm font-medium text-gray-900 mb-4">
-                Dijital iz analizi
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  {
-                    label: "LinkedIn",
-                    found: !!formData.linkedinUrl,
-                  },
-                  { label: "Web Sitesi", found: false },
-                  { label: "Haberler", found: true },
-                ].map((item) => (
+            {/* Source grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {digitalSources.map((source) => {
+                const isActive = source.status === "active";
+                return (
                   <div
-                    key={item.label}
-                    className="flex flex-col items-center gap-2 p-3 border border-gray-200 rounded-lg"
+                    key={source.name}
+                    className={`flex flex-col items-center gap-2 p-4 border rounded-xl text-center ${
+                      isActive ? "border-gray-200 bg-white" : "border-gray-100 bg-gray-50"
+                    }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        item.found ? "bg-green-100" : "bg-gray-100"
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
+                        isActive ? "bg-green-100" : "bg-gray-200"
                       }`}
                     >
-                      {item.found ? (
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <X className="w-4 h-4 text-gray-400" />
-                      )}
+                      <span className={isActive ? "" : "opacity-40"}>
+                        {source.icon}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-600">{item.label}</span>
+                    <span className={`text-sm font-medium ${isActive ? "text-gray-900" : "text-gray-400"}`}>
+                      {source.name}
+                    </span>
+                    <span className={`text-xs ${isActive ? "text-gray-500" : "text-gray-400"}`}>
+                      {source.detail}
+                    </span>
                     <span
-                      className={`text-xs font-medium ${
-                        item.found ? "text-green-600" : "text-gray-400"
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400"
                       }`}
                     >
-                      {item.found ? "Bulundu" : "Bulunamadı"}
+                      {isActive ? "Aktif" : "Eksik"}
                     </span>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+
+            <p className="text-sm text-gray-500 mt-6 text-center">
+              {6 - activeSources} kaynağı aktif edin, AI sıralama puanınız yükselsin
+            </p>
+          </div>
+        </section>
+
+        <div className="border-t border-gray-100 my-12" />
+
+        {/* ================================================================ */}
+        {/* LAYER 5 — Teknik Durum                                           */}
+        {/* ================================================================ */}
+        <section>
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            Teknik Durum
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">
+            Sitenizin AI botları için hazırlık durumu
+          </p>
+
+          <div className="border border-gray-200 rounded-xl p-6">
+            {/* Overall score gauge */}
+            <div className="flex items-center justify-center gap-4 mb-8 pb-6 border-b border-gray-100">
+              <div className="relative w-24 h-24">
+                <svg className="w-24 h-24 -rotate-90" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#E5E7EB" strokeWidth="10" />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke={auditScore >= 70 ? "#22C55E" : auditScore >= 40 ? "#EAB308" : "#EF4444"}
+                    strokeWidth="10"
+                    strokeDasharray={2 * Math.PI * 50}
+                    strokeDashoffset={2 * Math.PI * 50 - (auditScore / 100) * 2 * Math.PI * 50}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-900">{auditScore}</span>
+                  <span className="text-[10px] text-gray-400">/100</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Site Hazırlık Skoru</p>
+                <p className="text-xs text-gray-500">AI botlarına uyumluluk</p>
               </div>
             </div>
-          </>
-        )}
 
-        {/* Platform Traffic Bar */}
-        <div className="border border-gray-200 rounded-xl p-6 mb-8">
-          <p className="text-sm font-medium text-gray-900 mb-4">
-            Platform Trafik Dağılımı
-          </p>
-          <div className="flex h-6 rounded-full overflow-hidden">
-            {DEMO_PLATFORM_DISTRIBUTION.map((p) => (
-              <div
-                key={p.name}
-                style={{ width: `${p.share}%`, backgroundColor: p.color }}
-                className="relative group"
-                title={`${p.name}: %${p.share}`}
-              />
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-3 mt-3">
-            {DEMO_PLATFORM_DISTRIBUTION.map((p) => (
-              <div key={p.name} className="flex items-center gap-1.5">
+            {/* Audit check grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {siteAuditChecks.map((check) => (
                 <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: p.color }}
-                />
-                <span className="text-xs text-gray-500">
-                  {p.name} %{p.share}
-                </span>
-              </div>
-            ))}
+                  key={check.name}
+                  className="flex items-start gap-3 p-4 border border-gray-100 rounded-xl"
+                >
+                  <div className="shrink-0 mt-0.5">{statusIcon(check.status)}</div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {check.name}
+                      {check.score !== null && (
+                        <span className="ml-2 text-xs text-gray-400">{check.score}/100</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">{check.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* Pro CTA */}
-        <div className="border border-gray-200 rounded-xl p-8 text-center mt-12">
+        <div className="border-t border-gray-100 my-12" />
+
+        {/* ================================================================ */}
+        {/* BOTTOM CTA                                                       */}
+        {/* ================================================================ */}
+        <section className="text-center">
           <p className="text-lg font-semibold text-gray-900 mb-2">
-            Bu anlık bir fotoğraf.
+            Bu anlık bir fotoğraf. Yapay zeka yanıtları her hafta değişiyor.
           </p>
-          <p className="text-sm text-gray-500 mb-1">
-            Yapay zeka yanıtları her hafta değişiyor.
-          </p>
-          <p className="text-sm text-gray-500 mb-1">
-            Haftalık otomatik takip ile değişimleri kaçırmayın.
-          </p>
-          <p className="text-sm text-gray-500 mb-6">
-            Rakipleriniz ilerlerse anında haberiniz olsun.
-          </p>
+
+          {/* 3-card gym analogy */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 mb-8 text-left">
+            {/* Deneme Dersi */}
+            <div className="border border-gray-200 rounded-xl p-5">
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Deneme Dersi</p>
+              <p className="text-xl font-bold text-gray-900 mb-1">₺0</p>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Şu anki durumunuz — tek seferlik fotoğraf. Bugün gördükleriniz yarın değişebilir.
+              </p>
+            </div>
+
+            {/* Salon Üyeliği */}
+            <div className="border-2 border-gray-900 rounded-xl p-5 relative">
+              <div className="absolute -top-2.5 left-4 bg-gray-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                Popüler
+              </div>
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Salon Üyeliği</p>
+              <p className="text-xl font-bold text-gray-900 mb-1">₺2.495<span className="text-sm font-normal text-gray-400">/ay</span></p>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Haftalık otomatik takip. Rakipleriniz ilerlerse anında haberiniz olur.
+              </p>
+            </div>
+
+            {/* Personal Trainer */}
+            <div className="border border-gray-200 rounded-xl p-5">
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Personal Trainer</p>
+              <p className="text-xl font-bold text-gray-900 mb-1">₺7.495<span className="text-sm font-normal text-gray-400">/ay</span></p>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Biz sizin yerinize yapıyoruz. İçerik, optimizasyon ve strateji dahil.
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/giris"
               className="bg-gray-900 text-white rounded-lg px-8 py-3 font-medium hover:bg-gray-800 transition-colors"
             >
-              Haftalık Takibi Başlat &rarr; Pro &#8378;2.495/ay
+              Haftalık Takibi Başlat &rarr; Pro
             </Link>
             <button
               onClick={() => setShowCallPopup(true)}
@@ -1445,10 +1559,7 @@ export default function AnalizPage() {
               Sizi Arayalım
             </button>
           </div>
-          <button className="mt-4 text-sm text-gray-500 hover:text-gray-700">
-            Raporu WhatsApp&apos;a gönder
-          </button>
-        </div>
+        </section>
       </div>
     );
   };
