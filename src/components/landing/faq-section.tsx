@@ -4,28 +4,28 @@ import { useFadeIn } from "@/hooks/use-fade-in";
 
 const FAQS = [
   {
-    q: "GEO nedir, neden SEO'dan farklidir?",
-    a: "GEO (Generative Engine Optimization), iceriginizi yapay zeka motorlarinin guvenilir kaynak olarak referans almasi icin optimize etme disiplinidir. SEO, Google'da siralama hedefler; GEO ise ChatGPT, Gemini gibi AI'larin sizi dogrudan onermesini hedefler. Princeton Universitesi'nin 2024 arastirmasi, GEO'nun AI gorunurlugunu %40'a kadar artirabildigini gostermistir.",
+    q: "GEO nedir, neden SEO'dan farklıdır?",
+    a: "GEO (Generative Engine Optimization), içeriğinizi yapay zeka motorlarının güvenilir kaynak olarak referans alması için optimize etme disiplinidir. SEO, Google'da sıralama hedefler; GEO ise ChatGPT, Gemini gibi AI'ların sizi doğrudan önermesini hedefler. Princeton Üniversitesi'nin 2024 araştırması, GEO'nun AI görünürlüğünü %40'a kadar artırabildiğini göstermiştir.",
   },
   {
-    q: "Hangi AI platformlarini takip ediyorsunuz?",
-    a: "ChatGPT (OpenAI), Gemini (Google), Google AI Overview, Perplexity, Claude (Anthropic) ve Microsoft Copilot. Her platform farkli kaynaklara guvenir ve farkli siralama mantigi kullanir — GH7 hepsini ayri ayri analiz eder.",
+    q: "Hangi AI platformlarını takip ediyorsunuz?",
+    a: "ChatGPT (OpenAI), Gemini (Google), Google AI Overview, Perplexity, Claude (Anthropic) ve Microsoft Copilot. Her platform farklı kaynaklara güvenir ve farklı sıralama mantığı kullanır — GH7 hepsini ayrı ayrı analiz eder.",
   },
   {
-    q: "Il bazli takip nasil calisiyor?",
-    a: "Turkiye'nin 81 ilinde, o ile ozel sorgular gondererek AI'nin kimi onerdigini olcuyoruz. Ornegin \"Ankara'da en iyi isitma firmasi\" ve \"Balikesir'de en iyi isitma firmasi\" farkli sonuclar verir. GH7 bu farki gosterir, boylece hangi illerde guclu hangi illerde gorunmez oldugunuzu bilirsiniz.",
+    q: "İl bazlı takip nasıl çalışıyor?",
+    a: "Türkiye'nin 81 ilinde, o ile özel sorgular göndererek AI'nin kimi önerdiğini ölçüyoruz. Örneğin \"Ankara'da en iyi ısıtma firması\" ve \"Balıkesir'de en iyi ısıtma firması\" farklı sonuçlar verir. GH7 bu farkı gösterir, böylece hangi illerde güçlü hangi illerde görünmez olduğunuzu bilirsiniz.",
   },
   {
     q: "Ajans hizmeti (RaaS) ne anlama geliyor?",
-    a: "Results as a Service — sadece veri gostermiyoruz, sonuc aliyoruz. Business paketinde GEO ajansimiz sizin icin icerik optimizasyonu, schema markup, entity building ve citation stratejisi calisir. Siz dashboard'dan takip edersiniz, biz iyilestiririz.",
+    a: "Results as a Service — sadece veri göstermiyoruz, sonuç alıyoruz. Business paketinde GEO ajansımız sizin için içerik optimizasyonu, schema markup, entity building ve citation stratejisi çalışır. Siz dashboard'dan takip edersiniz, biz iyileştiririz.",
   },
   {
-    q: "Ne kadar surede sonuc gorurm?",
-    a: "Ilk analiz 60 saniye. Iyilestirme calismalarinin etkisi genellikle 2-4 haftada AI yanitlarinda gorulmeye baslar. AI modelleri guvenilir bulduklari kaynaklari tekrar tekrar onerir — erken baslamak kalici avantaj saglar.",
+    q: "Ne kadar sürede sonuç görürüm?",
+    a: "İlk analiz 60 saniye. İyileştirme çalışmalarının etkisi genellikle 2-4 haftada AI yanıtlarında görülmeye başlar. AI modelleri güvenilir buldukları kaynakları tekrar tekrar önerir — erken başlamak kalıcı avantaj sağlar.",
   },
   {
-    q: "Neden simdi baslamaliyim?",
-    a: "Gartner'a gore geleneksel arama trafigi 2026'ya kadar %25 dusecek. AI aramalari hizla artiyor. Su an AI'da referans kaynagi olan firmalar, bu pozisyonu koruyor ve guclendiriyor. Gec kalanlar ise cok daha fazla caba harcamak zorunda kalacak. Erken yatirim, kalici avantaj demek.",
+    q: "Neden şimdi başlamalıyım?",
+    a: "Gartner'a göre geleneksel arama trafiği 2026'ya kadar %25 düşecek. AI aramaları hızla artıyor. Şu an AI'da referans kaynağı olan firmalar, bu pozisyonu koruyor ve güçlendiriyor. Geç kalanlar ise çok daha fazla çaba harcamak zorunda kalacak. Erken yatırım, kalıcı avantaj demek.",
   },
 ];
 

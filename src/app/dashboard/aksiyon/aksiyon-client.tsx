@@ -49,16 +49,16 @@ const RAAS_OFFER_BASE = {
 const SOLUTION_PACKAGES = [
   {
     tier: "baslangic",
-    title: "Baslangic",
+    title: "Başlangıç",
     price: "5.000₺",
     duration: "1-2 hafta",
     color: "blue",
     features: [
-      "Yapay zekanin sitenizi daha iyi anlamasi icin yapilandirma",
-      "Baslik ve aciklamalarin duzenlenmesi",
-      "Yapay zeka erisim izinlerinin ayarlanmasi",
-      "Temel teknik hatalarin giderilmesi",
-      "Google Isletme Profili duzenleme",
+      "Yapay zekanın sitenizi daha iyi anlaması için yapılandırma",
+      "Başlık ve açıklamaların düzenlenmesi",
+      "Yapay zeka erişim izinlerinin ayarlanması",
+      "Temel teknik hataların giderilmesi",
+      "Google İşletme Profili düzenleme",
     ],
     cta: "Teklif Al",
   },
@@ -70,31 +70,31 @@ const SOLUTION_PACKAGES = [
     color: "purple",
     popular: true,
     features: [
-      "Baslangic paketindeki tum ozellikler",
-      "Yapay zeka icin icerik stratejisi",
+      "Başlangıç paketindeki tüm özellikler",
+      "Yapay zeka için içerik stratejisi",
       "Kaynak optimizasyonu",
-      "SSS ve bilgi tabani olusturma",
+      "SSS ve bilgi tabanı oluşturma",
       "Rakip analizi raporu",
-      "2 aylik performans takibi",
+      "2 aylık performans takibi",
     ],
     cta: "Teklif Al",
   },
   {
     tier: "hepsini_biz",
-    title: "Hepsini Biz Yapalim",
+    title: "Hepsini Biz Yapalım",
     price: "15.000₺",
     duration: "4-6 hafta",
     color: "amber",
     popular: false,
     features: [
-      "Profesyonel paketindeki tum ozellikler",
-      "Tam yapay zeka gorunurluk yonetimi",
-      "Wikipedia ve bilgi grafigi calismasi",
-      "Aylik raporlama ve optimizasyon",
-      "Ozel danisman atanmasi",
-      "6 aylik performans garantisi",
+      "Profesyonel paketindeki tüm özellikler",
+      "Tam yapay zeka görünürlük yönetimi",
+      "Wikipedia ve bilgi grafiği çalışması",
+      "Aylık raporlama ve optimizasyon",
+      "Özel danışman atanması",
+      "6 aylık performans garantisi",
     ],
-    cta: "Hemen Baslat",
+    cta: "Hemen Başlat",
   },
 ];
 
@@ -172,10 +172,10 @@ export function AksiyonClient({
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
                 {situation.totalPrompts > 0
-                  ? `${situation.totalPrompts} sorunun ${situation.mentionedCount} tanesinde sizi oneriyor (%${mentionPct}).`
-                  : "Henuz tarama yapilmadi."}
+                  ? `${situation.totalPrompts} sorunun ${situation.mentionedCount} tanesinde sizi öneriyor (%${mentionPct}).`
+                  : "Henüz tarama yapılmadı."}
                 {situation.weakPlatform && situation.weakPlatform !== situation.topPlatform && (
-                  <> <strong>{platformLabel(situation.weakPlatform)}</strong> sizi en az taniyan yapay zeka.</>
+                  <> <strong>{platformLabel(situation.weakPlatform)}</strong> sizi en az tanıyan yapay zeka.</>
                 )}
               </p>
             </CardContent>
@@ -224,14 +224,14 @@ export function AksiyonClient({
                   </>
                 ) : (
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg text-muted-foreground">Kontrol yapilmadi</span>
+                    <span className="text-lg text-muted-foreground">Kontrol yapılmadı</span>
                   </div>
                 )}
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
                 {situation.auditScore !== null
                   ? <>{situation.auditPassCount} kontrol başarılı, <strong>{situation.auditFailCount} kontrol başarısız</strong>.</>
-                  : "Site kontrolu calistirarak hazirlik puaninizi ogrenin."}
+                  : "Site kontrolü çalıştırarak hazırlık puanınızı öğrenin."}
               </p>
             </CardContent>
           </Card>
@@ -268,10 +268,10 @@ export function AksiyonClient({
             Profesyonel Çözümler
           </p>
           <h2 className="mt-1 text-lg font-light tracking-[-0.04em]">
-            Yapay zeka gorunurlugunuzu hizla artirin
+            Yapay zeka görünürlüğünüzü hızla artırın
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Uzman ekibimiz markanizin yapay zekalardaki gorunurlugunu optimize eder.
+            Uzman ekibimiz markanızın yapay zekalardaki görünürlüğünü optimize eder.
           </p>
         </div>
 
@@ -350,9 +350,9 @@ export function AksiyonClient({
                   Markanız acil iyileştirme gerektiriyor
                 </p>
                 <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                  {situation.mentionScore < 30 && "Yapay zekalar sizi yeterince tanimiyor. "}
-                  {situation.auditScore !== null && situation.auditScore < 50 && "Siteniz yapay zeka icin yeterince hazir degil. "}
-                  Cozum paketlerimiz ile yapay zekadaki gorunurlugunuzu hizla artirabiliriz.
+                  {situation.mentionScore < 30 && "Yapay zekalar sizi yeterince tanımıyor. "}
+                  {situation.auditScore !== null && situation.auditScore < 50 && "Siteniz yapay zeka için yeterince hazır değil. "}
+                  Çözüm paketlerimiz ile yapay zekadaki görünürlüğünüzü hızla artırabiliriz.
                 </p>
               </div>
             </CardContent>

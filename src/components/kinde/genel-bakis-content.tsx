@@ -130,8 +130,8 @@ export function GenelBakisContent({
         label="YAPAY ZEKA SENi NE KADAR TANIYOR?"
         title={`5 yapay zekadan\n`}
         animatedValue={platformsWithMentions}
-        titleAfter="'si seni taniyor"
-        subtitle={`${activePromptCount} soruda, ${totalMentionCount} tanesinde seni oneriyor${lastScanTimeAgo ? ` · Son tarama: ${lastScanTimeAgo}` : ""}`}
+        titleAfter="'si seni tanıyor"
+        subtitle={`${activePromptCount} soruda, ${totalMentionCount} tanesinde seni öneriyor${lastScanTimeAgo ? ` · Son tarama: ${lastScanTimeAgo}` : ""}`}
       >
         {/* Large progress indicator */}
         <div className="flex flex-col items-center gap-3">
@@ -165,7 +165,7 @@ export function GenelBakisContent({
                 %<AnimatedNumber value={mentionRate} />
               </span>
               <span style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4 }}>
-                bahsedilme orani
+                bahsedilme oranı
               </span>
             </div>
           </div>
@@ -233,8 +233,8 @@ export function GenelBakisContent({
                   }}
                 >
                   {isActive
-                    ? `${stat.total} sorunun ${stat.mentioned}'${stat.mentioned > 1 ? "i" : "u"}nde oneriyor`
-                    : "Henuz tanimiyor"}
+                    ? `${stat.total} sorunun ${stat.mentioned}'${stat.mentioned > 1 ? "i" : "u"}nde öneriyor`
+                    : "Henüz tanımıyor"}
                 </p>
               </div>
             );
@@ -249,7 +249,7 @@ export function GenelBakisContent({
         <PageSection className="mt-12">
           <SectionTitle
             title="Sorularda durum"
-            subtitle="Yapay zekalara sorulan sorularda ne kadar cikiyorsun?"
+            subtitle="Yapay zekalara sorulan sorularda ne kadar çıkıyorsun?"
           />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Best performing prompts */}
@@ -263,7 +263,7 @@ export function GenelBakisContent({
                     <CheckCircle2Icon className="size-4" style={{ color: "#22c55e" }} />
                   </div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-                    En cok ciktigin sorular
+                    En çok çıktığın sorular
                   </p>
                 </div>
                 <div className="flex flex-col gap-3">
@@ -320,7 +320,7 @@ export function GenelBakisContent({
                     <XCircleIcon className="size-4" style={{ color: "#ef4444" }} />
                   </div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-                    Hic cikamdigin sorular
+                    Hiç çıkamadığın sorular
                   </p>
                 </div>
                 <div className="flex flex-col gap-3">
@@ -372,7 +372,7 @@ export function GenelBakisContent({
               href="/dashboard/sorular"
               className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
-              Tum sorulari gor <ArrowRightIcon className="size-3.5" />
+              Tüm soruları gör <ArrowRightIcon className="size-3.5" />
             </Link>
           </div>
         </PageSection>
@@ -384,14 +384,14 @@ export function GenelBakisContent({
       {competitorRanking.length > 0 && (
         <PageSection className="mt-12">
           <SectionTitle
-            title="Senin yerine kim oneriliyor?"
-            subtitle="Yapay zekalarin senin yerine onerdigi ilk 5 firma"
+            title="Senin yerine kim öneriliyor?"
+            subtitle={`Yapay zekaların önerdiği ${competitorRanking.filter((c) => !c.isUser).length} firma${competitorRanking.some((c) => c.isUser) ? ` — sen ${competitorRanking.findIndex((c) => c.isUser) + 1}. sıradasın` : ""}`}
           />
           <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
             <div className="flex flex-col gap-4 sm:gap-5">
-              {competitorRanking.slice(0, 5).map((entry, i) => {
+              {competitorRanking.slice(0, 10).map((entry, i) => {
                 const maxMentions = Math.max(
-                  ...competitorRanking.slice(0, 5).map((r) => r.mentionCount),
+                  ...competitorRanking.slice(0, 10).map((r) => r.mentionCount),
                   1
                 );
                 const pct = (entry.mentionCount / maxMentions) * 100;
@@ -495,7 +495,7 @@ export function GenelBakisContent({
                 href="/dashboard/rakipler"
                 className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
-                Detayli rakip analizi <ArrowRightIcon className="size-3.5" />
+                Detaylı rakip analizi <ArrowRightIcon className="size-3.5" />
               </Link>
             </div>
           </div>
@@ -509,7 +509,7 @@ export function GenelBakisContent({
         <PageSection className="mt-12">
           <SectionTitle
             title="Yapay zeka senden nasil bahsediyor?"
-            subtitle="Seni oneren platformlarin gercek yanitlarindan ornekler"
+            subtitle="Seni öneren platformların gerçek yanıtlarından örnekler"
           />
           <div className="flex flex-col gap-4">
             {aiResponseExcerpts.slice(0, 2).map((item, i) => {
@@ -554,7 +554,7 @@ export function GenelBakisContent({
               href="/dashboard/sorular"
               className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
-              Tum yanitlari gor <ArrowRightIcon className="size-3.5" />
+              Tüm yanıtları gör <ArrowRightIcon className="size-3.5" />
             </Link>
           </div>
         </PageSection>
@@ -565,8 +565,8 @@ export function GenelBakisContent({
           ══════════════════════════════════════════════════════ */}
       <PageSection className="mt-12">
         <SectionTitle
-          title="Haftalik trend"
-          subtitle="Son 4 haftada yapay zekalarin seni ne kadar tanidigi"
+          title="Haftalık trend"
+          subtitle="Son 4 haftada yapay zekaların seni ne kadar tanıdığı"
         />
         {isPro ? (
           <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
@@ -624,7 +624,7 @@ export function GenelBakisContent({
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-                Henuz yeterli veri yok. Birkac tarama sonrasinda trend grafigini goreceksin.
+                Henüz yeterli veri yok. Birkaç tarama sonrasında trend grafiğini göreceksin.
               </div>
             )}
           </div>
@@ -648,10 +648,10 @@ export function GenelBakisContent({
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]">
               <LockIcon className="size-8 text-muted-foreground mb-3" />
               <p style={{ fontSize: 16, fontWeight: 700, color: "var(--foreground)", textAlign: "center" }}>
-                Haftalik trend takibi icin Pro&apos;ya gec
+                Haftalık trend takibi için Pro&apos;ya geç
               </p>
               <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginTop: 4, textAlign: "center" }}>
-                Hangi yapay zeka seni daha fazla taniyor, haftaya gore gor
+                Hangi yapay zeka seni daha fazla tanıyor, haftaya göre gör
               </p>
               <Link
                 href="/dashboard/paketler"
@@ -665,111 +665,90 @@ export function GenelBakisContent({
       </PageSection>
 
       {/* ══════════════════════════════════════════════════════
-          6. GELiSiM PLANI OZETi (Checklist Summary)
+          6. GELiSiM PLANI OZETi (Professional Single Card)
           ══════════════════════════════════════════════════════ */}
       <PageSection className="mt-12">
         <SectionTitle
-          title="Gelisim planin"
-          subtitle={`Ilerleme: ${checklistProgress.completed}/${checklistProgress.total || 22} tamamlandi`}
+          title="Gelişim planın"
+          subtitle={`${checklistProgress.total || 22} adımdan ${checklistProgress.completed} tamamlandı`}
         />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Easiest steps */}
-          {easiestChecklistItems.length > 0 && (
-            <div className="kinde-card p-4 sm:p-6 lg:p-7 cursor-default">
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="flex items-center justify-center rounded-xl"
-                  style={{ width: 32, height: 32, background: "#fef3c7" }}
-                >
-                  <ZapIcon className="size-4" style={{ color: "#d97706" }} />
-                </div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-                  En kolay 3 adim
-                </p>
-                <span style={{ fontSize: 11, color: "var(--muted-foreground)", fontWeight: 500 }}>
-                  hemen yapabilirsin
-                </span>
+        <div className="kinde-card p-5 sm:p-6 lg:p-8 cursor-default">
+          {/* Top: Progress + CTA */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div
+                className="flex items-center justify-center rounded-xl"
+                style={{ width: 44, height: 44, background: "#f5f5f5" }}
+              >
+                <ListChecksIcon className="size-5" />
               </div>
-              <div className="flex flex-col gap-3">
-                {easiestChecklistItems.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: "#d97706",
-                        marginTop: 6,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>
-                        {item.simpleTitle}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1">
-                        {item.estimatedTime && (
-                          <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>
-                            {item.estimatedTime}
-                          </span>
-                        )}
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, si) => (
-                            <div
-                              key={si}
-                              style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: "50%",
-                                background: si < item.feasibilityScore ? "#d97706" : "#e5e5e5",
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <p style={{ fontSize: 24, fontWeight: 800, color: "var(--foreground)", lineHeight: 1 }}>
+                  %{checklistProgress.total > 0 ? Math.round((checklistProgress.completed / checklistProgress.total) * 100) : 0}
+                </p>
+                <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>
+                  tamamlandı
+                </p>
               </div>
             </div>
-          )}
+            <Link
+              href="/dashboard/gelisim"
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-[13px] font-bold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Planı gör <ArrowRightIcon className="size-3.5" />
+            </Link>
+          </div>
 
-          {/* Highest impact steps */}
-          {highImpactChecklistItems.length > 0 && (
-            <div className="kinde-card p-4 sm:p-6 lg:p-7 cursor-default">
-              <div className="flex items-center gap-2 mb-4">
+          {/* Progress bar */}
+          <AnimBar
+            percent={checklistProgress.total > 0 ? (checklistProgress.completed / checklistProgress.total) * 100 : 0}
+            color="#22c55e"
+            height={6}
+          />
+
+          {/* Top 3 priority items */}
+          <div className="flex flex-col gap-0 mt-5">
+            {[...easiestChecklistItems, ...highImpactChecklistItems]
+              .filter((item, i, arr) => arr.findIndex((a) => a.simpleTitle === item.simpleTitle) === i)
+              .slice(0, 3)
+              .map((item, i) => (
                 <div
-                  className="flex items-center justify-center rounded-xl"
-                  style={{ width: 32, height: 32, background: "#ede9fe" }}
+                  key={i}
+                  className="flex items-center justify-between py-3"
+                  style={{ borderTop: i > 0 ? "1px solid #f0f0f0" : undefined }}
                 >
-                  <StarIcon className="size-4" style={{ color: "#7c3aed" }} />
-                </div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--foreground)" }}>
-                  En etkili 3 adim
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                {highImpactChecklistItems.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div
+                  <div className="flex items-center gap-3">
+                    <span
                       style={{
-                        width: 8,
-                        height: 8,
+                        width: 24,
+                        height: 24,
                         borderRadius: "50%",
-                        background: "#7c3aed",
-                        marginTop: 6,
+                        background: "#f5f5f5",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--muted-foreground)",
                         flexShrink: 0,
                       }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>
-                        {item.simpleTitle}
-                      </p>
+                    >
+                      {i + 1}
+                    </span>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>
+                      {item.simpleTitle}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {item.estimatedTime && (
+                      <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>
+                        {item.estimatedTime}
+                      </span>
+                    )}
+                    {item.impact === "HIGH" && (
                       <span
                         style={{
-                          display: "inline-block",
-                          marginTop: 4,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: 600,
                           color: "#7c3aed",
                           background: "#ede9fe",
@@ -777,45 +756,31 @@ export function GenelBakisContent({
                           borderRadius: 6,
                         }}
                       >
-                        Etki: Yuksek
+                        Yüksek Etki
                       </span>
+                    )}
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, si) => (
+                        <div
+                          key={si}
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: "50%",
+                            background: si < item.feasibilityScore ? "#d97706" : "#e5e5e5",
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Progress bar */}
-        <div className="kinde-card p-4 sm:p-5 mt-4 cursor-default">
-          <div className="flex items-center justify-between mb-2">
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--muted-foreground)" }}>
-              Genel ilerleme
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--foreground)" }}>
-              {checklistProgress.completed}/{checklistProgress.total || 22}
-            </span>
+                </div>
+              ))}
           </div>
-          <AnimBar
-            percent={checklistProgress.total > 0 ? (checklistProgress.completed / checklistProgress.total) * 100 : 0}
-            color="#111"
-            height={8}
-          />
-          {checklistProgress.completed === 0 && (
-            <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 8 }}>
-              Henuz baslamadin — ilk adimi at, fark hemen gorunur!
-            </p>
-          )}
-        </div>
 
-        <div className="mt-4 text-right">
-          <Link
-            href="/dashboard/gelisim"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Gelisim planinin tamamini gor <ArrowRightIcon className="size-3.5" />
-          </Link>
+          {/* Motivation text */}
+          <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 12, textAlign: "center" }}>
+            İlk adımı atarak yapay zekalarda daha görünür ol.
+          </p>
         </div>
       </PageSection>
 
@@ -824,7 +789,7 @@ export function GenelBakisContent({
           ══════════════════════════════════════════════════════ */}
       <PageSection className="mt-12">
         <SectionTitle
-          title="Yapay zeka seni nereden ogrenmis?"
+          title="Yapay zeka seni nereden öğrenmiş?"
           subtitle={`Aktif kaynaklar: ${activeSourceCount}/${sourceMap.length}`}
         />
         <div className="kinde-card p-4 sm:p-6 lg:p-7 cursor-default">
@@ -884,7 +849,7 @@ export function GenelBakisContent({
                 lineHeight: 1.5,
               }}
             >
-              Eksik kaynaklar eklendikce yapay zekalarin seni tanima orani artar.
+              Eksik kaynaklar eklendikçe yapay zekaların seni tanıma oranı artar.
             </div>
           )}
           <div className="mt-4 text-right">
@@ -892,7 +857,7 @@ export function GenelBakisContent({
               href="/dashboard/kaynaklar"
               className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
-              Tum kaynaklari gor <ArrowRightIcon className="size-3.5" />
+              Tüm kaynakları gör <ArrowRightIcon className="size-3.5" />
             </Link>
           </div>
         </div>
@@ -908,36 +873,36 @@ export function GenelBakisContent({
             icon={<SearchIcon className="size-4" />}
             label="Toplam soru"
             value={activePromptCount}
-            description={`${activePromptCount} soru analiz edildi, ${promptsWithMentions > 0 ? `${totalMentionCount}'inde cikiyorsun` : "henuz cikamiyorsun"}`}
+            description={`${activePromptCount} soru analiz edildi, ${promptsWithMentions > 0 ? `${totalMentionCount}'inde çıkıyorsun` : "henüz çıkamıyorsun"}`}
             linkHref="/dashboard/sorular"
-            linkText="Sorulari gor"
+            linkText="Soruları gör"
           />
           <EnrichedStatCard
             icon={<BarChart3Icon className="size-4" />}
-            label="Tarama sayisi"
+            label="Tarama sayısı"
             value={totalScanCount}
-            description={totalScanCount === 1 ? "Ilk tarama tamamlandi" : `${totalScanCount} tarama yapildi`}
+            description={totalScanCount === 1 ? "İlk tarama tamamlandı" : `${totalScanCount} tarama yapıldı`}
           />
           <EnrichedStatCard
             icon={<ListChecksIcon className="size-4" />}
-            label="Gelisim plani"
+            label="Gelişim planı"
             value={checklistProgress.completed}
             suffix={`/${checklistProgress.total || 22}`}
             description={
               checklistProgress.completed === 0
-                ? "Henuz baslamadin — ilk adimi at"
-                : `${checklistProgress.completed} adim tamamlandi`
+                ? "Henüz başlamadın — ilk adımı at"
+                : `${checklistProgress.completed} adım tamamlandı`
             }
             linkHref="/dashboard/gelisim"
-            linkText="Plani gor"
+            linkText="Planı gör"
           />
           <EnrichedStatCard
             icon={<LinkIcon className="size-4" />}
-            label="Kaynak sayisi"
+            label="Kaynak sayısı"
             value={totalSourceCount}
-            description={`Yapay zekalar ${totalSourceCount} farkli kaynaga referans verdi`}
+            description={`Yapay zekalar ${totalSourceCount} farklı kaynağa referans verdi`}
             linkHref="/dashboard/kaynaklar"
-            linkText="Kaynaklari gor"
+            linkText="Kaynakları gör"
           />
         </Stagger>
       </PageSection>
@@ -951,7 +916,7 @@ export function GenelBakisContent({
           9. DUAL CTA (keep existing)
           ══════════════════════════════════════════════════════ */}
       <DualCTA
-        contextMessage="Durumun her hafta degisiyor. Takipte kal."
+        contextMessage="Durumun her hafta değişiyor. Takipte kal."
         platformCount={platformsWithMentions}
         plan={plan}
       />

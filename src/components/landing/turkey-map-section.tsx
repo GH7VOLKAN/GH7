@@ -3,23 +3,23 @@
 import { useFadeIn } from "@/hooks/use-fade-in";
 
 const CITY_PINS = [
-  { name: "Istanbul", left: "28%", top: "25%", score: 82, color: "#22C55E" },
-  { name: "Balikesir", left: "20%", top: "38%", score: 91, color: "#22C55E" },
-  { name: "Izmir", left: "12%", top: "50%", score: 65, color: "#EAB308" },
+  { name: "İstanbul", left: "28%", top: "25%", score: 82, color: "#22C55E" },
+  { name: "Balıkesir", left: "20%", top: "38%", score: 91, color: "#22C55E" },
+  { name: "İzmir", left: "12%", top: "50%", score: 65, color: "#EAB308" },
   { name: "Bursa", left: "32%", top: "33%", score: 58, color: "#EAB308" },
   { name: "Ankara", left: "48%", top: "35%", score: 71, color: "#22C55E" },
   { name: "Konya", left: "40%", top: "60%", score: 38, color: "#EF4444" },
   { name: "Antalya", left: "25%", top: "72%", score: 45, color: "#EF4444" },
   { name: "Trabzon", left: "72%", top: "22%", score: 22, color: "#EF4444" },
   { name: "Erzurum", left: "82%", top: "42%", score: 15, color: "#D4D4D8" },
-  { name: "Diyarbakir", left: "68%", top: "52%", score: 12, color: "#D4D4D8" },
+  { name: "Diyarbakır", left: "68%", top: "52%", score: 12, color: "#D4D4D8" },
 ];
 
 const SIDEBAR_STATS = [
-  { num: "3", label: "Guclu il (70+)", color: "#22C55E" },
+  { num: "3", label: "Güçlü il (70+)", color: "#22C55E" },
   { num: "2", label: "Orta (40-69)", color: "#EAB308" },
-  { num: "3", label: "Zayif (1-39)", color: "#EF4444" },
-  { num: "73", label: "Takip disi", color: "#D4D4D8" },
+  { num: "3", label: "Zayıf (1-39)", color: "#EF4444" },
+  { num: "73", label: "Takip dışı", color: "#D4D4D8" },
 ];
 
 export function TurkeyMapSection() {
@@ -29,18 +29,18 @@ export function TurkeyMapSection() {
     <section ref={ref} className="fi-section bg-zinc-50 py-[72px] sm:py-[120px] px-5 sm:px-10">
       <div className="max-w-[1120px] mx-auto">
         <div className="text-[12px] font-semibold text-zinc-400 uppercase tracking-[0.12em] mb-4">
-          Yerel Gorunurluk
+          Yerel Görünürlük
         </div>
         <h2
           className="font-extrabold leading-[1.08] mb-4"
           style={{ fontSize: "clamp(30px, 4.5vw, 48px)", letterSpacing: "-0.035em" }}
         >
-          Her il ayri bir pazar.
+          Her il ayrı bir pazar.
           <br />
-          Her ilde ayri rakip.
+          Her ilde ayrı rakip.
         </h2>
         <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[520px]">
-          Istanbul&apos;da 1 numara olup Ankara&apos;da hic gorunmeyebilirsiniz. Bir musteri &quot;Ankara&apos;da en iyi isitma firmasi&quot; diye sordugunda AI kimi oneriyor? GH7 bunu il il gosterir.
+          İstanbul&apos;da 1 numara olup Ankara&apos;da hiç görünmeyebilirsiniz. Bir müşteri &quot;Ankara&apos;da en iyi ısıtma firması&quot; diye sorduğunda AI kimi öneriyor? GH7 bunu il il gösterir.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-6 md:gap-12 mt-12 items-start">

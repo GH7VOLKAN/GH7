@@ -56,61 +56,61 @@ interface FormData {
 /* ------------------------------------------------------------------ */
 
 const SECTORS = [
-  "Isitma Sistemleri",
-  "Insaat",
-  "Saglik",
+  "Isıtma Sistemleri",
+  "İnşaat",
+  "Sağlık",
   "Hukuk",
   "Restoran",
   "Otel",
   "E-ticaret",
-  "Diger",
+  "Diğer",
 ];
 
 const ALL_CITIES = [
-  "Istanbul",
+  "İstanbul",
   "Ankara",
-  "Izmir",
+  "İzmir",
   "Bursa",
   "Antalya",
   "Adana",
   "Konya",
   "Gaziantep",
   "Mersin",
-  "Diyarbakir",
+  "Diyarbakır",
   "Kayseri",
-  "Eskisehir",
+  "Eskişehir",
   "Samsun",
   "Denizli",
   "Malatya",
   "Trabzon",
   "Erzurum",
-  "Balikesir",
+  "Balıkesir",
   "Manisa",
   "Sakarya",
 ];
 
 const DEFAULT_KEYWORDS = [
-  "villa banyosu icin elektrikli yerden isitma sistemleri",
-  "yuzey alti boru isitma kablosu secenekleri",
-  "endustriyel varil isitma ceketi fiyat karsilastirmasi",
-  "serada enerji verimli isitma sistemi onerileri",
-  "catida kar buz eritme kablo cozumleri",
-  "karbon film yerden isitma avantajlari",
-  "elektrikli yerden isitma termostat secimi",
-  "boru donma onleme isitma kablosu",
-  "sera toprak alti isitma projeleri",
-  "endustriyel heat trace kablo sistemleri",
+  "villa banyosu için elektrikli yerden ısıtma sistemleri",
+  "yüzey altı boru ısıtma kablosu seçenekleri",
+  "endüstriyel varil ısıtma çeketi fiyat karşılaştırması",
+  "serada enerji verimli ısıtma sistemi önerileri",
+  "çatıda kar buz eritme kablo çözümleri",
+  "karbon film yerden ısıtma avantajları",
+  "elektrikli yerden ısıtma termostat seçimi",
+  "boru donma önleme ısıtma kablosu",
+  "sera toprak altı ısıtma projeleri",
+  "endüstriyel heat trace kablo sistemleri",
 ];
 
 const LOADING_STEPS = [
-  { text: "Markaniz arastiriliyor...", duration: 1200, icon: Globe },
+  { text: "Markanız araştırılıyor...", duration: 1200, icon: Globe },
   { text: "ChatGPT'ye soruyoruz...", duration: 1000, icon: MessageSquare },
-  { text: "Gemini'den yanit aliniyor...", duration: 1000, icon: MessageSquare },
+  { text: "Gemini'den yanıt alınıyor...", duration: 1000, icon: MessageSquare },
   { text: "Perplexity kontrol ediliyor...", duration: 1000, icon: MessageSquare },
-  { text: "Claude'a danisiyoruz...", duration: 1000, icon: MessageSquare },
-  { text: "Google AI Overview taraniyor...", duration: 1000, icon: MessageSquare },
+  { text: "Claude'a danışıyoruz...", duration: 1000, icon: MessageSquare },
+  { text: "Google AI Overview taranıyor...", duration: 1000, icon: MessageSquare },
   { text: "Rakipleriniz tespit ediliyor...", duration: 800, icon: BarChart3 },
-  { text: "Raporunuz hazirlaniyor...", duration: 800, icon: FileText },
+  { text: "Raporunuz hazırlanıyor...", duration: 800, icon: FileText },
 ];
 
 const PLATFORM_SCORES = [
@@ -126,25 +126,25 @@ const METRIC_CARDS = [
     label: "Ses Payi",
     value: `%${DEMO_METRICS.shareOfVoice}`,
     change: DEMO_METRICS.changes.shareOfVoice,
-    description: "AI yanitlarinda pazar payi",
+    description: "AI yanıtlarında pazar payı",
   },
   {
     label: "Kapsam",
     value: `%${DEMO_METRICS.coverage}`,
     change: DEMO_METRICS.changes.coverage,
-    description: "Aramalarda gorunme orani",
+    description: "Aramalarda görünme oranı",
   },
   {
     label: "Ort. Sira",
     value: DEMO_METRICS.avgPosition.toFixed(1),
     change: DEMO_METRICS.changes.avgPosition,
-    description: "Kaynaklarda siralama",
+    description: "Kaynaklarda sıralama",
   },
   {
     label: "Algi Skoru",
     value: DEMO_METRICS.sentiment.toFixed(2),
     change: DEMO_METRICS.changes.sentiment,
-    description: "Marka algi skoru",
+    description: "Marka algı skoru",
   },
 ];
 
@@ -158,41 +158,41 @@ const EXTRA_COMPETITORS = [
 const DEMO_PLATFORM_RESPONSES = [
   {
     provider: "ChatGPT",
-    keyword: "villa banyosu icin elektrikli yerden isitma",
+    keyword: "villa banyosu için elektrikli yerden ısıtma",
     response:
-      "Villa banyolari icin elektrikli yerden isitma sistemleri, ozellikle karbon film ve isitma kablolari olarak iki ana kategoriye ayrilir. Isitmax gibi yerli uretciler, seramik ve dogal tas altina uygun, uzun omurlu cozumler sunmaktadir...",
+      "Villa banyoları için elektrikli yerden ısıtma sistemleri, özellikle karbon film ve ısıtma kabloları olarak iki ana kategoriye ayrılır. Isıtmax gibi yerli üreticiler, seramik ve doğal taş altına uygun, uzun ömürlü çözümler sunmaktadır...",
     sources: ["isitmax.com", "enerserji.com.tr", "warmup.com.tr"],
     brandMentioned: true,
   },
   {
     provider: "Gemini",
-    keyword: "endustriyel varil isitma ceketi fiyat",
+    keyword: "endüstriyel varil ısıtma çeketi fiyat",
     response:
-      "Endustriyel varil isitma ceketleri, kimya ve gida sektorlerinde sivi sicakligi korumak icin kullanilir. Turkiye pazarinda Isitmax, RezistansMarket ve Danfoss gibi markalar one cikiyor...",
+      "Endüstriyel varil ısıtma çeketleri, kimya ve gıda sektörlerinde sıvı sıcaklığı korumak için kullanılır. Türkiye pazarında Isıtmax, RezistansMarket ve Danfoss gibi markalar öne çıkıyor...",
     sources: ["isitmax.com", "rezistansmarket.com", "danfoss.com.tr"],
     brandMentioned: true,
   },
   {
     provider: "AI Overview",
-    keyword: "yuzey alti boru isitma kablosu secenekleri",
+    keyword: "yüzey altı boru ısıtma kablosu seçenekleri",
     response:
-      "Yuzey alti boru isitma kablolari; donmayi onlemek (heat trace), sicakligi korumak veya akiskanligi saglamak icin kendinden reguleli veya sabit guclu kablolar olarak ayrilir...",
+      "Yüzey altı boru ısıtma kabloları; donmayı önlemek (heat trace), sıcaklığı korumak veya akışkanlığı sağlamak için kendinden regüleli veya sabit güçlü kablolar olarak ayrılır...",
     sources: ["firmamnet.com", "heattrace.com.tr", "isitmax.com", "senrezistans.com"],
     brandMentioned: true,
   },
   {
     provider: "Perplexity",
-    keyword: "serada enerji verimli isitma sistemi",
+    keyword: "serada enerji verimli ısıtma sistemi",
     response:
-      "Seralarda enerji verimli isitma icin toprak alti isitma kablolari, hava ufleyicili sistemler ve hibrit cozumler tercih edilmektedir. Isitmax'in sera isitma kablolari enerji verimli secenekler arasinda yer almaktadir...",
+      "Seralarda enerji verimli ısıtma için toprak altı ısıtma kabloları, hava üfleyicili sistemler ve hibrit çözümler tercih edilmektedir. Isıtmax'ın sera ısıtma kabloları enerji verimli seçenekler arasında yer almaktadır...",
     sources: ["isitmax.com", "tarim.gov.tr", "seracilik.org"],
     brandMentioned: true,
   },
   {
     provider: "Claude",
-    keyword: "catida kar buz eritme kablo cozumleri",
+    keyword: "çatıda kar buz eritme kablo çözümleri",
     response:
-      "Cati ve oluk sistemlerinde kar ve buz birikmesini onlemek icin self-regulating (kendinden ayarli) isitma kablolari kullanilir. Bu kablolar ortam sicakligina gore guc tuketimini otomatik ayarlar...",
+      "Çatı ve oluk sistemlerinde kar ve buz birikmesini önlemek için self-regulating (kendinden ayarlı) ısıtma kabloları kullanılır. Bu kablolar ortam sıcaklığına göre güç tüketimini otomatik ayarlar...",
     sources: ["warmup.com.tr", "isitmax.com", "heattrace.com.tr"],
     brandMentioned: true,
   },
@@ -212,10 +212,10 @@ function Logo() {
 
 function StepIndicator({ currentStep }: { currentStep: Step }) {
   const steps = [
-    { num: 0, label: "Dogrulama" },
+    { num: 0, label: "Doğrulama" },
     { num: 1, label: "Marka" },
     { num: 2, label: "Arama" },
-    { num: 3, label: "Sonuc" },
+    { num: 3, label: "Sonuç" },
   ];
 
   return (
@@ -330,7 +330,7 @@ function SiziArayalimPopup({
         </button>
 
         <h3 className="text-lg font-semibold text-gray-900 mb-6">
-          En kisa surede sizi arayalim
+          En kısa sürede sizi arayalım
         </h3>
 
         <div className="space-y-4">
@@ -358,7 +358,7 @@ function SiziArayalimPopup({
               onChange={(e) => setTimeSlot(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
             >
-              <option value="">Saat secin</option>
+              <option value="">Saat seçin</option>
               <option value="09:00-12:00">09:00-12:00</option>
               <option value="12:00-15:00">12:00-15:00</option>
               <option value="15:00-18:00">15:00-18:00</option>
@@ -391,7 +391,7 @@ function SiziArayalimPopup({
             onClick={onClose}
             className="w-full bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors"
           >
-            Arayin Beni &rarr;
+            Arayın Beni &rarr;
           </button>
 
           <p className="text-center text-sm text-gray-400">
@@ -484,13 +484,13 @@ export default function AnalizPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setOtpError(data.error ?? "SMS gonderilemedi. Lutfen tekrar deneyin.");
+        setOtpError(data.error ?? "SMS gönderilemedi. Lütfen tekrar deneyin.");
         return;
       }
       setOtpToken(data.token ?? null);
       setOtpSent(true);
     } catch {
-      setOtpError("Bir hata olustu. Lutfen tekrar deneyin.");
+      setOtpError("Bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setOtpLoading(false);
     }
@@ -516,13 +516,13 @@ export default function AnalizPage() {
       const data = await res.json();
       if (!res.ok) {
         setOtpError(
-          data.error ?? "Kod dogrulanamadi. Lutfen tekrar deneyin."
+          data.error ?? "Kod doğrulanamadı. Lütfen tekrar deneyin."
         );
         return;
       }
       setStep(1);
     } catch {
-      setOtpError("Dogrulama sirasinda bir hata olustu.");
+      setOtpError("Doğrulama sırasında bir hata oluştu.");
     } finally {
       setOtpLoading(false);
     }
@@ -621,12 +621,12 @@ export default function AnalizPage() {
       <Logo />
 
       <h1 className="mt-10 text-4xl md:text-5xl font-bold text-gray-900 max-w-xl leading-tight">
-        Yapay Zeka Seni Taniyor mu?
+        Yapay Zeka Seni Tanıyor mu?
       </h1>
 
       <p className="mt-4 text-lg text-gray-500 max-w-lg">
-        ChatGPT, Gemini ve AI Overview&apos;da gorunurlugunuzu 60 saniyede
-        ogrenin
+        ChatGPT, Gemini ve AI Overview&apos;da görünürlüğünüzü 60 saniyede
+        öğrenin
       </p>
 
       {/* Dual selection cards */}
@@ -647,7 +647,7 @@ export default function AnalizPage() {
         >
           <span className="text-2xl block mb-2">&#127970;</span>
           <span className="text-sm font-medium text-gray-900">
-            Firmami Test Et
+            Firmamı Test Et
           </span>
         </button>
         <button
@@ -667,7 +667,7 @@ export default function AnalizPage() {
         >
           <span className="text-2xl block mb-2">&#128100;</span>
           <span className="text-sm font-medium text-gray-900">
-            Kendi Adimi Test Et
+            Kendi Adımı Test Et
           </span>
         </button>
       </div>
@@ -687,7 +687,7 @@ export default function AnalizPage() {
           )}
           <input
             type="text"
-            placeholder={isFirma ? "firmaniz.com" : "Ad Soyad"}
+            placeholder={isFirma ? "firmanız.com" : "Ad Soyad"}
             value={formData.heroInput}
             onChange={(e) => updateField("heroInput", e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleHeroSubmit()}
@@ -698,12 +698,12 @@ export default function AnalizPage() {
           onClick={handleHeroSubmit}
           className="bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
         >
-          Ucretsiz Analiz Et
+          Ücretsiz Analiz Et
         </button>
       </div>
 
       <p className="mt-3 text-sm text-gray-400">
-        5 dakikadan kisa &middot; Kredi karti gerekmez
+        5 dakikadan kısa &middot; Kredi kartı gerekmez
       </p>
 
       <div className="mt-8 flex items-center gap-3">
@@ -731,10 +731,10 @@ export default function AnalizPage() {
 
       <div className="border border-gray-200 rounded-xl p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-1">
-          Dogrulama
+          Doğrulama
         </h2>
         <p className="text-sm text-gray-500 mb-6">
-          Analiz sonuclarinizi gonderebilmemiz icin bilgilerinizi dogrulayin.
+          Analiz sonuçlarınızı gönderebilmemiz için bilgilerinizi doğrulayın.
         </p>
 
         <div className="space-y-4">
@@ -773,7 +773,7 @@ export default function AnalizPage() {
               disabled={otpLoading}
               className="w-full bg-gray-100 text-gray-900 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
-              {otpLoading ? "Gonderiliyor..." : "SMS Kodu Gonder"}
+              {otpLoading ? "Gönderiliyor..." : "SMS Kodu Gönder"}
             </button>
           )}
 
@@ -781,7 +781,7 @@ export default function AnalizPage() {
           {otpSent && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dogrulama Kodu
+                Doğrulama Kodu
               </label>
               <input
                 type="text"
@@ -814,7 +814,7 @@ export default function AnalizPage() {
               className="mt-1 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
             />
             <span className="text-xs text-gray-500 leading-relaxed">
-              Analiz sonuclarimin WhatsApp ile gonderilmesini kabul ediyorum
+              Analiz sonuçlarımın WhatsApp ile gönderilmesini kabul ediyorum
             </span>
           </label>
 
@@ -830,7 +830,7 @@ export default function AnalizPage() {
               }
               className="w-full bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {otpLoading ? "Dogrulaniyor..." : "Dogrula ve Devam Et"}
+              {otpLoading ? "Doğrulanıyor..." : "Doğrula ve Devam Et"}
             </button>
           )}
         </div>
@@ -844,12 +844,12 @@ export default function AnalizPage() {
 
       <div className="border border-gray-200 rounded-xl p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-1">
-          {isFirma ? "Marka Bilgileri" : "Kisisel Bilgiler"}
+          {isFirma ? "Marka Bilgileri" : "Kişisel Bilgiler"}
         </h2>
         <p className="text-sm text-gray-500 mb-6">
           {isFirma
-            ? "AI aramasini kisislestirmek icin marka bilgilerinizi girin."
-            : "AI aramasini kisislestirmek icin bilgilerinizi girin."}
+            ? "AI aramasını kişiselleştirmek için marka bilgilerinizi girin."
+            : "AI aramasını kişiselleştirmek için bilgilerinizi girin."}
         </p>
 
         <div className="space-y-4">
@@ -858,7 +858,7 @@ export default function AnalizPage() {
               {/* Brand Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Marka Adi
+                  Marka Adı
                 </label>
                 <input
                   type="text"
@@ -884,14 +884,14 @@ export default function AnalizPage() {
               {/* Sector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sektor
+                  Sektör
                 </label>
                 <select
                   value={formData.sector}
                   onChange={(e) => updateField("sector", e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
                 >
-                  <option value="">Sektor secin</option>
+                  <option value="">Sektör seçin</option>
                   {SECTORS.map((s) => (
                     <option key={s} value={s}>
                       {s}
@@ -918,14 +918,14 @@ export default function AnalizPage() {
               {/* Profession */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Uzmanlik alani
+                  Uzmanlık alanı
                 </label>
                 <select
                   value={formData.profession}
                   onChange={(e) => updateField("profession", e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
                 >
-                  <option value="">Uzmanlik secin</option>
+                  <option value="">Uzmanlık seçin</option>
                   {PERSONAL_PROFESSIONS.map((p) => (
                     <option key={p} value={p}>
                       {p}
@@ -954,7 +954,7 @@ export default function AnalizPage() {
           {/* Cities */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {isFirma ? "Hizmet Verilen Iller" : "Faaliyet gosterilen iller"}{" "}
+              {isFirma ? "Hizmet Verilen İller" : "Faaliyet gösterilen iller"}{" "}
               <span className="text-gray-400 font-normal">(maks. 3)</span>
             </label>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -1017,10 +1017,10 @@ export default function AnalizPage() {
 
         <div className="border border-gray-200 rounded-xl p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-1">
-            Arama Onayi
+            Arama Onayı
           </h2>
           <p className="text-sm text-gray-500 mb-6">
-            AI otomatik 10 arama onerdi. Dilediginizi duzenleyebilirsiniz.
+            AI otomatik 10 arama önerdi. Dilediğinizi düzenleyebilirsiniz.
           </p>
 
           <div className="space-y-3 mb-6">
@@ -1060,7 +1060,7 @@ export default function AnalizPage() {
             onClick={handleStartAnalysis}
             className="w-full bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors"
           >
-            Analizi Baslat &rarr;
+            Analizi Başlat &rarr;
           </button>
         </div>
       </div>
@@ -1129,10 +1129,10 @@ export default function AnalizPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-gray-900">
-            {displayName} Analiz Sonuclari
+            {displayName} Analiz Sonuçları
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            5 platform uzerinden analiz tamamlandi
+            5 platform üzerinden analiz tamamlandı
           </p>
         </div>
 
@@ -1141,7 +1141,7 @@ export default function AnalizPage() {
           <div className="border border-gray-200 rounded-xl p-8 inline-flex flex-col items-center">
             <ScoreGauge score={DEMO_METRICS.geoScore} />
             <p className="text-sm text-gray-500 mt-3">
-              Genel AI Gorunurluk Skoru
+              Genel AI Görünürlük Skoru
             </p>
           </div>
         </div>
@@ -1199,7 +1199,7 @@ export default function AnalizPage() {
         {/* Turkey Map */}
         <div className="mb-8 border border-gray-200 rounded-xl p-6">
           <h3 className="text-sm font-medium text-gray-900 mb-4">
-            Secilen Illerde Gorunurluk
+            Seçilen İllerde Görünürlük
           </h3>
           <TurkeyMap
             cityData={Object.fromEntries([
@@ -1218,7 +1218,7 @@ export default function AnalizPage() {
         {/* Competitor Detection */}
         <div className="border border-gray-200 rounded-xl p-6 mb-8">
           <h3 className="text-sm font-medium text-gray-900 mb-4">
-            {isFirma ? "Rakip Tespiti" : "Meslektaslarinizla Kiyaslama"}
+            {isFirma ? "Rakip Tespiti" : "Meslektaşlarınızla Kıyaslama"}
           </h3>
           <div className="space-y-3">
             {allCompetitors.map((c, i) => (
@@ -1248,7 +1248,7 @@ export default function AnalizPage() {
         {/* Example AI Responses — one per platform */}
         <div className="space-y-4 mb-8">
           <h3 className="text-sm font-medium text-gray-900">
-            Platform Yanitlari
+            Platform Yanıtları
           </h3>
           {DEMO_PLATFORM_RESPONSES.map((resp, idx) => {
             const platformColor =
@@ -1314,8 +1314,8 @@ export default function AnalizPage() {
                     </svg>
                     <span className="text-xs text-green-700 font-medium">
                       {isFirma
-                        ? "Markaniz bu yanitta referans gosterildi"
-                        : "Isminiz bu yanitta gecti"}
+                        ? "Markanız bu yanıtta referans gösterildi"
+                        : "İsminiz bu yanıtta geçti"}
                     </span>
                   </div>
                 )}
@@ -1330,16 +1330,16 @@ export default function AnalizPage() {
             {/* AI sizi nasil tanimliyor */}
             <div className="border border-gray-200 rounded-xl p-6 mb-8">
               <h3 className="text-sm font-medium text-gray-900 mb-3">
-                AI sizi nasil tanimliyor
+                AI sizi nasıl tanımlıyor
               </h3>
               <p className="text-sm text-gray-700 leading-relaxed">
-                {formData.fullName}, {formData.profession} alaninda faaliyet
-                gosteren bir uzman olarak tanimlanmaktadir.{" "}
+                {formData.fullName}, {formData.profession} alanında faaliyet
+                gösteren bir uzman olarak tanımlanmaktadır.{" "}
                 {formData.cities.length > 0 &&
-                  `${formData.cities.join(", ")} bolgesinde aktif olarak gorunmektedir.`}{" "}
-                AI platformlari genel olarak olumlu bir profil cizmekte,
-                ancak dijital icerik uretimi arttirilarak gorunurluk
-                iyilestirilebilir.
+                  `${formData.cities.join(", ")} bölgesinde aktif olarak görünmektedir.`}{" "}
+                AI platformları genel olarak olumlu bir profil çizmekte,
+                ancak dijital içerik üretimi arttırılarak görünürlük
+                iyileştirilebilir.
               </p>
             </div>
 
@@ -1378,7 +1378,7 @@ export default function AnalizPage() {
                         item.found ? "text-green-600" : "text-gray-400"
                       }`}
                     >
-                      {item.found ? "Bulundu" : "Bulunamadi"}
+                      {item.found ? "Bulundu" : "Bulunamadı"}
                     </span>
                   </div>
                 ))}
@@ -1390,7 +1390,7 @@ export default function AnalizPage() {
         {/* Platform Traffic Bar */}
         <div className="border border-gray-200 rounded-xl p-6 mb-8">
           <p className="text-sm font-medium text-gray-900 mb-4">
-            Platform Trafik Dagilimi
+            Platform Trafik Dağılımı
           </p>
           <div className="flex h-6 rounded-full overflow-hidden">
             {DEMO_PLATFORM_DISTRIBUTION.map((p) => (
@@ -1420,33 +1420,33 @@ export default function AnalizPage() {
         {/* Pro CTA */}
         <div className="border border-gray-200 rounded-xl p-8 text-center mt-12">
           <p className="text-lg font-semibold text-gray-900 mb-2">
-            Bu anlik bir fotograf.
+            Bu anlık bir fotoğraf.
           </p>
           <p className="text-sm text-gray-500 mb-1">
-            Yapay zeka yanitlari her hafta degisiyor.
+            Yapay zeka yanıtları her hafta değişiyor.
           </p>
           <p className="text-sm text-gray-500 mb-1">
-            Haftalik otomatik takip ile degisimleri kacirmayin.
+            Haftalık otomatik takip ile değişimleri kaçırmayın.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            Rakipleriniz ilerlerse aninda haberiniz olsun.
+            Rakipleriniz ilerlerse anında haberiniz olsun.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/giris"
               className="bg-gray-900 text-white rounded-lg px-8 py-3 font-medium hover:bg-gray-800 transition-colors"
             >
-              Haftalik Takibi Baslat &rarr; Pro &#8378;2.495/ay
+              Haftalık Takibi Başlat &rarr; Pro &#8378;2.495/ay
             </Link>
             <button
               onClick={() => setShowCallPopup(true)}
               className="border border-gray-300 rounded-lg px-8 py-3 font-medium hover:bg-gray-50 transition-colors"
             >
-              Sizi Arayalim
+              Sizi Arayalım
             </button>
           </div>
           <button className="mt-4 text-sm text-gray-500 hover:text-gray-700">
-            Raporu WhatsApp&apos;a gonder
+            Raporu WhatsApp&apos;a gönder
           </button>
         </div>
       </div>

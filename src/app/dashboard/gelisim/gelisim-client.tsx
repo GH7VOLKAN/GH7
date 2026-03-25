@@ -75,7 +75,7 @@ function TechnicalDetailSection({ detail }: { detail: TechnicalDetail }) {
             transform: open ? "rotate(0)" : "rotate(-90deg)",
           }}
         />
-        {open ? "Teknik detayi gizle" : "Teknik detay"}
+        {open ? "Teknik detayı gizle" : "Teknik detay"}
       </button>
 
       {open && (
@@ -153,9 +153,9 @@ const DIFFICULTY_LABELS: Record<string, { label: string; bg: string; fg: string 
 };
 
 const IMPACT_LABELS: Record<string, { label: string; color: string }> = {
-  LOW: { label: "Dusuk Etki", color: "#999" },
+  LOW: { label: "Düşük Etki", color: "#999" },
   MEDIUM: { label: "Orta Etki", color: "#d97706" },
-  HIGH: { label: "Yuksek Etki", color: "#059669" },
+  HIGH: { label: "Yüksek Etki", color: "#059669" },
 };
 
 // ── "Pro ile AI rehber al" — Opus on-demand DIY rehber ────
@@ -277,7 +277,7 @@ function DiyGuideSection({
             marginBottom: 8,
           }}
         >
-          Kendin Yap Adimlari
+          Kendin Yap Adımları
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {fallbackSteps.map((step, i) => (
@@ -329,7 +329,7 @@ function DiyGuideSection({
         }}
       >
         <ArrowRightIcon style={{ width: 14, height: 14 }} />
-        {loading ? "Rehber hazirlaniyor..." : "Adim adim yapayim"}
+        {loading ? "Rehber hazırlanıyor..." : "Adım adım yapayım"}
       </button>
     );
   }
@@ -390,7 +390,7 @@ function CompletionStatus({ item }: { item: ChecklistItemFull }) {
           }}
         >
           <ShieldCheckIcon style={{ width: 14, height: 14, color: "#10b981" }} />
-          <span style={{ color: "#059669" }}>Yapay zeka tarafindan dogrulandi</span>
+          <span style={{ color: "#059669" }}>Yapay zeka tarafından doğrulandı</span>
           {item.completedAt && (
             <span style={{ marginLeft: "auto", fontSize: 10, color: "#6ee7b7" }}>
               {new Date(item.completedAt).toLocaleDateString("tr-TR", {
@@ -424,10 +424,10 @@ function CompletionStatus({ item }: { item: ChecklistItemFull }) {
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
         <CheckCircle2Icon style={{ width: 14, height: 14, color: "#3b82f6" }} />
-        <span style={{ color: "#1d4ed8", fontWeight: 500 }}>Tamamlandi olarak isaretledin</span>
+        <span style={{ color: "#1d4ed8", fontWeight: 500 }}>Tamamlandı olarak işaretledin</span>
       </div>
       <p style={{ marginTop: 4, fontSize: 11, color: "#60a5fa", paddingLeft: 22 }}>
-        Sonraki taramada yapay zeka dogrulayacak.{" "}
+        Sonraki taramada yapay zeka doğrulayacak.{" "}
         <span style={{ fontWeight: 500 }}>
           Test tarihi:{" "}
           {nextVerification.toLocaleDateString("tr-TR", {
@@ -496,8 +496,8 @@ function ReminderSection({
   }
 
   const quickOptions = [
-    { label: "Yarin", days: 1 },
-    { label: "3 gun sonra", days: 3 },
+    { label: "Yarın", days: 1 },
+    { label: "3 gün sonra", days: 3 },
     { label: "1 hafta sonra", days: 7 },
     { label: "2 hafta sonra", days: 14 },
   ];
@@ -518,7 +518,7 @@ function ReminderSection({
       >
         <BellIcon style={{ width: 14, height: 14, color: isPast ? "#f59e0b" : "#3b82f6" }} />
         <span style={{ color: isPast ? "#b45309" : "#1d4ed8" }}>
-          {isPast ? "Hatirlatici gecti: " : "Hatirlatici: "}
+          {isPast ? "Hatırlatıcı geçti: " : "Hatırlatıcı: "}
           {reminderDate!.toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
         </span>
         <button
@@ -533,7 +533,7 @@ function ReminderSection({
             cursor: "pointer",
           }}
         >
-          {saving ? "..." : "Kaldir"}
+          {saving ? "..." : "Kaldır"}
         </button>
       </div>
     );
@@ -549,7 +549,7 @@ function ReminderSection({
           padding: 12,
         }}
       >
-        <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Ne zaman hatirlatayim?</p>
+        <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Ne zaman hatırlatayım?</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {quickOptions.map((opt) => {
             const date = new Date();
@@ -585,7 +585,7 @@ function ReminderSection({
             cursor: "pointer",
           }}
         >
-          Iptal
+          İptal
         </button>
       </div>
     );
@@ -606,7 +606,7 @@ function ReminderSection({
       }}
     >
       <CalendarIcon style={{ width: 14, height: 14 }} />
-      Hatirlatici kur
+      Hatırlatıcı kur
     </button>
   );
 }
@@ -715,7 +715,7 @@ function ChecklistItemCard({
             <span style={{ fontSize: 10, fontWeight: 500, color: impact.color }}>
               {impact.label}
             </span>
-            <span style={{ fontSize: 10, color: "#999" }} title={`Yapilabilirlik: ${item.feasibilityScore}/5`}>
+            <span style={{ fontSize: 10, color: "#999" }} title={`Yapılabilirlik: ${item.feasibilityScore}/5`}>
               {"●".repeat(item.feasibilityScore)}
               {"○".repeat(5 - item.feasibilityScore)}
             </span>
@@ -807,7 +807,7 @@ function ChecklistItemCard({
                   }}
                 >
                   <UndoIcon style={{ width: 14, height: 14 }} />
-                  {loading ? "Sifirlaniyor..." : "Sifirla"}
+                  {loading ? "Sıfırlanıyor..." : "Sıfırla"}
                 </button>
               ) : (
                 <button
@@ -828,7 +828,7 @@ function ChecklistItemCard({
                   }}
                 >
                   <CheckCircle2Icon style={{ width: 14, height: 14 }} />
-                  {loading ? "Kaydediliyor..." : "Tamamladim"}
+                  {loading ? "Kaydediliyor..." : "Tamamladım"}
                 </button>
               )}
 
@@ -850,7 +850,7 @@ function ChecklistItemCard({
                 }}
               >
                 <ZapIcon style={{ width: 14, height: 14 }} />
-                Bu adimi biz yapalim
+                Bu adımı biz yapalım
               </Link>
             </div>
           </div>
@@ -919,11 +919,11 @@ export function GelisimClient({
           >
             <TargetIcon style={{ width: 32, height: 32, color: "#999" }} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Gelisim Planini Baslat</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Gelişim Planını Başlat</h2>
           <p style={{ marginTop: 8, fontSize: 14, color: "#999", maxWidth: 400 }}>
-            Yapay zeka gorunurlugunu adim adim artirmak icin kisisellestirilmis gelisim
-            planini olustur. 15 kontrol noktasi ile nerelerde guclu, nerelerde
-            zayif oldugunu gor.
+            Yapay zeka görünürlüğünü adım adım artırmak için kişiselleştirilmiş gelişim
+            planını oluştur. 15 kontrol noktası ile nerelerde güçlü, nerelerde
+            zayıf olduğunu gör.
           </p>
           <button
             onClick={async () => {
@@ -954,7 +954,7 @@ export function GelisimClient({
             }}
           >
             <TargetIcon style={{ width: 16, height: 16 }} />
-            {seeding ? "Hazirlaniyor..." : "Gelisim Planini Olustur"}
+            {seeding ? "Hazırlanıyor..." : "Gelişim Planını Oluştur"}
           </button>
         </div>
       </div>
@@ -969,8 +969,8 @@ export function GelisimClient({
       {/* ── HERO SECTION ─────────────────────────────── */}
       <HeroSection
         label="GELİŞİM PLANI"
-        title={`${data.total} adimda yapay zekada\ngorunur ol`}
-        subtitle={`3 katmanda yapay zeka gorunurlugunu artirmak icin kontrol listesi.`}
+        title={`${data.total} adımda yapay zekada\ngörünür ol`}
+        subtitle={`3 katmanda yapay zeka görünürlüğünü artırmak için kontrol listesi.`}
       >
         {/* Animated counter */}
         <div
@@ -987,7 +987,7 @@ export function GelisimClient({
               {data.completed}
               <span style={{ fontSize: 16, fontWeight: 500, color: "#999" }}>/{data.total}</span>
             </div>
-            <div style={{ fontSize: 12, color: "#999", marginTop: 2 }}>tamamlandi</div>
+            <div style={{ fontSize: 12, color: "#999", marginTop: 2 }}>tamamlandı</div>
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-1px", color: "var(--foreground)" }}>
@@ -1015,13 +1015,13 @@ export function GelisimClient({
           }}
         >
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} /> Tamamlandi
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} /> Tamamlandı
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171" }} /> Eksik
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} /> Uyari
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} /> Uyarı
           </span>
         </div>
       </HeroSection>
@@ -1031,7 +1031,7 @@ export function GelisimClient({
         {/* Sort toggle — pill buttons */}
         <PageSection>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, color: "#999" }}>Sirala:</span>
+            <span style={{ fontSize: 12, color: "#999" }}>Sırala:</span>
             {(["default", "easy", "impact"] as const).map((mode) => (
               <button
                 key={mode}
@@ -1048,7 +1048,7 @@ export function GelisimClient({
                   transition: "all 0.2s",
                 }}
               >
-                {mode === "default" ? "Varsayilan" : mode === "easy" ? "Kolay olanlar once" : "Etkili olanlar once"}
+                {mode === "default" ? "Varsayılan" : mode === "easy" ? "Kolay olanlar önce" : "Etkili olanlar önce"}
               </button>
             ))}
           </div>
@@ -1066,7 +1066,7 @@ export function GelisimClient({
                 {/* Section title + progress */}
                 <SectionTitle
                   title={`Katman ${layer.layer}: ${layer.name}`}
-                  subtitle={`${layer.completed}/${layer.total} tamamlandi`}
+                  subtitle={`${layer.completed}/${layer.total} tamamlandı`}
                 />
 
                 {/* Layer progress bar */}
@@ -1121,7 +1121,7 @@ export function GelisimClient({
             >
               <PackageIcon style={{ width: 32, height: 32, color: "#999", margin: "0 auto 12px" }} />
               <p style={{ fontSize: 20, fontWeight: 700, color: "var(--foreground)" }}>
-                Hepsini biz yapalim
+                Hepsini biz yapalım
               </p>
               <p
                 style={{
@@ -1134,7 +1134,7 @@ export function GelisimClient({
                   lineHeight: 1.6,
                 }}
               >
-                Gelisim planindaki adimlari tek tek ugrasmak yerine, ajans paketlerimizle hepsini profesyonelce tamamlayalim.
+                Gelişim planındaki adımları tek tek uğraşmak yerine, ajans paketlerimizle hepsini profesyonelce tamamlayalım.
               </p>
               <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
                 <Link

@@ -5,18 +5,18 @@ import { useFadeIn } from "@/hooks/use-fade-in";
 const CARDS = [
   {
     icon: "🏁",
-    title: "Ilk giren kazanir",
-    desc: "AI modelleri guvendigi kaynaklari tekrar tekrar onerir. Simdi referans kaynagi olan firma, gelecekte de onerilmeye devam eder. Rakibiniz bugun basladiysa, yarin sizi gecer.",
+    title: "İlk giren kazanır",
+    desc: "AI modelleri güvendiği kaynakları tekrar tekrar önerir. Şimdi referans kaynağı olan firma, gelecekte de önerilmeye devam eder. Rakibiniz bugün başladıysa, yarın sizi geçer.",
   },
   {
     icon: "🛡",
-    title: "AI itibar yonetimi",
-    desc: "ChatGPT markaniz hakkinda ne soyluyor? Yanlis bilgi mi veriyor, rakibinizi mi oneriyor? Bilmiyorsaniz kontrol edemezsiniz. GH7 markanizin AI itibarini gorunur kilar.",
+    title: "AI itibar yönetimi",
+    desc: "ChatGPT markanız hakkında ne söylüyor? Yanlış bilgi mi veriyor, rakibinizi mi öneriyor? Bilmiyorsanız kontrol edemezsiniz. GH7 markanızın AI itibarını görünür kılar.",
   },
   {
     icon: "📈",
-    title: "Yatirimin geri donusu",
-    desc: "Odediginizin cok daha fazlasini alirsiniz. AI'da 1. sirada gorunmek, Google reklamina para vermeden organik musteri kazanmak demek. Her il, her arama bir firsat.",
+    title: "Yatırımın geri dönüşü",
+    desc: "Ödediğinizin çok daha fazlasını alırsınız. AI'da 1. sırada görünmek, Google reklamına para vermeden organik müşteri kazanmak demek. Her il, her arama bir fırsat.",
   },
 ];
 
@@ -27,18 +27,18 @@ export function UrgencySection() {
     <section ref={ref} className="fi-section py-[72px] sm:py-[120px] px-5 sm:px-10">
       <div className="max-w-[1120px] mx-auto text-center">
         <div className="text-[12px] font-semibold text-zinc-400 uppercase tracking-[0.12em] mb-4">
-          Neden Simdi
+          Neden Şimdi
         </div>
         <h2
           className="font-extrabold leading-[1.08] mb-4"
           style={{ fontSize: "clamp(30px, 4.5vw, 48px)", letterSpacing: "-0.035em" }}
         >
-          Erken baslayanlar
+          Erken başlayanlar
           <br />
-          avantaji koruyacak
+          avantajı koruyacak
         </h2>
         <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[520px] mx-auto">
-          AI gorunurlugu bir kez kazanildiginda guclenerek devam eder. Gec kalanlar, pazar payini geri almak icin cok daha fazla caba harcayacak.
+          AI görünürlüğü bir kez kazanıldığında güçlenerek devam eder. Geç kalanlar, pazar payını geri almak için çok daha fazla çaba harcayacak.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-2xl overflow-hidden mt-12">

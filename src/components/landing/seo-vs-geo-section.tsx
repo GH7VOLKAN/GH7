@@ -3,20 +3,20 @@
 import { useFadeIn } from "@/hooks/use-fade-in";
 
 const SEO_ITEMS = [
-  "Anahtar kelime + backlink odakli",
-  "10 mavi link arasinda siralama",
-  "Tiklama orani (CTR) ile basari olcumu",
-  "Algoritma guncellemelerine bagimli",
-  "Yalnizca Google ekosistemi",
+  "Anahtar kelime + backlink odaklı",
+  "10 mavi link arasında sıralama",
+  "Tıklama oranı (CTR) ile başarı ölçümü",
+  "Algoritma güncellemelerine bağımlı",
+  "Yalnızca Google ekosistemi",
 ];
 
 const GEO_ITEMS = [
-  "Otorite, guvenilirlik ve entity sinyalleri",
-  "AI'nin dogrudan referans verdigi kaynak olma",
-  "Marka mention + citation ile basari olcumu",
-  "6 farkli AI platformunda gorunurluk",
-  "Il bazli, sektore ozel optimizasyon",
-  "Sonuc odakli ajans hizmeti (RaaS)",
+  "Otorite, güvenilirlik ve entity sinyalleri",
+  "AI'nin doğrudan referans verdiği kaynak olma",
+  "Marka mention + citation ile başarı ölçümü",
+  "6 farklı AI platformunda görünürlük",
+  "İl bazlı, sektöre özel optimizasyon",
+  "Sonuç odaklı ajans hizmeti (RaaS)",
 ];
 
 export function SeoVsGeoSection() {
@@ -26,7 +26,7 @@ export function SeoVsGeoSection() {
     <section ref={ref} className="fi-section py-[72px] sm:py-[120px] px-5 sm:px-10" id="geo">
       <div className="max-w-[1120px] mx-auto">
         <div className="text-[12px] font-semibold text-zinc-400 uppercase tracking-[0.12em] mb-4">
-          Yeni Donem
+          Yeni Dönem
         </div>
         <h2
           className="font-extrabold leading-[1.08] mb-4"
@@ -34,10 +34,10 @@ export function SeoVsGeoSection() {
         >
           SEO yetmez.
           <br />
-          GEO sart.
+          GEO şart.
         </h2>
         <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[520px]">
-          SEO sizi Google&apos;da siralar. GEO ise yapay zekanin sizi guvenilir kaynak olarak onermesini saglar. Ikisi farkli disiplinler.
+          SEO sizi Google&apos;da sıralar. GEO ise yapay zekanın sizi güvenilir kaynak olarak önermesini sağlar. İkisi farklı disiplinler.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_64px_1fr] gap-4 md:gap-0 mt-12 items-start">
@@ -47,7 +47,7 @@ export function SeoVsGeoSection() {
               Geleneksel SEO
             </div>
             <div className="text-[20px] font-bold mb-3" style={{ letterSpacing: "-0.01em" }}>
-              Google siralamasi
+              Google sıralaması
             </div>
             <ul className="list-none p-0">
               {SEO_ITEMS.map((item) => (
@@ -70,7 +70,7 @@ export function SeoVsGeoSection() {
               GEO — Yeni Standart
             </div>
             <div className="text-[20px] font-bold mb-3" style={{ letterSpacing: "-0.01em" }}>
-              AI tarafindan onerilme
+              AI tarafından önerilme
             </div>
             <ul className="list-none p-0">
               {GEO_ITEMS.map((item) => (

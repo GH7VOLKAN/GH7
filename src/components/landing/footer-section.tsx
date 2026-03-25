@@ -6,7 +6,7 @@ export function FooterSection() {
         <div>
           <div className="font-extrabold text-[15px] mb-1.5">GH7.ai</div>
           <p className="text-[12px] text-zinc-400 max-w-[260px] leading-[1.5]">
-            Turkiye&apos;nin ilk GEO platformu. Yapay zeka gorunurlugunuzu takip edin, anlayin, iyilestirin.
+            Türkiye&apos;nin ilk GEO platformu. Yapay zeka görünürlüğünüzü takip edin, anlayın, iyileştirin.
           </p>
         </div>
 
@@ -16,29 +16,29 @@ export function FooterSection() {
             Platform
           </div>
           <a href="#fiyat" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
-            Fiyatlandirma
+            Fiyatlandırma
           </a>
           <a href="#" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
-            API Dokumantasyonu
+            API Dokümantasyonu
           </a>
           <a href="/login" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
-            Giris
+            Giriş
           </a>
         </div>
 
-        {/* Araclar */}
+        {/* Araçlar */}
         <div>
           <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.06em] mb-2.5">
-            Araclar
+            Araçlar
           </div>
           <a href="#" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
-            AI Gorunurluk Analizi
+            AI Görünürlük Analizi
           </a>
           <a href="#" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
             GEO Skor Hesapla
           </a>
           <a href="#" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
-            Sektor Raporlari
+            Sektör Raporları
           </a>
         </div>
 
@@ -57,7 +57,7 @@ export function FooterSection() {
             SSS
           </a>
           <a href="#" className="block text-[12px] text-zinc-500 no-underline py-[3px]">
-            Iletisim
+            İletişim
           </a>
         </div>
       </div>

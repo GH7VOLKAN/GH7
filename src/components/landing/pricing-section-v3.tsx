@@ -4,10 +4,10 @@ import { useFadeIn } from "@/hooks/use-fade-in";
 
 const PLANS = [
   {
-    name: "Ucretsiz",
+    name: "Ücretsiz",
     price: "₺0",
     period: "",
-    desc: "Tek seferlik gorunurluk analizi",
+    desc: "Tek seferlik görünürlük analizi",
     featured: false,
     features: [
       "5 arama kelimesi",
@@ -16,64 +16,64 @@ const PLANS = [
       "GEO Skoru",
       "Rakip tespiti",
     ],
-    advantagesTitle: "Icerir",
+    advantagesTitle: "İçerir",
     advantages: [
-      "Anlik analiz raporu",
-      "Temel rakip karsilastirmasi",
+      "Anlık analiz raporu",
+      "Temel rakip karşılaştırması",
     ],
-    btnText: "Ucretsiz Analiz Et",
+    btnText: "Ücretsiz Analiz Et",
     btnStyle: "ghost" as const,
   },
   {
     name: "Pro Firma",
     price: "₺2.495",
     period: "/ay",
-    desc: "Surekli takip + ajans onerileri",
+    desc: "Sürekli takip + ajans önerileri",
     featured: true,
     features: [
       "50 arama kelimesi",
       "3 il dahil (+₺295/ek il)",
       "5 AI platformu",
-      "Haftalik otomatik analiz",
-      "Detayli rakip takibi",
+      "Haftalık otomatik analiz",
+      "Detaylı rakip takibi",
       "PDF rapor indirme",
-      "WhatsApp haftalik ozet",
+      "WhatsApp haftalık özet",
     ],
-    advantagesTitle: "Pro Avantajlari",
+    advantagesTitle: "Pro Avantajları",
     advantages: [
-      "Il bazli isi haritasi",
-      "AI yanit ornekleri (AI sizi nasil anlatiyor)",
-      "Keyword discovery (AI'nin onerdigi aramalar)",
-      "Trend grafigi (haftalik gelisim)",
-      "Iyilestirme onerileri (aksiyonlanabilir)",
+      "İl bazlı ısı haritası",
+      "AI yanıt örnekleri (AI sizi nasıl anlatıyor)",
+      "Keyword discovery (AI'nin önerdiği aramalar)",
+      "Trend grafiği (haftalık gelişim)",
+      "İyileştirme önerileri (aksiyonlanabilir)",
     ],
-    btnText: "Pro'ya Baslayin",
+    btnText: "Pro'ya Başlayın",
     btnStyle: "white" as const,
   },
   {
     name: "Business",
     price: "₺7.495",
     period: "/ay",
-    desc: "Genis takip + ajans destegi (RaaS)",
+    desc: "Geniş takip + ajans desteği (RaaS)",
     featured: false,
     features: [
       "150 arama kelimesi",
       "10 il dahil",
       "6 AI platformu + Grok",
-      "Gunluk analiz",
-      "Sinirsiz rakip takibi",
-      "API erisimi",
-      "Oncelikli destek",
+      "Günlük analiz",
+      "Sınırsız rakip takibi",
+      "API erişimi",
+      "Öncelikli destek",
     ],
-    advantagesTitle: "Business Avantajlari",
+    advantagesTitle: "Business Avantajları",
     advantages: [
       "GEO Ajans hizmeti (RaaS) — biz optimize ederiz",
-      "Aylik strateji toplantisi",
-      "Icerik + schema + entity calismasi",
+      "Aylık strateji toplantısı",
+      "İçerik + schema + entity çalışması",
       "White-label raporlama",
-      "Ozel musteri temsilcisi",
+      "Özel müşteri temsilcisi",
     ],
-    btnText: "Iletisime Gecin",
+    btnText: "İletişime Geçin",
     btnStyle: "black" as const,
   },
 ];
@@ -85,7 +85,7 @@ export function PricingSectionV3() {
     <section ref={ref} className="fi-section py-[72px] sm:py-[120px] px-5 sm:px-10" id="fiyat">
       <div className="max-w-[1120px] mx-auto text-center">
         <div className="text-[12px] font-semibold text-zinc-400 uppercase tracking-[0.12em] mb-4">
-          Fiyatlandirma
+          Fiyatlandırma
         </div>
         <h2
           className="font-extrabold leading-[1.08] mb-4"
