@@ -1,6 +1,7 @@
 import { NavSection } from "@/components/landing/nav-section";
 import { HeroSectionV3 } from "@/components/landing/hero-section-v3";
 import { ResearchSection } from "@/components/landing/research-section";
+import { HonestySection } from "@/components/landing/honesty-section";
 import { SeoVsGeoSection } from "@/components/landing/seo-vs-geo-section";
 import { PlatformsSection } from "@/components/landing/platforms-section";
 import { TurkeyMapSection } from "@/components/landing/turkey-map-section";
@@ -17,6 +18,7 @@ export default function Home() {
       <NavSection />
       <HeroSectionV3 />
       <ResearchSection />
+      <HonestySection />
       <SeoVsGeoSection />
       <PlatformsSection />
       <TurkeyMapSection />
