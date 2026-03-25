@@ -12,6 +12,7 @@ import { KeywordTable } from "@/components/panel/genel/keyword-table";
 import { AiResponses } from "@/components/panel/genel/ai-responses";
 import { ActionItems } from "@/components/panel/genel/action-items";
 import { CitedSources } from "@/components/panel/genel/cited-sources";
+import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 
 export default async function GenelBakisPage() {
   const activeBrand = await getActiveBrand();
@@ -143,6 +144,9 @@ export default async function GenelBakisPage() {
           responses={data.aiResponseExcerpts}
           mentions={data.recentMentions}
         />
+
+        {/* CTA */}
+        <PageBottomCTA />
       </div>
     </div>
   );
