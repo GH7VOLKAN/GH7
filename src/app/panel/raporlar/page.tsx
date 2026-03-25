@@ -1,232 +1,70 @@
-"use client";
-
-import { useState } from "react";
-import {
-  FileTextIcon,
-  DownloadIcon,
-  MailIcon,
-  MessageCircleIcon,
-  CalendarIcon,
-  CheckCircleIcon,
-  LoaderIcon,
-} from "lucide-react";
+import { getActiveBrand } from "@/lib/dal/brand";
+import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { FileTextIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
-import { usePanelContext } from "@/contexts/panel-context";
+import { RaporlarContent } from "./raporlar-content";
 
-const REPORT_HISTORY = [
-  { id: 1, title: "Haftalık GEO Raporu", date: "17 Mar 2025", type: "weekly", status: "ready" },
-  { id: 2, title: "Aylık Performans Raporu", date: "01 Mar 2025", type: "monthly", status: "ready" },
-  { id: 3, title: "Haftalık GEO Raporu", date: "10 Mar 2025", type: "weekly", status: "ready" },
-  { id: 4, title: "Rakip Analiz Raporu", date: "25 Şub 2025", type: "competitor", status: "ready" },
-  { id: 5, title: "Aylık Performans Raporu", date: "01 Şub 2025", type: "monthly", status: "ready" },
-];
+export interface ScanReport {
+  id: string;
+  status: string;
+  createdAt: string;
+  completedAt: string | null;
+  promptCount: number;
+}
 
-export default function RaporlarPage() {
-  const { isDemo } = usePanelContext();
-  const [emailEnabled, setEmailEnabled] = useState(true);
-  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
+export default async function RaporlarPage() {
+  const activeBrand = await getActiveBrand();
+  if (!activeBrand?.brand) redirect("/panel");
+  const brandId = activeBrand.brand.id;
+  const plan = activeBrand.plan ?? "free";
+  const profileEmail =
+    activeBrand.profile?.email ?? "";
+  const emailWeeklyReport =
+    (activeBrand.profile as Record<string, unknown>)?.emailWeeklyReport as boolean ?? true;
 
-  const handlePdfDownload = async () => {
-    if (isDemo) {
-      alert("Demo modunda PDF indirme kullanılamaz. Giriş yapın.");
-      return;
-    }
-    setPdfLoading(true);
-    try {
-      const res = await fetch("/api/export/pdf");
-      if (res.status === 403) {
-        alert("PDF indirme Pro plan ile kullanılabilir.");
-        return;
-      }
-      if (!res.ok) throw new Error("PDF oluşturulamadı");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "gh7-geo-rapor.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("PDF download error:", err);
-      alert("PDF indirirken bir hata oluştu.");
-    } finally {
-      setPdfLoading(false);
-    }
-  };
+  // Fetch completed scans as report history
+  const scans = await prisma.scan.findMany({
+    where: { brandId },
+    orderBy: { startedAt: "desc" },
+    take: 20,
+    include: {
+      _count: { select: { results: true } },
+    },
+  });
 
-  const handleEmailToggle = async () => {
-    const newValue = !emailEnabled;
-    setEmailEnabled(newValue);
-    if (!isDemo) {
-      try {
-        await fetch("/api/panel/profile", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ emailWeeklyReport: newValue }),
-        });
-      } catch (err) {
-        console.error("Email toggle error:", err);
-        setEmailEnabled(!newValue); // revert on error
-      }
-    }
-  };
+  const reports: ScanReport[] = scans.map((s) => ({
+    id: s.id,
+    status: s.status,
+    createdAt: s.startedAt.toISOString(),
+    completedAt: s.completedAt?.toISOString() ?? null,
+    promptCount: s._count.results,
+  }));
 
-  return (
-    <div className="space-y-8">
-      {/* Empty state - aktif data yokken gösterilir */}
-      {/* {REPORT_HISTORY.length === 0 && (
+  if (reports.length === 0) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Raporlar</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            GEO performansinizi PDF olarak indirin veya otomatik olarak alin
+          </p>
+        </div>
         <EmptyState
           icon={FileTextIcon}
-          title="Henüz rapor oluşturulmadı"
-          description="İlk raporunuz tarama sonrasında otomatik oluşturulacak."
+          title="Henuz rapor olusturulmadi"
+          description="Ilk raporunuz tarama sonrasinda otomatik olusturulacak."
         />
-      )} */}
-
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Raporlar</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          GEO performansınızı PDF olarak indirin veya otomatik olarak alın
-        </p>
       </div>
+    );
+  }
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* PDF Download */}
-        <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <FileTextIcon className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900">PDF Rapor İndir</h3>
-              <p className="text-xs text-gray-500">Türkçe, markalı rapor</p>
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 mb-4">
-            GEO skoru, ısı haritası, rakip analizi ve aksiyon önerilerini içeren detaylı rapor
-          </p>
-          <button
-            onClick={handlePdfDownload}
-            disabled={pdfLoading}
-            className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
-          >
-            {pdfLoading ? (
-              <LoaderIcon className="w-4 h-4 animate-spin" />
-            ) : (
-              <DownloadIcon className="w-4 h-4" />
-            )}
-            {pdfLoading ? "İndiriliyor..." : "PDF İndir"}
-          </button>
-        </div>
-
-        {/* Weekly Email */}
-        <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <MailIcon className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900">Haftalık E-posta Özeti</h3>
-              <p className="text-xs text-gray-500">Her Pazartesi 09:00</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-gray-600">Durum</span>
-            <button
-              onClick={handleEmailToggle}
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                emailEnabled ? "bg-green-500" : "bg-gray-200"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                  emailEnabled ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-          <input
-            type="email"
-            defaultValue="info@isitmax.com"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"
-            placeholder="E-posta adresiniz"
-          />
-        </div>
-
-        {/* WhatsApp */}
-        <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <MessageCircleIcon className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900">WhatsApp Özet</h3>
-              <p className="text-xs text-gray-500">Yakında</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-gray-600">Durum</span>
-            <button
-              onClick={() => setWhatsappEnabled(!whatsappEnabled)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                whatsappEnabled ? "bg-green-500" : "bg-gray-200"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                  whatsappEnabled ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-          <input
-            type="tel"
-            defaultValue="+90 532 xxx xx xx"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400"
-            placeholder="Telefon numaranız"
-            disabled
-          />
-        </div>
-      </div>
-
-      {/* Report History */}
-      <div className="border border-gray-200 rounded-xl hover:shadow-sm transition-shadow">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="font-medium text-gray-900">Rapor Geçmişi</h3>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {REPORT_HISTORY.map((report) => (
-            <div
-              key={report.id}
-              className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                  <FileTextIcon className="w-4 h-4 text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{report.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <CalendarIcon className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">{report.date}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircleIcon className="w-3 h-3" />
-                  Hazır
-                </span>
-                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <DownloadIcon className="w-4 h-4 text-gray-500" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+  return (
+    <RaporlarContent
+      reports={reports}
+      plan={plan}
+      profileEmail={profileEmail}
+      emailWeeklyReport={emailWeeklyReport}
+    />
   );
 }
