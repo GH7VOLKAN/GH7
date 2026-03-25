@@ -10,6 +10,7 @@ import {
 } from "@/data/demo-data";
 import { Globe, MessageSquare, BarChart3, FileText, CheckCircle } from "lucide-react";
 import { TurkeyMap } from "@/components/panel/turkey-map";
+import { GH7Logo } from "@/components/gh7-logo";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -117,10 +118,7 @@ const METRIC_CARDS = [
 function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="w-9 h-9 bg-gray-900 rounded-lg flex items-center justify-center">
-        <span className="text-white text-sm font-bold">G7</span>
-      </div>
-      <span className="text-lg font-semibold text-gray-900">GH7.ai</span>
+      <GH7Logo size="default" />
     </div>
   );
 }

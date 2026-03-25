@@ -54,8 +54,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /dashboard and /onboard routes — redirect to /login if no session
+  // Protect /panel, /dashboard and /onboard routes — redirect to /login if no session
   const isProtected =
+    request.nextUrl.pathname.startsWith("/panel") ||
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/onboard");
   if (!user && isProtected) {
@@ -69,9 +70,17 @@ export async function updateSession(request: NextRequest) {
     const wantsLogout = request.nextUrl.searchParams.get("logout") === "true";
     if (!wantsLogout) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard/genel";
+      url.pathname = "/panel/genel";
       return NextResponse.redirect(url);
     }
+  }
+
+  // Redirect old /dashboard routes to new /panel routes
+  if (user && request.nextUrl.pathname.startsWith("/dashboard")) {
+    const url = request.nextUrl.clone();
+    const subpath = request.nextUrl.pathname.replace("/dashboard", "/panel");
+    url.pathname = subpath === "/panel" ? "/panel/genel" : subpath;
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;

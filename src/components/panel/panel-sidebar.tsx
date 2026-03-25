@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { GH7Logo } from "@/components/gh7-logo";
 import {
   LayoutDashboardIcon,
   BarChart3Icon,
@@ -98,11 +99,8 @@ export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai",
     <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-40 border-r border-gray-100 bg-white">
       {/* Logo */}
       <div className="flex items-center h-16 px-6 border-b border-gray-100">
-        <Link href="/panel/genel" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">G7</span>
-          </div>
-          <span className="font-semibold text-lg text-gray-900">GH7.ai</span>
+        <Link href="/panel/genel" className="flex items-center">
+          <GH7Logo size="default" />
         </Link>
       </div>
 
