@@ -10,7 +10,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Building } from "lucide-react";
+import { EmptyState } from "@/components/panel/empty-state";
+import { Progress } from "@/components/ui/progress";
 
 // ---------------------------------------------------------------------------
 // Data
@@ -29,6 +31,18 @@ const ALL_COMPETITORS = [
   { name: "HeatTrace", domain: "heattrace.com.tr", mentions: 2, share: 3 },
   { name: "Giacomini", domain: "giacomini.com", mentions: 1, share: 2 },
   { name: "Schluter Systems", domain: "schluter-systems.com", mentions: 1, share: 1 },
+  { name: "Daikin", domain: "daikin.com.tr", mentions: 2, share: 3 },
+  { name: "Bosch Termoteknoloji", domain: "bosch-climate.com.tr", mentions: 2, share: 3 },
+  { name: "Buderus", domain: "buderus.com.tr", mentions: 1, share: 2 },
+  { name: "Baymak", domain: "baymak.com.tr", mentions: 2, share: 3 },
+  { name: "De Dietrich", domain: "dedietrich.com.tr", mentions: 1, share: 1 },
+  { name: "Protherm", domain: "protherm.com.tr", mentions: 1, share: 2 },
+  { name: "Ferroli", domain: "ferroli.com.tr", mentions: 1, share: 2 },
+  { name: "Ariston", domain: "aristonthermo.com.tr", mentions: 2, share: 3 },
+  { name: "Demirdöküm", domain: "demirdokum.com.tr", mentions: 2, share: 4 },
+  { name: "Honeywell", domain: "honeywell.com", mentions: 1, share: 1 },
+  { name: "Herz Armaturen", domain: "herz.com.tr", mentions: 1, share: 1 },
+  { name: "Purmo", domain: "purmo.com", mentions: 1, share: 1 },
 ];
 
 // The user brand (first entry)
@@ -112,6 +126,16 @@ export default function RakiplerPage() {
 
   return (
     <div className="space-y-6">
+      {/* Empty state - aktif data yokken gösterilir */}
+      {/* {COMPETITORS.length === 0 && (
+        <EmptyState
+          icon={Building}
+          title="Rakip analizi için tarama başlatın"
+          description="Rakiplerinizi ekleyin ve AI görünürlük karşılaştırması yapın."
+          action={<button className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium">+ Rakip Ekle</button>}
+        />
+      )} */}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -165,12 +189,7 @@ export default function RakiplerPage() {
               </div>
 
               {/* Share of Voice progress bar */}
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className="h-full rounded-full bg-gray-900 transition-all"
-                  style={{ width: `${Math.min(comp.share, 100)}%` }}
-                />
-              </div>
+              <Progress value={Math.min(comp.share, 100)} className="mt-2 w-full [&_[data-slot=progress-track]]:h-1.5" />
             </div>
           </button>
         ))}
@@ -198,17 +217,17 @@ export default function RakiplerPage() {
               {/* Summary badges */}
               <div className="flex items-center gap-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                  Siz: {yourWins} kazanim
+                  Siz: {yourWins} kazanım
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-                  {selectedCompetitor.name}: {compWins} kazanim
+                  {selectedCompetitor.name}: {compWins} kazanım
                 </span>
               </div>
 
               {/* Keyword comparison table */}
               <div>
                 <h3 className="mb-3 text-sm font-medium">
-                  Anahtar Kelime Karşılaştırmasi
+                  Anahtar Kelime Karşılaştırması
                 </h3>
                 <div className="overflow-x-auto rounded-lg border border-gray-200">
                   <table className="w-full text-left text-sm">
@@ -224,7 +243,7 @@ export default function RakiplerPage() {
                           {selectedCompetitor.name}
                         </th>
                         <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">
-                          Sonuc
+                          Sonuç
                         </th>
                       </tr>
                     </thead>
@@ -254,7 +273,7 @@ export default function RakiplerPage() {
                               </span>
                             ) : (
                               <span className="inline-flex rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
-                                Esit
+                                Eşit
                               </span>
                             )}
                           </td>

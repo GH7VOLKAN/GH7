@@ -16,7 +16,7 @@ export default function AyarlarPage() {
       </div>
 
       {/* Brand Info */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
             <GlobeIcon className="w-5 h-5 text-gray-600" />
@@ -66,7 +66,7 @@ export default function AyarlarPage() {
       </div>
 
       {/* Notification Settings */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
             <BellIcon className="w-5 h-5 text-gray-600" />
@@ -105,7 +105,7 @@ export default function AyarlarPage() {
       </div>
 
       {/* Security */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
             <ShieldIcon className="w-5 h-5 text-gray-600" />

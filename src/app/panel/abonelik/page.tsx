@@ -86,7 +86,7 @@ export default function AbonelikPage() {
       </div>
 
       {/* Current Plan */}
-      <div className="border border-gray-200 rounded-xl p-6 bg-gray-50">
+      <div className="border border-gray-200 rounded-xl p-6 bg-gray-50 hover:shadow-sm transition-shadow">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">Mevcut planınız</p>
@@ -104,7 +104,7 @@ export default function AbonelikPage() {
         {PLANS.map((plan) => (
           <div
             key={plan.name}
-            className={`border rounded-xl p-6 relative ${
+            className={`border rounded-xl p-6 relative hover:shadow-sm transition-shadow ${
               plan.popular
                 ? "border-gray-900 ring-1 ring-gray-900"
                 : "border-gray-200"
@@ -154,7 +154,7 @@ export default function AbonelikPage() {
       </div>
 
       {/* FAQ */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <h3 className="font-medium text-gray-900 mb-4">Sık Sorulan Sorular</h3>
         <div className="space-y-4">
           {[

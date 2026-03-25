@@ -17,7 +17,7 @@ export default function ApiPage() {
       </div>
 
       {/* API Key */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
             <KeyIcon className="w-5 h-5 text-gray-600" />
@@ -63,7 +63,7 @@ export default function ApiPage() {
       </div>
 
       {/* API Docs */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <h3 className="font-medium text-gray-900 mb-4">Hızlı Başlangıç</h3>
         <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
           <pre className="text-sm text-gray-100 font-mono">
@@ -85,7 +85,7 @@ export default function ApiPage() {
       </div>
 
       {/* Endpoints */}
-      <div className="border border-gray-200 rounded-xl p-6">
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <h3 className="font-medium text-gray-900 mb-4">API Endpoint&apos;leri</h3>
         <div className="space-y-3">
           {[

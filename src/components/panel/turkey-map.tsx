@@ -146,11 +146,11 @@ function getColor(
 ): string {
   const slug = toSlug(cityName);
   const data = cityData[slug] ?? cityData[cityName];
-  if (!data || data.status === "not-tracked") return "#E5E7EB";
-  if (data.score >= 70) return "#22C55E";
-  if (data.score >= 40) return "#F59E0B";
-  if (data.score > 0) return "#EF4444";
-  return "#E5E7EB";
+  if (!data || data.status === "not-tracked") return "var(--map-untracked)";
+  if (data.score >= 70) return "var(--map-strong)";
+  if (data.score >= 40) return "var(--map-moderate)";
+  if (data.score > 0) return "var(--map-weak)";
+  return "var(--map-untracked)";
 }
 
 function getCityInfo(
@@ -162,11 +162,11 @@ function getCityInfo(
 }
 
 function darkenColor(hex: string): string {
-  if (hex === "#E5E7EB") return "#D1D5DB";
-  if (hex === "#22C55E") return "#16A34A";
-  if (hex === "#F59E0B") return "#D97706";
-  if (hex === "#EF4444") return "#DC2626";
-  return "#D1D5DB";
+  if (hex === "var(--map-untracked)") return "var(--map-untracked-hover)";
+  if (hex === "var(--map-strong)") return "var(--map-strong-hover)";
+  if (hex === "var(--map-moderate)") return "var(--map-moderate-hover)";
+  if (hex === "var(--map-weak)") return "var(--map-weak-hover)";
+  return "var(--map-untracked-hover)";
 }
 
 const RECT_W = 38;
@@ -257,7 +257,7 @@ export function TurkeyMap({ cityData, onCityClick, className }: TurkeyMapProps) 
                 dominantBaseline="central"
                 fontSize="5.5"
                 fontWeight={isHovered ? 700 : 500}
-                fill={fill === "#E5E7EB" ? "#6B7280" : "#FFFFFF"}
+                fill={fill === "var(--map-untracked)" ? "#6B7280" : "#FFFFFF"}
                 style={{ pointerEvents: "none", userSelect: "none" }}
               >
                 {city.name}

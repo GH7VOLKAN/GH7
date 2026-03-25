@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   DEMO_METRICS,
   DEMO_COMPETITORS,
@@ -26,18 +27,22 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
 
 /* ------------------------------------------------------------------ */
 /*  Helper: Tooltip icon                                               */
 /* ------------------------------------------------------------------ */
 function InfoTip({ text }: { text: string }) {
   return (
-    <span
-      title={text}
-      className="ml-1 inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-400"
-    >
-      ?
-    </span>
+    <Tooltip>
+      <TooltipTrigger className="ml-1 inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-400">
+        ?
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <p className="text-xs">{text}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -86,7 +91,7 @@ function GeoScoreHero() {
   const progress = (score / 100) * circumference;
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         GEO Skor Kartı
       </h2>
@@ -163,7 +168,7 @@ const METRIC_CARDS = [
     suffix: "%",
     prefix: "%",
     tooltip:
-      "Markanızın, takip edilen tüm AI aramalarindaki gorunme oranini gosterir.",
+      "Markanızın, takip edilen tüm AI aramalarındaki görünme oranını gösterir.",
   },
   {
     label: "Kapsam",
@@ -172,7 +177,7 @@ const METRIC_CARDS = [
     suffix: "%",
     prefix: "%",
     tooltip:
-      "Takip edilen aramalarin yüzde kacinda markanız en az bir kez görünüyor.",
+      "Takip edilen aramaların yüzde kaçında markanız en az bir kez görünüyor.",
   },
   {
     label: "Ortalama Sıra",
@@ -187,7 +192,7 @@ const METRIC_CARDS = [
     value: DEMO_METRICS.sentiment.toString(),
     change: DEMO_METRICS.changes.sentiment,
     tooltip:
-      "AI nin markanızi nasil tanimladigi ve önerdiği ile ilgili genel duygu skorudur.",
+      "AI'nin markanızı nasıl tanımladığı ve önerdiği ile ilgili genel duygu skorudur.",
   },
 ];
 
@@ -197,7 +202,7 @@ function MetricCards() {
       {METRIC_CARDS.map((m) => (
         <div
           key={m.label}
-          className="border border-gray-200 rounded-xl p-6 flex flex-col gap-1"
+          className="border border-gray-200 rounded-xl p-6 flex flex-col gap-1 hover:shadow-sm transition-shadow"
         >
           <div className="flex items-center text-sm text-gray-500">
             {m.label}
@@ -226,14 +231,14 @@ function TurkeyHeatmapSection() {
   );
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
             Türkiye Isı Haritası
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            İl bazında AI görünürlük performansiniz
+            İl bazında AI görünürlük performansınız
           </p>
         </div>
         {/* Legend */}
@@ -355,7 +360,7 @@ function ActionItems() {
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         Yapılacaklar / Önerilen Aksiyonlar
       </h2>
@@ -393,7 +398,7 @@ function BrandShareDonut() {
   const total = DEMO_COMPETITORS.reduce((s, c) => s + c.share, 0);
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         Marka Ses Payı
       </h2>
@@ -430,9 +435,10 @@ function BrandShareDonut() {
         {/* Brand list */}
         <div className="flex-1 w-full space-y-2">
           {DEMO_COMPETITORS.map((comp) => (
-            <div
+            <Link
               key={comp.name}
-              className="flex items-center justify-between text-sm"
+              href="/panel/rakipler"
+              className="flex items-center justify-between text-sm rounded-lg px-2 py-1 -mx-2 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span
@@ -452,10 +458,18 @@ function BrandShareDonut() {
               <span className="font-medium text-gray-900">
                 %{comp.share}
               </span>
-            </div>
+            </Link>
           ))}
-          <div className="pt-1 text-xs text-gray-400">
-            Toplam: %{total}
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-gray-400">
+              Toplam: %{total}
+            </span>
+            <Link
+              href="/panel/rakipler"
+              className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Tümünü gör &rarr;
+            </Link>
           </div>
         </div>
       </div>
@@ -476,8 +490,8 @@ const TREND_TABS: { key: TrendKey; label: string; color: string; suffix: string 
 ];
 
 const TIME_OPTIONS = [
-  { label: "7 gun", days: 7 },
-  { label: "30 gun", days: 30 },
+  { label: "7 gün", days: 7 },
+  { label: "30 gün", days: 30 },
   { label: "3 ay", days: 90 },
   { label: "Tümu", days: 0 },
 ];
@@ -493,7 +507,7 @@ function TrendChart() {
       : DEMO_TREND_DATA.slice(-timeDays);
 
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         Trend Grafiği
       </h2>
@@ -581,7 +595,7 @@ function TrendChart() {
 /* ------------------------------------------------------------------ */
 function KeywordBreakdownTable() {
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         Arama Bazlı Kırılım
       </h2>
@@ -617,12 +631,7 @@ function KeywordBreakdownTable() {
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gray-900 rounded-full"
-                        style={{ width: `${kw.shareOfVoice}%` }}
-                      />
-                    </div>
+                    <Progress value={kw.shareOfVoice} className="w-16 [&_[data-slot=progress-track]]:h-1.5" />
                     <span className="text-gray-700 whitespace-nowrap">
                       %{kw.shareOfVoice}
                     </span>
@@ -630,20 +639,16 @@ function KeywordBreakdownTable() {
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${kw.coverage}%`,
-                          backgroundColor:
-                            kw.coverage === 100
-                              ? "#22C55E"
-                              : kw.coverage >= 50
-                                ? "#F59E0B"
-                                : "#EF4444",
-                        }}
-                      />
-                    </div>
+                    <Progress
+                      value={kw.coverage}
+                      className={`w-16 [&_[data-slot=progress-track]]:h-1.5 ${
+                        kw.coverage === 100
+                          ? "[&_[data-slot=progress-indicator]]:bg-green-500"
+                          : kw.coverage >= 50
+                            ? "[&_[data-slot=progress-indicator]]:bg-yellow-500"
+                            : "[&_[data-slot=progress-indicator]]:bg-red-500"
+                      }`}
+                    />
                     <span className="text-gray-700 whitespace-nowrap">
                       %{kw.coverage}
                     </span>
@@ -689,7 +694,7 @@ function KeywordBreakdownTable() {
 /* ------------------------------------------------------------------ */
 function CitedSources() {
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         En Çok Referans Alınan Siteler
       </h2>
@@ -697,7 +702,7 @@ function CitedSources() {
         {/* Domain list */}
         <div>
           <h3 className="text-sm font-medium text-gray-500 mb-3">
-            Domain Bazinda
+            Domain Bazında
           </h3>
           <div className="space-y-2">
             {DEMO_CITED_DOMAINS.map((d, i) => (
@@ -735,7 +740,7 @@ function CitedSources() {
         {/* Page list */}
         <div>
           <h3 className="text-sm font-medium text-gray-500 mb-3">
-            Sayfa Bazinda (isitmax.com)
+            Sayfa Bazında (isitmax.com)
           </h3>
           <div className="space-y-2">
             {DEMO_CITED_PAGES.map((p, i) => (
@@ -779,7 +784,7 @@ function CitedSources() {
 /* ------------------------------------------------------------------ */
 function AiResponseCards() {
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         AI Sizi Nasıl Anlatıyor
       </h2>
@@ -796,7 +801,7 @@ function AiResponseCards() {
               </span>
               {resp.brandMentioned && (
                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-green-50 text-green-700">
-                  Marka Gecti
+                  Marka Geçti
                 </span>
               )}
               {resp.position && (

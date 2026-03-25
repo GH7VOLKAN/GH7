@@ -18,6 +18,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { Progress } from "@/components/ui/progress";
 
 const PLATFORMS = [
   { name: "AI Overview", color: "#4285F4", icon: "G" },
@@ -186,12 +187,7 @@ export default function GorunurlukPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gray-900 rounded-full"
-                          style={{ width: `${kw.shareOfVoice}%` }}
-                        />
-                      </div>
+                      <Progress value={kw.shareOfVoice} className="w-16 [&_[data-slot=progress-track]]:h-1.5" />
                       <span className="text-sm text-gray-700">%{kw.shareOfVoice}</span>
                     </div>
                   </td>
