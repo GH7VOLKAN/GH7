@@ -3,11 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  DEMO_COMPETITORS,
-} from "@/data/demo-data";
-import {
   DEMO_PERSONAL_KEYWORDS,
-  DEMO_PERSONAL_COMPETITORS,
   PERSONAL_PROFESSIONS,
 } from "@/data/demo-personal";
 import {
@@ -21,6 +17,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Lightbulb,
+  Package,
+  Plus,
 } from "lucide-react";
 import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
@@ -30,7 +28,7 @@ import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type Step = 0 | 1 | 2 | 3;
+type Step = 0 | 1 | 1.5 | 2 | 3;
 type AnalysisType = "firma" | "kisisel";
 
 interface FormData {
@@ -104,21 +102,87 @@ const DEFAULT_KEYWORDS = [
 ];
 
 const LOADING_STEPS = [
-  { text: "Markanız araştırılıyor...", duration: 1200, icon: Globe },
+  { text: "Firmanız araştırılıyor...", duration: 1200, icon: Globe },
+  { text: "Ürünleriniz taranıyor...", duration: 1000, icon: Package },
   { text: "ChatGPT'ye soruyoruz...", duration: 1000, icon: MessageSquare },
   { text: "Gemini'den yanıt alınıyor...", duration: 1000, icon: MessageSquare },
   { text: "Perplexity kontrol ediliyor...", duration: 1000, icon: MessageSquare },
   { text: "Claude'a danışıyoruz...", duration: 1000, icon: MessageSquare },
   { text: "Google AI Overview taranıyor...", duration: 1000, icon: MessageSquare },
-  { text: "Rakipleriniz tespit ediliyor...", duration: 800, icon: BarChart3 },
+  { text: "Ürün bazlı rakipleriniz tespit ediliyor...", duration: 800, icon: BarChart3 },
   { text: "Raporunuz hazırlanıyor...", duration: 800, icon: FileText },
 ];
 
-const EXTRA_COMPETITORS = [
-  { name: "EnerSerji", share: 6, color: "#6B7280" },
-  { name: "FirmaMNet", share: 5, color: "#9CA3AF" },
-  { name: "HeatTrace TR", share: 4, color: "#D1D5DB" },
-  { name: "SenRezistans", share: 3, color: "#E5E7EB" },
+
+interface ProductItem {
+  name: string;
+  checked: boolean;
+  autoDetected: boolean;
+}
+
+const DEMO_FIRMA_PRODUCTS: ProductItem[] = [
+  { name: "Yerden ısıtma kablosu (elektrikli)", checked: true, autoDetected: true },
+  { name: "Heat trace boru ısıtma kablosu", checked: true, autoDetected: true },
+  { name: "Çatı kar buz eritme sistemi", checked: true, autoDetected: true },
+  { name: "Varil ısıtma ceketi", checked: true, autoDetected: true },
+  { name: "Sera ısıtma kablosu", checked: true, autoDetected: true },
+  { name: "Karbon film ısıtıcı", checked: false, autoDetected: true },
+];
+
+const DEMO_FIRMA_SERVICES: ProductItem[] = [
+  { name: "Proje tasarımı", checked: true, autoDetected: true },
+  { name: "Teknik destek", checked: true, autoDetected: true },
+];
+
+const DEMO_PERSONAL_PRODUCTS: ProductItem[] = [
+  { name: "Diz protezi ameliyatı", checked: true, autoDetected: true },
+  { name: "Artroskopi", checked: true, autoDetected: true },
+  { name: "Spor yaralanmaları", checked: true, autoDetected: true },
+  { name: "Omuz cerrahisi", checked: false, autoDetected: true },
+];
+
+/* Product-based competitor rankings for Layer 3 */
+const PRODUCT_RANKINGS = [
+  {
+    product: "Yerden Isıtma Kablosu",
+    rankings: [
+      { name: "Warmup", queryCount: 3, totalQueries: 5, trend: "same" as const, trendNote: "aynı" },
+      { name: "ISITMAX", queryCount: 2, totalQueries: 5, trend: "up" as const, trendNote: "geçen hafta 3.ydü" },
+      { name: "Giacomini", queryCount: 2, totalQueries: 5, trend: "down" as const, trendNote: "düştü" },
+    ],
+  },
+  {
+    product: "Heat Trace Boru Isıtma",
+    rankings: [
+      { name: "ISITMAX", queryCount: 4, totalQueries: 5, trend: "leader" as const, trendNote: "LİDER" },
+      { name: "Danfoss", queryCount: 3, totalQueries: 5, trend: "same" as const, trendNote: "" },
+      { name: "nVent Raychem", queryCount: 1, totalQueries: 5, trend: "same" as const, trendNote: "" },
+    ],
+  },
+  {
+    product: "Çatı Kar Buz Eritme",
+    rankings: [
+      { name: "ISITMAX", queryCount: 3, totalQueries: 5, trend: "leader" as const, trendNote: "LİDER" },
+      { name: "Warmup", queryCount: 2, totalQueries: 5, trend: "down" as const, trendNote: "düştü" },
+      { name: "Ensto", queryCount: 1, totalQueries: 5, trend: "same" as const, trendNote: "" },
+    ],
+  },
+  {
+    product: "Varil Isıtma Ceketi",
+    rankings: [
+      { name: "RezistansMarket", queryCount: 3, totalQueries: 5, trend: "same" as const, trendNote: "" },
+      { name: "ISITMAX", queryCount: 2, totalQueries: 5, trend: "up" as const, trendNote: "geçen hafta 4.ydü" },
+      { name: "Danfoss", queryCount: 2, totalQueries: 5, trend: "same" as const, trendNote: "" },
+    ],
+  },
+  {
+    product: "Sera Isıtma Kablosu",
+    rankings: [
+      { name: "ISITMAX", queryCount: 4, totalQueries: 5, trend: "leader" as const, trendNote: "LİDER" },
+      { name: "EnerSerji", queryCount: 2, totalQueries: 5, trend: "same" as const, trendNote: "" },
+      { name: "Warmup", queryCount: 1, totalQueries: 5, trend: "down" as const, trendNote: "düştü" },
+    ],
+  },
 ];
 
 const DEMO_PLATFORM_RESPONSES = [
@@ -179,8 +243,9 @@ function Logo() {
 function StepIndicator({ currentStep }: { currentStep: Step }) {
   const steps = [
     { num: 0, label: "Doğrulama" },
-    { num: 1, label: "Marka" },
-    { num: 2, label: "Arama" },
+    { num: 1, label: "Bilgiler" },
+    { num: 1.5, label: "Ürün/Hizmet" },
+    { num: 2, label: "Aramalar" },
     { num: 3, label: "Sonuç" },
   ];
 
@@ -213,16 +278,16 @@ function StepIndicator({ currentStep }: { currentStep: Step }) {
                   />
                 </svg>
               ) : (
-                s.num + 1
+                i + 1
               )}
             </div>
-            <span className="text-xs text-gray-500 mt-1 hidden sm:block">
+            <span className="text-xs text-gray-500 mt-1 hidden sm:block whitespace-nowrap">
               {s.label}
             </span>
           </div>
           {i < steps.length - 1 && (
             <div
-              className={`w-12 sm:w-20 h-0.5 mx-1 mt-[-12px] sm:mt-[-12px] ${
+              className={`w-8 sm:w-14 h-0.5 mx-1 mt-[-12px] sm:mt-[-12px] ${
                 s.num < currentStep ? "bg-gray-900" : "bg-gray-200"
               }`}
             />
@@ -354,6 +419,11 @@ export default function AnalizPage() {
     linkedinUrl: "",
   });
 
+  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [services, setServices] = useState<ProductItem[]>([]);
+  const [newProductInput, setNewProductInput] = useState("");
+  const [showAddProduct, setShowAddProduct] = useState(false);
+
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
@@ -463,10 +533,18 @@ export default function AnalizPage() {
         formData.cities.length === 0
       )
         return;
+      setProducts([...DEMO_FIRMA_PRODUCTS]);
+      setServices([...DEMO_FIRMA_SERVICES]);
     } else {
       if (!formData.fullName || !formData.profession || formData.cities.length === 0)
         return;
+      setProducts([...DEMO_PERSONAL_PRODUCTS]);
+      setServices([]);
     }
+    setStep(1.5);
+  };
+
+  const handleStep1_5Next = () => {
     setStep(2);
   };
 
@@ -533,13 +611,6 @@ export default function AnalizPage() {
   /* ---- derived ---- */
   const isFirma = formData.analysisType === "firma";
   const displayName = isFirma ? formData.brandName : formData.fullName;
-
-  const allCompetitors = isFirma
-    ? [...DEMO_COMPETITORS, ...EXTRA_COMPETITORS]
-    : DEMO_PERSONAL_COMPETITORS.map((c, i) => ({
-        ...c,
-        color: ["#18181B", "#6B7280", "#9CA3AF", "#D1D5DB", "#E5E7EB"][i] ?? "#F3F4F6",
-      }));
 
   /* ---- render helpers ---- */
 
@@ -929,6 +1000,143 @@ export default function AnalizPage() {
     </div>
   );
 
+  const renderStep1_5 = () => {
+    const toggleProduct = (index: number) => {
+      setProducts((prev) => prev.map((p, i) => i === index ? { ...p, checked: !p.checked } : p));
+    };
+    const toggleService = (index: number) => {
+      setServices((prev) => prev.map((s, i) => i === index ? { ...s, checked: !s.checked } : s));
+    };
+    const addProduct = () => {
+      if (!newProductInput.trim()) return;
+      setProducts((prev) => [...prev, { name: newProductInput.trim(), checked: true, autoDetected: false }]);
+      setNewProductInput("");
+      setShowAddProduct(false);
+    };
+
+    return (
+      <div className="max-w-md mx-auto px-4">
+        <StepIndicator currentStep={1.5} />
+
+        <div className="border border-gray-200 rounded-xl p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            {isFirma
+              ? `${displayName || "Firma"} — Ne Satıyorsunuz?`
+              : `${displayName || "Ad Soyad"} — Uzmanlık Alanlarınız?`}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            {isFirma
+              ? "Web sitenizden tespit ettiğimiz ürün ve hizmetlerinizi onaylayın."
+              : "Profilinizden tespit ettiğimiz uzmanlık alanlarınızı onaylayın."}
+          </p>
+
+          {/* Products / Specialties */}
+          <div className="mb-4">
+            <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+              {isFirma ? (
+                <><Package className="w-4 h-4 text-gray-500" /> Ürünleriniz:</>
+              ) : (
+                <><span className="text-base">🏥</span> Uzmanlıklarınız:</>
+              )}
+            </p>
+            <div className="space-y-2">
+              {products.map((product, i) => (
+                <label
+                  key={i}
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={product.checked}
+                    onChange={() => toggleProduct(i)}
+                    className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                  <span className={`text-sm ${product.checked ? "text-gray-900" : "text-gray-500"}`}>
+                    {product.name}
+                  </span>
+                  {!product.checked && product.autoDetected && (
+                    <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full ml-auto">
+                      tespit edildi ama onayınız gerekli
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Services (firma only) */}
+          {isFirma && services.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <span className="text-base">🔧</span> Hizmetleriniz:
+              </p>
+              <div className="space-y-2">
+                {services.map((service, i) => (
+                  <label
+                    key={i}
+                    className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={service.checked}
+                      onChange={() => toggleService(i)}
+                      className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
+                    <span className={`text-sm ${service.checked ? "text-gray-900" : "text-gray-500"}`}>
+                      {service.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Add product inline */}
+          {showAddProduct ? (
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="text"
+                placeholder={isFirma ? "Ürün/hizmet adı" : "Uzmanlık alanı"}
+                value={newProductInput}
+                onChange={(e) => setNewProductInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addProduct()}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                autoFocus
+              />
+              <button
+                onClick={addProduct}
+                className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                Ekle
+              </button>
+              <button
+                onClick={() => { setShowAddProduct(false); setNewProductInput(""); }}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddProduct(true)}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              {isFirma ? "Ürün/Hizmet Ekle" : "Uzmanlık Ekle"}
+            </button>
+          )}
+
+          <button
+            onClick={handleStep1_5Next}
+            className="w-full bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors"
+          >
+            Bu doğru, devam &rarr;
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderStep2 = () => {
     const platforms = [
       { name: "ChatGPT" },
@@ -1058,20 +1266,8 @@ export default function AnalizPage() {
       Claude: "claude",
     };
 
-    /* ---------- LAYER 3 DATA: Competitor rankings per platform ---------- */
-    const competitorRankings = [
-      { platform: "ChatGPT", ranks: [displayName || "Isıtmax", "Warmup", "Viessmann"] },
-      { platform: "Gemini", ranks: [displayName || "Isıtmax", "RezistansMarket", "Danfoss"] },
-      { platform: "AI Overview", ranks: ["Warmup", displayName || "Isıtmax", "Viessmann"] },
-      { platform: "Perplexity", ranks: [displayName || "Isıtmax", "EnerSerji", "Warmup"] },
-      { platform: "Claude", ranks: ["Warmup", "Viessmann", displayName || "Isıtmax"] },
-    ];
-
-    const emptySlotQueries = [
-      "endüstriyel ısıtma çözümleri karşılaştırma",
-      "akıllı termostat yerden ısıtma entegrasyonu",
-      "enerji verimli bina ısıtma danışmanlığı",
-    ];
+    /* ---------- LAYER 3 DATA: Product-based rankings ---------- */
+    const brandName = displayName || "ISITMAX";
 
     /* ---------- LAYER 4 DATA: Digital footprint ---------- */
     const digitalSources = [
@@ -1268,99 +1464,121 @@ export default function AnalizPage() {
         <div className="border-t border-gray-100 my-12" />
 
         {/* ================================================================ */}
-        {/* LAYER 3 — Senin Yerine Kim Öneriliyor                            */}
+        {/* LAYER 3 — Ürün Bazlı Rekabet Sıralaması                          */}
         {/* ================================================================ */}
         <section>
           <h3 className="text-xl font-bold text-gray-900 mb-1">
-            Senin Yerine Kim Öneriliyor?
+            Ürün Bazlı Rekabet Sıralaması
           </h3>
           <p className="text-sm text-gray-500 mb-6">
-            AI platformlarında sizi ve rakiplerinizi kıyaslıyoruz
+            Her ürün kategorisinde AI platformlarındaki sıralamanız
           </p>
 
-          {/* Horizontal bar chart */}
-          <div className="border border-gray-200 rounded-xl p-6 mb-6">
-            <p className="text-sm font-medium text-gray-900 mb-4">Bahsedilme Oranları</p>
-            <div className="space-y-3">
-              {allCompetitors.map((c, i) => {
-                const isUser = c.name === (displayName || "ISITMAX") || c.name === "ISITMAX";
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className={`text-sm w-40 truncate ${isUser ? "font-bold text-gray-900" : "text-gray-700"}`}>
-                      {c.name}
-                    </span>
-                    <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(c.share * 2, 100)}%`,
-                          backgroundColor: isUser ? "#18181B" : ("color" in c ? (c as { color: string }).color : "#9CA3AF"),
-                          maxWidth: "100%",
-                        }}
-                      />
-                    </div>
-                    <span className={`text-sm w-10 text-right ${isUser ? "font-bold text-gray-900" : "text-gray-500"}`}>
-                      %{c.share}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Platform ranking table */}
-          <div className="border border-gray-200 rounded-xl p-6 mb-6 overflow-x-auto">
-            <p className="text-sm font-medium text-gray-900 mb-4">Platform Bazında Sıralama</p>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 pr-4 text-gray-500 font-medium">Platform</th>
-                  <th className="text-left py-2 px-4 text-gray-500 font-medium">1. Sıra</th>
-                  <th className="text-left py-2 px-4 text-gray-500 font-medium">2. Sıra</th>
-                  <th className="text-left py-2 px-4 text-gray-500 font-medium">3. Sıra</th>
-                </tr>
-              </thead>
-              <tbody>
-                {competitorRankings.map((row) => {
-                  const pKey = platformKeyMap[row.platform] ?? "chatgpt";
-                  return (
-                    <tr key={row.platform} className="border-b border-gray-50">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2">
-                          <AIPlatformIcon platform={pKey} size="sm" />
-                          <span className="text-gray-900 font-medium">{row.platform}</span>
-                        </div>
-                      </td>
-                      {row.ranks.map((name, ri) => {
-                        const isUser = name === (displayName || "Isıtmax");
-                        return (
-                          <td key={ri} className="py-3 px-4">
-                            <span className={isUser ? "font-bold text-gray-900 bg-yellow-50 px-2 py-0.5 rounded" : "text-gray-600"}>
-                              {name}
+          {/* Product ranking tables */}
+          <div className="space-y-6 mb-8">
+            {PRODUCT_RANKINGS.map((productRanking, pi) => {
+              const medals = ["🥇", "🥈", "🥉"];
+              return (
+                <div key={pi} className="border border-gray-200 rounded-xl p-6">
+                  <p className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-gray-500" />
+                    {productRanking.product}
+                  </p>
+                  <div className="space-y-3">
+                    {productRanking.rankings.map((rank, ri) => {
+                      const isUser = rank.name === brandName || rank.name === "ISITMAX";
+                      const trendIcon =
+                        rank.trend === "up" ? "↑" :
+                        rank.trend === "down" ? "↓" :
+                        rank.trend === "leader" ? "" :
+                        "→";
+                      return (
+                        <div
+                          key={ri}
+                          className={`flex items-center gap-3 p-3 rounded-lg ${
+                            isUser ? "bg-gray-900 text-white" : "bg-gray-50"
+                          }`}
+                        >
+                          <span className="text-lg w-8 text-center">{medals[ri]}</span>
+                          <span className="text-sm w-5 text-center font-medium">
+                            {ri + 1}.
+                          </span>
+                          <span className={`text-sm font-medium flex-1 ${isUser ? "text-white" : "text-gray-900"}`}>
+                            {rank.name}
+                          </span>
+                          <span className={`text-xs ${isUser ? "text-gray-300" : "text-gray-500"}`}>
+                            {rank.queryCount}/{rank.totalQueries} sorguda
+                          </span>
+                          {rank.trend === "leader" ? (
+                            <span className="text-xs font-medium bg-green-500 text-white px-2 py-0.5 rounded-full">
+                              ✅ LİDER
                             </span>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                          ) : rank.trendNote ? (
+                            <span className={`text-xs ${
+                              rank.trend === "up" ? "text-green-600" :
+                              rank.trend === "down" ? "text-red-500" :
+                              isUser ? "text-gray-400" : "text-gray-400"
+                            }`}>
+                              {trendIcon} {rank.trendNote}
+                            </span>
+                          ) : null}
+                          <button
+                            disabled
+                            className={`text-xs underline cursor-not-allowed ${isUser ? "text-gray-500" : "text-gray-300"}`}
+                            title="Yakında"
+                          >
+                            Neden Önde?
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Boş Alan Fırsatları */}
+          {/* Genel Rekabet Özeti */}
           <div className="border border-gray-200 rounded-xl p-6">
-            <p className="text-sm font-medium text-gray-900 mb-3">Boş Alan Fırsatları</p>
+            <p className="text-sm font-semibold text-gray-900 mb-4">Genel Rekabet Özeti</p>
             <p className="text-xs text-gray-500 mb-4">
-              Bu sorgularda henüz güçlü bir marka yok — içerik üretirseniz ilk sırada yer alabilirsiniz.
+              Tüm ürün kategorilerindeki toplam performans
             </p>
-            <div className="space-y-2">
-              {emptySlotQueries.map((q, i) => (
-                <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2.5">
-                  <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0" />
-                  <span className="text-sm text-gray-700">{q}</span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              {(() => {
+                /* Aggregate scores across all product rankings */
+                const scoreMap: Record<string, number> = {};
+                PRODUCT_RANKINGS.forEach((pr) => {
+                  pr.rankings.forEach((r, ri) => {
+                    const points = ri === 0 ? 3 : ri === 1 ? 2 : 1;
+                    scoreMap[r.name] = (scoreMap[r.name] || 0) + points;
+                  });
+                });
+                const sorted = Object.entries(scoreMap).sort((a, b) => b[1] - a[1]);
+                const maxScore = sorted[0]?.[1] || 1;
+                return sorted.map(([name, score], i) => {
+                  const isUser = name === brandName || name === "ISITMAX";
+                  return (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className={`text-sm w-36 truncate ${isUser ? "font-bold text-gray-900" : "text-gray-700"}`}>
+                        {name}
+                      </span>
+                      <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${(score / maxScore) * 100}%`,
+                            backgroundColor: isUser ? "#18181B" : "#9CA3AF",
+                          }}
+                        />
+                      </div>
+                      <span className={`text-sm w-12 text-right ${isUser ? "font-bold text-gray-900" : "text-gray-500"}`}>
+                        {score} puan
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </section>
@@ -1578,6 +1796,7 @@ export default function AnalizPage() {
       {step === null && renderHero()}
       {step === 0 && renderStep0()}
       {step === 1 && renderStep1()}
+      {step === 1.5 && renderStep1_5()}
       {step === 2 && renderStep2()}
       {step === 3 && !analysisComplete && loading && renderLoading()}
       {step === 3 && analysisComplete && renderResults()}
