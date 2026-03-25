@@ -78,10 +78,17 @@ const BOTTOM_ITEMS = [
   },
 ];
 
-export function PanelSidebar() {
+interface PanelSidebarProps {
+  brandName?: string;
+  userEmail?: string;
+  plan?: string;
+}
+
+export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai", plan = "free" }: PanelSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [brandOpen, setBrandOpen] = React.useState(false);
+  const brandInitials = brandName.substring(0, 2).toUpperCase();
 
   const handleLogout = async () => {
     router.push("/giris");
@@ -110,9 +117,9 @@ export function PanelSidebar() {
         >
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
-              <span className="text-[10px] font-bold text-gray-600">IS</span>
+              <span className="text-[10px] font-bold text-gray-600">{brandInitials}</span>
             </div>
-            <span className="text-sm font-medium text-gray-900">ISITMAX</span>
+            <span className="text-sm font-medium text-gray-900">{brandName}</span>
           </div>
           <ChevronDownIcon className={cn("w-4 h-4 text-gray-400 transition-transform", brandOpen && "rotate-180")} />
         </div>
@@ -184,7 +191,7 @@ export function PanelSidebar() {
       <div className="px-4 py-4 border-t border-gray-100">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 truncate">info@isitmax.com</p>
+            <p className="text-xs text-gray-500 truncate">{userEmail}</p>
           </div>
           <button
             onClick={handleLogout}

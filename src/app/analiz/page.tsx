@@ -336,6 +336,9 @@ export default function AnalizPage() {
   });
 
   const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpToken, setOtpToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
@@ -362,14 +365,55 @@ export default function AnalizPage() {
     setStep(0);
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!formData.email || formData.phone.length < 6) return;
-    setOtpSent(true);
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const phone = formData.phone.replace(/\s/g, "");
+      const fullPhone = phone.startsWith("90") ? phone : `90${phone}`;
+      const res = await fetch("/api/auth/send-sms-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.error ?? "SMS gönderilemedi. Lütfen tekrar deneyin.");
+        return;
+      }
+      setOtpToken(data.token ?? null);
+      setOtpSent(true);
+    } catch {
+      setOtpError("Bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setOtpLoading(false);
+    }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!formData.otp || formData.otp.length < 6 || !formData.kvkkAccepted) return;
-    setStep(1);
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const phone = formData.phone.replace(/\s/g, "");
+      const fullPhone = phone.startsWith("90") ? phone : `90${phone}`;
+      const res = await fetch("/api/auth/verify-sms-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone, code: formData.otp, token: otpToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpError(data.error ?? "Kod doğrulanamadı. Lütfen tekrar deneyin.");
+        return;
+      }
+      setStep(1);
+    } catch {
+      setOtpError("Doğrulama sırasında bir hata oluştu.");
+    } finally {
+      setOtpLoading(false);
+    }
   };
 
   const handleStep1Next = () => {
