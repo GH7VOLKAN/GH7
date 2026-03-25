@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { WrenchIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { IyilestirmeContent } from "./iyilestirme-content";
+import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 
 export default async function IyilestirmePage() {
   const activeBrand = await getActiveBrand();
@@ -39,11 +40,16 @@ export default async function IyilestirmePage() {
   }
 
   return (
-    <IyilestirmeContent
-      checklistData={checklistData}
-      actionsData={actionsData}
-      auditData={auditData}
-      readinessScore={overviewData.readinessScore}
-    />
+    <>
+      <IyilestirmeContent
+        checklistData={checklistData}
+        actionsData={actionsData}
+        auditData={auditData}
+        readinessScore={overviewData.readinessScore}
+      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBottomCTA />
+      </div>
+    </>
   );
 }

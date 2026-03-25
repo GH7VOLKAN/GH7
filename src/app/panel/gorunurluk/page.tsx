@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { EyeIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { GorunurlukContent } from "./gorunurluk-content";
+import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 
 export default async function GorunurlukPage() {
   const activeBrand = await getActiveBrand();
@@ -26,19 +27,24 @@ export default async function GorunurlukPage() {
   }
 
   return (
-    <GorunurlukContent
-      mentionScore={overviewData.mentionScore}
-      mentionTrend={overviewData.mentionTrend}
-      activePromptCount={overviewData.activePromptCount}
-      totalMentionCount={overviewData.totalMentionCount}
-      totalResultCount={overviewData.totalResultCount}
-      platformStats={overviewData.platformStats}
-      weeklyTrend={overviewData.weeklyTrend}
-      bestPrompts={overviewData.bestPrompts}
-      worstPrompts={overviewData.worstPrompts}
-      recentMentions={overviewData.recentMentions}
-      competitorRanking={overviewData.competitorRanking}
-      scoreHistory={overviewData.scoreHistory}
-    />
+    <>
+      <GorunurlukContent
+        mentionScore={overviewData.mentionScore}
+        mentionTrend={overviewData.mentionTrend}
+        activePromptCount={overviewData.activePromptCount}
+        totalMentionCount={overviewData.totalMentionCount}
+        totalResultCount={overviewData.totalResultCount}
+        platformStats={overviewData.platformStats}
+        weeklyTrend={overviewData.weeklyTrend}
+        bestPrompts={overviewData.bestPrompts}
+        worstPrompts={overviewData.worstPrompts}
+        recentMentions={overviewData.recentMentions}
+        competitorRanking={overviewData.competitorRanking}
+        scoreHistory={overviewData.scoreHistory}
+      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBottomCTA />
+      </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { FileTextIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { RaporlarContent } from "./raporlar-content";
+import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 
 export interface ScanReport {
   id: string;
@@ -60,11 +61,16 @@ export default async function RaporlarPage() {
   }
 
   return (
-    <RaporlarContent
-      reports={reports}
-      plan={plan}
-      profileEmail={profileEmail}
-      emailWeeklyReport={emailWeeklyReport}
-    />
+    <>
+      <RaporlarContent
+        reports={reports}
+        plan={plan}
+        profileEmail={profileEmail}
+        emailWeeklyReport={emailWeeklyReport}
+      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBottomCTA />
+      </div>
+    </>
   );
 }

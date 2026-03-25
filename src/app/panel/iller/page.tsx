@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { IllerContent } from "./iller-content";
+import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 
 export interface CityData {
   name: string;
@@ -125,13 +126,18 @@ export default async function IllerPage() {
   const weakCount = cities.filter((c) => c.status === "weak").length;
 
   return (
-    <IllerContent
-      cities={cities}
-      mapCityData={mapCityData}
-      strongCount={strongCount}
-      moderateCount={moderateCount}
-      weakCount={weakCount}
-      topCompetitorName={overviewData.topCompetitorName}
-    />
+    <>
+      <IllerContent
+        cities={cities}
+        mapCityData={mapCityData}
+        strongCount={strongCount}
+        moderateCount={moderateCount}
+        weakCount={weakCount}
+        topCompetitorName={overviewData.topCompetitorName}
+      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBottomCTA />
+      </div>
+    </>
   );
 }
