@@ -1,106 +1,163 @@
-"use client";
-
-import { useParams } from "next/navigation";
+import { getActiveBrand } from "@/lib/dal/brand";
+import { prisma } from "@/lib/db";
+import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
-import {
-  DEMO_CITY_DATA,
-  DEMO_METRICS,
-  DEMO_KEYWORDS,
-  DEMO_COMPETITORS,
-  DEMO_CITED_PAGES,
-  getScoreColor,
-} from "@/data/demo-data";
+import { platformLabels, type PlatformKey } from "@/lib/types";
+import { CityDetailContent } from "./city-detail-content";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
+// --- Helpers ---
 function toSlug(name: string): string {
+  const TURKISH_CHAR_MAP: Record<string, string> = {
+    "\u00E7": "c", "\u011F": "g", "ı": "i", "İ": "i", "\u00F6": "o",
+    "\u015F": "s", "\u00FC": "u", "\u00C7": "c", "\u011E": "g", "\u00D6": "o",
+    "\u015E": "s", "\u00DC": "u",
+  };
   return name
-    .replace(/İ/g, "I")
+    .split("")
+    .map((c) => TURKISH_CHAR_MAP[c] ?? c)
+    .join("")
     .toLowerCase()
-    .replace(/ç/g, "c")
-    .replace(/ğ/g, "g")
-    .replace(/ı/g, "i")
-    .replace(/ö/g, "o")
-    .replace(/ş/g, "s")
-    .replace(/ü/g, "u")
-    .replace(/\s+/g, "-");
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
 }
 
-function findCityBySlug(slug: string): string | null {
-  for (const cityName of Object.keys(DEMO_CITY_DATA)) {
-    if (toSlug(cityName) === slug) return cityName;
-  }
-  return null;
+function getScoreColor(score: number): string {
+  if (score >= 50) return "#22C55E";
+  if (score >= 20) return "#F59E0B";
+  return "#EF4444";
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+// --- Types ---
+export interface CityPromptResult {
+  promptText: string;
+  platform: string;
+  mentioned: boolean;
+  position: string | null;
+  citations: string[];
+}
 
-export default function CityDetailPage() {
-  const params = useParams();
-  const slug = params.slug as string;
-  const cityName = findCityBySlug(slug);
+export interface CityMetric {
+  label: string;
+  value: number | string;
+  suffix: string;
+}
 
+export interface CityPlatformBreakdown {
+  platform: string;
+  platformLabel: string;
+  mentioned: number;
+  total: number;
+  rate: number;
+}
+
+export interface CityDetailProps {
+  cityName: string;
+  score: number;
+  scoreColor: string;
+  mentionCount: number;
+  totalResults: number;
+  mentionRate: number;
+  metrics: CityMetric[];
+  platformBreakdown: CityPlatformBreakdown[];
+  promptResults: CityPromptResult[];
+  citedUrls: { url: string; count: number }[];
+}
+
+export default async function CityDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const activeBrand = await getActiveBrand();
+  if (!activeBrand?.brand) redirect("/panel");
+  const brandId = activeBrand.brand.id;
+  const brand = activeBrand.brand as Record<string, unknown>;
+  const serviceRegions = (brand.serviceRegions as string[]) ?? [];
+
+  // Find city name from slug
+  const cityName = serviceRegions.find((r) => toSlug(r) === slug);
   if (!cityName) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 px-4 py-20">
-        <h1 className="text-2xl font-bold text-gray-900">Bu il bulunamadi</h1>
-        <p className="text-sm text-gray-500">
-          Aradiginiz il sistemde kayitli degil veya slug hatali.
-        </p>
-        <Link
-          href="/panel/iller"
-          className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeftIcon className="h-4 w-4" />
-          Iller sayfasina don
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
-  const city = DEMO_CITY_DATA[cityName];
-  const factor = city.score / 100;
+  // Get last completed scan
+  const lastScan = await prisma.scan.findFirst({
+    where: { brandId, status: "completed" },
+    orderBy: { completedAt: "desc" },
+  });
 
-  // Derived metrics
-  const metrics = [
-    {
-      label: "GEO Skor",
-      value: city.score,
-      suffix: "/100",
-    },
-    {
-      label: "Ses Payi",
-      value: Math.round(city.score * 0.35),
-      suffix: "%",
-    },
-    {
-      label: "Kapsam",
-      value: city.score > 50 ? 100 : city.score + 20,
-      suffix: "%",
-    },
-    {
-      label: "Ort. Pozisyon",
-      value: +(3.0 - city.score / 50).toFixed(1),
-      suffix: "",
-    },
+  let mentionCount = 0;
+  let totalResults = 0;
+  const platformBreakdown: CityPlatformBreakdown[] = [];
+  const promptResults: CityPromptResult[] = [];
+  const citationCounts: Record<string, number> = {};
+
+  if (lastScan) {
+    const results = await prisma.promptResult.findMany({
+      where: { scanId: lastScan.id },
+      include: { prompt: { select: { text: true } } },
+    });
+
+    const cityLower = cityName.toLowerCase();
+    const cityResults = results.filter((r) =>
+      r.prompt.text.toLowerCase().includes(cityLower)
+    );
+
+    totalResults = cityResults.length;
+    mentionCount = cityResults.filter((r) => r.mentioned).length;
+
+    // Platform breakdown
+    const platformStats: Record<string, { m: number; t: number }> = {};
+    for (const r of cityResults) {
+      if (!platformStats[r.platform]) platformStats[r.platform] = { m: 0, t: 0 };
+      platformStats[r.platform].t++;
+      if (r.mentioned) platformStats[r.platform].m++;
+
+      // Collect prompt results
+      const cites = (r.citations as string[]) ?? [];
+      promptResults.push({
+        promptText: r.prompt.text,
+        platform: r.platform,
+        mentioned: r.mentioned,
+        position: r.position,
+        citations: cites,
+      });
+
+      // Count citation URLs
+      for (const url of cites) {
+        citationCounts[url] = (citationCounts[url] ?? 0) + 1;
+      }
+    }
+
+    for (const [plat, stats] of Object.entries(platformStats)) {
+      platformBreakdown.push({
+        platform: plat,
+        platformLabel: platformLabels[plat as PlatformKey]?.name ?? plat,
+        mentioned: stats.m,
+        total: stats.t,
+        rate: stats.t > 0 ? Math.round((stats.m / stats.t) * 100) : 0,
+      });
+    }
+    platformBreakdown.sort((a, b) => b.rate - a.rate);
+  }
+
+  const mentionRate = totalResults > 0 ? Math.round((mentionCount / totalResults) * 100) : 0;
+
+  const metrics: CityMetric[] = [
+    { label: "GEO Skor", value: mentionRate, suffix: "/100" },
+    { label: "Mention Orani", value: mentionRate, suffix: "%" },
+    { label: "Mention Sayisi", value: mentionCount, suffix: "" },
+    { label: "Toplam Sonuc", value: totalResults, suffix: "" },
   ];
 
-  // City-specific keywords
-  const cityKeywords = DEMO_KEYWORDS.map((kw) => ({
-    ...kw,
-    keyword: `${cityName} ${kw.keyword}`,
-  }));
+  const citedUrls = Object.entries(citationCounts)
+    .map(([url, count]) => ({ url, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
 
-  // City-specific competitors
-  const cityCompetitors = DEMO_COMPETITORS.map((c) => ({
-    ...c,
-    share: Math.round(c.share * (0.7 + factor * 0.6)),
-  }));
+  const scoreColor = getScoreColor(mentionRate);
 
   return (
     <div className="flex flex-col gap-6 px-4 py-4 md:gap-8 md:px-6 md:py-6">
@@ -120,9 +177,9 @@ export default function CityDetailPage() {
         </h1>
         <div
           className="flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-bold"
-          style={{ backgroundColor: getScoreColor(city.score) }}
+          style={{ backgroundColor: scoreColor }}
         >
-          {city.score}
+          {mentionRate}
         </div>
       </div>
 
@@ -146,116 +203,11 @@ export default function CityDetailPage() {
         ))}
       </div>
 
-      {/* Aramalar tablosu */}
-      <div className="border border-gray-200 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Aramalar</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                <th className="px-4 py-3">Anahtar Kelime</th>
-                <th className="px-4 py-3">Ses Payi</th>
-                <th className="px-4 py-3">Kapsam</th>
-                <th className="px-4 py-3">Ort. Pozisyon</th>
-                <th className="px-4 py-3">Duygu</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cityKeywords.map((kw) => (
-                <tr
-                  key={kw.keyword}
-                  className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium text-gray-900 max-w-xs truncate">
-                    {kw.keyword}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gray-900 rounded-full"
-                          style={{ width: `${kw.shareOfVoice}%` }}
-                        />
-                      </div>
-                      <span>{kw.shareOfVoice}%</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gray-900 rounded-full"
-                          style={{ width: `${kw.coverage}%` }}
-                        />
-                      </div>
-                      <span>{kw.coverage}%</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {kw.avgPosition}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gray-900 rounded-full"
-                          style={{ width: `${Math.round(kw.sentiment * 100)}%` }}
-                        />
-                      </div>
-                      <span>{(kw.sentiment * 100).toFixed(0)}%</span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Rakipler */}
-      <div className="border border-gray-200 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Rakipler</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
-          {cityCompetitors.map((c) => (
-            <div
-              key={c.name}
-              className="border border-gray-200 rounded-xl p-4 text-center"
-            >
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {c.name}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">{c.share}% ses payi</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Referans Sayfalar */}
-      <div className="border border-gray-200 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Referans Sayfalar
-        </h2>
-        <ul className="space-y-2">
-          {DEMO_CITED_PAGES.map((p) => (
-            <li
-              key={p.path}
-              className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm"
-            >
-              <span className="font-mono text-gray-700">{p.path}</span>
-              <span className="text-gray-500">
-                {p.cites} referans &middot; {p.providers} saglayici
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* CTA */}
-      <div>
-        <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white shadow transition hover:bg-gray-800">
-          Bu ili optimize et &rarr; Ajansınıza gönderin
-        </button>
-      </div>
+      <CityDetailContent
+        platformBreakdown={platformBreakdown}
+        promptResults={promptResults}
+        citedUrls={citedUrls}
+      />
     </div>
   );
 }
