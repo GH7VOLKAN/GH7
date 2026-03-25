@@ -8,8 +8,10 @@ import {
   MessageCircleIcon,
   CalendarIcon,
   CheckCircleIcon,
+  LoaderIcon,
 } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
+import { usePanelContext } from "@/contexts/panel-context";
 
 const REPORT_HISTORY = [
   { id: 1, title: "Haftalık GEO Raporu", date: "17 Mar 2025", type: "weekly", status: "ready" },
@@ -20,8 +22,55 @@ const REPORT_HISTORY = [
 ];
 
 export default function RaporlarPage() {
+  const { isDemo } = usePanelContext();
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handlePdfDownload = async () => {
+    if (isDemo) {
+      alert("Demo modunda PDF indirme kullanılamaz. Giriş yapın.");
+      return;
+    }
+    setPdfLoading(true);
+    try {
+      const res = await fetch("/api/export/pdf");
+      if (res.status === 403) {
+        alert("PDF indirme Pro plan ile kullanılabilir.");
+        return;
+      }
+      if (!res.ok) throw new Error("PDF oluşturulamadı");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "gh7-geo-rapor.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("PDF download error:", err);
+      alert("PDF indirirken bir hata oluştu.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handleEmailToggle = async () => {
+    const newValue = !emailEnabled;
+    setEmailEnabled(newValue);
+    if (!isDemo) {
+      try {
+        await fetch("/api/panel/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emailWeeklyReport: newValue }),
+        });
+      } catch (err) {
+        console.error("Email toggle error:", err);
+        setEmailEnabled(!newValue); // revert on error
+      }
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -58,9 +107,17 @@ export default function RaporlarPage() {
           <p className="text-sm text-gray-500 mb-4">
             GEO skoru, ısı haritası, rakip analizi ve aksiyon önerilerini içeren detaylı rapor
           </p>
-          <button className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors">
-            <DownloadIcon className="w-4 h-4" />
-            PDF İndir
+          <button
+            onClick={handlePdfDownload}
+            disabled={pdfLoading}
+            className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+          >
+            {pdfLoading ? (
+              <LoaderIcon className="w-4 h-4 animate-spin" />
+            ) : (
+              <DownloadIcon className="w-4 h-4" />
+            )}
+            {pdfLoading ? "İndiriliyor..." : "PDF İndir"}
           </button>
         </div>
 
@@ -78,7 +135,7 @@ export default function RaporlarPage() {
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-gray-600">Durum</span>
             <button
-              onClick={() => setEmailEnabled(!emailEnabled)}
+              onClick={handleEmailToggle}
               className={`relative w-10 h-5 rounded-full transition-colors ${
                 emailEnabled ? "bg-green-500" : "bg-gray-200"
               }`}

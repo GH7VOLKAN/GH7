@@ -1,20 +1,76 @@
 import { PanelSidebar } from "@/components/panel/panel-sidebar";
 import { PanelMobileNav } from "@/components/panel/panel-mobile-nav";
+import { PanelDataProvider } from "@/contexts/panel-context";
+import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
+import { redirect } from "next/navigation";
 
-export default function PanelLayout({
+export const dynamic = "force-dynamic";
+
+export default async function PanelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let isDemo = true;
+  let brandData: { id: string; name: string; domain: string; sector: string | null; type: string; serviceRegions: string[] } | null = null;
+  let profileData: { id: string; email: string; fullName: string | null; avatarUrl: string | null; plan: string; emailWeeklyReport: boolean } | null = null;
+  let plan = "free";
+
+  try {
+    const user = await getUserProfile();
+    const activeBrand = await getActiveBrand();
+
+    if (user && activeBrand?.brand) {
+      isDemo = false;
+      plan = activeBrand.plan ?? "free";
+
+      brandData = {
+        id: activeBrand.brand.id,
+        name: activeBrand.brand.name,
+        domain: activeBrand.brand.domain ?? "",
+        sector: activeBrand.brand.sector,
+        type: activeBrand.brand.type ?? "firma",
+        serviceRegions: (activeBrand.brand as Record<string, unknown>).serviceRegions as string[] ?? [],
+      };
+
+      profileData = {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
+        plan,
+        emailWeeklyReport: (activeBrand.profile as Record<string, unknown>).emailWeeklyReport as boolean ?? true,
+      };
+    } else if (user && activeBrand?.profile && !activeBrand.brand) {
+      // User exists but no brand → onboarding
+      redirect("/onboard");
+    }
+    // If no user at all → isDemo stays true, show demo data
+  } catch {
+    // Auth/DB error → fallback to demo mode
+    isDemo = true;
+  }
+
   return (
-    <div className="min-h-screen bg-white">
-      <PanelSidebar />
-      <main className="md:pl-64">
-        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
-          {children}
-        </div>
-      </main>
-      <PanelMobileNav />
-    </div>
+    <PanelDataProvider
+      brand={brandData}
+      profile={profileData}
+      plan={plan}
+      isDemo={isDemo}
+    >
+      <div className="min-h-screen bg-white">
+        <PanelSidebar
+          brandName={brandData?.name ?? "ISITMAX"}
+          userEmail={profileData?.email ?? "demo@gh7.ai"}
+          plan={plan}
+        />
+        <main className="md:pl-64">
+          <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+            {children}
+          </div>
+        </main>
+        <PanelMobileNav />
+      </div>
+    </PanelDataProvider>
   );
 }
