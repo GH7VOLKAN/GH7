@@ -8,6 +8,8 @@ import {
   DEMO_PLATFORM_DISTRIBUTION,
   getScoreColor,
 } from "@/data/demo-data";
+import { Globe, MessageSquare, BarChart3, FileText, CheckCircle } from "lucide-react";
+import { TurkeyMap } from "@/components/panel/turkey-map";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -75,10 +77,10 @@ const DEFAULT_KEYWORDS = [
 ];
 
 const LOADING_STEPS = [
-  { text: "Markanız araştırılıyor...", duration: 2000 },
-  { text: "AI Overview'e soruyoruz...", duration: 2000 },
-  { text: "Rakipleriniz tespit ediliyor...", duration: 2000 },
-  { text: "Raporunuz hazırlanıyor...", duration: 1000 },
+  { text: "Markanız araştırılıyor...", duration: 2000, icon: Globe },
+  { text: "AI Overview'e soruyoruz...", duration: 2000, icon: MessageSquare },
+  { text: "Rakipleriniz tespit ediliyor...", duration: 2000, icon: BarChart3 },
+  { text: "Raporunuz hazırlanıyor...", duration: 1000, icon: FileText },
 ];
 
 const METRIC_CARDS = [
@@ -86,19 +88,19 @@ const METRIC_CARDS = [
     label: "Share of Voice",
     value: `%${DEMO_METRICS.shareOfVoice}`,
     change: DEMO_METRICS.changes.shareOfVoice,
-    description: "AI yanitlarinda pazar payı",
+    description: "AI yanıtlarında pazar payı",
   },
   {
     label: "Coverage",
     value: `%${DEMO_METRICS.coverage}`,
     change: DEMO_METRICS.changes.coverage,
-    description: "Aramalarda gorunme orani",
+    description: "Aramalarda görünme oranı",
   },
   {
     label: "Ort. Pozisyon",
     value: DEMO_METRICS.avgPosition.toFixed(1),
     change: DEMO_METRICS.changes.avgPosition,
-    description: "Kaynaklarda siralama",
+    description: "Kaynaklarda sıralama",
   },
   {
     label: "Sentiment",
@@ -337,6 +339,7 @@ export default function AnalizPage() {
   const [loading, setLoading] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
 
   /* ---- helpers ---- */
   const updateField = useCallback(
@@ -398,6 +401,16 @@ export default function AnalizPage() {
     });
   };
 
+  /* ---- favicon ---- */
+  useEffect(() => {
+    const domain = formData.domain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (domain.includes(".")) {
+      setFaviconUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=64`);
+    } else {
+      setFaviconUrl(null);
+    }
+  }, [formData.domain]);
+
   /* ---- loading animation ---- */
   useEffect(() => {
     if (!loading) return;
@@ -430,14 +443,26 @@ export default function AnalizPage() {
       </p>
 
       <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full max-w-md">
-        <input
-          type="text"
-          placeholder="ornek.com"
-          value={formData.domain}
-          onChange={(e) => updateField("domain", e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleDomainSubmit()}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-        />
+        <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-3 focus-within:ring-2 focus-within:ring-gray-900 focus-within:border-transparent">
+          {faviconUrl && (
+            <img
+              src={faviconUrl}
+              alt=""
+              width={24}
+              height={24}
+              className="shrink-0 rounded"
+              onError={() => setFaviconUrl(null)}
+            />
+          )}
+          <input
+            type="text"
+            placeholder="ornek.com"
+            value={formData.domain}
+            onChange={(e) => updateField("domain", e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleDomainSubmit()}
+            className="flex-1 text-base focus:outline-none bg-transparent"
+          />
+        </div>
         <button
           onClick={handleDomainSubmit}
           className="bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
@@ -476,7 +501,7 @@ export default function AnalizPage() {
       <div className="border border-gray-200 rounded-xl p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-1">Doğrulama</h2>
         <p className="text-sm text-gray-500 mb-6">
-          Analiz sonuçlarinizi gönderebilmemiz için bilgilerinizi doğrulayın.
+          Analiz sonuçlarınızi gönderebilmemiz için bilgilerinizi doğrulayın.
         </p>
 
         <div className="space-y-4">
@@ -763,51 +788,54 @@ export default function AnalizPage() {
 
   const renderLoading = () => (
     <div className="max-w-md mx-auto px-4 flex flex-col items-center pt-20">
-      {/* Spinner */}
-      <div className="w-12 h-12 border-3 border-gray-200 border-t-gray-900 rounded-full animate-spin mb-8" />
+      <div className="space-y-4 w-full">
+        {LOADING_STEPS.map((ls, i) => {
+          const Icon = ls.icon;
+          const isCompleted = i < loadingStepIndex;
+          const isActive = i === loadingStepIndex;
 
-      <div className="space-y-3 w-full">
-        {LOADING_STEPS.map((ls, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-3 transition-opacity duration-300 ${
-              i < loadingStepIndex
-                ? "opacity-50"
-                : i === loadingStepIndex
-                ? "opacity-100"
-                : "opacity-20"
-            }`}
-          >
-            {i < loadingStepIndex ? (
-              <svg
-                className="w-5 h-5 text-green-500 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            ) : i === loadingStepIndex ? (
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin shrink-0" />
-            ) : (
-              <div className="w-5 h-5 rounded-full border-2 border-gray-200 shrink-0" />
-            )}
-            <span
-              className={`text-sm ${
-                i === loadingStepIndex
-                  ? "text-gray-900 font-medium"
-                  : "text-gray-500"
+          return (
+            <div
+              key={i}
+              className={`flex items-center gap-4 transition-all duration-300 ${
+                isCompleted
+                  ? "opacity-60"
+                  : isActive
+                  ? "opacity-100"
+                  : "opacity-30"
               }`}
             >
-              {ls.text}
-            </span>
-          </div>
-        ))}
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  isCompleted
+                    ? "bg-green-100"
+                    : isActive
+                    ? "bg-gray-900"
+                    : "bg-gray-100"
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : isActive ? (
+                  <Icon className="w-5 h-5 text-white animate-pulse" />
+                ) : (
+                  <Icon className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+              <span
+                className={`text-sm ${
+                  isActive
+                    ? "text-gray-900 font-medium"
+                    : isCompleted
+                    ? "text-gray-500"
+                    : "text-gray-400"
+                }`}
+              >
+                {ls.text}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -822,10 +850,10 @@ export default function AnalizPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-gray-900">
-            {formData.brandName} Analiz Sonuçlari
+            {formData.brandName} Analiz Sonuçları
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            AI Overview uzerinden analiz tamamlandi
+            AI Overview üzerinden analiz tamamlandı
           </p>
         </div>
 
@@ -865,8 +893,20 @@ export default function AnalizPage() {
         </div>
 
         {/* Map */}
-        <div className="mb-8">
-          <MiniMap selectedCities={formData.cities} />
+        <div className="mb-8 border border-gray-200 rounded-xl p-6">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">
+            Seçilen İllerde Görünürlük
+          </h3>
+          <TurkeyMap
+            cityData={Object.fromEntries([
+              ...formData.cities.map((city) => [city, { score: 75, status: "strong" }]),
+              ...ALL_CITIES.filter((c) => !formData.cities.includes(c)).map((city) => [
+                city,
+                { score: 0, status: "not-tracked" },
+              ]),
+            ])}
+            className="max-h-[250px]"
+          />
         </div>
 
         {/* Example AI Response */}
@@ -916,7 +956,7 @@ export default function AnalizPage() {
                 />
               </svg>
               <span className="text-xs text-green-700 font-medium">
-                Markanız bu yantta referans gosterildi
+                Markanız bu yantta referans gösterildi
               </span>
             </div>
           )}
@@ -924,7 +964,7 @@ export default function AnalizPage() {
 
         {/* Locked: Other platforms */}
         <div className="mb-8">
-          <LockedSection title="ChatGPT, Gemini, Perplexity, Claude, Copilot sonuçlariniz">
+          <LockedSection title="ChatGPT, Gemini, Perplexity, Claude, Copilot sonuçlarınız">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {["ChatGPT", "Gemini", "Perplexity", "Claude", "Copilot"].map(
                 (p) => (
@@ -943,7 +983,7 @@ export default function AnalizPage() {
 
         {/* Locked: Full map */}
         <div className="mb-8">
-          <LockedSection title="Tum 81 ilde görünürlüğünüz">
+          <LockedSection title="Tüm 81 ilde görünürlüğünüz">
             <div className="h-48 bg-gray-50 rounded-lg flex items-center justify-center">
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: 81 }).map((_, i) => (
@@ -966,8 +1006,8 @@ export default function AnalizPage() {
         {/* Platform Traffic Bar */}
         <div className="border border-gray-200 rounded-xl p-6 mb-8">
           <p className="text-sm font-medium text-gray-900 mb-4">
-            Google AI Overview sonuçlarinizi gördünüz &mdash; ama kullanıcıların
-            %35&apos;i diger AI platformlarıni kullaniyor
+            Google AI Overview sonuçlarınızı gördünüz &mdash; ama kullanıcıların
+            %35&apos;i diğer AI platformlarını kullanıyor
           </p>
           <div className="flex h-6 rounded-full overflow-hidden">
             {DEMO_PLATFORM_DISTRIBUTION.map((p) => (

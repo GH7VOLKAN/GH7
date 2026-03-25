@@ -22,6 +22,7 @@ import {
   Trash2,
   ChevronDown,
 } from "lucide-react";
+import { EmptyState } from "@/components/panel/empty-state";
 
 // --- Provider colors ---
 const PROVIDERS = [
@@ -217,8 +218,18 @@ export default function AramalarPage() {
 
   return (
     <div className="space-y-6">
+      {/* Empty state - aktif data yokken gösterilir */}
+      {/* {filteredKeywords.length === 0 && (
+        <EmptyState
+          icon={Search}
+          title="Henüz arama eklemediniz"
+          description="Takip etmek istediğiniz aramaları ekleyerek başlayın."
+          action={<button className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium">+ Arama Ekle</button>}
+        />
+      )} */}
+
       {/* --- 3.1 Üst Bar --- */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 hover:shadow-sm transition-shadow">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[220px]">
@@ -380,7 +391,7 @@ export default function AramalarPage() {
       </div>
 
       {/* --- 3.2 Arama Listesi --- */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-xl border border-gray-200 bg-white hover:shadow-sm transition-shadow">
         {/* Table header */}
         <div className="grid grid-cols-[40px_1fr_120px_80px_120px_80px] items-center gap-2 border-b border-gray-100 px-4 py-3 text-xs font-medium text-gray-500">
           <div className="flex items-center justify-center">

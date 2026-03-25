@@ -9,6 +9,7 @@ import {
   CalendarIcon,
   CheckCircleIcon,
 } from "lucide-react";
+import { EmptyState } from "@/components/panel/empty-state";
 
 const REPORT_HISTORY = [
   { id: 1, title: "Haftalık GEO Raporu", date: "17 Mar 2025", type: "weekly", status: "ready" },
@@ -24,6 +25,15 @@ export default function RaporlarPage() {
 
   return (
     <div className="space-y-8">
+      {/* Empty state - aktif data yokken gösterilir */}
+      {/* {REPORT_HISTORY.length === 0 && (
+        <EmptyState
+          icon={FileTextIcon}
+          title="Henüz rapor oluşturulmadı"
+          description="İlk raporunuz tarama sonrasında otomatik oluşturulacak."
+        />
+      )} */}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Raporlar</h1>
@@ -35,7 +45,7 @@ export default function RaporlarPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* PDF Download */}
-        <div className="border border-gray-200 rounded-xl p-6">
+        <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
               <FileTextIcon className="w-5 h-5 text-gray-600" />
@@ -55,7 +65,7 @@ export default function RaporlarPage() {
         </div>
 
         {/* Weekly Email */}
-        <div className="border border-gray-200 rounded-xl p-6">
+        <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
               <MailIcon className="w-5 h-5 text-gray-600" />
@@ -89,7 +99,7 @@ export default function RaporlarPage() {
         </div>
 
         {/* WhatsApp */}
-        <div className="border border-gray-200 rounded-xl p-6">
+        <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
               <MessageCircleIcon className="w-5 h-5 text-gray-600" />
@@ -125,7 +135,7 @@ export default function RaporlarPage() {
       </div>
 
       {/* Report History */}
-      <div className="border border-gray-200 rounded-xl">
+      <div className="border border-gray-200 rounded-xl hover:shadow-sm transition-shadow">
         <div className="p-6 border-b border-gray-100">
           <h3 className="font-medium text-gray-900">Rapor Geçmişi</h3>
         </div>

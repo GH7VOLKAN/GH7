@@ -25,7 +25,7 @@ const PROVIDERS = [
 // --- Sorting options ---
 const SORT_OPTIONS = [
   { value: "default", label: "Varsayılan" },
-  { value: "aiRank", label: "AI Sira" },
+  { value: "aiRank", label: "AI Sıra" },
   { value: "seoVsMin", label: "SEO vs Min" },
 ] as const;
 
@@ -243,9 +243,9 @@ function KeywordRow({
                       </span>
                     </div>
                     <div className="space-y-1.5">
-                      <OptBar label="Icerik %" value={page.icerik} />
-                      <OptBar label="Baslik %" value={page.baslik} />
-                      <OptBar label="Aciklama %" value={page.aciklama} />
+                      <OptBar label="İçerik %" value={page.icerik} />
+                      <OptBar label="Başlık %" value={page.baslik} />
+                      <OptBar label="Açıklama %" value={page.aciklama} />
                     </div>
                   </div>
                 ))}
@@ -334,7 +334,7 @@ export default function İyileştirmePage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
       {/* ===== 2.1 — Site Sağlık Skoru ===== */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 hover:shadow-sm transition-shadow">
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
           <CircularGauge score={DEMO_OPTIMIZATION.domainSeoScore} />
           <div>
@@ -349,7 +349,7 @@ export default function İyileştirmePage() {
       </div>
 
       {/* ===== 2.2 — Filtreleme ===== */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 hover:shadow-sm transition-shadow">
         <div className="flex flex-col gap-4">
           {/* Row 1: Prompt + Il selects */}
           <div className="flex flex-wrap items-center gap-3">
@@ -359,8 +359,8 @@ export default function İyileştirmePage() {
               onChange={(e) => setSelectedPrompt(e.target.value)}
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
             >
-              <option value="all">Tum Promptlar</option>
-              <option value="branded">Markali Promptlar</option>
+              <option value="all">Tüm Promptlar</option>
+              <option value="branded">Markalı Promptlar</option>
               <option value="generic">Genel Promptlar</option>
             </select>
 
@@ -370,7 +370,7 @@ export default function İyileştirmePage() {
               onChange={(e) => setSelectedIl(e.target.value)}
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
             >
-              <option value="all">Tum Iller</option>
+              <option value="all">Tüm İller</option>
               <option value="istanbul">Istanbul</option>
               <option value="ankara">Ankara</option>
               <option value="izmir">Izmir</option>
@@ -400,7 +400,7 @@ export default function İyileştirmePage() {
 
           {/* Row 3: Sorting */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">Siralama:</span>
+            <span className="text-xs font-medium text-gray-500">Sıralama:</span>
             <div className="flex rounded-lg border border-gray-200">
               {SORT_OPTIONS.map((opt, i) => (
                 <button
@@ -423,7 +423,7 @@ export default function İyileştirmePage() {
       </div>
 
       {/* ===== 2.3 — Güçlendirilmesi Gereken ===== */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-xl border border-gray-200 bg-white hover:shadow-sm transition-shadow">
         {/* Yellow header */}
         <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
           <div className="h-3 w-3 rounded-full bg-amber-400" />
@@ -450,7 +450,7 @@ export default function İyileştirmePage() {
       </div>
 
       {/* ===== 2.4 — Güçlü Alanlar ===== */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-xl border border-gray-200 bg-white hover:shadow-sm transition-shadow">
         {/* Green header */}
         <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
           <div className="h-3 w-3 rounded-full bg-green-500" />
@@ -464,7 +464,7 @@ export default function İyileştirmePage() {
 
         <div className="px-6 py-3">
           <p className="mb-2 text-sm text-green-600">
-            Bu alanda güçlüsunuz, korumaya devam edin
+            Bu alanda güçlüsünüz, korumaya devam edin
           </p>
         </div>
 

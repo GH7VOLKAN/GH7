@@ -71,6 +71,15 @@
   --sidebar-border: #f0f0f0;
   --sidebar-ring: #111111;
   --radius: 1.25rem;
+  /* Isı haritası renkleri */
+  --map-strong: #22C55E;
+  --map-strong-hover: #16A34A;
+  --map-moderate: #F59E0B;
+  --map-moderate-hover: #D97706;
+  --map-weak: #EF4444;
+  --map-weak-hover: #DC2626;
+  --map-untracked: #E5E7EB;
+  --map-untracked-hover: #D1D5DB;
 }
 
 .dark {
