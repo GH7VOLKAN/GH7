@@ -3,15 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFadeIn } from "@/hooks/use-fade-in";
-
-const AI_PLATFORMS = [
-  { name: "ChatGPT", letter: "G", color: "#10A37F" },
-  { name: "Gemini", letter: "G", color: "#8B5CF6" },
-  { name: "AI Overview", letter: "G", color: "#4285F4" },
-  { name: "Perplexity", letter: "P", color: "#22D3EE" },
-  { name: "Claude", letter: "C", color: "#D97706" },
-  { name: "Copilot", letter: "C", color: "#00BCF2" },
-];
+import {
+  AIPlatformIcon,
+  AI_PLATFORM_KEYS,
+  getPlatformLabel,
+} from "@/components/ui/ai-platform-badge";
 
 export function HeroSectionV3() {
   const ref = useFadeIn<HTMLElement>();
@@ -45,10 +41,10 @@ export function HeroSectionV3() {
       >
         Yapay zeka
         <br />
-        sizi oneriyor mu<span className="text-zinc-300">?</span>
+        sizi öneriyor mu<span className="text-zinc-300">?</span>
       </h1>
       <p className="text-[17px] text-zinc-500 leading-[1.65] max-w-[480px] mb-10">
-        ChatGPT, Gemini, Perplexity ve Google AI Overview — musterileriniz artik bu platformlara soruyor. Sizi buluyorlar mi, yoksa rakibinizi mi?
+        ChatGPT, Gemini, Perplexity ve Google AI Overview — müşterileriniz artık bu platformlara soruyor. Sizi buluyorlar mı, yoksa rakibinizi mi?
       </p>
 
       {/* Dual selection cards */}
@@ -62,8 +58,8 @@ export function HeroSectionV3() {
           }`}
         >
           <div className="text-[20px] mb-1">🏢</div>
-          <div className="text-[14px] font-bold text-[#09090B]">Firmami Test Et</div>
-          <div className="text-[12px] text-zinc-400 mt-0.5">Sirket, marka, isletme</div>
+          <div className="text-[14px] font-bold text-[#09090B]">Firmamı Test Et</div>
+          <div className="text-[12px] text-zinc-400 mt-0.5">Şirket, marka, işletme</div>
         </button>
         <button
           onClick={() => { setSelected("kisisel"); setInputValue(""); }}
@@ -74,8 +70,8 @@ export function HeroSectionV3() {
           }`}
         >
           <div className="text-[20px] mb-1">👤</div>
-          <div className="text-[14px] font-bold text-[#09090B]">Kendi Adimi Test Et</div>
-          <div className="text-[12px] text-zinc-400 mt-0.5">Doktor, avukat, danisman</div>
+          <div className="text-[14px] font-bold text-[#09090B]">Kendi Adımı Test Et</div>
+          <div className="text-[12px] text-zinc-400 mt-0.5">Doktor, avukat, danışman</div>
         </button>
       </div>
 
@@ -87,36 +83,31 @@ export function HeroSectionV3() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder={selected === "firma" ? "firmaniz.com" : "Adiniz Soyadiniz"}
+            placeholder={selected === "firma" ? "firmanız.com" : "Adınız Soyadınız"}
             className="flex-1 border-none outline-none px-4 py-[13px] text-[15px] bg-transparent placeholder:text-zinc-300"
           />
           <button
             onClick={handleSubmit}
             className="bg-[#09090B] text-white px-6 py-[13px] rounded-[9px] text-[14px] font-semibold whitespace-nowrap cursor-pointer border-none"
           >
-            Ucretsiz Analiz
+            Ücretsiz Analiz
           </button>
         </div>
       )}
 
       <p className="text-[12px] text-zinc-400 mt-3">
-        SMS dogrulama · Tum platformlar · Kredi karti gerekmez
+        SMS doğrulama · Tüm platformlar · Kredi kartı gerekmez
       </p>
 
       {/* AI platform chips */}
       <div className="flex items-center gap-6 mt-12 flex-wrap">
         <span className="text-[11px] text-zinc-400 font-medium mr-1">
-          Takip ettigimiz platformlar:
+          Takip ettiğimiz platformlar:
         </span>
-        {AI_PLATFORMS.map((p) => (
-          <div key={p.name} className="flex items-center gap-1.5 text-[12px] text-zinc-400 font-medium">
-            <div
-              className="w-5 h-5 rounded-[5px] flex items-center justify-center text-[8px] font-extrabold text-white"
-              style={{ backgroundColor: p.color }}
-            >
-              {p.letter}
-            </div>
-            {p.name}
+        {AI_PLATFORM_KEYS.map((key) => (
+          <div key={key} className="flex items-center gap-1.5 text-[12px] text-zinc-400 font-medium">
+            <AIPlatformIcon platform={key} size="sm" />
+            {getPlatformLabel(key)}
           </div>
         ))}
       </div>

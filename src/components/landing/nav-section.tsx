@@ -22,7 +22,7 @@ export function NavSection() {
           SSS
         </a>
         <Link href="/login" className="bg-[#09090B] text-white px-[18px] py-2 rounded-lg text-[13px] font-semibold no-underline">
-          Giris
+          Giriş
         </Link>
       </div>
     </nav>

@@ -25,12 +25,12 @@ export function FinalCtaSection() {
         className="font-extrabold text-white leading-[1.08] max-w-[560px] mx-auto mb-4"
         style={{ fontSize: "clamp(30px, 4.5vw, 48px)", letterSpacing: "-0.035em" }}
       >
-        Yapay zekanin
+        Yapay zekanın
         <br />
-        sizi tanimasini saglayin
+        sizi tanımasını sağlayın
       </h2>
       <p className="text-[15px] text-zinc-600 leading-[1.7] max-w-[520px] mx-auto mb-10">
-        60 saniyede AI gorunurlugunuzu ogrenin. Ucretsiz.
+        60 saniyede AI görünürlüğünüzü öğrenin. Ücretsiz.
       </p>
 
       {/* Dual selection cards */}
@@ -44,8 +44,8 @@ export function FinalCtaSection() {
           }`}
         >
           <div className="text-[20px] mb-1">🏢</div>
-          <div className="text-[14px] font-bold text-white">Firmami Test Et</div>
-          <div className="text-[12px] text-zinc-500 mt-0.5">Sirket, marka, isletme</div>
+          <div className="text-[14px] font-bold text-white">Firmamı Test Et</div>
+          <div className="text-[12px] text-zinc-500 mt-0.5">Şirket, marka, işletme</div>
         </button>
         <button
           onClick={() => { setSelected("kisisel"); setInputValue(""); }}
@@ -56,8 +56,8 @@ export function FinalCtaSection() {
           }`}
         >
           <div className="text-[20px] mb-1">👤</div>
-          <div className="text-[14px] font-bold text-white">Kendi Adimi Test Et</div>
-          <div className="text-[12px] text-zinc-500 mt-0.5">Doktor, avukat, danisman</div>
+          <div className="text-[14px] font-bold text-white">Kendi Adımı Test Et</div>
+          <div className="text-[12px] text-zinc-500 mt-0.5">Doktor, avukat, danışman</div>
         </button>
       </div>
 
@@ -68,7 +68,7 @@ export function FinalCtaSection() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder={selected === "firma" ? "firmaniz.com" : "Adiniz Soyadiniz"}
+            placeholder={selected === "firma" ? "firmanız.com" : "Adınız Soyadınız"}
             className="flex-1 border-none outline-none px-4 py-[13px] text-[15px] bg-transparent text-white placeholder:text-zinc-700"
           />
           <button
@@ -81,7 +81,7 @@ export function FinalCtaSection() {
       )}
 
       <p className="text-[12px] text-zinc-700 mt-6">
-        Bir ISITMAX projesidir · 1M+ aylik ziyaretcinin arkasindaki ekip
+        Bir ISITMAX projesidir · 1M+ aylık ziyaretçinin arkasındaki ekip
       </p>
     </section>
   );

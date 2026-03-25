@@ -7,19 +7,19 @@ const STATS = [
     source: "Gartner, 2025",
     value: "%25",
     description:
-      "Geleneksel arama motoru trafigi 2026'ya kadar dusecek. Kullanicilar AI yanitlarini tercih ediyor.",
+      "Geleneksel arama motoru trafiği 2026'ya kadar düşecek. Kullanıcılar AI yanıtlarını tercih ediyor.",
   },
   {
     source: "Princeton / ACM KDD, 2024",
     value: "%40",
     description:
-      "GEO optimizasyonu yapilan icerikler, AI yanitlarinda %40'a kadar daha fazla gorunurluk kazaniyor.",
+      "GEO optimizasyonu yapılan içerikler, AI yanıtlarında %40'a kadar daha fazla görünürlük kazanıyor.",
   },
   {
     source: "Bain & Company, 2025",
     value: "%60",
     description:
-      "Google aramalarinin %60'i artik hicbir siteye tiklanmadan sonuclaniyor. AI ozetleri trafik caliyor.",
+      "Google aramalarının %60'ı artık hiçbir siteye tıklanmadan sonuçlanıyor. AI özetleri trafik çalıyor.",
   },
 ];
 
@@ -30,18 +30,18 @@ export function ResearchSection() {
     <section ref={ref} className="fi-section bg-[#09090B] text-white py-[72px] sm:py-[120px] px-5 sm:px-10">
       <div className="max-w-[1120px] mx-auto">
         <div className="text-[12px] font-semibold text-zinc-600 uppercase tracking-[0.12em] mb-4">
-          Arastirma Verileri
+          Araştırma Verileri
         </div>
         <h2
           className="font-extrabold text-white leading-[1.08] mb-4"
           style={{ fontSize: "clamp(30px, 4.5vw, 48px)", letterSpacing: "-0.035em" }}
         >
-          Bu bir trend degil,
+          Bu bir trend değil,
           <br />
-          yapisal bir donusum
+          yapısal bir dönüşüm
         </h2>
         <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[520px]">
-          Princeton, Stanford ve Gartner arastirmalarinin ortak sonucu: arama motorlari donusuyor, hazir olmayanlar gorunmez kalacak.
+          Princeton, Stanford ve Gartner araştırmalarının ortak sonucu: arama motorları dönüşüyor, hazır olmayanlar görünmez kalacak.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-800 rounded-2xl overflow-hidden mt-12">

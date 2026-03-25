@@ -3,20 +3,20 @@
 import { useFadeIn } from "@/hooks/use-fade-in";
 
 const SERVICES = [
-  "Icerik optimizasyonu — AI'nin referans almak isteyecegi formatta icerik uretimi",
-  "Schema markup — Yapilandirilmis veri ile AI botlarinin sitenizi anlamasini saglama",
-  "Entity building — Markanizi AI'larin \"guvenilir kaynak\" olarak tanimasini saglama",
-  "Citation stratejisi — Sektorel platformlarda referans agi olusturma",
-  "llms.txt dosyasi — AI botlarina sitenizi tanitan teknik dosya hazirlama",
-  "Il bazli optimizasyon — Hedef sehirlerinize ozel icerik ve sinyal calismasi",
-  "Aylik performans raporu — Ne yapildi, ne degisti, siradaki adimlar",
+  "İçerik optimizasyonu — AI'nin referans almak isteyeceği formatta içerik üretimi",
+  "Schema markup — Yapılandırılmış veri ile AI botlarının sitenizi anlamasını sağlama",
+  "Entity building — Markanızı AI'ların \"güvenilir kaynak\" olarak tanımasını sağlama",
+  "Citation stratejisi — Sektörel platformlarda referans ağı oluşturma",
+  "llms.txt dosyası — AI botlarına sitenizi tanıtan teknik dosya hazırlama",
+  "İl bazlı optimizasyon — Hedef şehirlerinize özel içerik ve sinyal çalışması",
+  "Aylık performans raporu — Ne yapıldı, ne değişti, sıradaki adımlar",
 ];
 
 const CASE_STATS = [
-  { value: "%26", label: "Ses payi" },
-  { value: "1.4", label: "Ort. AI sirasi" },
+  { value: "%26", label: "Ses payı" },
+  { value: "1.4", label: "Ort. AI sırası" },
   { value: "%100", label: "Kapsam" },
-  { value: "1M+", label: "Aylik ziyaretci" },
+  { value: "1M+", label: "Aylık ziyaretçi" },
 ];
 
 export function AgencySection() {
@@ -26,18 +26,18 @@ export function AgencySection() {
     <section ref={ref} className="fi-section bg-[#09090B] text-white py-[72px] sm:py-[120px] px-5 sm:px-10">
       <div className="max-w-[1120px] mx-auto">
         <div className="text-[12px] font-semibold text-zinc-600 uppercase tracking-[0.12em] mb-4">
-          Sadece Takip Degil
+          Sadece Takip Değil
         </div>
         <h2
           className="font-extrabold text-white leading-[1.08] mb-4"
           style={{ fontSize: "clamp(30px, 4.5vw, 48px)", letterSpacing: "-0.035em" }}
         >
-          Biz gostermiyoruz.
+          Biz göstermiyoruz.
           <br />
-          Biz duzeltiyoruz.
+          Biz düzeltiyoruz.
         </h2>
         <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[520px]">
-          Diger araclar &quot;sunu optimize et&quot; der ve sizi yalniz birakir. GH7&apos;de &quot;Ajansiniza Gonderin&quot; butonuna basarsiniz, GEO ajansimiz sizin icin calismaya baslar.
+          Diğer araçlar &quot;şunu optimize et&quot; der ve sizi yalnız bırakır. GH7&apos;de &quot;Ajansınıza Gönderin&quot; butonuna basarsınız, GEO ajansımız sizin için çalışmaya başlar.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mt-12 items-center">
@@ -57,7 +57,7 @@ export function AgencySection() {
           {/* Case study */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10">
             <div className="text-[18px] font-medium leading-[1.5] text-white/80 mb-5 italic">
-              &quot;3 ayda ChatGPT&apos;de sektorumuzun 1 numarali onerisi olduk. AI aramalarinda %26 ses payina sahibiz.&quot;
+              &quot;3 ayda ChatGPT&apos;de sektörümüzün 1 numaralı önerisi olduk. AI aramalarında %26 ses payına sahibiz.&quot;
             </div>
             <div className="text-[13px] text-zinc-600">
               ISITMAX A.S. · isitmax.com
