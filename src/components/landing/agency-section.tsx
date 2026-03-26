@@ -2,52 +2,60 @@
 
 import { useFadeIn } from "@/hooks/use-fade-in";
 
-const SERVICES = [
-  "Schema Markup Paketi — tüm sayfalarınıza AI uyumlu yapılandırılmış veri",
-  "İçerik Optimizasyonu — 10 sayfa AI referans alacak formatta yeniden yazım",
-  "Entity Building — markanızı AI'ların güvenilir kaynak olarak tanıtma",
-  "Citation Paketi — sektörel platformlarda referans ağı oluşturma",
-  "llms.txt + robots.txt — AI botlarına sitenizi tanıtan teknik dosyalar",
-  "Export Dil Paketi — 5 sayfanın hedef dilde GEO uyumlu çevirisi",
-  "Video İçerik Danışmanlığı — AI'ın referans alacağı video stratejisi",
+const PACKAGES = [
+  {
+    title: "Schema Markup",
+    desc: "Tüm sayfalarınıza AI uyumlu yapılandırılmış veri. Yapay zekaların sizi doğru tanıma olasılığını artırın.",
+  },
+  {
+    title: "İçerik Optimizasyonu",
+    desc: "10 sayfanızın AI referans alacak formatta yeniden yazımı. Hem SEO hem GEO uyumlu.",
+  },
+  {
+    title: "Export Dil Paketi",
+    desc: "5 sayfanızın hedef dilde GEO uyumlu çevirisi. Uluslararası pazarlarda AI görünürlüğü.",
+  },
 ];
 
 export function AgencySection() {
   const ref = useFadeIn<HTMLElement>();
 
   return (
-    <section ref={ref} className="fi-section py-[72px] sm:py-[100px] px-5 sm:px-10">
+    <section
+      ref={ref}
+      className="fi-section bg-[#F9FAFB] border-t border-b border-[#E5E7EB] py-[80px] sm:py-[120px] px-5 sm:px-10"
+    >
       <div className="max-w-[1120px] mx-auto">
-        <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.14em] mb-3.5">
+        <div className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-[0.14em] mb-3.5">
           Kendiniz Yapamıyor Musunuz?
         </div>
         <h2
-          className="font-extrabold leading-[1.1] mb-3.5"
-          style={{ fontSize: "clamp(28px, 4.2vw, 46px)", letterSpacing: "-0.035em" }}
+          className="font-extrabold leading-[1.1] mb-10"
+          style={{
+            fontSize: "clamp(28px, 4.2vw, 46px)",
+            letterSpacing: "-0.035em",
+          }}
         >
           GEO ajans paketleri tek tıkla.
         </h2>
-        <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[500px]">
-          Tek seferlik hizmetler — aylık abonelik yok. Schema, içerik, çeviri, entity building — ihtiyacınız olan paketi alın, ajans uygulasın.
-        </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-10 items-start">
-          <ul className="list-none p-0">
-            {SERVICES.map((item) => (
-              <li
-                key={item}
-                className="text-[14px] text-zinc-600 py-3 border-b border-zinc-100 flex items-start gap-2.5 leading-[1.5]"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#E5E7EB] rounded-[14px] overflow-hidden">
+          {PACKAGES.map((pkg) => (
+            <div key={pkg.title} className="bg-white p-8">
+              <div className="text-[15px] font-bold text-[#09090B] mb-2">
+                {pkg.title}
+              </div>
+              <div className="text-[13px] text-[#6B7280] leading-[1.6] mb-4">
+                {pkg.desc}
+              </div>
+              <a
+                href="#"
+                className="text-[13px] font-semibold text-[#09090B] no-underline hover:underline"
               >
-                <span className="text-zinc-300 shrink-0">→</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-
-          {/* Visual placeholder */}
-          <div className="border border-zinc-200 rounded-[14px] bg-[#FAFAFA] flex items-center justify-center text-zinc-300 text-[12px] font-medium min-h-[340px]">
-            Ajans Paketleri Görseli
-          </div>
+                Detay &rarr;
+              </a>
+            </div>
+          ))}
         </div>
       </div>
     </section>

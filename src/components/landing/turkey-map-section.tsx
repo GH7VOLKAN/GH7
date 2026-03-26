@@ -1,6 +1,7 @@
 "use client";
 
 import { useFadeIn } from "@/hooks/use-fade-in";
+import Link from "next/link";
 
 const CITY_PINS = [
   { name: "İstanbul", left: "28%", top: "25%", score: 82, color: "#22C55E" },
@@ -27,27 +28,31 @@ export function TurkeyMapSection() {
   return (
     <section
       ref={ref}
-      className="fi-section bg-[#FAFAFA] border-t border-b border-zinc-100 py-[72px] sm:py-[100px] px-5 sm:px-10"
+      className="fi-section py-[80px] sm:py-[120px] px-5 sm:px-10"
     >
       <div className="max-w-[1120px] mx-auto">
-        <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.14em] mb-3.5">
+        <div className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-[0.14em] mb-3.5">
           81 İl Takibi
         </div>
         <h2
           className="font-extrabold leading-[1.1] mb-3.5"
-          style={{ fontSize: "clamp(28px, 4.2vw, 46px)", letterSpacing: "-0.035em" }}
+          style={{
+            fontSize: "clamp(28px, 4.2vw, 46px)",
+            letterSpacing: "-0.035em",
+          }}
         >
           Her il ayrı bir pazar.
           <br />
           Her ilde ayrı rakip.
         </h2>
-        <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[500px]">
-          İstanbul&apos;da 1 numara olup Ankara&apos;da görünmüyor olabilirsiniz. GH7 farkı il il gösterir.
+        <p className="text-[15px] text-[#6B7280] leading-[1.7] max-w-[500px] mb-10">
+          İstanbul&apos;da 1 numara olup Ankara&apos;da görünmüyor olabilirsiniz.
+          GH7 farkı il il gösterir.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-10 mt-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-10 items-start">
           {/* Map area */}
-          <div className="border border-zinc-200 rounded-[14px] bg-[#FAFAFA] p-7 relative min-h-[300px]">
+          <div className="border border-[#E5E7EB] rounded-[14px] bg-[#F9FAFB] p-7 relative min-h-[300px]">
             {CITY_PINS.map((city) => (
               <div
                 key={city.name}
@@ -56,12 +61,18 @@ export function TurkeyMapSection() {
               >
                 <div
                   className="w-3 h-3 rounded-full border-2 border-white"
-                  style={{ backgroundColor: city.color, boxShadow: "0 1px 3px rgba(0,0,0,.12)" }}
+                  style={{
+                    backgroundColor: city.color,
+                    boxShadow: "0 1px 3px rgba(0,0,0,.12)",
+                  }}
                 />
-                <div className="text-[7px] font-bold text-zinc-600 whitespace-nowrap bg-white/90 px-[3px] rounded-sm">
+                <div className="text-[7px] font-bold text-[#6B7280] whitespace-nowrap bg-white/90 px-[3px] rounded-sm">
                   {city.name}
                 </div>
-                <div className="text-[8px] font-extrabold" style={{ color: city.color }}>
+                <div
+                  className="text-[8px] font-extrabold"
+                  style={{ color: city.color }}
+                >
                   {city.score}
                 </div>
               </div>
@@ -73,22 +84,23 @@ export function TurkeyMapSection() {
             {SIDEBAR_STATS.map((stat) => (
               <div
                 key={stat.label}
-                className="border border-zinc-200 rounded-[10px] p-4 flex justify-between items-center"
+                className="border border-[#E5E7EB] rounded-[10px] p-4"
               >
-                <div>
-                  <div
-                    className="text-[24px] font-extrabold"
-                    style={{ letterSpacing: "-0.02em", color: stat.color }}
-                  >
-                    {stat.num}
-                  </div>
-                  <div className="text-[11px] text-zinc-500">{stat.label}</div>
+                <div
+                  className="text-[24px] font-extrabold"
+                  style={{ letterSpacing: "-0.02em", color: stat.color }}
+                >
+                  {stat.num}
                 </div>
+                <div className="text-[11px] text-[#6B7280]">{stat.label}</div>
               </div>
             ))}
-            <button className="mt-2 bg-[#09090B] text-white border-none py-3.5 rounded-[9px] text-[13px] font-semibold cursor-pointer w-full">
-              İllerinizi analiz edin →
-            </button>
+            <Link
+              href="/analiz"
+              className="mt-2 bg-[#09090B] text-white border-none py-3.5 rounded-[9px] text-[13px] font-semibold cursor-pointer w-full text-center no-underline block"
+            >
+              Kendi illerinizi analiz edin &rarr;
+            </Link>
           </div>
         </div>
       </div>
