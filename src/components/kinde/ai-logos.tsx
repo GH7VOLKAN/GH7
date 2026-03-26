@@ -37,7 +37,7 @@ function getPlatformIconPath(platform: string): string {
   const key = platform.toLowerCase();
   if (key.includes("chatgpt") || key.includes("openai")) return "/chatgpt-icon.webp";
   if (key.includes("claude") || key.includes("anthropic")) return "/claude-ai-icon.webp";
-  if (key.includes("google_aio")) return "/google-icon.webp";
+  if (key.includes("google_aio")) return "/google-ai-studio-icon.webp";
   if (key.includes("gemini")) return "/google-gemini-icon.webp";
   if (key.includes("google")) return "/google-gemini-icon.webp";
   if (key.includes("perplexity")) return "/perplexity-ai-icon.webp";

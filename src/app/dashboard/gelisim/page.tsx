@@ -10,7 +10,7 @@ export default async function GelisimPage() {
   if (!brandId) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        Marka bulunamadi. Lutfen ayarlardan marka ekleyin.
+        Marka bulunamadı. Lütfen ayarlardan marka ekleyin.
       </div>
     );
   }

@@ -124,7 +124,7 @@ export async function triggerProActivation(brandId: string): Promise<void> {
     scanId = scan.id;
 
     await executeScan(scan.id, brandId);
-    progress.push({ step: "scan", success: true, detail: `Scan ${scan.id} tamamlandi` });
+    progress.push({ step: "scan", success: true, detail: `Scan ${scan.id} tamamlandı` });
   } catch (err) {
     console.error("[pro-activation] Step 2 (scan) failed:", err);
     progress.push({ step: "scan", success: false, detail: String(err) });
@@ -164,9 +164,9 @@ export async function triggerProActivation(brandId: string): Promise<void> {
         })),
       });
 
-      progress.push({ step: "competitors", success: true, detail: `${result.competitors.length} rakip kesfedildi` });
+      progress.push({ step: "competitors", success: true, detail: `${result.competitors.length} rakip keşfedildi` });
     } else {
-      progress.push({ step: "competitors", success: true, detail: "Rakip bulunamadi" });
+      progress.push({ step: "competitors", success: true, detail: "Rakip bulunamadı" });
     }
   } catch (err) {
     console.error("[pro-activation] Step 3 (competitors) failed:", err);
@@ -235,7 +235,7 @@ export async function triggerProActivation(brandId: string): Promise<void> {
 
       progress.push({ step: "competitor_analysis", success: true, detail: `${competitors.length} rakip analiz edildi` });
     } else {
-      progress.push({ step: "competitor_analysis", success: true, detail: "Rakip analizi icin veri yok" });
+      progress.push({ step: "competitor_analysis", success: true, detail: "Rakip analizi için veri yok" });
     }
   } catch (err) {
     console.error("[pro-activation] Steps 4-5 (competitor analysis) failed:", err);
@@ -259,7 +259,7 @@ export async function triggerProActivation(brandId: string): Promise<void> {
       : await runSiteAudit(brand.domain);
 
     await persistAuditResults(brandId, auditResult);
-    progress.push({ step: "audit", success: true, detail: "GEO audit tamamlandi" });
+    progress.push({ step: "audit", success: true, detail: "GEO audit tamamlandı" });
   } catch (err) {
     console.error("[pro-activation] Step 6 (audit) failed:", err);
     progress.push({ step: "audit", success: false, detail: String(err) });
@@ -291,9 +291,9 @@ export async function triggerProActivation(brandId: string): Promise<void> {
         mentionScore,
       );
 
-      progress.push({ step: "action_plan", success: true, detail: "Gelisim plani olusturuldu" });
+      progress.push({ step: "action_plan", success: true, detail: "Gelişim planı oluşturuldu" });
     } else {
-      progress.push({ step: "action_plan", success: false, detail: "Audit sonucu yok, plan uretilemedi" });
+      progress.push({ step: "action_plan", success: false, detail: "Audit sonucu yok, plan üretilemedi" });
     }
   } catch (err) {
     console.error("[pro-activation] Step 7 (action plan) failed:", err);
@@ -314,8 +314,8 @@ export async function triggerProActivation(brandId: string): Promise<void> {
     await sendNotification({
       brandId,
       type: "scan_completed",
-      title: "Pro aktivasyon tamamlandi",
-      message: `Tum analizleriniz hazir! ${successCount}/${progress.length} adim basariyla tamamlandi.`,
+      title: "Pro aktivasyon tamamlandı",
+      message: `Tüm analizleriniz hazır! ${successCount}/${progress.length} adım başarıyla tamamlandı.`,
       data: { progress },
     });
   } catch {

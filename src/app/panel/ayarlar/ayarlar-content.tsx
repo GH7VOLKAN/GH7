@@ -35,7 +35,7 @@ export function AyarlarContent({
       });
     } catch (err) {
       console.error("Save error:", err);
-      alert("Kaydetme sirasinda bir hata olustu.");
+      alert("Kaydetme sırasında bir hata oluştu.");
     } finally {
       setSaving(false);
     }
@@ -45,7 +45,7 @@ export function AyarlarContent({
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Ayarlar</h1>
-        <p className="text-sm text-gray-500 mt-1">Marka ve hesap ayarlarinizi yonetin</p>
+        <p className="text-sm text-gray-500 mt-1">Marka ve hesap ayarlarınızı yönetin</p>
       </div>
 
       {/* Brand Info */}
@@ -61,7 +61,7 @@ export function AyarlarContent({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Marka Adi</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Marka Adı</label>
             <input
               value={brandName}
               onChange={(e) => setBrandName(e.target.value)}
@@ -77,7 +77,7 @@ export function AyarlarContent({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Sektor</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Sektör</label>
             <input
               value={sector}
               onChange={(e) => setSector(e.target.value)}
@@ -92,7 +92,7 @@ export function AyarlarContent({
               </span>
               {plan !== "pro" && (
                 <button className="text-sm text-gray-500 hover:text-gray-700">
-                  Pro&apos;ya gecin &rarr;
+                  Pro&apos;ya geçin &rarr;
                 </button>
               )}
             </div>
@@ -108,7 +108,7 @@ export function AyarlarContent({
           </div>
           <div>
             <h3 className="font-medium text-gray-900">Hesap Bilgileri</h3>
-            <p className="text-xs text-gray-500">Giris yapilan hesap bilgileri</p>
+            <p className="text-xs text-gray-500">Giriş yapılan hesap bilgileri</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -139,15 +139,15 @@ export function AyarlarContent({
           </div>
           <div>
             <h3 className="font-medium text-gray-900">Bildirim Tercihleri</h3>
-            <p className="text-xs text-gray-500">Hangi bildirimleri almak istediginizi secin</p>
+            <p className="text-xs text-gray-500">Hangi bildirimleri almak istediğinizi seçin</p>
           </div>
         </div>
         <div className="space-y-4">
           {[
-            { label: "Haftalik rapor e-postasi", desc: "Her Pazartesi ozet e-posta", enabled: true },
-            { label: "Skor degisikligi bildirimi", desc: "GEO skorunuz degistiginde", enabled: true },
-            { label: "Yeni rakip tespiti", desc: "Yeni bir rakip tespit edildiginde", enabled: false },
-            { label: "Tarama tamamlandi", desc: "Planlanmis tarama bittiginde", enabled: true },
+            { label: "Haftalık rapor e-postası", desc: "Her Pazartesi özet e-posta", enabled: true },
+            { label: "Skor değişikliği bildirimi", desc: "GEO skorunuz değiştiğinde", enabled: true },
+            { label: "Yeni rakip tespiti", desc: "Yeni bir rakip tespit edildiğinde", enabled: false },
+            { label: "Tarama tamamlandı", desc: "Planlanmış tarama bittiğinde", enabled: true },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between py-2">
               <div>
@@ -177,17 +177,17 @@ export function AyarlarContent({
             <ShieldIcon className="w-5 h-5 text-gray-600" />
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">Guvenlik</h3>
-            <p className="text-xs text-gray-500">Hesap guvenlik ayarlari</p>
+            <h3 className="font-medium text-gray-900">Güvenlik</h3>
+            <p className="text-xs text-gray-500">Hesap güvenlik ayarları</p>
           </div>
         </div>
         <div className="space-y-3">
           <button className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-            Sifre degistir &rarr;
+            Şifre değiştir &rarr;
           </button>
           <br />
           <button className="text-sm text-red-500 hover:text-red-700 transition-colors">
-            Hesabi sil
+            Hesabı sil
           </button>
         </div>
       </div>

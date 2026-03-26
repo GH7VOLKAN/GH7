@@ -83,16 +83,16 @@ export function GorunurlukContent({
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Gorunurluk</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Görünürlük</h1>
         <p className="text-sm text-gray-500 mt-1">
-          AI platformlarinda marka gorunurlugunuzun detayli analizi
+          AI platformlarında marka görünürlüğünüzün detaylı analizi
         </p>
       </div>
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="border border-gray-200 rounded-xl p-5">
-          <p className="text-xs text-gray-500 font-medium">Gorunurluk Skoru</p>
+          <p className="text-xs text-gray-500 font-medium">Görünürlük Skoru</p>
           <p className="text-2xl font-semibold text-gray-900 mt-1">{mentionScore}</p>
           <p className={`text-xs mt-1 ${mentionTrend >= 0 ? "text-green-600" : "text-red-500"}`}>
             {mentionTrend >= 0 ? "+" : ""}{mentionTrend} son tarama
@@ -109,17 +109,17 @@ export function GorunurlukContent({
           <p className="text-xs text-gray-400 mt-1">Aktif prompt</p>
         </div>
         <div className="border border-gray-200 rounded-xl p-5">
-          <p className="text-xs text-gray-500 font-medium">Mention Orani</p>
+          <p className="text-xs text-gray-500 font-medium">Mention Oranı</p>
           <p className="text-2xl font-semibold text-gray-900 mt-1">%{mentionRate}</p>
-          <p className="text-xs text-gray-400 mt-1">{totalMentionCount}/{totalResultCount} sonuc</p>
+          <p className="text-xs text-gray-400 mt-1">{totalMentionCount}/{totalResultCount} sonuç</p>
         </div>
       </div>
 
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-gray-200">
         {[
-          { key: "platform" as const, label: "Platform Dagilimi" },
-          { key: "keyword" as const, label: "Arama Bazli" },
+          { key: "platform" as const, label: "Platform Dağılımı" },
+          { key: "keyword" as const, label: "Arama Bazlı" },
           { key: "trend" as const, label: "Trend" },
         ].map((tab) => (
           <button
@@ -140,7 +140,7 @@ export function GorunurlukContent({
       {activeTab === "platform" && (
         <div className="space-y-6">
           <div className="border border-gray-200 rounded-xl p-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-6">Platform Mention Orani (%)</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-6">Platform Mention Oranı (%)</h3>
             {platformDistribution.length > 0 ? (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -154,7 +154,7 @@ export function GorunurlukContent({
                       tick={{ fontSize: 12 }}
                     />
                     <RechartsTooltip
-                      formatter={(value: number) => [`%${value}`, "Mention Orani"]}
+                      formatter={(value: number) => [`%${value}`, "Mention Oranı"]}
                       contentStyle={{
                         borderRadius: "8px",
                         border: "1px solid #E5E7EB",
@@ -207,7 +207,7 @@ export function GorunurlukContent({
           {/* Competitor Ranking */}
           {competitorRanking.length > 0 && (
             <div className="border border-gray-200 rounded-xl p-6">
-              <h3 className="text-sm font-medium text-gray-900 mb-4">Rakip Siralama</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Rakip Sıralama</h3>
               <div className="space-y-2">
                 {competitorRanking.map((entry, i) => {
                   const rate = entry.totalResults > 0 ? Math.round((entry.mentionCount / entry.totalResults) * 100) : 0;
@@ -250,7 +250,7 @@ export function GorunurlukContent({
           {bestPrompts.length > 0 && (
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-6 py-3 border-b border-gray-100 bg-green-50/50">
-                <h3 className="text-sm font-medium text-green-800">En Iyi Performans Gosteren Aramalar</h3>
+                <h3 className="text-sm font-medium text-green-800">En İyi Performans Gösteren Aramalar</h3>
               </div>
               <div className="divide-y divide-gray-100">
                 {bestPrompts.map((p, i) => (
@@ -287,7 +287,7 @@ export function GorunurlukContent({
           {worstPrompts.length > 0 && (
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-6 py-3 border-b border-gray-100 bg-red-50/50">
-                <h3 className="text-sm font-medium text-red-800">Iyilestirilmesi Gereken Aramalar</h3>
+                <h3 className="text-sm font-medium text-red-800">İyileştirilmesi Gereken Aramalar</h3>
               </div>
               <div className="divide-y divide-gray-100">
                 {worstPrompts.map((p, i) => (
@@ -365,7 +365,7 @@ export function GorunurlukContent({
           {weeklyTrend.length > 0 && (
             <div className="border border-gray-200 rounded-xl p-6">
               <h3 className="text-sm font-medium text-gray-900 mb-6">
-                Haftalik Platform Mention Trendi (%)
+                Haftalık Platform Mention Trendi (%)
               </h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -396,7 +396,7 @@ export function GorunurlukContent({
           {scoreHistory.length > 0 && (
             <div className="border border-gray-200 rounded-xl p-6">
               <h3 className="text-sm font-medium text-gray-900 mb-6">
-                Skor Gecmisi
+                Skor Geçmişi
               </h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -413,7 +413,7 @@ export function GorunurlukContent({
                     />
                     <Legend />
                     <Line type="monotone" dataKey="mentionScore" stroke="#18181B" strokeWidth={2} dot={false} name="Mention Skoru" />
-                    <Line type="monotone" dataKey="readinessScore" stroke="#3B82F6" strokeWidth={2} dot={false} name="Hazirlik Skoru" />
+                    <Line type="monotone" dataKey="readinessScore" stroke="#3B82F6" strokeWidth={2} dot={false} name="Hazırlık Skoru" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -421,7 +421,7 @@ export function GorunurlukContent({
           )}
 
           {weeklyTrend.length === 0 && scoreHistory.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-8">Henuz trend verisi yok.</p>
+            <p className="text-sm text-gray-400 text-center py-8">Henüz trend verisi yok.</p>
           )}
         </div>
       )}

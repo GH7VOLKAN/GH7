@@ -3,6 +3,44 @@ import { cache } from "react";
 import type { PlatformKey, Sentiment } from "@/lib/types";
 import { extractCompetitorNames } from "@/lib/ai/types";
 
+/**
+ * Strip markdown, URLs, garbled text from AI responses for clean display.
+ */
+function cleanExcerpt(text: string): string {
+  // Detect garbled/binary responses
+  if (isGarbledResponse(text)) return "";
+  return text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/https?:\/\/[^\s)]+/g, "")
+    .replace(/(?:www\.)[a-zA-Z0-9.-]+\.[a-z]{2,}[^\s]*/g, "")
+    .replace(/\*{1,3}([^*]*?)\*{1,3}/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^[\s]*[-*+]\s+/gm, " ")
+    .replace(/^[\s]*\d+\.\s+/gm, " ")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/^>\s*/gm, "")
+    .replace(/[_~|]/g, "")
+    .replace(/\[\d+\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Detect garbled/binary/error responses that shouldn't be shown */
+function isGarbledResponse(text: string): boolean {
+  if (!text || text.length < 10) return false;
+  if (text.startsWith("[ERROR]") || text.startsWith("ERROR")) return true;
+  if (text.includes("Bu arama için AI Bakışı mevcut değil")) return true;
+  // Check for base64-like content (long strings without spaces)
+  const words = text.split(/\s+/);
+  const longWords = words.filter((w) => w.length > 40);
+  if (longWords.length >= 2) return true;
+  // Check for very low space ratio (normal text has ~1 space per 5-7 chars)
+  const spaceRatio = (text.match(/\s/g) || []).length / text.length;
+  if (text.length > 50 && spaceRatio < 0.05) return true;
+  return false;
+}
+
 export interface RecentMention {
   id: string;
   platform: PlatformKey;
@@ -335,6 +373,8 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
 
     // Count how many times each competitor name appears across all results
     const compCounts: Record<string, { total: number; perPlatform: Record<PlatformKey, { mentioned: number; total: number }> }> = {};
+
+    // Source 1: PromptResult.competitors field
     for (const r of allScanResults) {
       const comps = extractCompetitorNames(r.competitors);
       for (const name of comps) {
@@ -348,7 +388,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
               claude: { mentioned: 0, total: 0 },
               gemini: { mentioned: 0, total: 0 },
               perplexity: { mentioned: 0, total: 0 },
-      google_aio: { mentioned: 0, total: 0 },
+              google_aio: { mentioned: 0, total: 0 },
             },
           };
         }
@@ -357,6 +397,27 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
         if (compCounts[key].perPlatform[plat]) {
           compCounts[key].perPlatform[plat].mentioned++;
         }
+      }
+    }
+
+    // Source 2: If PromptResult.competitors was empty, fall back to Competitor table
+    if (Object.keys(compCounts).length === 0) {
+      const dbCompetitors = await prisma.competitor.findMany({
+        where: { brandId },
+        select: { name: true, mentionScore: true },
+        orderBy: { mentionScore: "desc" },
+      });
+      for (const c of dbCompetitors) {
+        compCounts[c.name] = {
+          total: c.mentionScore,
+          perPlatform: {
+            chatgpt: { mentioned: 0, total: 0 },
+            claude: { mentioned: 0, total: 0 },
+            gemini: { mentioned: 0, total: 0 },
+            perplexity: { mentioned: 0, total: 0 },
+            google_aio: { mentioned: 0, total: 0 },
+          },
+        };
       }
     }
 
@@ -399,9 +460,9 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     } else {
       merged.splice(brandPos, 0, brandEntry);
     }
-    competitorRanking = merged.slice(0, 5);
+    competitorRanking = merged.slice(0, 10);
 
-    // If brand is not in top 5, add it anyway
+    // If brand is not in top 10, add it anyway
     if (!competitorRanking.some((c) => c.isUser)) {
       competitorRanking.push(brandEntry);
     }
@@ -563,7 +624,9 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       if (!r.mentioned) continue;
       if (aiResponseExcerpts.length >= 3) break;
 
-      const responseText = r.fullResponse ?? r.excerpt ?? "";
+      const rawText = r.fullResponse ?? r.excerpt ?? "";
+      if (!rawText) continue;
+      const responseText = cleanExcerpt(rawText);
       if (!responseText) continue;
 
       // Find a snippet around the brand name
@@ -618,13 +681,21 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
   const sourceMap: SourceMapEntry[] = [];
 
   // Check which standard categories exist
-  const hasDomain = sourceDomains.some((s) => s.domain.includes(brandDomain.replace(/^www\./, "")));
-  const hasDirectory = sourceDomains.some((s) => s.type === "directory");
+  // DB types vary: "kurumsal" | "dizin" | "ugc" | "referans" | "medya" | "directory" | "profile" | "news"
+  const domainLower = brandDomain.replace(/^www\./, "").toLowerCase();
+  const hasDomain = sourceDomains.some((s) => s.domain.toLowerCase().includes(domainLower) && domainLower.length > 0);
+  const hasDirectory = sourceDomains.some((s) =>
+    s.type === "dizin" || s.type === "directory" ||
+    ["armut.com", "iyioneri.tr", "eniyisinde.com.tr", "efirmalar.com.tr"].some((d) => s.domain.includes(d))
+  );
   const hasGoogleBusiness = sourceDomains.some((s) =>
-    s.domain.includes("google") && (s.type === "directory" || s.type === "profile")
+    s.domain.includes("google") || s.domain.includes("maps.google")
   );
   const hasLinkedIn = sourceDomains.some((s) => s.domain.includes("linkedin"));
-  const hasNews = sourceDomains.some((s) => s.type === "news" || s.type === "article");
+  const hasNews = sourceDomains.some((s) =>
+    s.type === "medya" || s.type === "news" || s.type === "article" ||
+    ["haberturk.com", "medium.com", "youtube.com"].some((d) => s.domain.includes(d))
+  );
 
   sourceMap.push(
     { domain: brandDomain || "Web sitesi", type: "website", exists: hasDomain },

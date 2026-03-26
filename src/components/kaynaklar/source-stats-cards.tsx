@@ -50,7 +50,7 @@ export function SourceStatsCards({ sourceDomains }: SourceStatsCardsProps) {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Yapay zekanin referans gosterdigi siteler
+            Yapay zekanın referans gösterdiği siteler
           </div>
           <div className="text-muted-foreground">
             Yapay zeka yanitlarinda markanızla birlikte referans gösterilen domain sayısı

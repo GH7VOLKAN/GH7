@@ -108,7 +108,7 @@ export function buildCorrelationTimeline(
     events.push({
       date: completedAt,
       type: "checklist_completed",
-      description: `"${item.simpleTitle}" tamamlandi`,
+      description: `"${item.simpleTitle}" tamamlandı`,
       metricBefore: Math.round(rateBefore * 100),
       metricAfter: Math.round(rateAfter * 100),
     });
@@ -117,15 +117,15 @@ export function buildCorrelationTimeline(
     if (beforeResults.length >= 3 && afterResults.length >= 3) {
       const change = rateAfter - rateBefore;
       if (Math.abs(change) > 0.05) {
-        const direction = change > 0 ? "artti" : "azaldi";
+        const direction = change > 0 ? "arttı" : "azaldı";
         const confidence: "high" | "medium" | "low" =
           Math.abs(change) > 0.15 ? "high" : Math.abs(change) > 0.08 ? "medium" : "low";
 
         insights.push({
-          event: `"${item.simpleTitle}" tamamlandi`,
+          event: `"${item.simpleTitle}" tamamlandı`,
           metric: `Mention rate %${Math.round(Math.abs(change) * 100)} ${direction}`,
           confidence,
-          description: `${item.simpleTitle} tamamlandiktan sonra mention rate %${Math.round(rateBefore * 100)} → %${Math.round(rateAfter * 100)} oldu`,
+          description: `${item.simpleTitle} tamamlandıktan sonra mention rate %${Math.round(rateBefore * 100)} → %${Math.round(rateAfter * 100)} oldu`,
         });
       }
     }

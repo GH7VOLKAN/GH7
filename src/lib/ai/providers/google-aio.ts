@@ -56,7 +56,12 @@ export class GoogleAIOProvider implements AIProvider {
     // 1. Try ai_overview field (Google's AI-generated summary)
     if (data.ai_overview) {
       const text = this.parseAIOverviewField(data.ai_overview);
-      if (text) return text;
+      // Validate: must have spaces (readable text, not base64/encoded)
+      if (text && text.length > 10) {
+        const spaceRatio = (text.match(/\s/g) || []).length / text.length;
+        const hasLongGarble = text.split(/\s+/).some((w: string) => w.length > 50);
+        if (spaceRatio > 0.05 && !hasLongGarble) return text;
+      }
     }
 
     // 2. Try answer_box field

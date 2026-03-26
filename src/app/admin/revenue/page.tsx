@@ -150,27 +150,27 @@ export default function AdminRevenuePage() {
       {/* MRR card */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
-          title="MRR (Aylik Tekrarlayan Gelir)"
+          title="MRR (Aylık Tekrarlayan Gelir)"
           value={formatTRY(data.mrr)}
           icon={TrendingUp}
-          description={`${totalPaid} odeme yapan kullanici`}
+          description={`${totalPaid} ödeme yapan kullanıcı`}
         />
         <StatCard
-          title="Risk Altinda"
+          title="Risk Altında"
           value={data.failedPayments.length}
           icon={AlertTriangle}
-          description="Odeme basarisiz / grace period"
+          description="Ödeme başarısız / grace period"
         />
         <StatCard
-          title="Son 30 Gun Churn"
+          title="Son 30 Gün Churn"
           value={data.churnedUsers.length}
           icon={UserMinus}
-          description="Free'ye dusen kullanicilar"
+          description="Free'ye düşen kullanıcılar"
         />
       </div>
 
       {/* Plan distribution */}
-      <h2 className="mb-3 mt-8 text-lg font-semibold">Plan Dagilimi</h2>
+      <h2 className="mb-3 mt-8 text-lg font-semibold">Plan Dağılımı</h2>
       <div className="flex flex-wrap gap-3">
         {Object.entries(data.plans).map(([plan, count]) => (
           <Card key={plan} className="min-w-[140px]">
@@ -187,7 +187,7 @@ export default function AdminRevenuePage() {
       </div>
 
       {/* Payment history table */}
-      <h2 className="mb-3 mt-8 text-lg font-semibold">Son Odemeler</h2>
+      <h2 className="mb-3 mt-8 text-lg font-semibold">Son Ödemeler</h2>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -204,7 +204,7 @@ export default function AdminRevenuePage() {
               {data.payments.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Henuz odeme kaydi yok.
+                    Henüz ödeme kaydı yok.
                   </TableCell>
                 </TableRow>
               )}

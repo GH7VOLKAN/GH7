@@ -194,7 +194,7 @@ export default function AdminAgencyPage() {
               {data.leads.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Henuz lead yok.
+                    Henüz lead yok.
                   </TableCell>
                 </TableRow>
               )}

@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     });
 
     if (!profile) {
-      return NextResponse.json({ error: "Profil bulunamadi" }, { status: 404 });
+      return NextResponse.json({ error: "Profil bulunamadı" }, { status: 404 });
     }
 
     const price = getPlanPrice(plan, period);
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("[payment/checkout] Error:", err);
     return NextResponse.json(
-      { error: "Odeme formu olusturulamadi" },
+      { error: "Ödeme formu oluşturulamadı" },
       { status: 500 },
     );
   }

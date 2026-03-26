@@ -139,8 +139,8 @@ export function RakiplerContent({
       <div className="space-y-6">
         <EmptyState
           icon={Building}
-          title="Rakip analizi icin tarama baslatin"
-          description="Rakiplerinizi ekleyin ve AI gorunurluk karsilastirmasi yapin."
+          title="Rakip analizi için tarama başlatın"
+          description="Rakiplerinizi ekleyin ve AI görünürlük karşılaştırması yapın."
           action={
             <Button
               className="bg-black text-white hover:bg-black/90"
@@ -172,7 +172,7 @@ export function RakiplerContent({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Rakipler</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            AI yanitlarindan otomatik tespit edilen rakipleriniz
+            AI yanıtlarından otomatik tespit edilen rakipleriniz
           </p>
         </div>
         <Button
@@ -187,7 +187,7 @@ export function RakiplerContent({
       {/* Share of Voice bar */}
       {shareOfVoice.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-3 text-sm font-medium text-gray-700">Ses Payi</h2>
+          <h2 className="mb-3 text-sm font-medium text-gray-700">Ses Payı</h2>
           <div className="flex h-4 overflow-hidden rounded-full bg-gray-100">
             {shareOfVoice.map((entry) => (
               <div
@@ -296,10 +296,10 @@ export function RakiplerContent({
       {emptyAreaOpportunities.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="mb-1 text-sm font-medium text-gray-700">
-            Bos Alanlar
+            Boş Alanlar
           </h2>
           <p className="mb-4 text-xs text-muted-foreground">
-            Kimsenin domine edemedigi sorular - firsat alaniniz
+            Kimsenin domine edemediği sorular - fırsat alanınız
           </p>
           <div className="space-y-2">
             {emptyAreaOpportunities.map((opp, i) => (
@@ -350,7 +350,7 @@ export function RakiplerContent({
               {userName} vs {selectedComp?.name}
             </DialogTitle>
             <DialogDescription>
-              Prompt bazli karsilastirma ve kaynak analizi
+              Prompt bazlı karşılaştırma ve kaynak analizi
             </DialogDescription>
           </DialogHeader>
 
@@ -369,7 +369,7 @@ export function RakiplerContent({
               {/* Platform comparison */}
               <div>
                 <h3 className="mb-3 text-sm font-medium">
-                  Platform Bazli Skor
+                  Platform Bazlı Skor
                 </h3>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {(Object.keys(PLATFORM_LABELS) as PlatformKey[]).map(
@@ -423,7 +423,7 @@ export function RakiplerContent({
               {deepDetail && deepDetail.promptAppearances.length > 0 && (
                 <div>
                   <h3 className="mb-3 text-sm font-medium">
-                    Prompt Bazli Gorunurluk
+                    Prompt Bazlı Görünürlük
                   </h3>
                   <div className="max-h-[300px] space-y-2 overflow-y-auto">
                     {deepDetail.promptAppearances.map((pa, i) => (
@@ -470,7 +470,7 @@ export function RakiplerContent({
                   deepDetail.competitorOnlySources.length > 0) && (
                   <div>
                     <h3 className="mb-3 text-sm font-medium">
-                      Kaynak Karsilastirmasi
+                      Kaynak Karşılaştırması
                     </h3>
                     {deepDetail.sharedSources.length > 0 && (
                       <div className="mb-2">
@@ -563,7 +563,7 @@ function AddCompetitorDialog({
         <div className="space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium">
-              Rakip Adi *
+              Rakip Adı *
             </label>
             <input
               type="text"

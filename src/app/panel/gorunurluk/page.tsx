@@ -20,8 +20,8 @@ export default async function GorunurlukPage() {
     return (
       <EmptyState
         icon={EyeIcon}
-        title="Henuz gorunurluk verisi yok"
-        description="Ilk tarama tamamlandiktan sonra platform gorunurluk analizi burada gorunecek."
+        title="Henüz görünürlük verisi yok"
+        description="İlk tarama tamamlandıktan sonra platform görünürlük analizi burada görünecek."
       />
     );
   }

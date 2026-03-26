@@ -47,9 +47,9 @@ export function SuggestedPromptsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Onerilen Sorular</CardTitle>
+        <CardTitle>Önerilen Sorular</CardTitle>
         <CardDescription>
-          Sektorunuzle ilgili yeni soru onerileri
+          Sektörünüzle ilgili yeni soru önerileri
         </CardDescription>
       </CardHeader>
       <CardContent>

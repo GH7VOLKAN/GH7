@@ -31,7 +31,7 @@ function formatDate(iso: string): string {
 
 function getReportTitle(report: ScanReport): string {
   if (report.status === "completed") {
-    return `GEO Tarama Raporu (${report.promptCount} sonuc)`;
+    return `GEO Tarama Raporu (${report.promptCount} sonuç)`;
   }
   if (report.status === "running") {
     return "Tarama devam ediyor...";
@@ -54,10 +54,10 @@ export function RaporlarContent({
     try {
       const res = await fetch("/api/export/pdf");
       if (res.status === 403) {
-        alert("PDF indirme Pro plan ile kullanilabilir.");
+        alert("PDF indirme Pro plan ile kullanılabilir.");
         return;
       }
-      if (!res.ok) throw new Error("PDF olusturulamadi");
+      if (!res.ok) throw new Error("PDF oluşturulamadı");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -67,7 +67,7 @@ export function RaporlarContent({
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("PDF download error:", err);
-      alert("PDF indirirken bir hata olustu.");
+      alert("PDF indirirken bir hata oluştu.");
     } finally {
       setPdfLoading(false);
     }
@@ -94,7 +94,7 @@ export function RaporlarContent({
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Raporlar</h1>
         <p className="text-sm text-gray-500 mt-1">
-          GEO performansinizi PDF olarak indirin veya otomatik olarak alin
+          GEO performansınızı PDF olarak indirin veya otomatik olarak alın
         </p>
       </div>
 
@@ -107,12 +107,12 @@ export function RaporlarContent({
               <FileTextIcon className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">PDF Rapor Indir</h3>
-              <p className="text-xs text-gray-500">Turkce, markali rapor</p>
+              <h3 className="font-medium text-gray-900">PDF Rapor İndir</h3>
+              <p className="text-xs text-gray-500">Türkçe, markalı rapor</p>
             </div>
           </div>
           <p className="text-sm text-gray-500 mb-4">
-            GEO skoru, isi haritasi, rakip analizi ve aksiyon onerilerini iceren detayli rapor
+            GEO skoru, ısı haritası, rakip analizi ve aksiyon önerilerini içeren detaylı rapor
           </p>
           <button
             onClick={handlePdfDownload}
@@ -124,7 +124,7 @@ export function RaporlarContent({
             ) : (
               <DownloadIcon className="w-4 h-4" />
             )}
-            {pdfLoading ? "Indiriliyor..." : "PDF Indir"}
+            {pdfLoading ? "İndiriliyor..." : "PDF İndir"}
           </button>
         </div>
 
@@ -135,7 +135,7 @@ export function RaporlarContent({
               <MailIcon className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Haftalik E-posta Ozeti</h3>
+              <h3 className="font-medium text-gray-900">Haftalık E-posta Özeti</h3>
               <p className="text-xs text-gray-500">Her Pazartesi 09:00</p>
             </div>
           </div>
@@ -169,8 +169,8 @@ export function RaporlarContent({
               <MessageCircleIcon className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">WhatsApp Ozet</h3>
-              <p className="text-xs text-gray-500">Yakinda</p>
+              <h3 className="font-medium text-gray-900">WhatsApp Özet</h3>
+              <p className="text-xs text-gray-500">Yakında</p>
             </div>
           </div>
           <div className="flex items-center justify-between mb-3">
@@ -192,7 +192,7 @@ export function RaporlarContent({
             type="tel"
             defaultValue="+90 5xx xxx xx xx"
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400"
-            placeholder="Telefon numaraniz"
+            placeholder="Telefon numaranız"
             disabled
           />
         </div>
@@ -201,8 +201,8 @@ export function RaporlarContent({
       {/* Report History */}
       <div className="border border-gray-200 rounded-xl hover:shadow-sm transition-shadow">
         <div className="p-6 border-b border-gray-100">
-          <h3 className="font-medium text-gray-900">Rapor Gecmisi</h3>
-          <p className="text-xs text-gray-500 mt-1">{reports.length} tarama kaydi</p>
+          <h3 className="font-medium text-gray-900">Rapor Geçmişi</h3>
+          <p className="text-xs text-gray-500 mt-1">{reports.length} tarama kaydı</p>
         </div>
         <div className="divide-y divide-gray-100">
           {reports.map((report) => (
@@ -231,7 +231,7 @@ export function RaporlarContent({
                   <>
                     <span className="flex items-center gap-1 text-xs text-green-600">
                       <CheckCircleIcon className="w-3 h-3" />
-                      Hazir
+                      Hazır
                     </span>
                     <button
                       onClick={handlePdfDownload}

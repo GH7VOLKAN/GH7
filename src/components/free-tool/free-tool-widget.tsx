@@ -235,7 +235,7 @@ export function FreeToolWidget() {
           {/* Platform cards */}
           <div>
             <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Yapay Zeka Bazli Sonuclar
+              Yapay Zeka Bazlı Sonuçlar
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {result.platforms.map((p) => (
@@ -255,7 +255,7 @@ export function FreeToolWidget() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">
-                  Bu ucretsiz test, 1 soru ile anlik bir goruntudur
+                  Bu ücretsiz test, 1 soru ile anlık bir görüntüdür
                 </p>
                 <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
                   Pro ile aynı analiz çok daha kapsamlı yapılır:
@@ -264,7 +264,7 @@ export function FreeToolWidget() {
                   <div className="flex items-center gap-2 text-[13px] text-foreground/70">
                     <RepeatIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span>
-                      <span className="font-medium">200 farkli soru</span> ile
+                      <span className="font-medium">200 farklı soru</span> ile
                       derinlemesine analiz
                     </span>
                   </div>
@@ -285,7 +285,7 @@ export function FreeToolWidget() {
                   <div className="flex items-center gap-2 text-[13px] text-foreground/70">
                     <ZapIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span>
-                      Kaynak analizi, site iyilestirme onerileri,{" "}
+                      Kaynak analizi, site iyileştirme önerileri,{" "}
                       <span className="font-medium">aksiyon planı</span>
                     </span>
                   </div>
@@ -310,8 +310,8 @@ export function FreeToolWidget() {
               onClick={() => {
                 const text =
                   mode === "kisisel"
-                    ? `Yapay zeka beni tanıyor mu? Yapay zeka gorunurluk puanim: ${result.overallScore}/100! gh7.ai'da sen de test et.`
-                    : `Yapay zeka gorunurluk puanimiz: ${result.overallScore}/100! gh7.ai'da siz de test edin.`;
+                    ? `Yapay zeka beni tanıyor mu? Yapay zeka görünürlük puanım: ${result.overallScore}/100! gh7.ai'da sen de test et.`
+                    : `Yapay zeka görünürlük puanımız: ${result.overallScore}/100! gh7.ai'da siz de test edin.`;
                 navigator.clipboard?.writeText(text);
               }}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"

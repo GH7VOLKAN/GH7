@@ -60,12 +60,12 @@ export function AgencyReportModal({
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Bir hata olustu. Lutfen tekrar deneyin.");
+        throw new Error(body?.error ?? "Bir hata oluştu. Lütfen tekrar deneyin.");
       }
 
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir hata olustu.");
+      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
     } finally {
       setLoading(false);
     }

@@ -32,8 +32,8 @@ export default async function IyilestirmePage() {
       <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
         <EmptyState
           icon={WrenchIcon}
-          title="Henuz iyilestirme onerisi yok"
-          description="Ilk tarama tamamlandiktan sonra optimizasyon onerileri burada gorunecek."
+          title="Henüz iyileştirme önerisi yok"
+          description="İlk tarama tamamlandıktan sonra optimizasyon önerileri burada görünecek."
         />
       </div>
     );

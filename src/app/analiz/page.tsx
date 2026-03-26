@@ -1337,7 +1337,7 @@ export default function AnalizPage() {
                   {/* Platform header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2.5">
-                      <AIPlatformIcon platform={pKey} size="lg" />
+                      <AIPlatformIcon platform={pKey} size={28} />
                       <span className="text-base font-semibold text-gray-900">
                         {resp.provider}
                       </span>

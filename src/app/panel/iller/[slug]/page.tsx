@@ -147,9 +147,9 @@ export default async function CityDetailPage({
 
   const metrics: CityMetric[] = [
     { label: "GEO Skor", value: mentionRate, suffix: "/100" },
-    { label: "Mention Orani", value: mentionRate, suffix: "%" },
-    { label: "Mention Sayisi", value: mentionCount, suffix: "" },
-    { label: "Toplam Sonuc", value: totalResults, suffix: "" },
+    { label: "Mention Oranı", value: mentionRate, suffix: "%" },
+    { label: "Mention Sayısı", value: mentionCount, suffix: "" },
+    { label: "Toplam Sonuç", value: totalResults, suffix: "" },
   ];
 
   const citedUrls = Object.entries(citationCounts)
@@ -167,7 +167,7 @@ export default async function CityDetailPage({
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors w-fit"
       >
         <ArrowLeftIcon className="h-4 w-4" />
-        Iller
+        İller
       </Link>
 
       {/* Header */}
