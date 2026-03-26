@@ -13,11 +13,15 @@ const FAQS = [
   },
   {
     q: "Free analiz gerçekten tam analiz mi, blur var mı?",
-    a: "Hayır, blur yok. Free\u2019de tüm platformlar, tüm metrikler, tüm rakipler, tüm AI yanıtları tam açık gösterilir. Pro\u2019nun farkı haftalık otomatik takip ve değişim bildirimidir.",
+    a: "Hayır, blur yok. Free\u2019de tüm platformlar, tüm metrikler, tüm rakipler, tüm AI yanıtları tam açık gösterilir. Pro\u2019nun farkı haftalık otomatik takip, Business\u2019ın farkı aksiyon araçlarıdır.",
   },
   {
-    q: "Ajans hizmeti (RaaS) ne demek?",
-    a: "Results as a Service. Business paketinde GEO ajansımız sizin için çalışır — içerik, schema, entity building, citation. Siz dashboard\u2019dan takip edersiniz, biz iyileştiririz.",
+    q: "Pro ve Business arasındaki fark ne?",
+    a: "Pro = monitoring. Durumunuzu gösterir: haftalık takip, sıralama savaşı, trend grafikleri, bildirimler. Business = monitoring + aksiyon araçları. Ne yapacağınızı söyler, araçları verir, yaptığınızı doğrular, işe yaradığını gösterir. Haftalık aksiyon listesi, Opus içerik üretimi, rakip istihbarat, korelasyon motoru Business\u2019a özeldir.",
+  },
+  {
+    q: "Ajans paketleri nasıl çalışıyor?",
+    a: "Tek seferlik hizmet paketleri. Schema markup, içerik optimizasyonu, export dil paketi gibi. Aylık abonelik yok — ihtiyacınız olan paketi alırsınız, ajans uygular. Fiyatları ajans belirler.",
   },
   {
     q: "Export analizi hangi dilleri destekliyor?",

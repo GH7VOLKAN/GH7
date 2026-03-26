@@ -4,18 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboardIcon,
-  TargetIcon,
+  BarChart3Icon,
   SearchIcon,
-  MapPinIcon,
+  ClipboardListIcon,
   MenuIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Genel", href: "/panel/genel", icon: LayoutDashboardIcon },
-  { label: "İyileştir", href: "/panel/iyilestirme", icon: TargetIcon },
+  { label: "Sıralama", href: "/panel/gorunurluk", icon: BarChart3Icon },
   { label: "Aramalar", href: "/panel/aramalar", icon: SearchIcon },
-  { label: "İller", href: "/panel/iller", icon: MapPinIcon },
+  { label: "Aksiyonlar", href: "/panel/aksiyonlar", icon: ClipboardListIcon },
   { label: "Menü", href: "/panel/ayarlar", icon: MenuIcon },
 ];
 

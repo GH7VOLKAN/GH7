@@ -1,6 +1,7 @@
 "use client";
 
 import { useFadeIn } from "@/hooks/use-fade-in";
+import Link from "next/link";
 
 const PLANS = [
   {
@@ -24,7 +25,7 @@ const PLANS = [
     name: "Pro",
     price: "₺2.495",
     period: "/ay",
-    desc: "Haftalık otomatik takip + değişim bildirimi",
+    desc: "Haftalık otomatik monitoring + sıralama savaşı",
     featured: true,
     features: [
       "1 proje (firma/kişi/e-ticaret/export)",
@@ -34,30 +35,29 @@ const PLANS = [
       "Ürün bazlı sıralama savaşı",
       "\u201CRakibi geçtiniz!\u201D bildirimleri",
       "PDF rapor + WhatsApp haftalık özet",
-      "Trend grafiği + gelişim planı",
-      "Otomatik blog üretimi (Opus)",
+      "Trend grafiği + iyileştirme önerileri",
     ],
     btnText: "Pro\u2019ya Başlayın",
     btnClass: "bg-[#09090B] text-white",
   },
   {
     name: "Business",
-    price: "₺7.495",
+    price: "₺4.995",
     period: "/ay",
-    desc: "Çoklu proje + GEO ajans hizmeti (RaaS)",
+    desc: "Pro + aksiyon araçları — ne yap, nasıl yap, işe yaradı mı",
     featured: false,
     features: [
-      "3 proje (karma: firma+kişi+export vb.)",
+      "3 proje (karma kombinasyon)",
       "Sınırsız sorgu + ürün + pazar",
-      "6 AI platformu + 10 il",
-      "Günlük analiz",
-      "GEO Ajans hizmeti dahil",
-      "İçerik + schema + entity çalışması",
-      "Aylık strateji toplantısı",
-      "White-label raporlama",
+      "6 AI platformu + 10 il + günlük analiz",
+      "Haftalık aksiyon listesi (\u201Cbu 3 şeyi yap\u201D)",
+      "Opus içerik üretimi (hazır blog taslağı)",
+      "Rakip istihbarat (\u201Conda var sende yok\u201D)",
+      "\u201CTamamladım\u201D doğrulama (gerçekten kontrol)",
+      "Korelasyon motoru (\u201Cbunu yaptın → bu oldu\u201D)",
       "API erişimi",
     ],
-    btnText: "İletişime Geçin",
+    btnText: "Business\u2019a Başlayın",
     btnClass: "bg-[#09090B] text-white",
   },
 ];
@@ -118,6 +118,14 @@ export function PricingSectionV3() {
             </div>
           ))}
         </div>
+
+        <p className="text-[13px] text-zinc-400 mt-6">
+          Kendiniz yapamıyor musunuz?{" "}
+          <Link href="/panel/ajans-paketleri" className="text-zinc-600 underline underline-offset-2 hover:text-zinc-900">
+            GEO Ajans Paketleri
+          </Link>
+          {" "}— tek seferlik hizmetler, abonelik yok.
+        </p>
       </div>
     </section>
   );
