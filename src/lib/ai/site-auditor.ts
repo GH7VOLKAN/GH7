@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { querySonar } from "./sonar-research";
+import { withCache, cacheKeys } from "@/lib/cache";
 
 export interface AuditCheckResult {
   label: string;
@@ -495,10 +496,18 @@ async function checkPerformance(domain: string): Promise<AuditCategoryResult> {
     const keyParam = apiKey ? `&key=${apiKey}` : "";
     const url = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=https://${domain}&strategy=mobile&category=performance&category=seo${keyParam}`;
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
-    if (!res.ok) throw new Error(`PageSpeed HTTP ${res.status}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: pageSpeedData } = await withCache<any>(
+      cacheKeys.pageSpeed(domain),
+      24 * 60 * 60, // 24 hours
+      async () => {
+        const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+        if (!res.ok) throw new Error(`PageSpeed HTTP ${res.status}`);
+        return res.json();
+      },
+    );
 
-    const data = await res.json();
+    const data = pageSpeedData;
     const lighthouse = data.lighthouseResult;
 
     // Performance score

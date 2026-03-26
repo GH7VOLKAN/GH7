@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import {
+  generateWhatsAppShareLink,
+  generateActionShareMessage,
+} from "@/lib/whatsapp";
 
 interface ActionItem {
   id: string;
@@ -74,6 +79,16 @@ export default function AksiyonlarContent() {
     setActions((prev) =>
       prev.map((a) => (a.id === id ? { ...a, completed: !a.completed } : a))
     );
+  };
+
+  const handleWhatsAppShare = (action: ActionItem) => {
+    const message = generateActionShareMessage({
+      keyword: action.title,
+      issue: action.reason,
+      recommendation: action.draft,
+    });
+    const url = generateWhatsAppShareLink({ text: message });
+    window.open(url, "_blank", "noopener");
   };
 
   const weekStart = "24 Mart";
@@ -157,6 +172,13 @@ export default function AksiyonlarContent() {
                       >
                         Ajans yapsın → Paketlere git
                       </Link>
+                      <button
+                        onClick={() => handleWhatsAppShare(action)}
+                        className="px-4 py-2 border border-green-600 text-sm font-medium text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-1.5"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp&apos;a Gönder
+                      </button>
                     </div>
                   </>
                 )}

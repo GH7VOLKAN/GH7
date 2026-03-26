@@ -7,7 +7,9 @@ import { updateCompetitorScores } from "./competitor-scorer";
 import { discoverSourceDomains } from "./source-discoverer";
 import { verifyScanChecklistItems } from "./checklist-verifier";
 import { sendNotification } from "@/lib/notifications/send";
-import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
+import { makeCacheKey } from "@/lib/redis";
+import { withCache } from "@/lib/cache";
+import { generateQueryVariations } from "@/lib/query-variation";
 import type { AIProvider } from "./providers/base";
 import type { AnalysisResult, AIResponse } from "./types";
 
@@ -19,7 +21,7 @@ const memCache = new Map<string, { data: AIResponse; expiresAt: number }>();
 const MEM_TTL = 60 * 60 * 1000; // 1 hour
 
 /**
- * Cached AI call — SHA256 key, 7-day Redis TTL + 1-hour in-memory fallback.
+ * Cached AI call — SHA256 key, 6-hour Redis TTL (via withCache) + 1-hour in-memory fallback.
  * Same prompt+platform always returns cached response if available.
  * Cross-user safe: brandless prompts mean same key = same result.
  */
@@ -33,25 +35,22 @@ async function cachedSendPrompt(
   const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
   const cacheKey = makeCacheKey("ai", provider.platform, promptText, String(weekNum));
 
-  // 1. Check Redis cache first
-  const redisCached = await cacheGet<AIResponse>(cacheKey);
-  if (redisCached && !redisCached.error) {
-    return redisCached;
-  }
-
-  // 2. Check in-memory fallback
+  // 1. Check in-memory fallback first (fastest)
   const memEntry = memCache.get(cacheKey);
   if (memEntry && memEntry.expiresAt > Date.now()) {
     return memEntry.data;
   }
 
-  // 3. Make actual API call
-  const response = await provider.sendPrompt(promptText);
+  // 2. Use withCache for Redis + fetcher (graceful fallback if Redis unavailable)
+  const { data: response } = await withCache<AIResponse>(
+    cacheKey,
+    6 * 60 * 60, // 6 hours
+    () => provider.sendPrompt(promptText),
+  );
 
-  // 4. Cache successful responses in both layers
+  // 3. Cache successful responses in memory layer too
   if (!response.error) {
-    await cacheSet(cacheKey, response); // Redis: 7-day TTL
-    memCache.set(cacheKey, { data: response, expiresAt: Date.now() + MEM_TTL }); // Memory: 1hr
+    memCache.set(cacheKey, { data: response, expiresAt: Date.now() + MEM_TTL });
   }
 
   return response;
@@ -78,8 +77,15 @@ export async function executeScan(
       throw new Error("No AI providers available");
     }
 
-    const brand = await prisma.brand.findUnique({ where: { id: brandId } });
+    const brand = await prisma.brand.findUnique({
+      where: { id: brandId },
+      include: { profile: { select: { plan: true } } },
+    });
     if (!brand) throw new Error("Brand not found");
+
+    // Varyasyon sayisi: Free = 1 (tek sorgu), Pro+ = 3 varyasyon
+    const userPlan = brand.profile?.plan ?? "free";
+    const variationCount = userPlan === "free" ? 1 : 3;
 
     const totalExpected = prompts.length * providers.length;
     console.log(
@@ -105,7 +111,38 @@ export async function executeScan(
           const platformResults = await Promise.allSettled(
             providers.map(async (provider) => {
               const platformTimer = Date.now();
-              const aiResponse = await cachedSendPrompt(provider, prompt.text);
+
+              // Sorgu varyasyonlari: Pro+ icin 3, Free icin 1
+              const variations = generateQueryVariations(prompt.text).slice(0, variationCount);
+
+              // Tum varyasyonlari paralel gonder
+              const variationResults = await Promise.allSettled(
+                variations.map((v) => cachedSendPrompt(provider, v)),
+              );
+
+              // Basarili sonuclari topla
+              const fulfilledResponses = variationResults
+                .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === "fulfilled")
+                .map((r) => r.value)
+                .filter((r) => !r.error);
+
+              // Fallback: hicbir varyasyon basarili olmazsa, hata sonucu kullan
+              const allResponses = variationResults
+                .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === "fulfilled")
+                .map((r) => r.value);
+
+              // Ana yaniti sec: basarili olanlardan ilkini kullan, yoksa ilk hata yanitini
+              const aiResponse = fulfilledResponses.length > 0
+                ? fulfilledResponses[0]
+                : allResponses.length > 0
+                  ? allResponses[0]
+                  : { platform: provider.platform, content: "", error: "Tüm varyasyonlar başarısız oldu" } as AIResponse;
+
+              if (variations.length > 1) {
+                console.log(
+                  `[scan-engine] ${provider.platform} prompt ${globalIdx}: ${variations.length} varyasyon, ${fulfilledResponses.length} başarılı`,
+                );
+              }
 
               if (aiResponse.error) {
                 console.warn(
@@ -132,11 +169,38 @@ export async function executeScan(
                   competitorAdvantage: null,
                 };
               } else {
+                // Ana varyasyonun analizini yap
                 analysis = await analyzeResponse(
                   aiResponse.content,
                   brand.name,
                   prompt.text,
                 );
+
+                // Ek basarili varyasyonlarin analizini yap ve en iyi sonucu sec
+                // mentioned=true olan varsa onu tercih et (daha guclu sinyal)
+                if (fulfilledResponses.length > 1) {
+                  for (let vi = 1; vi < fulfilledResponses.length; vi++) {
+                    try {
+                      const varAnalysis = await analyzeResponse(
+                        fulfilledResponses[vi].content,
+                        brand.name,
+                        variations[vi] || prompt.text,
+                      );
+                      // Eger ana analiz mentioned=false ama varyasyon mentioned=true ise, varyasyonu kullan
+                      if (!analysis.mentioned && varAnalysis.mentioned) {
+                        analysis = varAnalysis;
+                      }
+                      // Citation'lari her zaman birleştir
+                      if (varAnalysis.citations.length > 0) {
+                        analysis.citations = [
+                          ...new Set([...analysis.citations, ...varAnalysis.citations]),
+                        ];
+                      }
+                    } catch {
+                      // Varyasyon analizi basarisiz olursa devam et
+                    }
+                  }
+                }
 
                 // Perplexity ve Google AIO zaten citation donduruyor, diger platformlara takip sorusu sor
                 // Google AIO SerpAPI üzerinden zaten kaynak veriyor
@@ -163,6 +227,15 @@ export async function executeScan(
                   analysis.citations = [
                     ...new Set([...analysis.citations, ...aiResponse.citations]),
                   ];
+                }
+
+                // Tum varyasyonlarin citation'larini da ekle
+                for (const resp of fulfilledResponses) {
+                  if (resp !== aiResponse && resp.citations?.length) {
+                    analysis.citations = [
+                      ...new Set([...analysis.citations, ...resp.citations]),
+                    ];
+                  }
                 }
               }
 

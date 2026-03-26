@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { captureError } from "@/lib/monitoring";
 
 export default function PanelError({
   error,
@@ -10,7 +11,7 @@ export default function PanelError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[panel]", error);
+    captureError(error, { context: "panel-error-boundary" });
   }, [error]);
 
   return (

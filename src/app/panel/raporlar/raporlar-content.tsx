@@ -12,6 +12,11 @@ import {
   ClockIcon,
 } from "lucide-react";
 import type { ScanReport } from "./page";
+import {
+  generateWhatsAppShareLink,
+  generateWeeklyReportMessage,
+  generatePdfShareMessage,
+} from "@/lib/whatsapp";
 
 interface Props {
   reports: ScanReport[];
@@ -73,6 +78,27 @@ export function RaporlarContent({
     }
   };
 
+  const handleWhatsAppWeeklyReport = () => {
+    const message = generateWeeklyReportMessage({
+      brandName: "Marka",
+      geoScore: 72,
+      delta: 5,
+      topInsight: "Bu hafta 3 yeni sorguda bahsedilmeye başlandı.",
+      dashboardUrl: `${window.location.origin}/panel`,
+    });
+    const url = generateWhatsAppShareLink({ text: message });
+    window.open(url, "_blank", "noopener");
+  };
+
+  const handleWhatsAppPdfShare = () => {
+    const message = generatePdfShareMessage(
+      "Marka",
+      `${window.location.origin}/api/export/pdf`,
+    );
+    const url = generateWhatsAppShareLink({ text: message });
+    window.open(url, "_blank", "noopener");
+  };
+
   const handleEmailToggle = async () => {
     const newValue = !emailEnabled;
     setEmailEnabled(newValue);
@@ -114,18 +140,27 @@ export function RaporlarContent({
           <p className="text-sm text-gray-500 mb-4">
             GEO skoru, ısı haritası, rakip analizi ve aksiyon önerilerini içeren detaylı rapor
           </p>
-          <button
-            onClick={handlePdfDownload}
-            disabled={pdfLoading}
-            className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
-          >
-            {pdfLoading ? (
-              <LoaderIcon className="w-4 h-4 animate-spin" />
-            ) : (
-              <DownloadIcon className="w-4 h-4" />
-            )}
-            {pdfLoading ? "İndiriliyor..." : "PDF İndir"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handlePdfDownload}
+              disabled={pdfLoading}
+              className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+            >
+              {pdfLoading ? (
+                <LoaderIcon className="w-4 h-4 animate-spin" />
+              ) : (
+                <DownloadIcon className="w-4 h-4" />
+              )}
+              {pdfLoading ? "İndiriliyor..." : "PDF İndir"}
+            </button>
+            <button
+              onClick={handleWhatsAppPdfShare}
+              className="flex items-center justify-center gap-2 border border-green-600 text-green-600 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-green-50 transition-colors"
+              title="Raporu WhatsApp'a gönder"
+            >
+              <MessageCircleIcon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Weekly Email */}
@@ -165,36 +200,24 @@ export function RaporlarContent({
         {/* WhatsApp */}
         <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <MessageCircleIcon className="w-5 h-5 text-gray-600" />
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <MessageCircleIcon className="w-5 h-5 text-green-600" />
             </div>
             <div>
               <h3 className="font-medium text-gray-900">WhatsApp Özet</h3>
-              <p className="text-xs text-gray-500">Yakında</p>
+              <p className="text-xs text-gray-500">Haftalık raporu paylaşın</p>
             </div>
           </div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-gray-600">Durum</span>
-            <button
-              onClick={() => setWhatsappEnabled(!whatsappEnabled)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                whatsappEnabled ? "bg-green-500" : "bg-gray-200"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                  whatsappEnabled ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-          <input
-            type="tel"
-            defaultValue="+90 5xx xxx xx xx"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400"
-            placeholder="Telefon numaranız"
-            disabled
-          />
+          <p className="text-sm text-gray-500 mb-4">
+            GEO skor özetinizi WhatsApp üzerinden ekibinize veya müşterinize gönderin
+          </p>
+          <button
+            onClick={handleWhatsAppWeeklyReport}
+            className="w-full flex items-center justify-center gap-2 bg-green-600 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-green-700 transition-colors"
+          >
+            <MessageCircleIcon className="w-4 h-4" />
+            WhatsApp&apos;a Gönder
+          </button>
         </div>
       </div>
 

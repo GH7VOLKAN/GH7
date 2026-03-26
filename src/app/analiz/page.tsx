@@ -10,6 +10,7 @@ import {
 import {
   Globe,
   MessageSquare,
+  MessageCircle,
   BarChart3,
   FileText,
   CheckCircle,
@@ -21,6 +22,10 @@ import {
   Package,
   Plus,
 } from "lucide-react";
+import {
+  generateWhatsAppShareLink,
+  generatePdfShareMessage,
+} from "@/lib/whatsapp";
 import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
@@ -1794,6 +1799,20 @@ function AnalizPageInner() {
             >
               Haftalık Takibi Başlat &rarr; Pro
             </Link>
+            <button
+              onClick={() => {
+                const message = generatePdfShareMessage(
+                  displayName || "Marka",
+                  window.location.href,
+                );
+                const url = generateWhatsAppShareLink({ text: message });
+                window.open(url, "_blank", "noopener");
+              }}
+              className="flex items-center justify-center gap-2 border border-green-600 text-green-600 rounded-lg px-8 py-3 font-medium hover:bg-green-50 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Raporu WhatsApp&apos;a Gönder
+            </button>
             <button
               onClick={() => setShowCallPopup(true)}
               className="border border-gray-300 rounded-lg px-8 py-3 font-medium hover:bg-gray-50 transition-colors"
