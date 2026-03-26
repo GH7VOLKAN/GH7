@@ -10,72 +10,101 @@ import {
   BarChart3Icon,
   TargetIcon,
   SearchIcon,
-  BuildingIcon,
   MapPinIcon,
   FileTextIcon,
   SettingsIcon,
   CreditCardIcon,
-  KeyIcon,
   LogOutIcon,
   ChevronDownIcon,
   PlusIcon,
 } from "lucide-react";
-// Brand dropdown uses simple state instead of shadcn DropdownMenu
-// to avoid base-ui button nesting issues
 
 const NAV_ITEMS = [
   {
     title: "Genel Bakış",
     href: "/panel/genel",
     icon: LayoutDashboardIcon,
+    emoji: null,
   },
   {
     title: "Görünürlük",
     href: "/panel/gorunurluk",
     icon: BarChart3Icon,
+    emoji: null,
   },
   {
     title: "İyileştirme",
     href: "/panel/iyilestirme",
     icon: TargetIcon,
+    emoji: null,
   },
   {
     title: "Aramalar",
     href: "/panel/aramalar",
     icon: SearchIcon,
+    emoji: null,
   },
   {
-    title: "Rakipler",
+    title: "Senin Yerine Kim",
     href: "/panel/rakipler",
-    icon: BuildingIcon,
+    icon: null,
+    emoji: "🏆",
   },
   {
     title: "İller",
     href: "/panel/iller",
     icon: MapPinIcon,
+    emoji: null,
   },
   {
     title: "Raporlar",
     href: "/panel/raporlar",
     icon: FileTextIcon,
+    emoji: null,
+  },
+];
+
+const BUSINESS_ITEMS = [
+  {
+    title: "Haftalık Aksiyonlar",
+    href: "/panel/aksiyonlar",
+    emoji: "📋",
+  },
+  {
+    title: "İçerik Üretimi",
+    href: "/panel/icerik",
+    emoji: "✍️",
+  },
+  {
+    title: "Rakip İstihbarat",
+    href: "/panel/istihbarat",
+    emoji: "🔎",
+  },
+  {
+    title: "Korelasyon",
+    href: "/panel/korelasyon",
+    emoji: "📈",
   },
 ];
 
 const BOTTOM_ITEMS = [
   {
+    title: "Ajans Paketleri",
+    href: "/panel/ajans-paketleri",
+    emoji: "🛠",
+    icon: null,
+  },
+  {
     title: "Ayarlar",
     href: "/panel/ayarlar",
     icon: SettingsIcon,
+    emoji: null,
   },
   {
     title: "Abonelik",
     href: "/panel/abonelik",
     icon: CreditCardIcon,
-  },
-  {
-    title: "API",
-    href: "/panel/api",
-    icon: KeyIcon,
+    emoji: null,
   },
 ];
 
@@ -83,13 +112,20 @@ interface PanelSidebarProps {
   brandName?: string;
   userEmail?: string;
   plan?: string;
+  projectType?: string;
 }
 
-export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai", plan = "free" }: PanelSidebarProps) {
+export function PanelSidebar({
+  brandName = "ISITMAX",
+  userEmail = "demo@gh7.ai",
+  plan = "free",
+  projectType = "Firma",
+}: PanelSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [brandOpen, setBrandOpen] = React.useState(false);
   const brandInitials = brandName.substring(0, 2).toUpperCase();
+  const isBusiness = plan === "business";
 
   const handleLogout = async () => {
     router.push("/giris");
@@ -118,6 +154,9 @@ export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai",
               <span className="text-[10px] font-bold text-gray-600">{brandInitials}</span>
             </div>
             <span className="text-sm font-medium text-gray-900">{brandName}</span>
+            <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+              {projectType}
+            </span>
           </div>
           <ChevronDownIcon className={cn("w-4 h-4 text-gray-400 transition-transform", brandOpen && "rotate-180")} />
         </div>
@@ -128,6 +167,9 @@ export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai",
                 <span className="text-[8px] font-bold text-white">IS</span>
               </div>
               ISITMAX
+              <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-auto">
+                Firma
+              </span>
             </div>
             <div className="h-px bg-gray-100 my-1" />
             <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
@@ -155,12 +197,53 @@ export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai",
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
-              <Icon className="w-[18px] h-[18px]" />
+              {item.emoji ? (
+                <span className="w-[18px] h-[18px] flex items-center justify-center text-sm leading-none">{item.emoji}</span>
+              ) : Icon ? (
+                <Icon className="w-[18px] h-[18px]" />
+              ) : null}
               <span>{item.title}</span>
             </Link>
           );
         })}
 
+        {/* Divider before Business section */}
+        <div className="h-px bg-gray-100 my-4" />
+
+        {/* Business Section Header */}
+        <div className="flex items-center gap-2 px-3 py-1.5">
+          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            Business
+          </span>
+          {!isBusiness && (
+            <span className="text-xs">🔒</span>
+          )}
+        </div>
+
+        {BUSINESS_ITEMS.map((item) => {
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              )}
+            >
+              <span className="w-[18px] h-[18px] flex items-center justify-center text-sm leading-none">{item.emoji}</span>
+              <span className="flex-1">{item.title}</span>
+              {!isBusiness && (
+                <span className="text-xs opacity-50">🔒</span>
+              )}
+            </Link>
+          );
+        })}
+
+        {/* Divider before Ajans + Settings */}
         <div className="h-px bg-gray-100 my-4" />
 
         {BOTTOM_ITEMS.map((item) => {
@@ -178,7 +261,11 @@ export function PanelSidebar({ brandName = "ISITMAX", userEmail = "demo@gh7.ai",
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
-              <Icon className="w-[18px] h-[18px]" />
+              {item.emoji ? (
+                <span className="w-[18px] h-[18px] flex items-center justify-center text-sm leading-none">{item.emoji}</span>
+              ) : Icon ? (
+                <Icon className="w-[18px] h-[18px]" />
+              ) : null}
               <span>{item.title}</span>
             </Link>
           );

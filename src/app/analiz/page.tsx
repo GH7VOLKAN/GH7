@@ -363,7 +363,7 @@ function SiziArayalimPopup({
               Hangi konuda?
             </label>
             <div className="space-y-2">
-              {["Fiyat bilgisi", "Teknik detay", "Ajans hizmeti"].map((t) => (
+              {["Fiyat bilgisi", "Teknik detay", "Ajans Paketleri"].map((t) => (
                 <label key={t} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -1730,35 +1730,26 @@ export default function AnalizPage() {
             Bu anlık bir fotoğraf. Yapay zeka yanıtları her hafta değişiyor.
           </p>
 
-          {/* 3-card gym analogy */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 mb-8 text-left">
-            {/* Deneme Dersi */}
-            <div className="border border-gray-200 rounded-xl p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Deneme Dersi</p>
-              <p className="text-xl font-bold text-gray-900 mb-1">₺0</p>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Şu anki durumunuz — tek seferlik fotoğraf. Bugün gördükleriniz yarın değişebilir.
-              </p>
-            </div>
-
-            {/* Salon Üyeliği */}
+          {/* Pro & Business cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-8 text-left max-w-[640px] mx-auto">
+            {/* Pro */}
             <div className="border-2 border-gray-900 rounded-xl p-5 relative">
               <div className="absolute -top-2.5 left-4 bg-gray-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
                 Popüler
               </div>
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Salon Üyeliği</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Pro</p>
               <p className="text-xl font-bold text-gray-900 mb-1">₺2.495<span className="text-sm font-normal text-gray-400">/ay</span></p>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Haftalık otomatik takip. Rakipleriniz ilerlerse anında haberiniz olur.
+                Haftalık otomatik takip, sıralama savaşı, değişim bildirimi, trend grafikleri
               </p>
             </div>
 
-            {/* Personal Trainer */}
+            {/* Business */}
             <div className="border border-gray-200 rounded-xl p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Personal Trainer</p>
-              <p className="text-xl font-bold text-gray-900 mb-1">₺7.495<span className="text-sm font-normal text-gray-400">/ay</span></p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Business</p>
+              <p className="text-xl font-bold text-gray-900 mb-1">₺4.995<span className="text-sm font-normal text-gray-400">/ay</span></p>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Biz sizin yerinize yapıyoruz. İçerik, optimizasyon ve strateji dahil.
+                Pro&apos;daki her şey + haftalık aksiyon listesi, Opus içerik üretimi, rakip istihbarat, korelasyon motoru
               </p>
             </div>
           </div>
