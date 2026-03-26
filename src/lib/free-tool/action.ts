@@ -13,6 +13,8 @@ import { analyzeResponse } from "@/lib/ai/analyzer";
 import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
 import Anthropic from "@anthropic-ai/sdk";
 import { researchOnboardingDomain } from "@/lib/ai/sonar-research";
+import { headers } from "next/headers";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // ── Fallback in-memory cache (when Redis unavailable) ──
 const memCache = new Map<string, { result: FreeToolResult; ts: number }>();
@@ -283,6 +285,20 @@ export async function runFreeToolQuery(
 
   if (recentQueries >= RATE_LIMIT_MAX) {
     throw new Error("Çok fazla sorgu gönderildi. Lütfen bir dakika bekleyin.");
+  }
+
+  // DB-backed rate limit: 3 per hour per IP
+  try {
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const ipRl = await checkRateLimit(`freetool:ip:${ip}`, 3, 60);
+    if (!ipRl.allowed) {
+      throw new Error("Saatlik analiz limitinize ulaştınız. Lütfen daha sonra tekrar deneyin.");
+    }
+  } catch (err) {
+    // If the error is our rate limit message, re-throw it
+    if (err instanceof Error && err.message.includes("limitinize")) throw err;
+    // Otherwise ignore (DB unavailable etc.)
   }
 
   // Check cache — try Redis first, fall back to in-memory

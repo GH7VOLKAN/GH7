@@ -4,6 +4,7 @@ import { welcomeTemplate } from "./templates/welcome";
 import { scanCompleteTemplate } from "./templates/scan-complete";
 import { scoreChangeTemplate } from "./templates/score-change";
 import { weeklyReportTemplate } from "./templates/weekly-report";
+import type { WeeklyReportEmailData } from "./templates/weekly-report";
 import { accountUpdateTemplate } from "./templates/account-update";
 import { proWelcomeTemplate } from "./templates/pro-welcome";
 import { proUpgradeTemplate } from "./templates/pro-upgrade";
@@ -90,12 +91,12 @@ export async function sendScoreChangeEmail(
 export async function sendWeeklyReportEmail(
   email: string,
   brandName: string,
-  data: { score: number; change: number; topPlatform: string }
+  data: WeeklyReportEmailData,
 ) {
   return getResend().emails.send({
     from: `GH7 <${FROM}>`,
     to: email,
-    subject: `Haftalık Rapor — ${brandName}`,
+    subject: `Haftalik Rapor — ${brandName}`,
     html: weeklyReportTemplate(brandName, data),
   });
 }

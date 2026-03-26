@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { PROTECTED_ROUTES, hasAccess, type SubscriptionTier } from "@/lib/subscription";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -81,6 +82,29 @@ export async function updateSession(request: NextRequest) {
     const subpath = request.nextUrl.pathname.replace("/dashboard", "/panel");
     url.pathname = subpath === "/panel" ? "/panel/genel" : subpath;
     return NextResponse.redirect(url);
+  }
+
+  // ── RBAC: Check plan-gated routes ──────────────────
+  if (user) {
+    const pathname = request.nextUrl.pathname;
+    const requiredTier = Object.entries(PROTECTED_ROUTES).find(
+      ([route]) => pathname === route || pathname.startsWith(route + "/"),
+    )?.[1] as SubscriptionTier | undefined;
+
+    if (requiredTier) {
+      // Read plan from Supabase user metadata (set during login/profile update).
+      // Falls back to "free" if not present — server components do a full DB check.
+      const userPlan =
+        (user.user_metadata?.plan as string) ?? "free";
+
+      if (!hasAccess(userPlan, requiredTier)) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/panel/upgrade";
+        url.searchParams.set("from", pathname);
+        url.searchParams.set("required", requiredTier);
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return supabaseResponse;
