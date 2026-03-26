@@ -5,6 +5,7 @@ import { FileTextIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { RaporlarContent } from "./raporlar-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import { hasAccess } from "@/lib/subscription";
 
 export interface ScanReport {
   id: string;
@@ -17,6 +18,11 @@ export interface ScanReport {
 export default async function RaporlarPage() {
   const activeBrand = await getActiveBrand();
   if (!activeBrand?.brand) redirect("/panel");
+
+  // RBAC: Raporlar requires Pro plan
+  if (!hasAccess(activeBrand.plan ?? "free", "pro")) {
+    redirect("/panel/upgrade?from=%2Fpanel%2Fraporlar&required=pro");
+  }
   const brandId = activeBrand.brand.id;
   const plan = activeBrand.plan ?? "free";
   const profileEmail =

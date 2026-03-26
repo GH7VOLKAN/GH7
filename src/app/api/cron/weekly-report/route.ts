@@ -329,6 +329,8 @@ export async function GET(request: NextRequest) {
         score: opusReport.weeklyScore,
         change,
         topPlatform: metrics.platformPerformance.bestPlatform ?? "N/A",
+        highlights: opusReport.highlights.slice(0, 3),
+        nextActions: opusReport.nextActions.slice(0, 3),
       });
 
       sent++;

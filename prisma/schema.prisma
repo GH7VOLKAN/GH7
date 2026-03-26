@@ -358,6 +358,17 @@ model ScoreHistory {
   @@map("score_history")
 }
 
+// ─── Rate Limits ────────────────────────────────────
+
+model RateLimit {
+  key         String   @id
+  count       Int      @default(1)
+  windowStart DateTime @default(now()) @map("window_start")
+  expiresAt   DateTime @map("expires_at")
+
+  @@map("rate_limits")
+}
+
 // ─── Leads (Sizi Arayalım) ──────────────────────────
 
 model Lead {

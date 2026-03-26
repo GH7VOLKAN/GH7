@@ -6,13 +6,26 @@
  */
 
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: 3 requests per 10 minutes per IP
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rl = await checkRateLimit(`lead:${ip}`, 3, 10);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla istek gönderdiniz. Lütfen biraz bekleyin." },
+        { status: 429 },
+      );
+    }
+
     const body = await req.json();
     const { phone, timeSlot, subject, source } = body;
 

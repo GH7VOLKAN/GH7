@@ -12,6 +12,7 @@ import {
   normalizePhoneNumber,
   isValidTurkishPhone,
 } from "@/lib/sms/netgsm";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -34,6 +35,15 @@ export async function POST(request: Request) {
     }
 
     console.log(`[sms-otp] Request for phone: ${normalizedPhone.slice(0, 4)}****`);
+
+    // Rate limit: 5 SMS per hour per phone number
+    const rl = await checkRateLimit(`sms:${normalizedPhone}`, 5, 60);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla deneme yaptınız. Lütfen daha sonra tekrar deneyin." },
+        { status: 429 },
+      );
+    }
 
     // Rate limit: Check for recent code sent to this phone
     const recentCode = await prisma.verificationCode.findFirst({
