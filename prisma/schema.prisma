@@ -357,3 +357,21 @@ model ScoreHistory {
   @@unique([brandId, date])
   @@map("score_history")
 }
+
+// ─── Leads (Sizi Arayalım) ──────────────────────────
+
+model Lead {
+  id        String   @id @default(cuid())
+  phone     String
+  timeSlot  String?  @map("time_slot")
+  subject   String?
+  source    String?  // "sizi-arayalim", "analiz-sonuc", "panel-cta"
+  profileId String?  @map("profile_id")
+  brandId   String?  @map("brand_id")
+  status    String   @default("new") // new, contacted, converted, lost
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("leads")
+}
