@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   DEMO_PERSONAL_KEYWORDS,
   PERSONAL_PROFESSIONS,
@@ -399,7 +400,8 @@ function SiziArayalimPopup({
 /*  Main Page Component                                                */
 /* ------------------------------------------------------------------ */
 
-export default function AnalizPage() {
+function AnalizPageInner() {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step | null>(null); // null = hero
   const [formData, setFormData] = useState<FormData>({
     analysisType: "firma",
@@ -433,6 +435,37 @@ export default function AnalizPage() {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [showCallPopup, setShowCallPopup] = useState(false);
+
+  /* ---- auto-fill from URL params (landing page redirect) ---- */
+  useEffect(() => {
+    const type = searchParams.get("type");
+    const domain = searchParams.get("domain");
+    const name = searchParams.get("name");
+
+    if (type === "firma" && domain) {
+      const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      const brandGuess = cleanDomain.split(".")[0];
+      setFormData((prev) => ({
+        ...prev,
+        analysisType: "firma",
+        heroInput: cleanDomain,
+        domain: cleanDomain,
+        brandName: brandGuess.charAt(0).toUpperCase() + brandGuess.slice(1),
+        websiteUrl: `https://${cleanDomain}`,
+      }));
+      setStep(0);
+    } else if (type === "kisi" && name) {
+      setFormData((prev) => ({
+        ...prev,
+        analysisType: "kisisel",
+        heroInput: name,
+        fullName: name,
+        keywords: [...DEMO_PERSONAL_KEYWORDS],
+      }));
+      setStep(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ---- helpers ---- */
   const updateField = useCallback(
@@ -1798,5 +1831,13 @@ export default function AnalizPage() {
         onClose={() => setShowCallPopup(false)}
       />
     </div>
+  );
+}
+
+export default function AnalizPage() {
+  return (
+    <Suspense fallback={null}>
+      <AnalizPageInner />
+    </Suspense>
   );
 }
