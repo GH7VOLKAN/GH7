@@ -43,7 +43,7 @@ export function SourceTable({ sourceDomains }: SourceTableProps) {
         <CardContent className="py-12 text-center">
           <GlobeIcon className="mx-auto size-8 text-muted-foreground/40 mb-3" />
           <p className="text-sm text-muted-foreground">
-            Henuz kaynak domain verisi yok. Tarama sonrasi yapay zekanin referans gosterdigi kaynaklar burada gorunecek.
+            Henüz kaynak domain verisi yok. Tarama sonrası yapay zekanın referans gösterdiği kaynaklar burada görünecek.
           </p>
         </CardContent>
       </Card>
@@ -55,7 +55,7 @@ export function SourceTable({ sourceDomains }: SourceTableProps) {
       <CardHeader>
         <CardTitle>Kaynak Domainler</CardTitle>
         <CardDescription>
-          Yapay zekalarin yanitlarinda referans gosterdigi kaynaklar — satira tiklayarak URL&apos;leri gorun
+          Yapay zekaların yanıtlarında referans gösterdiği kaynaklar — satıra tıklayarak URL&apos;leri görün
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -64,10 +64,10 @@ export function SourceTable({ sourceDomains }: SourceTableProps) {
             <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead>Domain</TableHead>
-                <TableHead>Tur</TableHead>
-                <TableHead>Kullanim</TableHead>
+                <TableHead>Tür</TableHead>
+                <TableHead>Kullanım</TableHead>
                 <TableHead className="hidden sm:table-cell">
-                  Ort. Atif
+                  Ort. Atıf
                 </TableHead>
                 <TableHead className="text-right">Aksiyon</TableHead>
               </TableRow>

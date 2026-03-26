@@ -183,7 +183,7 @@ export async function executeScan(
                   excerpt: analysis.excerpt,
                   fullResponse: aiResponse.error ? `[ERROR] ${aiResponse.error}` : aiResponse.content.slice(0, 3000),
                   citations: analysis.citations,
-                  competitors: analysis.competitors.length > 0 ? JSON.parse(JSON.stringify(analysis.competitors)) : undefined,
+                  competitors: JSON.parse(JSON.stringify(analysis.competitors ?? [])),
                   citationSources: analysis.citationSources.length > 0 ? JSON.parse(JSON.stringify(analysis.citationSources)) : undefined,
                   mentionType: analysis.mentionType,
                   mentionContext: analysis.mentionContext,

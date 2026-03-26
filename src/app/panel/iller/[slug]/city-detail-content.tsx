@@ -49,7 +49,7 @@ export function CityDetailContent({
       {/* Platform breakdown */}
       {platformBreakdown.length > 0 && (
         <div className="border border-gray-200 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Platform Dagilimi</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Platform Dağılımı</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
             {platformBreakdown.map((pb) => (
               <div key={pb.platform} className="border border-gray-200 rounded-xl p-4 text-center">
@@ -140,7 +140,7 @@ export function CityDetailContent({
 
       {promptResults.length === 0 && (
         <div className="border border-gray-200 rounded-xl p-8 text-center">
-          <p className="text-sm text-gray-400">Bu il icin henuz tarama sonucu yok.</p>
+          <p className="text-sm text-gray-400">Bu il için henüz tarama sonucu yok.</p>
         </div>
       )}
     </>

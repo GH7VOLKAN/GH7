@@ -106,7 +106,7 @@ export function AramalarContent({
       if (item.category) cats.add(item.category);
     }
     return [
-      { value: "all", label: "Tumu" },
+      { value: "all", label: "Tümü" },
       ...Array.from(cats).map((c) => ({
         value: c,
         label: c.charAt(0).toUpperCase() + c.slice(1),
@@ -254,10 +254,10 @@ export function AramalarContent({
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffHours < 1) return "Az once";
-    if (diffHours < 24) return `${diffHours} saat once`;
-    if (diffDays < 7) return `${diffDays} gun once`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta once`;
+    if (diffHours < 1) return "Az önce";
+    if (diffHours < 24) return `${diffHours} saat önce`;
+    if (diffDays < 7) return `${diffDays} gün önce`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta önce`;
     return date.toLocaleDateString("tr-TR");
   }
 
@@ -266,8 +266,8 @@ export function AramalarContent({
       <div className="space-y-6">
         <EmptyState
           icon={Search}
-          title="Henuz arama eklemediniz"
-          description="Takip etmek istediginiz aramalari ekleyerek baslayin."
+          title="Henüz arama eklemediniz"
+          description="Takip etmek istediğiniz aramaları ekleyerek başlayın."
           action={
             <div className="flex gap-2">
               <button
@@ -284,7 +284,7 @@ export function AramalarContent({
                 className="flex items-center gap-1.5 rounded-lg border border-black bg-white px-4 py-2 text-sm font-medium text-black hover:bg-gray-50"
               >
                 <Compass className="size-4" />
-                Kesfet
+                Keşfet
               </button>
             </div>
           }
@@ -362,7 +362,7 @@ export function AramalarContent({
             className="flex items-center gap-1.5 rounded-lg border border-black bg-white px-4 py-2 text-sm font-medium text-black hover:bg-gray-50"
           >
             <Compass className="size-4" />
-            Kesfet
+            Keşfet
           </button>
         </div>
       </div>
@@ -383,7 +383,7 @@ export function AramalarContent({
           <div>Arama</div>
           <div>Platformlar</div>
           <div>Eklendi</div>
-          <div className="text-right">Islemler</div>
+          <div className="text-right">İşlemler</div>
         </div>
 
         {/* Rows */}
@@ -507,7 +507,7 @@ export function AramalarContent({
 
         {filteredPrompts.length === 0 && (
           <div className="px-4 py-12 text-center text-sm text-gray-400">
-            Aramanizla eslesen sonuc bulunamadi.
+            Aramanızla eşleşen sonuç bulunamadı.
           </div>
         )}
 
@@ -515,7 +515,7 @@ export function AramalarContent({
         {selectedIds.size > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
             <span className="text-sm text-gray-600">
-              {selectedIds.size} secili
+              {selectedIds.size} seçili
             </span>
             <button
               type="button"
@@ -632,14 +632,14 @@ function DiscoverDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Markaniz Icin Arama Kesfet</DialogTitle>
+          <DialogTitle>Markanız İçin Arama Keşfet</DialogTitle>
           <DialogDescription>
-            AI sektorunuze uygun aramalar olusturur ve takip listenize ekler.
+            AI sektörünüze uygun aramalar oluşturur ve takip listenize ekler.
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm text-gray-600">
-          Bu islem mevcut aramalarinizi yenileriyle degistirecektir. AI,
-          markaniza ozel aramalar uretecektir.
+          Bu işlem mevcut aramalarınızı yenileriyle değiştirecektir. AI,
+          markanıza özel aramalar üretecektir.
         </div>
         <DialogFooter>
           <button
@@ -660,7 +660,7 @@ function DiscoverDialog({
             ) : (
               <Compass className="size-4" />
             )}
-            {discovering ? "Kesfediliyor..." : "Aramalari Kesfet"}
+            {discovering ? "Keşfediliyor..." : "Aramaları Keşfet"}
           </button>
         </DialogFooter>
       </DialogContent>

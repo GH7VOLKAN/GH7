@@ -38,9 +38,9 @@ const statusIcon: Record<CheckStatus, { icon: string; bg: string; color: string 
 };
 
 const statusLabel: Record<CheckStatus, string> = {
-  pass: "Basarili",
-  partial: "Kismi",
-  fail: "Basarisiz",
+  pass: "Başarılı",
+  partial: "Kısmi",
+  fail: "Başarısız",
 };
 
 export function SiteContent({
@@ -55,8 +55,8 @@ export function SiteContent({
 
   const heroTitle =
     brandType === "kisisel"
-      ? "Dijital varligin yapay\nzekaya ne kadar hazir?"
-      : "Siten yapay zekaya\nne kadar hazir?";
+      ? "Dijital varlığın yapay\nzekaya ne kadar hazır?"
+      : "Siten yapay zekaya\nne kadar hazır?";
 
   const allChecks = auditCategories.flatMap((cat) => cat.checks);
 
@@ -75,7 +75,7 @@ export function SiteContent({
         <PageSection className="mt-2">
           <SectionTitle
             title="Kontrol Listesi"
-            subtitle={`Toplam: ${passCount}/${totalChecks} kontrol gecti`}
+            subtitle={`Toplam: ${passCount}/${totalChecks} kontrol geçti`}
           />
           <Stagger className="flex flex-col gap-3" staggerMs={60}>
             {allChecks.map((check) => {
@@ -145,8 +145,8 @@ export function SiteContent({
                 lineHeight: 1.6,
               }}
             >
-              Henuz site analizi yapilmadi. Analizi baslatmak icin
-              yukaridaki butona tiklayin.
+              Henüz site analizi yapılmadı. Analizi başlatmak için
+              yukarıdaki butona tıklayın.
             </p>
           </div>
         </FadeIn>

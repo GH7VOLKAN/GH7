@@ -95,7 +95,7 @@ function CircularGauge({
 // --- Status badge ---
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {
-    complete: { bg: "bg-green-50", text: "text-green-700", label: "Tamamlandi" },
+    complete: { bg: "bg-green-50", text: "text-green-700", label: "Tamamlandı" },
     warning: { bg: "bg-amber-50", text: "text-amber-700", label: "Dikkat" },
     missing: { bg: "bg-red-50", text: "text-red-700", label: "Eksik" },
     locked: { bg: "bg-gray-50", text: "text-gray-500", label: "Kilitli" },
@@ -135,9 +135,9 @@ function ImpactBadge({ impact }: { impact: string }) {
     LOW: "bg-gray-50 text-gray-600",
   };
   const labels: Record<string, string> = {
-    HIGH: "Yuksek Etki",
+    HIGH: "Yüksek Etki",
     MEDIUM: "Orta Etki",
-    LOW: "Dusuk Etki",
+    LOW: "Düşük Etki",
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colors[impact] ?? "bg-gray-50 text-gray-600"}`}>
@@ -196,7 +196,7 @@ function ChecklistItemRow({ item, index }: { item: ChecklistItemFull; index: num
             <FeasibilityBar score={item.feasibilityScore} />
             {item.estimatedTime && (
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-gray-500">Tahmini sure:</span>
+                <span className="text-gray-500">Tahmini süre:</span>
                 <span className="font-medium text-gray-700">{item.estimatedTime}</span>
               </div>
             )}
@@ -241,7 +241,7 @@ function ChecklistItemRow({ item, index }: { item: ChecklistItemFull; index: num
             )}
             {item.canAgencyDo && (
               <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50">
-                Ajansiniza Gonderin
+                Ajansınıza Gönderin
               </button>
             )}
           </div>
@@ -259,9 +259,9 @@ function ActionTaskRow({ task }: { task: ActionTaskData }) {
     low: "bg-gray-50 text-gray-600",
   };
   const priorityLabels: Record<string, string> = {
-    high: "Yuksek",
+    high: "Yüksek",
     medium: "Orta",
-    low: "Dusuk",
+    low: "Düşük",
   };
 
   return (
@@ -342,15 +342,15 @@ export function IyilestirmeContent({
           <CircularGauge score={readinessScore} />
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Site Saglik Skoru
+              Site Sağlık Skoru
             </h2>
             <p className="text-sm text-gray-500">
-              AI SEO &amp; hazirlik analizi
+              AI SEO &amp; hazırlık analizi
             </p>
             <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
               <span>Kontrol: {checklistData.total} madde</span>
               <span>Tamamlanan: {checklistData.completed}</span>
-              <span>Denetim: {auditData.passCount}/{auditData.totalChecks} basarili</span>
+              <span>Denetim: {auditData.passCount}/{auditData.totalChecks} başarılı</span>
             </div>
           </div>
         </div>
@@ -359,7 +359,7 @@ export function IyilestirmeContent({
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-gray-200">
         {[
-          { key: "checklist" as const, label: `Gelisim Plani (${checklistData.total})` },
+          { key: "checklist" as const, label: `Gelişim Planı (${checklistData.total})` },
           { key: "actions" as const, label: `Aksiyonlar (${actionsData.totalCount})` },
           { key: "audit" as const, label: `Site Denetimi (${auditData.totalChecks})` },
         ].map((tab) => (
@@ -406,15 +406,15 @@ export function IyilestirmeContent({
           {incompleteItems.length > 0 && (
             <div className="rounded-xl border border-amber-200 bg-amber-50/30 p-4">
               <p className="text-sm text-amber-800">
-                <strong>{incompleteItems.length}</strong> madde tamamlanmadi.{" "}
-                {incompleteItems.filter((i) => i.feasibilityScore >= 4).length} tanesi kolay yapilabilir.
+                <strong>{incompleteItems.length}</strong> madde tamamlanmadı.{" "}
+                {incompleteItems.filter((i) => i.feasibilityScore >= 4).length} tanesi kolay yapılabilir.
               </p>
             </div>
           )}
           {completedItems.length > 0 && completedItems.length === checklistData.total && (
             <div className="rounded-xl border border-green-200 bg-green-50/30 p-4">
               <p className="text-sm text-green-800">
-                Tum maddeler tamamlandi! Harika is!
+                Tüm maddeler tamamlandı! Harika iş!
               </p>
             </div>
           )}
@@ -433,7 +433,7 @@ export function IyilestirmeContent({
           </div>
 
           {actionsData.actionTasks.length === 0 ? (
-            <p className="text-sm text-gray-400 py-8 text-center">Henuz aksiyon onerisi yok.</p>
+            <p className="text-sm text-gray-400 py-8 text-center">Henüz aksiyon önerisi yok.</p>
           ) : (
             <div className="space-y-3">
               {actionsData.actionTasks.map((task) => (
@@ -454,15 +454,15 @@ export function IyilestirmeContent({
               <p className="text-2xl font-semibold text-gray-900 mt-1">{auditData.totalScore}</p>
             </div>
             <div className="border border-gray-200 rounded-xl p-4">
-              <p className="text-xs text-gray-500">Basarili</p>
+              <p className="text-xs text-gray-500">Başarılı</p>
               <p className="text-2xl font-semibold text-green-600 mt-1">{auditData.passCount}</p>
             </div>
             <div className="border border-gray-200 rounded-xl p-4">
-              <p className="text-xs text-gray-500">Basarisiz</p>
+              <p className="text-xs text-gray-500">Başarısız</p>
               <p className="text-2xl font-semibold text-red-600 mt-1">{auditData.failCount}</p>
             </div>
             <div className="border border-gray-200 rounded-xl p-4">
-              <p className="text-xs text-gray-500">Kismi</p>
+              <p className="text-xs text-gray-500">Kısmi</p>
               <p className="text-2xl font-semibold text-amber-600 mt-1">{auditData.partialCount}</p>
             </div>
           </div>

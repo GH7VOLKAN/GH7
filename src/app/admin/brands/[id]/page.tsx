@@ -329,11 +329,11 @@ export default function AdminBrandDetailPage() {
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="mb-4 flex flex-wrap">
-          <TabsTrigger value="overview">Genel Bakis</TabsTrigger>
+          <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
           <TabsTrigger value="prompts">Sorular</TabsTrigger>
           <TabsTrigger value="scans">Taramalar</TabsTrigger>
           <TabsTrigger value="audit">Audit</TabsTrigger>
-          <TabsTrigger value="checklist">Gelisim Plani</TabsTrigger>
+          <TabsTrigger value="checklist">Gelişim Planı</TabsTrigger>
           <TabsTrigger value="competitors">Rakipler</TabsTrigger>
           <TabsTrigger value="sources">Kaynaklar</TabsTrigger>
           <TabsTrigger value="settings">Ayarlar</TabsTrigger>

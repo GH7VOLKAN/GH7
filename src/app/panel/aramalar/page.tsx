@@ -13,8 +13,8 @@ export default async function AramalarPage() {
     return (
       <EmptyState
         icon={Search}
-        title="Marka bulunamadi"
-        description="Lutfen ayarlardan marka ekleyin."
+        title="Marka bulunamadı"
+        description="Lütfen ayarlardan marka ekleyin."
       />
     );
   }

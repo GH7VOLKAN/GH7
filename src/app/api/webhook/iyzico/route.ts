@@ -283,9 +283,9 @@ async function handleSubscriptionFailure(payload: IyzicoWebhookPayload): Promise
       data: {
         brandId: brand.id,
         type: "scan_failed", // reuse existing type for payment failure
-        title: "Odeme Basarisiz",
+        title: "Ödeme Başarısız",
         message:
-          "Abonelik odemeniz alinamadi. Lutfen odeme bilgilerinizi guncelleyin. 3 gun icinde guncellenmezse planiniz ucretsiz plana dusecektir.",
+          "Abonelik ödemeniz alınamadı. Lütfen ödeme bilgilerinizi güncelleyin. 3 gün içinde güncellenmezse planınız ücretsiz plana düşecektir.",
       },
     });
   }
@@ -321,9 +321,9 @@ async function handleSubscriptionCancel(payload: IyzicoWebhookPayload): Promise<
       data: {
         brandId: brand.id,
         type: "scan_completed", // reuse type
-        title: "Abonelik Iptal Edildi",
+        title: "Abonelik İptal Edildi",
         message:
-          "Aboneliginiz iptal edildi ve planiniz ucretsiz plana dusuruldu. Tekrar yukseltmek icin ayarlar sayfasini ziyaret edin.",
+          "Aboneliğiniz iptal edildi ve planınız ücretsiz plana düşürüldü. Tekrar yükseltmek için ayarlar sayfasını ziyaret edin.",
       },
     });
   }

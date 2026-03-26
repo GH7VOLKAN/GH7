@@ -12,8 +12,8 @@ interface ScanStatus {
 
 const phaseLabels: Record<string, string> = {
   scanning: "Yapay zekalara soruluyor...",
-  audit: "Site kontrolu yapiliyor...",
-  checklist: "Gelisim plani hazirlaniyor...",
+  audit: "Site kontrolü yapılıyor...",
+  checklist: "Gelişim planı hazırlanıyor...",
 };
 
 export function AnalysisBanner({ brandId }: { brandId: string }) {
@@ -61,8 +61,8 @@ export function AnalysisBanner({ brandId }: { brandId: string }) {
 
   const progressText =
     status.total > 0
-      ? `${status.completed}/${status.total} soru tamamlandi`
-      : "Baslatiliyor...";
+      ? `${status.completed}/${status.total} soru tamamlandı`
+      : "Başlatılıyor...";
 
   const phaseText = phaseLabels[status.phase] ?? "Analiz devam ediyor...";
 

@@ -31,7 +31,7 @@ export async function GET() {
   });
 
   if (!profile) {
-    return NextResponse.json({ error: "Profil bulunamadi" }, { status: 404 });
+    return NextResponse.json({ error: "Profil bulunamadı" }, { status: 404 });
   }
 
   // ── PRO+ plan check ─────────────────────────────────────
@@ -47,7 +47,7 @@ export async function GET() {
     where: { profileId: profile.id, isDefault: true },
   });
   if (!brand) {
-    return NextResponse.json({ error: "Marka bulunamadi" }, { status: 404 });
+    return NextResponse.json({ error: "Marka bulunamadı" }, { status: 404 });
   }
 
   // ── Gather data ─────────────────────────────────────────
@@ -194,9 +194,9 @@ export async function GET() {
   // ── Key Metrics ─────────────────────────────────────────
   const metrics = [
     { label: "Bahsedilme Skoru", value: `${mentionScore}/100` },
-    { label: "Hazirlik Skoru", value: `${readinessScore}/100` },
-    { label: "Toplam Sonuc", value: `${totalMentioned}/${totalResults}` },
-    { label: "Gelisim Plani", value: `${checklistCompleted}/${checklistTotal}` },
+    { label: "Hazırlık Skoru", value: `${readinessScore}/100` },
+    { label: "Toplam Sonuç", value: `${totalMentioned}/${totalResults}` },
+    { label: "Gelişim Planı", value: `${checklistCompleted}/${checklistTotal}` },
   ];
 
   const boxWidth = (contentWidth - 12) / 4;
@@ -343,7 +343,7 @@ export async function GET() {
   doc.setFontSize(13);
   doc.setFont("Helvetica", "bold");
   doc.setTextColor(17, 24, 39);
-  doc.text("Gelisim Plani Durumu", marginLeft, y);
+  doc.text("Gelişim Planı Durumu", marginLeft, y);
   y += 10;
 
   // Progress bar
@@ -370,7 +370,7 @@ export async function GET() {
   doc.setFont("Helvetica", "bold");
   doc.setTextColor(17, 24, 39);
   doc.text(
-    `${checklistCompleted}/${checklistTotal} tamamlandi (%${Math.round(progressPct * 100)})`,
+    `${checklistCompleted}/${checklistTotal} tamamlandı (%${Math.round(progressPct * 100)})`,
     marginLeft + barWidth + 6,
     y + 6,
   );
@@ -379,9 +379,9 @@ export async function GET() {
 
   // ── Checklist items by layer ────────────────────────────
   const LAYER_NAMES: Record<number, string> = {
-    1: "Temel Altyapi",
-    2: "Icerik & SEO",
-    3: "Otorite & Dis Sinyaller",
+    1: "Temel Altyapı",
+    2: "İçerik & SEO",
+    3: "Otorite & Dış Sinyaller",
   };
 
   const allItems = await prisma.checklistItem.findMany({

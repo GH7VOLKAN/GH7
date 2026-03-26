@@ -45,11 +45,11 @@ const chartConfig = {
     label: "Skorlar",
   },
   bahsedilme: {
-    label: "Gorunurluk",
+    label: "Görünürlük",
     color: "hsl(142, 71%, 45%)",
   },
   hazirlik: {
-    label: "Site Hazirlik",
+    label: "Site Hazırlık",
     color: "hsl(221, 83%, 53%)",
   },
 } satisfies ChartConfig;
@@ -83,12 +83,12 @@ export function ChartAreaInteractive({
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Haftalik Gelisim</CardTitle>
+        <CardTitle>Haftalık Gelişim</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Yapay zekadaki gorunurlugunuz ve site hazirliginiz nasil degisiyor
+            Yapay zekadaki görünürlüğünüz ve site hazırlığınız nasıl değişiyor
           </span>
-          <span className="@[540px]/card:hidden">Haftalik gelisim</span>
+          <span className="@[540px]/card:hidden">Haftalık gelişim</span>
         </CardDescription>
         <CardAction>
           <ToggleGroup

@@ -7,19 +7,19 @@ const STATS = [
     source: "Gartner, 2025",
     value: "%25",
     description:
-      "Geleneksel arama motoru trafiği 2026'ya kadar düşecek. Kullanıcılar AI yanıtlarını tercih ediyor.",
+      "Geleneksel arama trafiği 2026\u2019ya kadar düşecek. Kullanıcılar AI yanıtlarını tercih ediyor.",
   },
   {
     source: "Princeton / ACM KDD, 2024",
     value: "%40",
     description:
-      "GEO optimizasyonu yapılan içerikler, AI yanıtlarında %40'a kadar daha fazla görünürlük kazanıyor.",
+      "GEO optimize edilen içerikler AI yanıtlarında %40\u2019a kadar daha fazla görünürlük kazanıyor.",
   },
   {
     source: "Bain & Company, 2025",
     value: "%60",
     description:
-      "Google aramalarının %60'ı artık hiçbir siteye tıklanmadan sonuçlanıyor. AI özetleri trafik çalıyor.",
+      "Google aramalarının %60\u2019ı hiçbir siteye tıklanmadan sonuçlanıyor. AI özetleri trafiği yönlendiriyor.",
   },
 ];
 
@@ -27,30 +27,33 @@ export function ResearchSection() {
   const ref = useFadeIn<HTMLElement>();
 
   return (
-    <section ref={ref} className="fi-section bg-[#09090B] text-white py-[72px] sm:py-[120px] px-5 sm:px-10">
+    <section
+      ref={ref}
+      className="fi-section bg-[#FAFAFA] border-t border-b border-zinc-100 py-[72px] sm:py-[100px] px-5 sm:px-10"
+    >
       <div className="max-w-[1120px] mx-auto">
-        <div className="text-[12px] font-semibold text-zinc-600 uppercase tracking-[0.12em] mb-4">
+        <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.14em] mb-3.5">
           Araştırma Verileri
         </div>
         <h2
-          className="font-extrabold text-white leading-[1.08] mb-4"
-          style={{ fontSize: "clamp(30px, 4.5vw, 48px)", letterSpacing: "-0.035em" }}
+          className="font-extrabold leading-[1.1] mb-3.5"
+          style={{ fontSize: "clamp(28px, 4.2vw, 46px)", letterSpacing: "-0.035em" }}
         >
           Bu bir trend değil,
           <br />
           yapısal bir dönüşüm
         </h2>
-        <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[520px]">
-          Princeton, Stanford ve Gartner araştırmalarının ortak sonucu: arama motorları dönüşüyor, hazır olmayanlar görünmez kalacak.
+        <p className="text-[15px] text-zinc-500 leading-[1.7] max-w-[500px]">
+          Princeton, Stanford ve Gartner araştırmalarının ortak sonucu: arama dönüşüyor, hazır olmayanlar görünmez kalacak.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-800 rounded-2xl overflow-hidden mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-200 rounded-[14px] overflow-hidden mt-10">
           {STATS.map((stat) => (
-            <div key={stat.value} className="bg-zinc-900 p-8 sm:p-10">
-              <div className="text-[10px] text-zinc-600 uppercase tracking-[0.1em] font-semibold mb-3">
+            <div key={stat.value} className="bg-white p-8 sm:p-8">
+              <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.1em] mb-2.5">
                 {stat.source}
               </div>
-              <div className="text-[36px] font-extrabold tracking-tight mb-2" style={{ letterSpacing: "-0.03em" }}>
+              <div className="text-[32px] font-extrabold mb-1.5" style={{ letterSpacing: "-0.03em" }}>
                 {stat.value}
               </div>
               <div className="text-[13px] text-zinc-500 leading-[1.5]">

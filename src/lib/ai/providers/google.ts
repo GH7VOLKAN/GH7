@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, DynamicRetrievalMode } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AIProvider } from "./base";
 import type { AIResponse } from "../types";
 
@@ -22,43 +22,43 @@ export class GoogleProvider implements AIProvider {
 
     const errors: string[] = [];
 
-    // Step 1: Try gemini-2.0-flash with Google Search grounding
+    // Step 1: Try gemini-2.5-flash with Google Search grounding
     try {
-      const content = await this.tryModel("gemini-2.0-flash", promptText, true);
+      const content = await this.tryModel("gemini-2.5-flash", promptText, true);
       if (content.length > 0) {
         return { platform: "gemini", content };
       }
-      errors.push("gemini-2.0-flash with grounding returned empty");
+      errors.push("gemini-2.5-flash with grounding returned empty");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error(`[gemini-provider] gemini-2.0-flash with grounding failed: ${msg}`);
-      errors.push(`gemini-2.0-flash+grounding: ${msg}`);
+      console.error(`[gemini-provider] gemini-2.5-flash with grounding failed: ${msg}`);
+      errors.push(`gemini-2.5-flash+grounding: ${msg}`);
     }
 
-    // Step 2: Try gemini-2.0-flash WITHOUT grounding (in case grounding causes error)
+    // Step 2: Try gemini-2.5-flash WITHOUT grounding
     try {
-      const content = await this.tryModel("gemini-2.0-flash", promptText, false);
+      const content = await this.tryModel("gemini-2.5-flash", promptText, false);
       if (content.length > 0) {
         return { platform: "gemini", content };
       }
-      errors.push("gemini-2.0-flash without grounding returned empty");
+      errors.push("gemini-2.5-flash without grounding returned empty");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error(`[gemini-provider] gemini-2.0-flash without grounding failed: ${msg}`);
-      errors.push(`gemini-2.0-flash: ${msg}`);
+      console.error(`[gemini-provider] gemini-2.5-flash without grounding failed: ${msg}`);
+      errors.push(`gemini-2.5-flash: ${msg}`);
     }
 
-    // Step 3: Fallback to gemini-1.5-flash (stable, no grounding)
+    // Step 3: Fallback to gemini-2.5-flash-lite
     try {
-      const content = await this.tryModel("gemini-1.5-flash", promptText, false);
+      const content = await this.tryModel("gemini-2.5-flash-lite", promptText, false);
       if (content.length > 0) {
         return { platform: "gemini", content };
       }
-      errors.push("gemini-1.5-flash returned empty");
+      errors.push("gemini-2.5-flash-lite returned empty");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error(`[gemini-provider] gemini-1.5-flash fallback failed: ${msg}`);
-      errors.push(`gemini-1.5-flash: ${msg}`);
+      console.error(`[gemini-provider] gemini-2.5-flash-lite fallback failed: ${msg}`);
+      errors.push(`gemini-2.5-flash-lite: ${msg}`);
     }
 
     console.error(`[gemini-provider] All models failed. Errors: ${errors.join(" | ")}`);
@@ -79,14 +79,7 @@ export class GoogleProvider implements AIProvider {
 
     if (useGrounding) {
       modelOptions.tools = [
-        {
-          googleSearchRetrieval: {
-            dynamicRetrievalConfig: {
-              mode: DynamicRetrievalMode.MODE_DYNAMIC,
-              dynamicThreshold: 0.3,
-            },
-          },
-        },
+        { googleSearch: {} },
       ];
     }
 

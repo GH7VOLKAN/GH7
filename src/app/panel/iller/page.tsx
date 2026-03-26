@@ -50,8 +50,8 @@ export default async function IllerPage() {
       <div className="flex flex-col gap-6 px-4 py-4 md:gap-8 md:px-6 md:py-6">
         <EmptyState
           icon={MapPin}
-          title="Henuz il takip etmiyorsunuz"
-          description="Marka ayarlarinizdan hizmet bolgenizi ekleyin, ardindan il bazli gorunurluk analizi burada gorunecek."
+          title="Henüz il takip etmiyorsunuz"
+          description="Marka ayarlarınızdan hizmet bölgenizi ekleyin, ardından il bazlı görünürlük analizi burada görünecek."
         />
       </div>
     );

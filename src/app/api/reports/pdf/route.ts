@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
   if (!notification) {
     return NextResponse.json(
-      { error: "Bildirim bulunamadi" },
+      { error: "Bildirim bulunamadı" },
       { status: 404 },
     );
   }
@@ -129,12 +129,12 @@ export async function GET(request: Request) {
   // Draw metric boxes
   const metrics = [
     { label: "Bahsedilme Skoru", value: `${mentionScore}/100` },
-    { label: "Hazirlik Skoru", value: `${readinessScore}/100` },
+    { label: "Hazırlık Skoru", value: `${readinessScore}/100` },
     {
-      label: "Gelisim Plani",
+      label: "Gelişim Planı",
       value: `%${checklistProgress}`,
     },
-    { label: "Rakip Sayisi", value: `${competitorCount}` },
+    { label: "Rakip Sayısı", value: `${competitorCount}` },
   ];
 
   const boxWidth = (contentWidth - 12) / 4; // 4mm gap between boxes
