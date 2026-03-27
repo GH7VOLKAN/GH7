@@ -1,35 +1,33 @@
-import { NavSection } from "@/components/landing/nav-section";
-import { HeroSectionV5 } from "@/components/landing/hero-section-v5";
-import { PlatformsSection } from "@/components/landing/platforms-section";
-import { IsitmaxProofSection } from "@/components/landing/isitmax-proof-section";
-import { ResearchSection } from "@/components/landing/research-section";
-import { HonestySection } from "@/components/landing/honesty-section";
-import { GeoSection } from "@/components/landing/geo-section";
-import { TurkeyMapSection } from "@/components/landing/turkey-map-section";
-import { AgencySection } from "@/components/landing/agency-section";
-import { UrgencySection } from "@/components/landing/urgency-section";
-import { PricingSectionV5 } from "@/components/landing/pricing-section-v5";
-import { FaqSection } from "@/components/landing/faq-section";
-import { FinalCtaSection } from "@/components/landing/final-cta-section";
-import { FooterSection } from "@/components/landing/footer-section";
+import Nav from "@/components/landing-v6/Nav";
+import HeroSection from "@/components/landing-v6/HeroSection";
+import FearSection from "@/components/landing-v6/FearSection";
+import KapiSection from "@/components/landing-v6/KapiSection";
+import CozumSection from "@/components/landing-v6/CozumSection";
+import CaseStudySection from "@/components/landing-v6/CaseStudySection";
+import PlatformStrip from "@/components/landing-v6/PlatformStrip";
+import ResearchSection from "@/components/landing-v6/ResearchSection";
+import FaqSection from "@/components/landing-v6/FaqSection";
+import FinalCta from "@/components/landing-v6/FinalCta";
+import Footer from "@/components/landing-v6/Footer";
+import RevealWrapper from "@/components/landing-v6/RevealWrapper";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white">
-      <NavSection />
-      <HeroSectionV5 />
-      <PlatformsSection />
-      <IsitmaxProofSection />
-      <ResearchSection />
-      <HonestySection />
-      <GeoSection />
-      <TurkeyMapSection />
-      <AgencySection />
-      <UrgencySection />
-      <PricingSectionV5 />
-      <FaqSection />
-      <FinalCtaSection />
-      <FooterSection />
-    </main>
+    <>
+      <Nav />
+      <main>
+        <HeroSection />
+        <FearSection />
+        <KapiSection />
+        <CozumSection />
+        <CaseStudySection />
+        <PlatformStrip />
+        <ResearchSection />
+        <FaqSection />
+        <FinalCta />
+      </main>
+      <Footer />
+      <RevealWrapper />
+    </>
   );
 }
