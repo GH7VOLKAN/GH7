@@ -50,7 +50,7 @@ export default function HomePage() {
   return (
     <>
       {/* NAV */}
-      <nav>
+      <nav className="gh7-nav">
         <Link href="/" className="logo">GH7<span>.ai</span></Link>
         <ul className="nav-links">
           <li><a href="#cozum">Çözümler</a></li>
@@ -398,7 +398,7 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer>
+      <footer className="gh7-footer">
         <div className="footer-inner">
           <div className="footer-top">
             <div>
