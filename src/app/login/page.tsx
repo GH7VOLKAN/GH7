@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { GH7Logo } from "@/components/gh7-logo";
-import { GH7Icon } from "@/components/gh7-icon";
 import { createClient } from "@/lib/supabase/client";
 
 type Step = "input" | "otp";
@@ -22,6 +20,7 @@ export default function LoginPage() {
   const [cooldown, setCooldown] = useState(0);
   const [sessionCleared, setSessionCleared] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
+  const [isReturning, setIsReturning] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // On page load: check for existing session and handle ?logout=true
@@ -30,13 +29,17 @@ export default function LoginPage() {
     const shouldLogout = params.get("logout") === "true";
     const supabase = createClient();
 
+    // Check if returning user
+    const savedEmail = localStorage.getItem("gh7_email");
+    if (savedEmail || params.get("returning")) {
+      setIsReturning(true);
+    }
+
     async function handleSessionCleanup() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (shouldLogout && session) {
-        // User explicitly wants to log out — clear session
         await supabase.auth.signOut();
-        // Clear all Supabase cookies
         document.cookie.split(";").forEach((c) => {
           const name = c.split("=")[0].trim();
           if (name.startsWith("sb-")) {
@@ -46,7 +49,6 @@ export default function LoginPage() {
         setSessionCleared(true);
         window.history.replaceState({}, "", "/login");
       } else if (session) {
-        // There's an existing session — show which account is logged in
         setExistingEmail(session.user.email ?? null);
       }
     }
@@ -59,7 +61,6 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("error") === "auth") {
       setError("Giriş süresi doldu. Lütfen tekrar deneyin.");
-      // Clean URL
       window.history.replaceState({}, "", "/login");
     }
   }, []);
@@ -81,10 +82,7 @@ export default function LoginPage() {
   // ─── Phone formatting ──────────────────────────────
 
   function formatPhoneDisplay(value: string): string {
-    // Remove all non-digits
     const digits = value.replace(/\D/g, "");
-
-    // Format as 5XX XXX XX XX (max 10 digits)
     const limited = digits.slice(0, 10);
     if (limited.length <= 3) return limited;
     if (limited.length <= 6) return `${limited.slice(0, 3)} ${limited.slice(3)}`;
@@ -98,7 +96,6 @@ export default function LoginPage() {
     setPhone(formatPhoneDisplay(raw));
   }
 
-  // Get the raw phone digits for API calls (with +90 prefix)
   function getRawPhone(): string {
     return "+90" + phone.replace(/\D/g, "");
   }
@@ -110,12 +107,8 @@ export default function LoginPage() {
     setError(null);
     try {
       const supabase = createClient();
-
-      // Always sign out existing session before starting a new Google login
-      // This prevents the old session from persisting after OAuth redirect
       await supabase.auth.signOut();
 
-      // Use consistent origin to prevent state cookie mismatch
       const redirectOrigin = typeof window !== "undefined" && window.location.hostname !== "localhost"
         ? `https://${window.location.hostname}`
         : window.location.origin;
@@ -146,7 +139,6 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Sign out any existing session before email login
       const supabase = createClient();
       await supabase.auth.signOut();
 
@@ -225,7 +217,6 @@ export default function LoginPage() {
       setError(null);
 
       try {
-        // Choose the right verify endpoint based on login method
         const endpoint =
           method === "phone"
             ? "/api/auth/verify-sms-otp"
@@ -252,10 +243,8 @@ export default function LoginPage() {
           return;
         }
 
-        // Create Supabase session with fresh token from server
         const supabase = createClient();
 
-        // Clear any stale cookies first (without calling signOut which invalidates tokens)
         document.cookie.split(";").forEach((c) => {
           const name = c.split("=")[0].trim();
           if (name.startsWith("sb-")) {
@@ -263,7 +252,6 @@ export default function LoginPage() {
           }
         });
 
-        // Use the fresh tokenHash from server to create session
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.tokenHash,
           type: "magiclink",
@@ -294,7 +282,6 @@ export default function LoginPage() {
 
     const newDigits = [...otpDigits];
 
-    // Handle paste
     if (value.length > 1) {
       const pasted = value.slice(0, 6).split("");
       pasted.forEach((d, i) => {
@@ -314,7 +301,6 @@ export default function LoginPage() {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit when all 6 digits entered
     if (newDigits.every((d) => d !== "")) {
       handleVerifyOtp(newDigits);
     }
@@ -386,183 +372,235 @@ export default function LoginPage() {
       ? "numarasına 6 haneli SMS kodu gönderdik"
       : "adresine 6 haneli kod gönderdik";
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "14px 16px",
+    fontSize: 15,
+    border: "1.5px solid var(--g200)",
+    borderRadius: 10,
+    background: "var(--white)",
+    color: "var(--black)",
+    outline: "none",
+    fontFamily: "var(--font)",
+    marginBottom: 12,
+    transition: "border-color .15s",
+    boxSizing: "border-box",
+  };
+
+  const primaryBtnStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "14px",
+    borderRadius: 10,
+    border: "none",
+    background: "var(--black)",
+    color: "var(--white)",
+    fontSize: 14,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: "var(--font)",
+    transition: "opacity .15s",
+  };
+
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left — form */}
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-sm space-y-8">
-          <div>
-            <Link href="/">
-              <GH7Logo size="default" />
+    <>
+      <style>{`
+        @media (max-width: 767px) {
+          .login-right-col { display: none !important; }
+          .login-left-col { width: 100% !important; }
+        }
+      `}</style>
+      <div style={{ display: "flex", minHeight: "100vh", fontFamily: "var(--font)" }}>
+        {/* LEFT COLUMN — Form (45%) */}
+        <div
+          className="login-left-col"
+          style={{
+            width: "45%",
+            padding: "48px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            background: "var(--white)",
+          }}
+        >
+          <div style={{ maxWidth: 400, margin: "0 auto", width: "100%" }}>
+            {/* Logo */}
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "var(--black)", letterSpacing: "-.5px", marginBottom: 40 }}>
+                GH7<span style={{ color: "var(--g400)" }}>.ai</span>
+              </div>
             </Link>
 
             {step === "input" ? (
               <>
-                <h1 className="mt-6 text-xl sm:text-2xl font-light tracking-[-0.04em]">
-                  Hesabınıza giriş yapın
+                {/* Heading */}
+                <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--black)", letterSpacing: "-.03em", marginBottom: 8, lineHeight: 1.2 }}>
+                  {isReturning ? "Tekrar hoş geldiniz." : "Giriş yapın."}
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Yapay zekalarda görünürlüğünüzü takip edin
+                <p style={{ fontSize: 15, color: "var(--g500)", marginBottom: 32 }}>
+                  {isReturning ? "Hesabınıza giriş yapın." : "Hesabınız yok mu? Ücretsiz başlayın."}
                 </p>
               </>
             ) : (
               <>
-                <h1 className="mt-6 text-xl sm:text-2xl font-light tracking-[-0.04em]">
+                <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--black)", letterSpacing: "-.03em", marginBottom: 8, lineHeight: 1.2 }}>
                   Doğrulama kodu gönderildi
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">
-                    {otpDestination}
-                  </span>{" "}
+                <p style={{ fontSize: 15, color: "var(--g500)", marginBottom: 32 }}>
+                  <span style={{ fontWeight: 600, color: "var(--black)" }}>{otpDestination}</span>{" "}
                   {otpDestinationLabel}
                 </p>
               </>
             )}
-          </div>
 
-          {sessionCleared && (
-            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400">
-              Oturum kapatıldı. Yeni hesapla giriş yapabilirsiniz.
-            </div>
-          )}
-
-          {existingEmail && !sessionCleared && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
-              <p>
-                Şu anda <span className="font-medium">{existingEmail}</span> olarak giriş yapılmış.
-              </p>
-              <button
-                onClick={async () => {
-                  const supabase = createClient();
-                  await supabase.auth.signOut();
-                  document.cookie.split(";").forEach((c) => {
-                    const name = c.split("=")[0].trim();
-                    if (name.startsWith("sb-")) {
-                      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-                    }
-                  });
-                  setExistingEmail(null);
-                  setSessionCleared(true);
-                }}
-                className="mt-1 text-xs font-medium underline hover:text-amber-900 dark:hover:text-amber-300"
-              >
-                Farklı hesapla giriş yap
-              </button>
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-              {error}
-            </div>
-          )}
-
-          {step === "input" ? (
-            <>
-              {/* Google Login */}
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-lg border border-border px-4 py-3 text-sm font-medium transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Google ile Giriş
-              </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-3 text-muted-foreground">
-                    veya
-                  </span>
-                </div>
+            {/* Session cleared notice */}
+            {sessionCleared && (
+              <div style={{
+                borderRadius: 10, border: "1.5px solid #bbf7d0", background: "#f0fdf4",
+                padding: "12px 16px", fontSize: 13, color: "#15803d", marginBottom: 20,
+              }}>
+                Oturum kapatıldı. Yeni hesapla giriş yapabilirsiniz.
               </div>
+            )}
 
-              {/* Method Toggle: E-posta | Telefon */}
-              <div className="flex rounded-lg border border-border p-1">
+            {/* Existing session notice */}
+            {existingEmail && !sessionCleared && (
+              <div style={{
+                borderRadius: 10, border: "1.5px solid #fde68a", background: "#fffbeb",
+                padding: "12px 16px", fontSize: 13, color: "#92400e", marginBottom: 20,
+              }}>
+                <p style={{ margin: 0 }}>
+                  Şu anda <span style={{ fontWeight: 600 }}>{existingEmail}</span> olarak giriş yapılmış.
+                </p>
                 <button
-                  type="button"
-                  onClick={() => switchMethod("email")}
-                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    method === "email"
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    document.cookie.split(";").forEach((c) => {
+                      const name = c.split("=")[0].trim();
+                      if (name.startsWith("sb-")) {
+                        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                      }
+                    });
+                    setExistingEmail(null);
+                    setSessionCleared(true);
+                  }}
+                  style={{
+                    marginTop: 6, fontSize: 12, fontWeight: 600, color: "#92400e",
+                    textDecoration: "underline", background: "none", border: "none",
+                    cursor: "pointer", padding: 0, fontFamily: "var(--font)",
+                  }}
                 >
-                  E-posta
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMethod("phone")}
-                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    method === "phone"
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Telefon
+                  Farklı hesapla giriş yap
                 </button>
               </div>
+            )}
 
-              {/* Email OTP Form */}
-              {method === "email" && (
-                <form onSubmit={handleSendEmailOtp} className="space-y-4">
-                  <div>
-                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                      E-posta
-                    </label>
+            {/* Error message */}
+            {error && (
+              <div style={{
+                borderRadius: 10, border: "1.5px solid #fecaca", background: "#fef2f2",
+                padding: "12px 16px", fontSize: 13, color: "var(--red)", marginBottom: 20,
+              }}>
+                {error}
+              </div>
+            )}
+
+            {step === "input" ? (
+              <>
+                {/* Google OAuth button */}
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  style={{
+                    width: "100%", padding: "13px", borderRadius: 10,
+                    border: "1.5px solid var(--g200)", background: "var(--white)",
+                    fontSize: 14, fontWeight: 600, color: "var(--black)",
+                    cursor: "pointer", display: "flex", alignItems: "center",
+                    justifyContent: "center", gap: 10, marginBottom: 24,
+                    fontFamily: "var(--font)", transition: "border-color .15s",
+                    opacity: loading ? 0.5 : 1,
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Google ile devam et
+                </button>
+
+                {/* Divider */}
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+                  <div style={{ flex: 1, height: 1, background: "var(--g200)" }} />
+                  <span style={{ fontSize: 12, color: "var(--g400)", fontWeight: 500 }}>veya</span>
+                  <div style={{ flex: 1, height: 1, background: "var(--g200)" }} />
+                </div>
+
+                {/* Email / Phone tabs */}
+                <div style={{ display: "flex", gap: 2, marginBottom: 20, background: "var(--g100)", borderRadius: 10, padding: 3 }}>
+                  <button
+                    type="button"
+                    onClick={() => switchMethod("email")}
+                    style={{
+                      flex: 1, padding: "10px", borderRadius: 8, border: "none",
+                      fontSize: 13, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "var(--font)", transition: "all .15s",
+                      background: method === "email" ? "var(--black)" : "transparent",
+                      color: method === "email" ? "var(--white)" : "var(--g500)",
+                    }}
+                  >
+                    E-posta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMethod("phone")}
+                    style={{
+                      flex: 1, padding: "10px", borderRadius: 8, border: "none",
+                      fontSize: 13, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "var(--font)", transition: "all .15s",
+                      background: method === "phone" ? "var(--black)" : "transparent",
+                      color: method === "phone" ? "var(--white)" : "var(--g500)",
+                    }}
+                  >
+                    Telefon
+                  </button>
+                </div>
+
+                {/* Email form */}
+                {method === "email" && (
+                  <form onSubmit={handleSendEmailOtp}>
                     <input
                       type="email"
+                      placeholder="örnek@firma.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="ornek@firma.com"
                       required
                       autoFocus
-                      className="mt-1 w-full rounded-xl border-[1.5px] border-border bg-background px-4 py-3 text-sm transition-colors focus:border-foreground focus:outline-none"
+                      style={inputStyle}
+                      onFocus={(e) => (e.target.style.borderColor = "var(--black)")}
+                      onBlur={(e) => (e.target.style.borderColor = "var(--g200)")}
                     />
-                  </div>
+                    <button
+                      type="submit"
+                      disabled={loading || !email}
+                      style={{ ...primaryBtnStyle, opacity: loading || !email ? 0.5 : 1 }}
+                    >
+                      {loading ? "Gönderiliyor..." : "Doğrulama kodu gönder \u2192"}
+                    </button>
+                  </form>
+                )}
 
-                  <button
-                    type="submit"
-                    disabled={loading || !email}
-                    className="w-full rounded-lg bg-foreground px-4 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
-                  >
-                    {loading ? "Gönderiliyor..." : "Doğrulama Kodu Gönder"}
-                  </button>
-                </form>
-              )}
-
-              {/* Phone OTP Form */}
-              {method === "phone" && (
-                <form onSubmit={handleSendSmsOtp} className="space-y-4">
-                  <div>
-                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                      Telefon Numarası
-                    </label>
-                    <div className="mt-1 flex items-center rounded-xl border-[1.5px] border-border bg-background transition-colors focus-within:border-foreground">
-                      <span className="pl-4 text-sm text-muted-foreground select-none">
-                        +90
-                      </span>
+                {/* Phone form */}
+                {method === "phone" && (
+                  <form onSubmit={handleSendSmsOtp}>
+                    <div style={{
+                      display: "flex", alignItems: "center", border: "1.5px solid var(--g200)",
+                      borderRadius: 10, background: "var(--white)", marginBottom: 12,
+                      transition: "border-color .15s",
+                    }}>
+                      <span style={{ paddingLeft: 16, fontSize: 15, color: "var(--g400)", userSelect: "none" }}>+90</span>
                       <input
                         type="tel"
                         value={phone}
@@ -571,149 +609,180 @@ export default function LoginPage() {
                         required
                         autoFocus
                         maxLength={13}
-                        className="w-full bg-transparent px-2 py-3 text-sm focus:outline-none"
+                        style={{
+                          width: "100%", padding: "14px 12px", fontSize: 15,
+                          border: "none", background: "transparent",
+                          color: "var(--black)", outline: "none",
+                          fontFamily: "var(--font)", boxSizing: "border-box",
+                        }}
                       />
                     </div>
-                  </div>
+                    <button
+                      type="submit"
+                      disabled={loading || phone.replace(/\D/g, "").length < 10}
+                      style={{ ...primaryBtnStyle, opacity: loading || phone.replace(/\D/g, "").length < 10 ? 0.5 : 1 }}
+                    >
+                      {loading ? "Gönderiliyor..." : "Kod gönder \u2192"}
+                    </button>
+                  </form>
+                )}
+              </>
+            ) : (
+              <>
+                {/* OTP Verification */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20 }}>
+                  {otpDigits.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { inputRefs.current[i] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      disabled={loading}
+                      style={{
+                        width: 48, height: 56, textAlign: "center",
+                        fontSize: 20, fontWeight: 700,
+                        border: "1.5px solid var(--g200)", borderRadius: 10,
+                        background: "var(--white)", color: "var(--black)",
+                        outline: "none", fontFamily: "var(--font)",
+                        transition: "border-color .15s",
+                        opacity: loading ? 0.5 : 1,
+                      }}
+                      onFocus={(e) => (e.target.style.borderColor = "var(--black)")}
+                      onBlur={(e) => (e.target.style.borderColor = "var(--g200)")}
+                    />
+                  ))}
+                </div>
 
+                <button
+                  type="button"
+                  onClick={() => handleVerifyOtp(otpDigits)}
+                  disabled={loading || otpDigits.some((d) => d === "")}
+                  style={{ ...primaryBtnStyle, opacity: loading || otpDigits.some((d) => d === "") ? 0.5 : 1, marginBottom: 16 }}
+                >
+                  {loading ? "Doğrulanıyor..." : "Doğrula"}
+                </button>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: "var(--g400)" }}>
                   <button
-                    type="submit"
-                    disabled={loading || phone.replace(/\D/g, "").length < 10}
-                    className="w-full rounded-lg bg-foreground px-4 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
-                  >
-                    {loading ? "Gönderiliyor..." : "SMS Kodu Gönder"}
-                  </button>
-                </form>
-              )}
-            </>
-          ) : (
-            <>
-              {/* OTP Verification */}
-              <div className="flex justify-center gap-1.5 sm:gap-2.5">
-                {otpDigits.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => {
-                      inputRefs.current[i] = el;
+                    type="button"
+                    onClick={() => {
+                      setStep("input");
+                      setError(null);
+                      setOtpDigits(["", "", "", "", "", ""]);
                     }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    disabled={loading}
-                    className="h-12 w-10 rounded-lg border-[1.5px] border-border bg-background text-center text-lg font-bold transition-colors focus:border-foreground focus:outline-none disabled:opacity-50 sm:h-16 sm:w-12 sm:rounded-xl sm:text-xl"
-                  />
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      fontSize: 12, color: "var(--g400)", textDecoration: "underline",
+                      fontFamily: "var(--font)", padding: 0,
+                    }}
+                  >
+                    {method === "phone" ? "\u2190 Farklı numara" : "\u2190 Farklı e-posta"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={cooldown > 0 || loading}
+                    style={{
+                      background: "none", border: "none", cursor: cooldown > 0 ? "default" : "pointer",
+                      fontSize: 12, color: "var(--g400)",
+                      textDecoration: cooldown > 0 ? "none" : "underline",
+                      fontFamily: "var(--font)", padding: 0,
+                      opacity: cooldown > 0 ? 0.5 : 1,
+                    }}
+                  >
+                    {cooldown > 0 ? `Tekrar gönder (${cooldown}s)` : "Tekrar gönder"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Bottom link */}
+            <p style={{ fontSize: 13, color: "var(--g400)", marginTop: 32, textAlign: "center" }}>
+              Hesabınız yok mu?{" "}
+              <Link href="/analiz" style={{ color: "var(--black)", fontWeight: 700, textDecoration: "none" }}>
+                Ücretsiz başlayın &rarr;
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN — Content (55%) */}
+        <div
+          className="login-right-col"
+          style={{
+            width: "55%",
+            background: "var(--black)",
+            padding: "48px 56px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            color: "var(--white)",
+          }}
+        >
+          {isReturning ? (
+            /* Version B — Returning user */
+            <>
+              <span style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "rgba(255,255,255,.4)", marginBottom: 20, display: "block" }}>
+                Tekrar hoş geldiniz
+              </span>
+              <h2 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1.15, marginBottom: 40 }}>
+                Bu hafta için<br/>3 aksiyon hazır.
+              </h2>
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px", color: "rgba(255,255,255,.4)", marginBottom: 16 }}>Geçen hafta ne oldu</div>
+                {[
+                  { label: "GEO Skoru", val: "74", delta: "\u21913" },
+                  { label: "Ses Payı", val: "%26", delta: "\u21912" },
+                  { label: "Görünür Sorgu", val: "12", delta: "\u21912" },
+                ].map((m, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.1)", fontSize: 14 }}>
+                    <span style={{ color: "rgba(255,255,255,.5)" }}>{m.label}</span>
+                    <span style={{ fontWeight: 700, fontFamily: "monospace" }}>{m.val} <span style={{ color: "#22C55E" }}>{m.delta}</span></span>
+                  </div>
                 ))}
               </div>
-
-              <button
-                type="button"
-                onClick={() => handleVerifyOtp(otpDigits)}
-                disabled={loading || otpDigits.some((d) => d === "")}
-                className="w-full rounded-lg bg-foreground px-4 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
-              >
-                {loading ? "Doğrulanıyor..." : "Doğrula"}
-              </button>
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <button
-                  onClick={() => {
-                    setStep("input");
-                    setError(null);
-                    setOtpDigits(["", "", "", "", "", ""]);
-                  }}
-                  className="underline hover:text-foreground"
-                >
-                  {method === "phone"
-                    ? "← Farklı numara"
-                    : "← Farklı e-posta"}
-                </button>
-
-                <button
-                  onClick={handleResendOtp}
-                  disabled={cooldown > 0 || loading}
-                  className="underline hover:text-foreground disabled:no-underline disabled:opacity-50"
-                >
-                  {cooldown > 0
-                    ? `Tekrar gönder (${cooldown}s)`
-                    : "Tekrar gönder"}
-                </button>
+              <p style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,.9)", marginBottom: 8, lineHeight: 1.4 }}>
+                Rakibiniz bu hafta 2 sorguda sizi geçti.
+              </p>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,.4)" }}>Giriş yapın, görün.</p>
+            </>
+          ) : (
+            /* Version A — New user */
+            <>
+              <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 40, letterSpacing: "-.4px" }}>
+                GH7<span style={{ color: "rgba(255,255,255,.3)" }}>.ai</span>
               </div>
+              <h2 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1.15, marginBottom: 20 }}>
+                Yapay zeka sizi<br/>tanıyor mu?
+              </h2>
+              <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7, marginBottom: 40, maxWidth: 400 }}>
+                ChatGPT, Gemini, Perplexity ve Google AI Overview — müşterileriniz artık bu platformlara soruyor.
+              </p>
+              <div style={{ marginBottom: 40 }}>
+                {[
+                  { name: "Tespit Et", price: "Ücretsiz" },
+                  { name: "Takip Et", price: "\u20BA2.450/ay" },
+                  { name: "Çözüm Üret", price: "\u20BA4.450/ay" },
+                  { name: "Uygulat", price: "\u20BA9.450/ay" },
+                ].map((tier, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.1)", fontSize: 14 }}>
+                    <span style={{ color: "rgba(255,255,255,.7)", fontWeight: 600 }}>{tier.name}</span>
+                    <span style={{ fontFamily: "monospace", color: "rgba(255,255,255,.5)" }}>{tier.price}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,.35)", fontStyle: "italic", lineHeight: 1.6 }}>
+                &ldquo;12 haftada AI görünürlüğümüz %340 arttı.&rdquo;<br/>
+                <span style={{ fontStyle: "normal", fontWeight: 600, color: "rgba(255,255,255,.5)" }}>— ISITMAX &middot; 1M+ aylık ziyaretçi</span>
+              </p>
             </>
           )}
         </div>
       </div>
-
-      {/* Right — visual panel (desktop only) */}
-      <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:bg-foreground lg:p-12">
-        <div className="max-w-md">
-          <GH7Icon size={48} className="mb-10 text-background/20" />
-
-          <h2 className="text-2xl font-light tracking-[-0.04em] text-background">
-            Yapay zekalar seni
-            <br />
-            tanıyor mu?
-          </h2>
-
-          <p className="mt-4 text-sm leading-relaxed text-background/50">
-            Müşterilerin artık yapay zekaya soruyor. ChatGPT, Claude, Gemini,
-            Perplexity ve Google AI — seni öneriyorlar mı?
-          </p>
-
-          <div className="mt-10 space-y-5">
-            {[
-              {
-                step: "1",
-                title: "Adını veya firmanı yaz",
-                desc: "1-2 dakikada 5 yapay zekaya sorarız.",
-              },
-              {
-                step: "2",
-                title: "Sonucu gör",
-                desc: "Seni tanıyorlar mı, ne diyorlar, senin yerine kimi öneriyorlar.",
-              },
-              {
-                step: "3",
-                title: "Düzelt",
-                desc: "Ne yapman gerektiğini söyleriz. İstersen biz yaparız.",
-              },
-            ].map((item) => (
-              <div key={item.step} className="flex gap-4">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-background/20 text-xs font-bold text-background/40">
-                  {item.step}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-background">
-                    {item.title}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-background/40">
-                    {item.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 flex items-center gap-6 border-t border-background/10 pt-8">
-            {[
-              { label: "Yapay Zeka", value: "5" },
-              { label: "Sonuç Süresi", value: "1-2 dk" },
-              { label: "Ücretsiz", value: "Başla" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl font-light text-background">
-                  {stat.value}
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-background/30">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
