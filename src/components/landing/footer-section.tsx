@@ -1,14 +1,13 @@
+import { GH7Logo } from "@/components/gh7-logo";
+
 export function FooterSection() {
   return (
     <footer className="px-5 sm:px-10 pt-12 pb-7 border-t border-[#E5E7EB]">
       <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr_1fr] gap-8 max-w-[1120px] mx-auto mb-10">
         {/* Brand */}
         <div className="col-span-2 sm:col-span-1">
-          <div
-            className="font-extrabold text-[15px] mb-1.5"
-            style={{ letterSpacing: "-0.5px" }}
-          >
-            GH7<span className="text-[#9CA3AF]">.ai</span>
+          <div className="mb-1.5">
+            <GH7Logo size="default" />
           </div>
           <p className="text-[11px] text-[#9CA3AF] max-w-[220px] leading-[1.5]">
             Türkiye&apos;nin ilk GEO platformu. Yapay zeka görünürlüğünüzü
