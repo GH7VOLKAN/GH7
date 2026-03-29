@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { GH7Logo } from "@/components/gh7-logo";
 
 export function NavSection() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] px-5 sm:px-10 h-16 flex items-center justify-between bg-white/90 backdrop-blur-[16px] border-b border-[#E5E7EB]">
       <Link
         href="/"
-        className="flex items-center gap-0.5 font-extrabold text-lg tracking-tight text-[#09090B] no-underline"
-        style={{ letterSpacing: "-0.5px" }}
+        className="flex items-center no-underline"
       >
-        GH7
-        <span className="text-[#9CA3AF]">.ai</span>
+        <GH7Logo size="sm" />
       </Link>
 
       <div className="hidden sm:flex items-center gap-7">

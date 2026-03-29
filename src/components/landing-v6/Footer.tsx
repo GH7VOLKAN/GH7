@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { GH7Logo } from "@/components/gh7-logo";
 
 export default function Footer() {
   return (
     <footer className="v6-footer">
       <div className="footer-top">
         <div className="footer-brand">
-          <Link href="/" className="logo">GH7<span>.ai</span></Link>
+          <Link href="/" className="logo"><GH7Logo size="default" /></Link>
           <p className="footer-tagline">Yapay zeka gorunurluk platformu.</p>
         </div>
         <div className="footer-cols">

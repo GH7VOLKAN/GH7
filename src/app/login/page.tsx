@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { GH7Logo } from "@/components/gh7-logo";
 
 type Step = "input" | "otp";
 type LoginMethod = "email" | "phone";
@@ -424,10 +425,8 @@ export default function LoginPage() {
         >
           <div style={{ maxWidth: 400, margin: "0 auto", width: "100%" }}>
             {/* Logo */}
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "var(--black)", letterSpacing: "-.5px", marginBottom: 40 }}>
-                GH7<span style={{ color: "var(--g400)" }}>.ai</span>
-              </div>
+            <Link href="/" style={{ textDecoration: "none", display: "block", marginBottom: 40 }}>
+              <GH7Logo size="default" />
             </Link>
 
             {step === "input" ? (
@@ -753,8 +752,8 @@ export default function LoginPage() {
           ) : (
             /* Version A — New user */
             <>
-              <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 40, letterSpacing: "-.4px" }}>
-                GH7<span style={{ color: "rgba(255,255,255,.3)" }}>.ai</span>
+              <div style={{ marginBottom: 40 }}>
+                <GH7Logo size="lg" className="text-white" />
               </div>
               <h2 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1.15, marginBottom: 20 }}>
                 Yapay zeka sizi<br/>tanıyor mu?

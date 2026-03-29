@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { GH7Logo } from "@/components/gh7-logo";
 
 export default function HomePage() {
   const [activeKapi, setActiveKapi] = useState("firma");
@@ -51,7 +52,7 @@ export default function HomePage() {
     <>
       {/* NAV */}
       <nav className="gh7-nav">
-        <Link href="/" className="logo">GH7<span>.ai</span></Link>
+        <Link href="/" className="logo"><GH7Logo size="sm" /></Link>
         <ul className="nav-links">
           <li><a href="#cozum">Çözümler</a></li>
           <li><a href="#pricing">Fiyatlar</a></li>
@@ -402,7 +403,7 @@ export default function HomePage() {
         <div className="footer-inner">
           <div className="footer-top">
             <div>
-              <div className="footer-brand">GH7<span>.ai</span></div>
+              <div className="footer-brand"><GH7Logo size="default" /></div>
               <p className="footer-desc">Türkiye&apos;nin ilk GEO platformu. Bir ISITMAX projesidir.</p>
             </div>
             <div className="footer-cols">
