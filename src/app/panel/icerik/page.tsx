@@ -9,6 +9,11 @@ export default async function IcerikPage() {
       <PageHero
         title="İçerik Üretimi"
         description="Opus ile hazırlanmış blog ve içerik taslakları"
+        stats={[
+          { label: "Taslak", value: "3" },
+          { label: "Yayınlanan", value: "2" },
+          { label: "AI Referansı", value: "7", deltaType: "positive" },
+        ]}
       />
       <IcerikContent />
     </>

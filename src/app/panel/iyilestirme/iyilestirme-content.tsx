@@ -240,7 +240,10 @@ function ChecklistItemRow({ item, index }: { item: ChecklistItemFull; index: num
               </div>
             )}
             {item.canAgencyDo && (
-              <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50">
+              <button
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                onClick={() => window.location.href = '/panel/ajans-paketleri'}
+              >
                 Ajansınıza Gönderin
               </button>
             )}

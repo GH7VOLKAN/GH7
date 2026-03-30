@@ -10,6 +10,8 @@ import type {
 } from "@/lib/dal/overview";
 import type { PlatformKey } from "@/lib/types";
 import { platformLabels } from "@/lib/types";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 import {
   BarChart,
   Bar,
@@ -185,12 +187,7 @@ export function GorunurlukContent({
                   className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition"
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <div
-                      className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold"
-                      style={{ backgroundColor: PLATFORM_COLORS[ps.platform] ?? "#6B7280" }}
-                    >
-                      {(label?.name ?? ps.platform).charAt(0)}
-                    </div>
+                    <AIPlatformIcon platform={ps.platform as AIPlatform} size={20} colored />
                     <span className="text-sm font-medium text-gray-900">
                       {label?.name ?? ps.platform}
                     </span>
@@ -264,15 +261,10 @@ export function GorunurlukContent({
                         {Object.entries(p.platformResults).map(([plat, mentioned]) => (
                           <span
                             key={plat}
-                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white`}
-                            style={{
-                              backgroundColor: mentioned
-                                ? PLATFORM_COLORS[plat as PlatformKey] ?? "#6B7280"
-                                : "#D1D5DB",
-                            }}
+                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full ${!mentioned ? "opacity-30" : ""}`}
                             title={platformLabels[plat as PlatformKey]?.name ?? plat}
                           >
-                            {(platformLabels[plat as PlatformKey]?.name ?? plat).charAt(0)}
+                            <AIPlatformIcon platform={plat as AIPlatform} size={16} colored />
                           </span>
                         ))}
                       </div>
@@ -301,15 +293,10 @@ export function GorunurlukContent({
                         {Object.entries(p.platformResults).map(([plat, mentioned]) => (
                           <span
                             key={plat}
-                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white`}
-                            style={{
-                              backgroundColor: mentioned
-                                ? PLATFORM_COLORS[plat as PlatformKey] ?? "#6B7280"
-                                : "#D1D5DB",
-                            }}
+                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full ${!mentioned ? "opacity-30" : ""}`}
                             title={platformLabels[plat as PlatformKey]?.name ?? plat}
                           >
-                            {(platformLabels[plat as PlatformKey]?.name ?? plat).charAt(0)}
+                            <AIPlatformIcon platform={plat as AIPlatform} size={16} colored />
                           </span>
                         ))}
                       </div>
@@ -330,12 +317,7 @@ export function GorunurlukContent({
                 {recentMentions.slice(0, 10).map((m) => (
                   <div key={m.id} className="px-6 py-3 hover:bg-gray-50">
                     <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                        style={{ backgroundColor: PLATFORM_COLORS[m.platform] ?? "#6B7280" }}
-                      >
-                        {(platformLabels[m.platform]?.name ?? m.platform).charAt(0)}
-                      </span>
+                      <AIPlatformIcon platform={m.platform as AIPlatform} size={16} colored />
                       <span className="text-xs font-medium text-gray-900">
                         {platformLabels[m.platform]?.name ?? m.platform}
                       </span>

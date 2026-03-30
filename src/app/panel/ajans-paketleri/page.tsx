@@ -15,6 +15,11 @@ export default function AjansPaketleriPage() {
     <PageHero
       title="Ajans Paketleri"
       description="Tek seferlik GEO optimizasyon hizmetleri"
+      stats={[
+        { label: "Paket Sayısı", value: String(AJANS_PAKETLERI.length) },
+        { label: "En Düşük Fiyat", value: "₺990" },
+        { label: "En Popüler", value: "İçerik Opt." },
+      ]}
     />
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}

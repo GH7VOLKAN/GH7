@@ -7,6 +7,7 @@ import { RaporlarContent } from "./raporlar-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { hasAccess } from "@/lib/subscription";
 import { PageHero } from "@/components/panel/page-hero";
+import type { HeroStat } from "@/components/panel/page-hero";
 
 export interface ScanReport {
   id: string;
@@ -67,11 +68,24 @@ export default async function RaporlarPage() {
     );
   }
 
+  const completedReports = reports.filter((r) => r.status === "completed");
+  const heroStats: HeroStat[] = [
+    {
+      label: "Toplam Rapor",
+      value: String(reports.length),
+    },
+    {
+      label: "Tamamlanan",
+      value: String(completedReports.length),
+    },
+  ];
+
   return (
     <>
       <PageHero
         title="Raporlar"
         description="PDF rapor indirin, haftalık özet ayarlayın"
+        stats={heroStats}
       />
       <RaporlarContent
         reports={reports}

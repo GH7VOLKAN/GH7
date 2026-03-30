@@ -1,3 +1,10 @@
+export interface HeroStat {
+  label: string;
+  value: string;
+  delta?: string;
+  deltaType?: "positive" | "negative" | "neutral";
+}
+
 interface PageHeroProps {
   title: string;
   description: string;
@@ -6,9 +13,10 @@ interface PageHeroProps {
     label: string;
     href: string;
   };
+  stats?: HeroStat[];
 }
 
-export function PageHero({ title, description, badge, action }: PageHeroProps) {
+export function PageHero({ title, description, badge, action, stats }: PageHeroProps) {
   return (
     <div style={{
       background: "#FFFFFF",
@@ -46,6 +54,41 @@ export function PageHero({ title, description, badge, action }: PageHeroProps) {
           >
             {action.label} →
           </a>
+        )}
+
+        {stats && stats.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+            {stats.map((stat, i) => (
+              <div
+                key={i}
+                className="bg-white border border-gray-200 rounded-xl px-5 py-4"
+              >
+                <div className="text-xs font-medium text-gray-400 mb-1">
+                  {stat.label}
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[22px] font-extrabold text-gray-900 tracking-tight">
+                    {stat.value}
+                  </span>
+                  {stat.delta && (
+                    <span
+                      className={`text-xs font-semibold ${
+                        stat.deltaType === "positive"
+                          ? "text-green-600"
+                          : stat.deltaType === "negative"
+                          ? "text-red-600"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {stat.deltaType === "positive" && "↑ "}
+                      {stat.deltaType === "negative" && "↓ "}
+                      {stat.delta}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

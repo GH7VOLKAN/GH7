@@ -26,6 +26,12 @@ export default async function RakiplerPage() {
       <PageHero
         title="Senin Yerine Kim"
         description="Ürün bazlı rakip sıralaması ve rekabet analizi"
+        stats={[
+          { label: "Ürün Kategorisi", value: "8" },
+          { label: "Takip Edilen Rakip", value: "12" },
+          { label: "Lider Olduğunuz", value: "3", deltaType: "positive" },
+          { label: "Geride Olduğunuz", value: "5", deltaType: "negative" },
+        ]}
       />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <SeninYerineKim userName={userName} />

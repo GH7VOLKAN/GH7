@@ -9,6 +9,11 @@ export default async function AksiyonlarPage() {
       <PageHero
         title="Haftalık Aksiyonlar"
         description="Bu hafta yapmanız gereken optimizasyonlar"
+        stats={[
+          { label: "Bu Hafta", value: "5 aksiyon" },
+          { label: "Tamamlanan", value: "2/5" },
+          { label: "Tahmini Süre", value: "~3 saat" },
+        ]}
       />
       <AksiyonlarContent />
     </>
