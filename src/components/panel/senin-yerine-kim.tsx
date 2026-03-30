@@ -823,6 +823,7 @@ function ProductRankingTable({
           variant="outline"
           size="sm"
           className="text-xs text-gray-600"
+          onClick={() => window.location.href = '/panel/ajans-paketleri'}
         >
           <Send className="mr-1.5 size-3.5" />
           Ajansınıza Gönderin

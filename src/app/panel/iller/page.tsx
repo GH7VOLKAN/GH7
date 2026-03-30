@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { IllerContent } from "./iller-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { PageHero } from "@/components/panel/page-hero";
+import type { HeroStat } from "@/components/panel/page-hero";
 
 export interface CityData {
   name: string;
@@ -126,11 +127,34 @@ export default async function IllerPage() {
   const moderateCount = cities.filter((c) => c.status === "moderate").length;
   const weakCount = cities.filter((c) => c.status === "weak").length;
 
+  const heroStats: HeroStat[] = [
+    {
+      label: "Takip Edilen İl",
+      value: String(cities.length),
+    },
+    {
+      label: "Güçlü",
+      value: String(strongCount),
+      deltaType: "positive" as const,
+    },
+    {
+      label: "Orta",
+      value: String(moderateCount),
+      deltaType: "neutral" as const,
+    },
+    {
+      label: "Zayıf",
+      value: String(weakCount),
+      deltaType: weakCount > 0 ? "negative" as const : "neutral" as const,
+    },
+  ];
+
   return (
     <>
       <PageHero
         title="İl Bazlı Analiz"
         description="Hizmet verdiğiniz illerde yapay zeka görünürlüğünüz"
+        stats={heroStats}
       />
       <IllerContent
         cities={cities}

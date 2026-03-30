@@ -9,6 +9,11 @@ export default async function KorelasyonPage() {
       <PageHero
         title="Korelasyon Motoru"
         description="Yaptığınız aksiyonların sonuçları"
+        stats={[
+          { label: "Doğrulanmış Etki", value: "3" },
+          { label: "Ortalama Süre", value: "5 gün" },
+          { label: "Güven Düzeyi", value: "Yüksek", deltaType: "positive" },
+        ]}
       />
       <KorelasyonContent />
     </>

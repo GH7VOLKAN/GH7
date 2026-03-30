@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { IyilestirmeContent } from "./iyilestirme-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { PageHero } from "@/components/panel/page-hero";
+import type { HeroStat } from "@/components/panel/page-hero";
 
 export default async function IyilestirmePage() {
   const activeBrand = await getActiveBrand();
@@ -40,11 +41,31 @@ export default async function IyilestirmePage() {
     );
   }
 
+  const heroStats: HeroStat[] = [
+    {
+      label: "Tamamlanan",
+      value: `${checklistData.completed}/${checklistData.total}`,
+    },
+    {
+      label: "Site Skoru",
+      value: `${auditData.totalScore}/100`,
+    },
+    {
+      label: "Hazır Olma Skoru",
+      value: `%${overviewData.readinessScore}`,
+    },
+    {
+      label: "Aksiyon Sayısı",
+      value: String(actionsData.totalCount),
+    },
+  ];
+
   return (
     <>
       <PageHero
         title="İyileştirme"
         description="Site sağlığı, içerik kalitesi ve teknik optimizasyon önerileri"
+        stats={heroStats}
       />
       <IyilestirmeContent
         checklistData={checklistData}

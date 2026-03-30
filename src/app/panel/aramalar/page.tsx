@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { Search } from "lucide-react";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { PageHero } from "@/components/panel/page-hero";
+import type { HeroStat } from "@/components/panel/page-hero";
 
 export default async function AramalarPage() {
   const activeBrand = await getActiveBrand();
@@ -22,11 +23,23 @@ export default async function AramalarPage() {
 
   const data = await getPromptsData(brandId);
 
+  const heroStats: HeroStat[] = [
+    {
+      label: "Toplam Sorgu",
+      value: String(data.promptItems.length),
+    },
+    {
+      label: "Aktif Sorgu",
+      value: String(data.activeCount),
+    },
+  ];
+
   return (
     <>
       <PageHero
         title="Aramalar"
         description="Takip ettiğiniz sorguları yönetin ve yeni sorgular keşfedin"
+        stats={heroStats}
       />
       <AramalarContent
         promptItems={data.promptItems}

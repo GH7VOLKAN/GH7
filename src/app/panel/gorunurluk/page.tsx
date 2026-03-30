@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { GorunurlukContent } from "./gorunurluk-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { PageHero } from "@/components/panel/page-hero";
+import type { HeroStat } from "@/components/panel/page-hero";
 
 export default async function GorunurlukPage() {
   const activeBrand = await getActiveBrand();
@@ -27,11 +28,33 @@ export default async function GorunurlukPage() {
     );
   }
 
+  const heroStats: HeroStat[] = [
+    {
+      label: "Platform Sayısı",
+      value: String(overviewData.platformStats.length),
+    },
+    {
+      label: "Toplam Tarama",
+      value: String(overviewData.totalResultCount),
+    },
+    {
+      label: "Bahsedilme",
+      value: String(overviewData.totalMentionCount),
+    },
+    {
+      label: "Bahsedilme Skoru",
+      value: `%${overviewData.mentionScore}`,
+      delta: overviewData.mentionTrend > 0 ? `+${overviewData.mentionTrend}` : overviewData.mentionTrend < 0 ? String(overviewData.mentionTrend) : undefined,
+      deltaType: overviewData.mentionTrend > 0 ? "positive" : overviewData.mentionTrend < 0 ? "negative" : "neutral",
+    },
+  ];
+
   return (
     <>
       <PageHero
         title="Görünürlük"
         description="Platform ve sorgu bazlı detaylı görünürlük analizi"
+        stats={heroStats}
       />
       <GorunurlukContent
         mentionScore={overviewData.mentionScore}
