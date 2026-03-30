@@ -10,6 +10,7 @@ import { sendNotification } from "@/lib/notifications/send";
 import { makeCacheKey } from "@/lib/redis";
 import { withCache } from "@/lib/cache";
 import { generateQueryVariations } from "@/lib/query-variation";
+import { feedScanToQueryPages } from "@/lib/query-pages/feed";
 import type { AIProvider } from "./providers/base";
 import type { AnalysisResult, AIResponse } from "./types";
 
@@ -327,6 +328,11 @@ export async function executeScan(
       where: { id: scanId },
       data: { status: "completed", completedAt: new Date() },
     });
+
+    // Non-blocking: feed scan results to query pages pipeline
+    feedScanToQueryPages(scanId, brandId).catch((err) =>
+      console.error("[scan-engine] Query pages pipeline error:", err),
+    );
 
     const totalMs = Date.now() - scanStart;
     console.log(
