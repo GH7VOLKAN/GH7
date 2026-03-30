@@ -1,5 +1,6 @@
 import { PanelSidebar } from "@/components/panel/panel-sidebar";
 import { PanelMobileNav } from "@/components/panel/panel-mobile-nav";
+import { PageLoadingBar } from "@/components/panel/page-loading-bar";
 import { PanelDataProvider } from "@/contexts/panel-context";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { redirect } from "next/navigation";
@@ -58,6 +59,7 @@ export default async function PanelLayout({
       plan={plan}
       isDemo={isDemo}
     >
+      <PageLoadingBar />
       <div className="min-h-screen bg-white">
         <PanelSidebar
           brandName={brandData?.name ?? "ISITMAX"}
