@@ -30,10 +30,16 @@ export default function LoginPage() {
     const shouldLogout = params.get("logout") === "true";
     const supabase = createClient();
 
-    // Check if returning user
+    // Check if returning user — email'i otomatik doldur
     const savedEmail = localStorage.getItem("gh7_email");
     if (savedEmail || params.get("returning")) {
       setIsReturning(true);
+      if (savedEmail && savedEmail.includes("@")) {
+        setEmail(savedEmail);
+      } else if (savedEmail && savedEmail.startsWith("+90")) {
+        setMethod("phone");
+        setPhone(savedEmail.replace("+90", "").replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4"));
+      }
     }
 
     async function handleSessionCleanup() {
@@ -50,7 +56,12 @@ export default function LoginPage() {
         setSessionCleared(true);
         window.history.replaceState({}, "", "/login");
       } else if (session) {
-        setExistingEmail(session.user.email ?? null);
+        // Aktif session var — otomatik yönlendir
+        if (session.user.email) {
+          localStorage.setItem("gh7_email", session.user.email);
+        }
+        router.push("/panel/genel");
+        return;
       }
     }
 
@@ -265,7 +276,10 @@ export default function LoginPage() {
           return;
         }
 
-        router.push("/dashboard/genel");
+        // Başarılı giriş — email'i kaydet ve yönlendir
+        const userEmail = method === "email" ? email : `+90${phone.replace(/\D/g, "")}`;
+        if (userEmail) localStorage.setItem("gh7_email", userEmail);
+        router.push("/panel/genel");
         router.refresh();
       } catch {
         setError("Bağlantı hatası. Lütfen tekrar deneyin.");
