@@ -1,5 +1,7 @@
 import type { PlatformKey } from "@/lib/types";
 import { platformLabels } from "@/lib/types";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 const ALL_PLATFORMS: PlatformKey[] = [
   "chatgpt",
@@ -21,11 +23,15 @@ export function PlatformDots({ activePlatforms }: PlatformDotsProps) {
         return (
           <span
             key={platform}
-            className={`inline-block h-2.5 w-2.5 rounded-full ${
-              isActive ? "bg-foreground" : "bg-border"
-            }`}
+            className={`inline-flex ${isActive ? "" : "opacity-25 grayscale"}`}
             title={platformLabels[platform]?.name ?? platform}
-          />
+          >
+            <AIPlatformIcon
+              platform={platform as AIPlatform}
+              size={14}
+              colored={isActive}
+            />
+          </span>
         );
       })}
     </div>

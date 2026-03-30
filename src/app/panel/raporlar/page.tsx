@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { RaporlarContent } from "./raporlar-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { hasAccess } from "@/lib/subscription";
+import { PageHero } from "@/components/panel/page-hero";
 
 export interface ScanReport {
   id: string;
@@ -68,6 +69,10 @@ export default async function RaporlarPage() {
 
   return (
     <>
+      <PageHero
+        title="Raporlar"
+        description="PDF rapor indirin, haftalık özet ayarlayın"
+      />
       <RaporlarContent
         reports={reports}
         plan={plan}

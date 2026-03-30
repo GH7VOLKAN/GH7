@@ -6,6 +6,7 @@ import { MapPin } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { IllerContent } from "./iller-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import { PageHero } from "@/components/panel/page-hero";
 
 export interface CityData {
   name: string;
@@ -127,6 +128,10 @@ export default async function IllerPage() {
 
   return (
     <>
+      <PageHero
+        title="İl Bazlı Analiz"
+        description="Hizmet verdiğiniz illerde yapay zeka görünürlüğünüz"
+      />
       <IllerContent
         cities={cities}
         mapCityData={mapCityData}

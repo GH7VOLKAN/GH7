@@ -1,6 +1,7 @@
 import { getActiveBrand } from "@/lib/dal/brand";
 import { redirect } from "next/navigation";
 import { AyarlarContent } from "./ayarlar-content";
+import { PageHero } from "@/components/panel/page-hero";
 
 export default async function AyarlarPage() {
   const activeBrand = await getActiveBrand();
@@ -11,6 +12,11 @@ export default async function AyarlarPage() {
   const plan = activeBrand.plan ?? "free";
 
   return (
+    <>
+    <PageHero
+      title="Ayarlar"
+      description="Hesap, marka ve bildirim ayarlarınız"
+    />
     <AyarlarContent
       brandName={brand.name}
       brandDomain={brand.domain ?? ""}
@@ -19,5 +25,6 @@ export default async function AyarlarPage() {
       profileFullName={profile.fullName ?? ""}
       plan={plan}
     />
+    </>
   );
 }

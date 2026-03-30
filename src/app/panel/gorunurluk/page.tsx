@@ -5,6 +5,7 @@ import { EyeIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { GorunurlukContent } from "./gorunurluk-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import { PageHero } from "@/components/panel/page-hero";
 
 export default async function GorunurlukPage() {
   const activeBrand = await getActiveBrand();
@@ -28,6 +29,10 @@ export default async function GorunurlukPage() {
 
   return (
     <>
+      <PageHero
+        title="Görünürlük"
+        description="Platform ve sorgu bazlı detaylı görünürlük analizi"
+      />
       <GorunurlukContent
         mentionScore={overviewData.mentionScore}
         mentionTrend={overviewData.mentionTrend}

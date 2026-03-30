@@ -4,6 +4,7 @@ import { AramalarContent } from "@/components/panel/aramalar-content";
 import { EmptyState } from "@/components/panel/empty-state";
 import { Search } from "lucide-react";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import { PageHero } from "@/components/panel/page-hero";
 
 export default async function AramalarPage() {
   const activeBrand = await getActiveBrand();
@@ -23,6 +24,10 @@ export default async function AramalarPage() {
 
   return (
     <>
+      <PageHero
+        title="Aramalar"
+        description="Takip ettiğiniz sorguları yönetin ve yeni sorgular keşfedin"
+      />
       <AramalarContent
         promptItems={data.promptItems}
         activeCount={data.activeCount}

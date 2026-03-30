@@ -8,6 +8,7 @@ import { WrenchIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { IyilestirmeContent } from "./iyilestirme-content";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import { PageHero } from "@/components/panel/page-hero";
 
 export default async function IyilestirmePage() {
   const activeBrand = await getActiveBrand();
@@ -41,6 +42,10 @@ export default async function IyilestirmePage() {
 
   return (
     <>
+      <PageHero
+        title="İyileştirme"
+        description="Site sağlığı, içerik kalitesi ve teknik optimizasyon önerileri"
+      />
       <IyilestirmeContent
         checklistData={checklistData}
         actionsData={actionsData}
