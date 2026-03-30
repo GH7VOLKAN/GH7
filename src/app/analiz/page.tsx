@@ -505,13 +505,22 @@ function AnalizPageInner() {
     setStep(0);
   };
 
+  // Telefon numarasını normalize et: her formattan 905XXXXXXXXX formatına çevir
+  function normalizePhone(raw: string): string {
+    let digits = raw.replace(/\D/g, ""); // Sadece rakamlar
+    if (digits.startsWith("90") && digits.length === 12) return digits; // Zaten doğru
+    if (digits.startsWith("0") && digits.length === 11) digits = digits.slice(1); // 05XX → 5XX
+    if (digits.length === 10 && digits.startsWith("5")) return "90" + digits; // 5XX → 905XX
+    if (digits.startsWith("90") && digits.length > 12) return digits.slice(0, 12); // Fazla hane kes
+    return "90" + digits; // Fallback
+  }
+
   const handleSendOtp = async () => {
     if (!formData.email || formData.phone.length < 6) return;
     setOtpLoading(true);
     setOtpError(null);
     try {
-      const phone = formData.phone.replace(/\s/g, "");
-      const fullPhone = phone.startsWith("90") ? phone : `90${phone}`;
+      const fullPhone = normalizePhone(formData.phone);
       const res = await fetch("/api/auth/send-sms-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -537,8 +546,7 @@ function AnalizPageInner() {
     setOtpLoading(true);
     setOtpError(null);
     try {
-      const phone = formData.phone.replace(/\s/g, "");
-      const fullPhone = phone.startsWith("90") ? phone : `90${phone}`;
+      const fullPhone = normalizePhone(formData.phone);
       const res = await fetch("/api/auth/verify-sms-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
