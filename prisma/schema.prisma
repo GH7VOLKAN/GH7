@@ -386,3 +386,71 @@ model Lead {
 
   @@map("leads")
 }
+
+// ─── Query-Based Analysis Pages ─────────────────────
+
+model QueryPage {
+  id                    String   @id @default(uuid())
+  slug                  String   @unique
+  originalQuery         String   @map("original_query")
+  normalizedQuery       String   @map("normalized_query")
+  pageTitle             String   @map("page_title")
+  metaDescription       String?  @map("meta_description")
+  queryType             String   @map("query_type") // siralama, karsilastirma, bilgi, fiyat, tavsiye
+  sector                String?
+  location              String?
+  totalPlatformsResponded Int    @default(0) @map("total_platforms_responded")
+  totalFirmsMentioned   Int      @default(0) @map("total_firms_mentioned")
+  totalSourcesCited     Int      @default(0) @map("total_sources_cited")
+  timesQueried          Int      @default(1) @map("times_queried")
+  summaryText           String?  @map("summary_text")
+  platformResponses     Json?    @map("platform_responses")
+  firmRanking           Json?    @map("firm_ranking")
+  sourceAnalysis        Json?    @map("source_analysis")
+  crossPlatformNotes    String?  @map("cross_platform_notes")
+  visibilityTips        String?  @map("visibility_tips")
+  published             Boolean  @default(true)
+  lastQueriedAt         DateTime @default(now()) @map("last_queried_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  mentions              QueryPageMention[]
+  history               QueryPageHistory[]
+
+  @@map("query_pages")
+}
+
+model QueryPageMention {
+  id                   String    @id @default(uuid())
+  queryPageId          String    @map("query_page_id")
+  queryPage            QueryPage @relation(fields: [queryPageId], references: [id], onDelete: Cascade)
+  firmName             String    @map("firm_name")
+  firmWebsite          String?   @map("firm_website")
+  firmNormalized       String    @map("firm_normalized")
+  mentionedOnPlatforms Json      @map("mentioned_on_platforms")
+  platformCount        Int       @map("platform_count")
+  mentionContexts      Json?     @map("mention_contexts")
+  sourceUrls           Json?     @map("source_urls")
+  sourceCount          Int       @default(0) @map("source_count")
+  rankPosition         Int?      @map("rank_position")
+  isVerified           Boolean   @default(false) @map("is_verified")
+  claimedByProfileId   String?   @map("claimed_by_profile_id")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@unique([queryPageId, firmNormalized])
+  @@map("query_page_mentions")
+}
+
+model QueryPageHistory {
+  id                       String    @id @default(uuid())
+  queryPageId              String    @map("query_page_id")
+  queryPage                QueryPage @relation(fields: [queryPageId], references: [id], onDelete: Cascade)
+  recordedAt               DateTime  @default(now()) @map("recorded_at")
+  firmRankingSnapshot      Json?     @map("firm_ranking_snapshot")
+  platformResponsesSnapshot Json?    @map("platform_responses_snapshot")
+  triggeredByProfileId     String?   @map("triggered_by_profile_id")
+  createdAt                DateTime  @default(now()) @map("created_at")
+
+  @@map("query_page_history")
+}
