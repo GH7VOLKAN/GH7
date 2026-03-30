@@ -61,13 +61,22 @@ interface FormData {
 /* ------------------------------------------------------------------ */
 
 const SECTORS = [
-  "Isıtma Sistemleri",
-  "İnşaat",
-  "Sağlık",
-  "Hukuk",
-  "Restoran",
-  "Otel",
+  "Isıtma ve Tesisat",
+  "İnşaat ve Mimarlık",
+  "Sağlık ve Klinik",
+  "Hukuk ve Danışmanlık",
+  "Restoran ve Yiyecek",
+  "Otel ve Konaklama",
   "E-ticaret",
+  "Güzellik ve Bakım",
+  "Eğitim",
+  "Otomotiv",
+  "Teknoloji",
+  "Gayrimenkul",
+  "Finans ve Sigorta",
+  "Lojistik ve Taşımacılık",
+  "Tarım ve Hayvancılık",
+  "Enerji",
   "Diğer",
 ];
 
@@ -95,16 +104,16 @@ const ALL_CITIES = [
 ];
 
 const DEFAULT_KEYWORDS = [
-  "villa banyosu için elektrikli yerden ısıtma sistemleri",
-  "yüzey altı boru ısıtma kablosu seçenekleri",
-  "endüstriyel varil ısıtma çeketi fiyat karşılaştırması",
-  "serada enerji verimli ısıtma sistemi önerileri",
-  "çatıda kar buz eritme kablo çözümleri",
-  "karbon film yerden ısıtma avantajları",
-  "elektrikli yerden ısıtma termostat seçimi",
-  "boru donma önleme ısıtma kablosu",
-  "sera toprak altı ısıtma projeleri",
-  "endüstriyel heat trace kablo sistemleri",
+  "yerden ısıtma yaptıracağım firma önerir misin",
+  "Türkiye'de en iyi yerden ısıtma firması hangisi",
+  "heat trace boru ısıtma kablosu nereden alabilirim",
+  "endüstriyel varil ısıtma ceketi en iyi marka",
+  "çatı kar eritme sistemi kuracağım firma öner",
+  "sera ısıtma sistemi hangi firma yapıyor",
+  "yerden ısıtma mı radyatör mü daha ekonomik",
+  "elektrikli yerden ısıtma en güvenilir marka",
+  "boru donma önleme kablosu teklif nereden alırım",
+  "karbon film yerden ısıtma mı kablolu mu tercih etmeliyim",
 ];
 
 const LOADING_STEPS = [
@@ -1802,7 +1811,7 @@ function AnalizPageInner() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              href="/giris"
+              href="/panel/abonelik"
               className="bg-gray-900 text-white rounded-lg px-8 py-3 font-medium hover:bg-gray-800 transition-colors"
             >
               Haftalık Takibi Başlat &rarr; Pro
