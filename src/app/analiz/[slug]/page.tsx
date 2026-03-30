@@ -51,13 +51,18 @@ export const revalidate = 3600;
 // ─── Static Params ──────────────────────────────────
 
 export async function generateStaticParams() {
-  const pages = await prisma.queryPage.findMany({
-    where: { published: true },
-    select: { slug: true },
-    orderBy: { timesQueried: "desc" },
-    take: 100,
-  });
-  return pages.map((p) => ({ slug: p.slug }));
+  try {
+    const pages = await prisma.queryPage.findMany({
+      where: { published: true },
+      select: { slug: true },
+      orderBy: { timesQueried: "desc" },
+      take: 100,
+    });
+    return pages.map((p) => ({ slug: p.slug }));
+  } catch {
+    // DB not available during build (CI)
+    return [];
+  }
 }
 
 // ─── Metadata ───────────────────────────────────────
