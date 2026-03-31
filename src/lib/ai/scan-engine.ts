@@ -7,8 +7,6 @@ import { updateCompetitorScores } from "./competitor-scorer";
 import { discoverSourceDomains } from "./source-discoverer";
 import { verifyScanChecklistItems } from "./checklist-verifier";
 import { sendNotification } from "@/lib/notifications/send";
-import { makeCacheKey } from "@/lib/redis";
-import { withCache } from "@/lib/cache";
 import { generateQueryVariations } from "@/lib/query-variation";
 import { feedScanToQueryPages } from "@/lib/query-pages/feed";
 import type { AIProvider } from "./providers/base";
@@ -17,44 +15,24 @@ import type { AnalysisResult, AIResponse } from "./types";
 // Process prompts in parallel batches for speed
 const PROMPT_BATCH_SIZE = 5;
 
-// In-memory fallback cache (1 hour TTL) — used when Redis is unavailable
-const memCache = new Map<string, { data: AIResponse; expiresAt: number }>();
-const MEM_TTL = 60 * 60 * 1000; // 1 hour
-
 /**
- * Cached AI call — SHA256 key, 6-hour Redis TTL (via withCache) + 1-hour in-memory fallback.
- * Same prompt+platform always returns cached response if available.
- * Cross-user safe: brandless prompts mean same key = same result.
+ * Direct AI call — NO CACHE.
+ *
+ * Her sorgu her seferinde taze yanıt alır. Neden:
+ * - Temperature 0.7 ile her yanıt farklı → mention rate ölçümü
+ * - "100 kişi sorsa kaçında çıkarsın" simülasyonu
+ * - Cache'lemek bu ölçümü bozar
+ *
+ * Cache sadece şuralarda kullanılır:
+ * - PageSpeed (24 saat) — site performansı sık değişmez
+ * - Sonar onboarding (12 saat) — firma profili kısa sürede değişmez
+ * - Rate limiting — Redis ile
  */
-async function cachedSendPrompt(
+async function sendPromptDirect(
   provider: AIProvider,
   promptText: string,
 ): Promise<AIResponse> {
-  // Cache key includes week number — spec F.7: SHA256(prompt + platform + week_number)
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-  const cacheKey = makeCacheKey("ai", provider.platform, promptText, String(weekNum));
-
-  // 1. Check in-memory fallback first (fastest)
-  const memEntry = memCache.get(cacheKey);
-  if (memEntry && memEntry.expiresAt > Date.now()) {
-    return memEntry.data;
-  }
-
-  // 2. Use withCache for Redis + fetcher (graceful fallback if Redis unavailable)
-  const { data: response } = await withCache<AIResponse>(
-    cacheKey,
-    6 * 60 * 60, // 6 hours
-    () => provider.sendPrompt(promptText),
-  );
-
-  // 3. Cache successful responses in memory layer too
-  if (!response.error) {
-    memCache.set(cacheKey, { data: response, expiresAt: Date.now() + MEM_TTL });
-  }
-
-  return response;
+  return provider.sendPrompt(promptText);
 }
 
 export async function executeScan(
@@ -118,7 +96,7 @@ export async function executeScan(
 
               // Tum varyasyonlari paralel gonder
               const variationResults = await Promise.allSettled(
-                variations.map((v) => cachedSendPrompt(provider, v)),
+                variations.map((v) => sendPromptDirect(provider, v)),
               );
 
               // Basarili sonuclari topla
