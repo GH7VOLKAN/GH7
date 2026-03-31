@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PanelSidebar } from "@/components/panel/panel-sidebar";
 import { PanelMobileNav } from "@/components/panel/panel-mobile-nav";
 import { PageLoadingBar } from "@/components/panel/page-loading-bar";
@@ -59,7 +60,9 @@ export default async function PanelLayout({
       plan={plan}
       isDemo={isDemo}
     >
-      <PageLoadingBar />
+      <Suspense fallback={null}>
+        <PageLoadingBar />
+      </Suspense>
       <div className="min-h-screen bg-white">
         <PanelSidebar
           brandName={brandData?.name ?? "ISITMAX"}
@@ -68,7 +71,9 @@ export default async function PanelLayout({
         />
         <main className="md:pl-64">
           <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
-            {children}
+            <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" /></div>}>
+              {children}
+            </Suspense>
           </div>
         </main>
         <PanelMobileNav />

@@ -16,18 +16,38 @@ export default async function IyilestirmePage() {
   if (!activeBrand?.brand) redirect("/panel");
   const brandId = activeBrand.brand.id;
 
-  const [checklistData, actionsData, auditData, overviewData] =
-    await Promise.all([
+  let checklistData, actionsData, auditData, overviewData;
+  try {
+    [checklistData, actionsData, auditData, overviewData] = await Promise.all([
       getChecklistData(brandId),
       getActionsData(brandId),
       getSiteAuditData(brandId),
       getOverviewData(brandId),
     ]);
+  } catch (error) {
+    console.error("[iyilestirme] Data fetch error:", error);
+    return (
+      <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
+        <EmptyState
+          icon={WrenchIcon}
+          title="Veri yüklenirken hata oluştu"
+          description="İyileştirme verileri yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin."
+        />
+      </div>
+    );
+  }
+
+  const completedCount = checklistData?.completed ?? 0;
+  const totalCount = checklistData?.total ?? 0;
+  const totalActionsCount = actionsData?.totalCount ?? 0;
+  const totalScore = auditData?.totalScore ?? 0;
+  const totalChecks = auditData?.totalChecks ?? 0;
+  const readinessScore = overviewData?.readinessScore ?? 0;
 
   const hasData =
-    checklistData.total > 0 ||
-    actionsData.totalCount > 0 ||
-    auditData.totalChecks > 0;
+    totalCount > 0 ||
+    totalActionsCount > 0 ||
+    totalChecks > 0;
 
   if (!hasData) {
     return (
@@ -44,19 +64,19 @@ export default async function IyilestirmePage() {
   const heroStats: HeroStat[] = [
     {
       label: "Tamamlanan",
-      value: `${checklistData.completed}/${checklistData.total}`,
+      value: `${completedCount}/${totalCount}`,
     },
     {
       label: "Site Skoru",
-      value: `${auditData.totalScore}/100`,
+      value: `${totalScore}/100`,
     },
     {
       label: "Hazır Olma Skoru",
-      value: `%${overviewData.readinessScore}`,
+      value: `%${readinessScore}`,
     },
     {
       label: "Aksiyon Sayısı",
-      value: String(actionsData.totalCount),
+      value: String(totalActionsCount),
     },
   ];
 
@@ -71,7 +91,7 @@ export default async function IyilestirmePage() {
         checklistData={checklistData}
         actionsData={actionsData}
         auditData={auditData}
-        readinessScore={overviewData.readinessScore}
+        readinessScore={readinessScore}
       />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageBottomCTA />

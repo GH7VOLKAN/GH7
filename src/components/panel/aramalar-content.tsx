@@ -24,6 +24,8 @@ import { EmptyState } from "@/components/panel/empty-state";
 import type { PromptItemData } from "@/lib/dal/prompts";
 import type { PlatformKey } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 // ---------------------------------------------------------------------------
 // Provider config
@@ -459,15 +461,18 @@ export function AramalarContent({
               )}
             </div>
 
-            {/* Provider dots showing which platforms mentioned brand */}
+            {/* Provider icons showing which platforms mentioned brand */}
             <div className="flex items-center gap-1">
               {PROVIDERS.map((provider) => {
                 const mentioned = item.modelResults[provider.key];
                 return (
-                  <ProviderDot
+                  <span
                     key={provider.key}
-                    color={mentioned ? provider.color : "#e5e5e5"}
-                  />
+                    className={`inline-flex ${!mentioned ? "opacity-20" : ""}`}
+                    title={provider.label}
+                  >
+                    <AIPlatformIcon platform={provider.key as AIPlatform} size={16} colored />
+                  </span>
                 );
               })}
             </div>

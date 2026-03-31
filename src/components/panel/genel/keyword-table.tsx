@@ -3,6 +3,8 @@
 import type { PromptSummaryItem } from "@/lib/dal/overview";
 import type { PlatformKey } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 const PLATFORM_LABELS: Record<PlatformKey, string> = {
   chatgpt: "ChatGPT",
@@ -48,7 +50,10 @@ export function KeywordTable({ prompts }: KeywordTableProps) {
                   key={p}
                   className="text-center py-3 px-2 text-gray-500 font-medium text-xs"
                 >
-                  {PLATFORM_LABELS[p]}
+                  <div className="flex items-center justify-center gap-1">
+                    <AIPlatformIcon platform={p as AIPlatform} size={14} colored />
+                    <span>{PLATFORM_LABELS[p]}</span>
+                  </div>
                 </th>
               ))}
             </tr>
@@ -89,11 +94,9 @@ export function KeywordTable({ prompts }: KeywordTableProps) {
                   </td>
                   {(Object.keys(PLATFORM_LABELS) as PlatformKey[]).map((p) => (
                     <td key={p} className="py-3 px-2 text-center">
-                      {kw.platformResults[p] ? (
-                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" />
-                      ) : (
-                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-gray-200" />
-                      )}
+                      <span className={`inline-flex items-center justify-center ${!kw.platformResults[p] ? "opacity-20" : ""}`}>
+                        <AIPlatformIcon platform={p as AIPlatform} size={16} colored />
+                      </span>
                     </td>
                   ))}
                 </tr>
