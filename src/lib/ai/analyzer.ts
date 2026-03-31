@@ -180,20 +180,17 @@ export async function analyzeResponse(
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
       temperature: 0.7,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" }, // 5dk cache — batch'te %90 tasarruf
+        },
+      ],
       messages: [
         {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: SYSTEM_PROMPT,
-              cache_control: { type: "ephemeral" },
-            },
-            {
-              type: "text",
-              text: `Marka: "${brandName}"\n\nAI Platformunun Yanıtı:\n${rawResponse.slice(0, 3000)}`,
-            },
-          ],
+          content: `Marka: "${brandName}"\n\nAI Platformunun Yanıtı:\n${rawResponse.slice(0, 3000)}`,
         },
       ],
     });

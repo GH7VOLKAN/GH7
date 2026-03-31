@@ -335,6 +335,9 @@ h2.kapi-title{font-size:clamp(32px,4vw,52px);font-weight:800;letter-spacing:-.04
 .btn-submit{font-family:var(--font);font-size:15px;font-weight:700;color:var(--white);background:var(--black);border:none;cursor:pointer;padding:15px 24px;border-radius:10px;white-space:nowrap;transition:opacity .15s}
 .btn-submit:hover{opacity:.75}
 .kapi-note{font-size:13px;color:var(--g400)}
+.kapi-platforms,.final-platforms{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
+.kapi-platform-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;color:var(--g600);background:var(--white)}
+.kapi-platform-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
 
 /* ── ÇÖZÜM BÖLÜMÜ ────────────────────── */
 .cozum-sec{background:var(--g50);border-top:1px solid var(--g200);border-bottom:1px solid var(--g200);padding:96px 48px}
@@ -618,6 +621,37 @@ footer.gh7-footer{background:var(--white);border-top:1px solid var(--g200);paddi
 
 /* full-width card */
 .dc-full{background:var(--white);padding:28px;border:1px solid var(--g200);border-radius:16px;margin-bottom:2px}
+
+/* ── TURKEY MAP SECTION (landing) ───────── */
+.map-sec{padding:80px 40px;background:var(--g50)}
+.map-inner{max-width:1100px;margin:0 auto}
+.map-grid{display:grid;grid-template-columns:1fr 240px;gap:40px;align-items:start}
+.map-visual{position:relative;aspect-ratio:2/1;background:var(--g100);border-radius:16px;border:1px solid var(--g200)}
+.map-pin{position:absolute;display:flex;align-items:center;gap:6px}
+.map-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--white);box-shadow:0 1px 4px rgba(0,0,0,.12);flex-shrink:0}
+.map-pin-label{font-size:11px;font-weight:600;color:var(--g600);white-space:nowrap}
+.map-stats{display:flex;flex-direction:column;gap:12px}
+.map-stat{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--g600)}
+.map-stat-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+.map-stat-num{font-weight:700;color:var(--black)}
+.map-cta{display:inline-block;margin-top:12px;font-size:14px;font-weight:700;color:var(--black);text-decoration:none}
+.map-cta:hover{text-decoration:underline}
+
+/* ── AJANS SECTION (landing) ───────────── */
+.ajans-sec{padding:80px 40px;background:var(--white)}
+.ajans-inner{max-width:1100px;margin:0 auto}
+.ajans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--g200);border-radius:16px;overflow:hidden;border:1px solid var(--g200)}
+.ajans-card{background:var(--white);padding:32px}
+.ajans-icon{font-size:24px;display:block;margin-bottom:12px}
+.ajans-title{font-size:16px;font-weight:700;color:var(--black);margin-bottom:8px}
+.ajans-desc{font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:16px}
+.ajans-link{font-size:13px;font-weight:600;color:var(--black);text-decoration:none}
+.ajans-link:hover{text-decoration:underline}
+
+@media(max-width:768px){
+  .map-grid{grid-template-columns:1fr}
+  .ajans-grid{grid-template-columns:1fr}
+}
 
 /* ── DASHBOARD RESPONSIVE ─────────────── */
 @media(max-width:1100px){

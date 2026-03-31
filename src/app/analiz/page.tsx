@@ -117,15 +117,15 @@ const DEFAULT_KEYWORDS = [
 ];
 
 const LOADING_STEPS = [
-  { text: "Firmanız araştırılıyor...", duration: 1200, icon: Globe },
-  { text: "Ürünleriniz taranıyor...", duration: 1000, icon: Package },
-  { text: "ChatGPT'ye soruyoruz...", duration: 1000, icon: MessageSquare },
-  { text: "Gemini'den yanıt alınıyor...", duration: 1000, icon: MessageSquare },
-  { text: "Perplexity kontrol ediliyor...", duration: 1000, icon: MessageSquare },
-  { text: "Claude'a danışıyoruz...", duration: 1000, icon: MessageSquare },
-  { text: "Google AI Overview taranıyor...", duration: 1000, icon: MessageSquare },
-  { text: "Ürün bazlı rakipleriniz tespit ediliyor...", duration: 800, icon: BarChart3 },
-  { text: "Raporunuz hazırlanıyor...", duration: 800, icon: FileText },
+  { text: "Firmanız araştırılıyor...", duration: 1200, icon: Globe, platform: null as AIPlatform | null },
+  { text: "Ürünleriniz taranıyor...", duration: 1000, icon: Package, platform: null as AIPlatform | null },
+  { text: "ChatGPT'ye soruyoruz...", duration: 1000, icon: MessageSquare, platform: "chatgpt" as AIPlatform | null },
+  { text: "Gemini'den yanıt alınıyor...", duration: 1000, icon: MessageSquare, platform: "gemini" as AIPlatform | null },
+  { text: "Perplexity kontrol ediliyor...", duration: 1000, icon: MessageSquare, platform: "perplexity" as AIPlatform | null },
+  { text: "Claude'a danışıyoruz...", duration: 1000, icon: MessageSquare, platform: "claude" as AIPlatform | null },
+  { text: "Google AI Overview taranıyor...", duration: 1000, icon: MessageSquare, platform: "google_aio" as AIPlatform | null },
+  { text: "Ürün bazlı rakipleriniz tespit ediliyor...", duration: 800, icon: BarChart3, platform: null as AIPlatform | null },
+  { text: "Raporunuz hazırlanıyor...", duration: 800, icon: FileText, platform: null as AIPlatform | null },
 ];
 
 
@@ -1240,7 +1240,7 @@ function AnalizPageInner() {
                   key={p.name}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-900 text-white"
                 >
-                  <AIPlatformIcon platform={p.key} size={14} />
+                  <AIPlatformIcon platform={p.key} size={14} colored />
                   {p.name}
                 </div>
               ))}
@@ -1281,6 +1281,8 @@ function AnalizPageInner() {
                 className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                   isCompleted
                     ? "bg-green-100"
+                    : isActive && ls.platform
+                    ? "bg-gray-100 ring-2 ring-gray-300"
                     : isActive
                     ? "bg-gray-900"
                     : "bg-gray-100"
@@ -1288,6 +1290,8 @@ function AnalizPageInner() {
               >
                 {isCompleted ? (
                   <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : ls.platform ? (
+                  <AIPlatformIcon platform={ls.platform} size={20} colored />
                 ) : isActive ? (
                   <Icon className="w-5 h-5 text-white animate-pulse" />
                 ) : (
@@ -1393,7 +1397,7 @@ function AnalizPageInner() {
                   {/* Platform header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2.5">
-                      <AIPlatformIcon platform={pKey} size={28} />
+                      <AIPlatformIcon platform={pKey} size={28} colored />
                       <span className="text-base font-semibold text-gray-900">
                         {resp.provider}
                       </span>

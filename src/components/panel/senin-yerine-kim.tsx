@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, PartyPopper, AlertTriangle, TrendingUp } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,6 +50,30 @@ interface ProductSummary {
 // ---------------------------------------------------------------------------
 
 const BRAND_NAME = "ISITMAX";
+
+const RANKING_NOTIFICATIONS = [
+  {
+    type: "celebration" as const,
+    message:
+      "Tebrikler! \"Yerden ısıtma kablosu\"nda Giacomini'yi geçtiniz! (3. → 2. sıra)",
+    product: "Yerden ısıtma kablosu",
+    date: "28 Mart 2026",
+  },
+  {
+    type: "warning" as const,
+    message:
+      "Dikkat: Danfoss \"heat trace\"de yükseliyor. Geçen hafta 3., bu hafta 2. sıraya çıktı.",
+    product: "Heat trace boru ısıtma",
+    date: "27 Mart 2026",
+  },
+  {
+    type: "stable" as const,
+    message:
+      "\"Varil ısıtma ceketi\"nde 3 haftadır istikrarlı 1. sıradasınız.",
+    product: "Varil ısıtma ceketi",
+    date: "26 Mart 2026",
+  },
+];
 
 const PRODUCTS = [
   "Yerden ısıtma kablosu",
@@ -568,6 +592,46 @@ export function SeninYerineKim({ userName }: SeninYerineKimProps) {
         <p className="mt-1 text-sm text-muted-foreground">
           Ürün/hizmet bazlı gerçek rakip tespiti ve sıralama
         </p>
+      </div>
+
+      {/* 5.5 — Sıralama Savaşı Bildirimleri */}
+      <div className="space-y-2">
+        {RANKING_NOTIFICATIONS.map((notif, i) => (
+          <div
+            key={i}
+            className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
+              notif.type === "celebration"
+                ? "border-green-200 bg-green-50"
+                : notif.type === "warning"
+                ? "border-yellow-200 bg-yellow-50"
+                : "border-gray-200 bg-gray-50"
+            }`}
+          >
+            {notif.type === "celebration" && (
+              <PartyPopper className="mt-0.5 size-4 shrink-0 text-green-600" />
+            )}
+            {notif.type === "warning" && (
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-yellow-600" />
+            )}
+            {notif.type === "stable" && (
+              <TrendingUp className="mt-0.5 size-4 shrink-0 text-gray-500" />
+            )}
+            <div>
+              <p
+                className={
+                  notif.type === "celebration"
+                    ? "text-green-800"
+                    : notif.type === "warning"
+                    ? "text-yellow-800"
+                    : "text-gray-700"
+                }
+              >
+                {notif.message}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-400">{notif.date}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 5.1 — Ürün/Hizmet Haritası */}

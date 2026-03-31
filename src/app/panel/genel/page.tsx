@@ -1,292 +1,243 @@
 "use client";
 
-import { useState } from "react";
-import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
-import type { AIPlatform } from "@/components/ui/ai-platform-badge";
+import { useRouter } from "next/navigation";
+import { GeoScoreHero } from "@/components/panel/genel/geo-score-hero";
+import { MetricCards } from "@/components/panel/genel/metric-cards";
+import { TrendChart } from "@/components/panel/genel/trend-chart";
+import { BrandShareDonut } from "@/components/panel/genel/brand-share-donut";
+import { KeywordTable } from "@/components/panel/genel/keyword-table";
+import { CitedSources } from "@/components/panel/genel/cited-sources";
+import { AiResponses } from "@/components/panel/genel/ai-responses";
+import { ActionItems } from "@/components/panel/genel/action-items";
+import { TurkeyMap } from "@/components/panel/turkey-map";
+import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
+import {
+  DEMO_METRICS,
+  DEMO_COMPETITORS,
+  DEMO_KEYWORDS,
+  DEMO_CITED_DOMAINS,
+  DEMO_CITED_PAGES,
+  DEMO_AI_RESPONSES,
+  DEMO_CITY_DATA,
+  DEMO_TREND_DATA,
+} from "@/data/demo-data";
+
+// ---------------------------------------------------------------------------
+// Adapters: transform demo-data into component prop shapes
+// ---------------------------------------------------------------------------
+
+// MetricCards expects specific shapes from the DAL. We map demo data.
+const platformStats = [
+  { platform: "chatgpt", score: 74 },
+  { platform: "perplexity", score: 83 },
+  { platform: "gemini", score: 58 },
+  { platform: "google_aio", score: 61 },
+  { platform: "claude", score: 49 },
+  { platform: "copilot", score: 41 },
+];
+
+const competitorRanking = DEMO_COMPETITORS.map((c) => ({
+  name: c.name,
+  mentionCount: c.share,
+  isUser: c.name === "ISITMAX",
+}));
+
+const recentMentions = DEMO_KEYWORDS.map((k) => ({
+  prompt: k.keyword,
+  platform: "chatgpt" as const,
+  position: k.avgPosition,
+  sentiment: k.sentiment > 0.6 ? ("pozitif" as const) : ("notr" as const),
+  excerpt: "",
+  sources: [],
+}));
+
+// KeywordTable expects PromptSummaryItem[]
+const keywordTableData = DEMO_KEYWORDS.map((k) => ({
+  prompt: k.keyword,
+  mentionedCount: Math.round((k.coverage / 100) * 5),
+  totalResults: 5,
+  platforms: {
+    chatgpt: k.coverage === 100,
+    claude: k.coverage === 100,
+    gemini: k.coverage >= 80,
+    perplexity: k.coverage >= 80,
+    google_aio: k.coverage >= 20,
+  },
+}));
+
+// CitedSources expects SourceMapEntry[]
+const citedSourcesData = [
+  ...DEMO_CITED_DOMAINS.map((d) => ({
+    domain: d.domain,
+    url: `https://${d.domain}`,
+    count: d.cites,
+  })),
+  ...DEMO_CITED_PAGES.map((p) => ({
+    domain: "isitmax.com",
+    url: `https://isitmax.com${p.path}`,
+    count: p.cites,
+  })),
+];
+
+// AiResponses expects AiResponseExcerpt[]
+const aiResponseData = DEMO_AI_RESPONSES.map((r) => ({
+  platform: r.provider === "AI Overview" ? "google_aio" : r.provider.toLowerCase(),
+  prompt: r.keyword,
+  excerpt: r.response,
+  citations: r.sources,
+}));
+
+const aiMentionsData = DEMO_AI_RESPONSES.map((r) => ({
+  prompt: r.keyword,
+  platform: r.provider === "AI Overview" ? "google_aio" : r.provider.toLowerCase(),
+  position: r.position,
+  sentiment: r.brandMentioned ? ("pozitif" as const) : ("notr" as const),
+  excerpt: r.response,
+  sources: r.sources,
+}));
+
+// TrendChart data
+const trendChartData = DEMO_TREND_DATA.geoScore.map((d, i) => ({
+  week: d.date,
+  chatgpt: 60 + Math.round(Math.random() * 20),
+  claude: 40 + Math.round(Math.random() * 15),
+  gemini: 50 + Math.round(Math.random() * 15),
+  perplexity: 70 + Math.round(Math.random() * 15),
+  google_aio: 55 + Math.round(Math.random() * 15),
+}));
+
+const scoreHistoryData = DEMO_TREND_DATA.geoScore.map((d) => ({
+  date: d.date,
+  mentionScore: d.value,
+}));
+
+// TurkeyMap data
+const turkeyMapData: Record<string, { score: number; status: string }> = {};
+for (const [city, data] of Object.entries(DEMO_CITY_DATA)) {
+  turkeyMapData[city] = { score: data.score, status: data.status };
+}
+
+// Actions
+const actionList = [
+  { title: "/banyo-yerden-isitma sayfasina FAQ ekle — Gemini referansi baslasin", impact: "high" },
+  { title: "YouTube'a 'Yerden Isitma Kurulum' videosu yukle — ChatGPT video kaynagi tercih ediyor", impact: "high" },
+  { title: "Schema markup guncelle (/urunler sayfasi) — AI botlari yapilandirilmis veriyi seviyor", impact: "medium" },
+];
+
+// City stats
+const trackedCities = Object.values(DEMO_CITY_DATA).filter((c) => c.status !== "not-tracked");
+const strongCities = trackedCities.filter((c) => c.status === "strong").length;
+const moderateCities = trackedCities.filter((c) => c.status === "moderate").length;
+const weakCities = trackedCities.filter((c) => c.status === "weak" || c.status === "none").length;
+const notTrackedCities = Object.values(DEMO_CITY_DATA).filter((c) => c.status === "not-tracked").length;
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function GenelBakisPage() {
-  // Gerçek tier burada DB'den gelecek — şimdilik demo
-  const [tier] = useState<"takip" | "cozum" | "uygulat">("cozum");
-  const [doneItems, setDoneItems] = useState<Set<number>>(new Set());
-  const [copiedItem, setCopiedItem] = useState<number | null>(null);
-
-  const toggleDone = (idx: number) => {
-    setDoneItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
-      return next;
-    });
-  };
-
-  const handleCopy = (idx: number) => {
-    setCopiedItem(idx);
-    setTimeout(() => setCopiedItem(null), 2000);
-  };
-
-  const totalActions = 3;
-  const doneCount = doneItems.size;
+  const router = useRouter();
 
   return (
-    <>
-      {/* ═══ HERO ZONE ═══ */}
-      <div className="hero-zone">
-        {/* TAKIP HERO */}
-        {tier === "takip" && (
-          <div className="takip-hero">
-            <span className="th-week">Bu Hafta · 24-30 Mart 2026</span>
-            <div className="th-split">
-              <div className="th-cell">
-                <span className="th-cell-label good">İyi haber</span>
-                <span className="th-cell-num">12</span>
-                <div className="th-cell-desc">sorguda görünüyorsunuz. Geçen haftaya göre <strong>+2 sorgu</strong>.</div>
-              </div>
-              <div className="th-cell">
-                <span className="th-cell-label bad">Kötü haber</span>
-                <span className="th-cell-num">3</span>
-                <div className="th-cell-desc">sorguda rakibiniz <strong>sizi geçti</strong>. Geçen hafta öndeydıniz.</div>
-              </div>
-            </div>
-            <div className="th-actions">
-              <button className="btn-primary">Hangi sorgular? →</button>
-              <button className="btn-secondary">Geçen haftayla karşılaştır</button>
-            </div>
-          </div>
-        )}
+    <div className="space-y-6 pb-12">
+      {/* 1.1 — GEO Skor Karti */}
+      <GeoScoreHero score={DEMO_METRICS.geoScore} trend={DEMO_METRICS.changes.geoScore} />
 
-        {/* ÇÖZÜM HERO */}
-        {tier === "cozum" && (
-          <div className="cozum-hero">
-            <div className="ch-header">
-              <div className="ch-title">Bu hafta 3 şey hazır.<br/>Kopyala, yapıştır, bitti.</div>
-              <div className="ch-sub">GH7 analiz etti, çözüm üretti. Sizin yapmanız gereken tek şey uygulamak.</div>
-            </div>
-            <div className="ch-items">
-              {[
-                { title: "Havuz ekipmanları fiyatları — içerik", desc: "ChatGPT bu sorguda sizi bulamıyor. Hazır içerik paragrafını sayfanıza ekleyin." },
-                { title: "Ürün sayfaları — schema kodu", desc: "Gemini ve AI Overview için schema markup. Ana sayfanızın <head> bölümüne yapıştırın." },
-                { title: "Rakip karşılaştırma — başlık ve FAQ", desc: "Perplexity'de rakibiniz öne çıkıyor. Bu başlık ve 3 soru ile farkı kapatabilirsiniz." },
-              ].map((item, idx) => (
-                <div className="ch-item" key={idx}>
-                  <span className="ch-item-num">{String(idx + 1).padStart(2, "0")}</span>
-                  <div className="ch-item-text">
-                    <div className="ch-item-title">{item.title}</div>
-                    <div className="ch-item-desc">{item.desc}</div>
-                  </div>
-                  <button
-                    className={`btn-copy${copiedItem === idx ? " copied" : ""}`}
-                    onClick={() => handleCopy(idx)}
-                  >
-                    {copiedItem === idx ? "Kopyalandı" : "Kopyala"}
-                  </button>
-                  <div
-                    className={`ch-item-done${doneItems.has(idx) ? " checked" : ""}`}
-                    onClick={() => toggleDone(idx)}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="ch-progress">
-              <div className="ch-progress-bar-wrap">
-                <div className="ch-progress-bar" style={{ width: `${(doneCount / totalActions) * 100}%` }} />
-              </div>
-              <span className="ch-progress-text">{doneCount} / {totalActions} tamamlandı</span>
-            </div>
-          </div>
-        )}
+      {/* 1.2 — 4 Metrik Karti */}
+      <MetricCards
+        mentionScore={DEMO_METRICS.geoScore}
+        totalMentions={DEMO_KEYWORDS.reduce((s, k) => s + (k.coverage === 100 ? 5 : k.coverage >= 80 ? 4 : 1), 0)}
+        totalResults={DEMO_KEYWORDS.length * 5}
+        platformStats={platformStats as never}
+        competitorRanking={competitorRanking as never}
+        recentMentions={recentMentions as never}
+      />
 
-        {/* UYGULAT HERO */}
-        {tier === "uygulat" && (
-          <div className="uygulat-hero">
-            <div className="uh-header">
-              <span className="uh-month">Mart 2026</span>
-              <div className="uh-title">Ajans bu ay 4 şeyi uyguladı.<br/>Sonuçlar gelmeye başladı.</div>
-              <div className="uh-sub">Siz onayladınız, biz yaptık. İşte bu ayki değişim.</div>
-            </div>
-            <div className="uh-score-row">
-              <div>
-                <div className="uh-score-arrow">
-                  <span className="from">61</span>
-                  <span className="arr">→</span>
-                  <span className="to">74</span>
-                </div>
-                <div className="uh-score-label">GEO Skoru · <strong>+13 puan</strong> bu ay</div>
-              </div>
-              <div className="uh-score-details">
-                <div className="uh-detail-row"><span className="uh-detail-label">Ses Payı</span><span className="uh-detail-val pos">%24 → %26 ↑</span></div>
-                <div className="uh-detail-row"><span className="uh-detail-label">Görünür Sorgu</span><span className="uh-detail-val pos">9 → 12 ↑</span></div>
-                <div className="uh-detail-row"><span className="uh-detail-label">Rakip önde</span><span className="uh-detail-val pos">5 → 3 ↓</span></div>
-                <div className="uh-detail-row"><span className="uh-detail-label">Ort. Pozisyon</span><span className="uh-detail-val pos">2.1 → 1.4 ↑</span></div>
-              </div>
-            </div>
-            <div className="uh-done-list">
-              <div className="uh-done">
-                <div className="uh-done-title">Schema markup eklendi</div>
-                <div className="uh-done-desc">12 ürün sayfasına yapılandırılmış veri eklendi.</div>
-                <span className="uh-done-status">Uygulandı · 3 Mart</span>
-              </div>
-              <div className="uh-done">
-                <div className="uh-done-title">FAQ içerikleri yazıldı</div>
-                <div className="uh-done-desc">8 sorguda AI&apos;ın aradığı içerik oluşturuldu ve yayınlandı.</div>
-                <span className="uh-done-status">Uygulandı · 8 Mart</span>
-              </div>
-              <div className="uh-done">
-                <div className="uh-done-title">Başlık ve meta güncelleme</div>
-                <div className="uh-done-desc">Ana sayfa ve 5 kategori sayfasında AI uyumlu başlıklar.</div>
-                <span className="uh-done-status">Uygulandı · 15 Mart</span>
-              </div>
-              <div className="uh-done">
-                <div className="uh-done-title">Rakip boşluğu içerikleri</div>
-                <div className="uh-done-desc">Rakibin öne çıktığı 3 sorguda yeni içerik üretildi.</div>
-                <span className="uh-done-status">Uygulandı · 22 Mart</span>
-              </div>
-            </div>
-            <div className="th-actions">
-              <button className="btn-primary">Nisan planını gör →</button>
-              <button className="btn-secondary">Detaylı rapor</button>
-            </div>
+      {/* 1.3 — Turkiye Isi Haritasi */}
+      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Il Bazli AI Gorunurluk
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Hizmet verdiginiz illerde yapay zeka sizi ne kadar taniyor?
+            </p>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* ═══ DIVIDER ═══ */}
-      <div style={{ padding: "32px 40px 0" }}>
-        <div style={{ borderTop: "1px solid var(--g200)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-          <span style={{ position: "absolute", background: "var(--g50)", padding: "6px 16px", fontSize: 11, fontWeight: 700, color: "var(--g400)", textTransform: "uppercase" as const, letterSpacing: ".8px", border: "1px solid var(--g200)", borderRadius: 20 }}>
-            Detaylar
+        <TurkeyMap
+          cityData={turkeyMapData}
+          onCityClick={(city) => {
+            const slug = city
+              .toLowerCase()
+              .replace(/\u00e7/g, "c")
+              .replace(/\u011f/g, "g")
+              .replace(/\u0131/g, "i")
+              .replace(/\u00f6/g, "o")
+              .replace(/\u015f/g, "s")
+              .replace(/\u00fc/g, "u")
+              .replace(/\u00c7/g, "c")
+              .replace(/\u011e/g, "g")
+              .replace(/\u0130/g, "i")
+              .replace(/\u00d6/g, "o")
+              .replace(/\u015e/g, "s")
+              .replace(/\u00dc/g, "u")
+              .replace(/\s+/g, "-");
+            router.push(`/panel/iller/${slug}`);
+          }}
+        />
+
+        <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+          <span>
+            <span className="inline-block w-3 h-3 rounded-sm bg-green-500 mr-1.5 align-middle" />
+            {strongCities} ilde guclu
+          </span>
+          <span>
+            <span className="inline-block w-3 h-3 rounded-sm bg-yellow-500 mr-1.5 align-middle" />
+            {moderateCities} ilde orta
+          </span>
+          <span>
+            <span className="inline-block w-3 h-3 rounded-sm bg-red-500 mr-1.5 align-middle" />
+            {weakCities} ilde zayif
+          </span>
+          <span>
+            <span className="inline-block w-3 h-3 rounded-sm bg-gray-200 mr-1.5 align-middle" />
+            {notTrackedCities} il henuz takip edilmiyor
           </span>
         </div>
+
+        <button
+          onClick={() => router.push("/panel/iller")}
+          className="mt-4 text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors"
+        >
+          Yeni il ekle &rarr;
+        </button>
       </div>
 
-      {/* ═══ DETAIL ZONE ═══ */}
-      <div className="detail-zone">
-        {/* Metrikler */}
-        <div className="detail-grid-3" style={{ marginBottom: 2 }}>
-          <div className="dc">
-            <span className="dc-label">Ses Payı</span>
-            <div className="mini-metric">
-              <span className="mm-num">%26</span>
-              <span className="mm-delta pos">↑ %2</span>
-            </div>
-            <span className="mm-label">Tüm AI önerilerinde payınız</span>
-          </div>
-          <div className="dc">
-            <span className="dc-label">Kapsam</span>
-            <div className="mini-metric">
-              <span className="mm-num">%80</span>
-              <span className="mm-delta pos">↑ %5</span>
-            </div>
-            <span className="mm-label">Takip edilen sorgularda görünme oranı</span>
-          </div>
-          <div className="dc">
-            <span className="dc-label">Ortalama Pozisyon</span>
-            <div className="mini-metric">
-              <span className="mm-num">1.4</span>
-              <span className="mm-delta pos">↑ 0.3</span>
-            </div>
-            <span className="mm-label">AI&apos;ın sizi önerme sırası (düşük = iyi)</span>
-          </div>
-        </div>
+      {/* 1.4 — Yapilacaklar */}
+      <ActionItems
+        actions={actionList}
+        checklistProgress={{ completed: 1, total: 3 }}
+      />
 
-        {/* Sorgu Dağılımı + Platform */}
-        <div className="detail-grid" style={{ marginBottom: 2 }}>
-          <div className="dc">
-            <span className="dc-label">Sorgu Bazlı Görünürlük</span>
-            <div className="bar-list">
-              <div className="bar-row"><span className="bar-lbl">Havuz ekipmanı fiyat</span><div className="bar-track"><div className="bar-fill" style={{ width: "36%" }} /></div><span className="bar-val">%36</span></div>
-              <div className="bar-row"><span className="bar-lbl">Havuz pompası seçimi</span><div className="bar-track"><div className="bar-fill" style={{ width: "29%" }} /></div><span className="bar-val">%29</span></div>
-              <div className="bar-row"><span className="bar-lbl">Isıtma sistemi karş.</span><div className="bar-track"><div className="bar-fill" style={{ width: "24%" }} /></div><span className="bar-val">%24</span></div>
-              <div className="bar-row"><span className="bar-lbl">Yüzme havuzu bakım</span><div className="bar-track"><div className="bar-fill" style={{ width: "18%" }} /></div><span className="bar-val">%18</span></div>
-              <div className="bar-row"><span className="bar-lbl">Klor dozaj sistemi</span><div className="bar-track"><div className="bar-fill weak" style={{ width: "11%" }} /></div><span className="bar-val weak">%11 ↓</span></div>
-            </div>
-          </div>
-          <div className="dc">
-            <span className="dc-label">Platform Dağılımı</span>
-            <table className="pt-table">
-              <thead>
-                <tr>
-                  <th>Platform</th>
-                  <th>Skor</th>
-                  <th>Değişim</th>
-                  <th>Durum</th>
-                </tr>
-              </thead>
-              <tbody>
-                {([
-                  { key: "chatgpt" as AIPlatform, name: "ChatGPT", score: 74, delta: "+8", deltaColor: "var(--green)", pill: "sp-green", status: "Güçlü" },
-                  { key: "perplexity" as AIPlatform, name: "Perplexity", score: 83, delta: "+12", deltaColor: "var(--green)", pill: "sp-green", status: "Güçlü" },
-                  { key: "gemini" as AIPlatform, name: "Gemini", score: 58, delta: "+3", deltaColor: "var(--green)", pill: "sp-amber", status: "Orta" },
-                  { key: "google_aio" as AIPlatform, name: "AI Overview", score: 61, delta: "+5", deltaColor: "var(--green)", pill: "sp-amber", status: "Orta" },
-                  { key: "claude" as AIPlatform, name: "Claude", score: 49, delta: "-3", deltaColor: "var(--red)", pill: "sp-red", status: "Zayıf" },
-                  { key: "copilot" as AIPlatform, name: "Copilot", score: 41, delta: "-1", deltaColor: "var(--red)", pill: "sp-red", status: "Zayıf" },
-                ]).map((p) => (
-                  <tr key={p.key}><td><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AIPlatformIcon platform={p.key} size={16} colored />{p.name}</span></td><td>{p.score}</td><td style={{ color: p.deltaColor }}>{p.delta}</td><td><span className={`score-pill ${p.pill}`}>{p.status}</span></td></tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* 1.5 — Marka Ses Payi (Donut Chart) */}
+      <BrandShareDonut competitors={competitorRanking as never} />
 
-        {/* Rakip Ses Payı + Aksiyonlar */}
-        <div className="detail-grid" style={{ marginBottom: 0 }}>
-          <div className="dc">
-            <span className="dc-label">Rakip Ses Payı Dağılımı</span>
-            <div className="comp-list">
-              <div className="comp-item">
-                <span className="comp-name me">Aqua Store</span>
-                <div className="comp-bar-wrap"><div className="comp-bar" style={{ width: "26%" }} /></div>
-                <span className="comp-pct">%26</span>
-              </div>
-              <div className="comp-item">
-                <span className="comp-name">Havuz Dünyası</span>
-                <div className="comp-bar-wrap"><div className="comp-bar dim" style={{ width: "19%" }} /></div>
-                <span className="comp-pct">%19</span>
-              </div>
-              <div className="comp-item">
-                <span className="comp-name">Piscimar TR</span>
-                <div className="comp-bar-wrap"><div className="comp-bar dim" style={{ width: "14%" }} /></div>
-                <span className="comp-pct">%14</span>
-              </div>
-              <div className="comp-item">
-                <span className="comp-name">AquaTech</span>
-                <div className="comp-bar-wrap"><div className="comp-bar dim" style={{ width: "9%" }} /></div>
-                <span className="comp-pct">%9</span>
-              </div>
-              <div className="comp-item">
-                <span className="comp-name" style={{ color: "var(--g400)" }}>Diğer</span>
-                <div className="comp-bar-wrap"><div className="comp-bar dim" style={{ width: "32%", background: "var(--g100)" }} /></div>
-                <span className="comp-pct" style={{ color: "var(--g400)" }}>%32</span>
-              </div>
-            </div>
-          </div>
-          <div className="dc">
-            <span className="dc-label">Bu Haftanın Aksiyon Listesi</span>
-            <div className="action-list">
-              <div className="action-item">
-                <span className="action-priority ap-high">Yüksek</span>
-                <div>
-                  <div className="action-text">Klor dozaj sayfasına FAQ ekle</div>
-                  <div className="action-sub">Perplexity&apos;de rakip bu sorguda sizi geçiyor. Hazır içerik panelde.</div>
-                </div>
-              </div>
-              <div className="action-item">
-                <span className="action-priority ap-high">Yüksek</span>
-                <div>
-                  <div className="action-text">Claude için schema markup güncelle</div>
-                  <div className="action-sub">Claude sizi tanımıyor. Hazır kod kopyalanmaya hazır.</div>
-                </div>
-              </div>
-              <div className="action-item">
-                <span className="action-priority ap-mid">Orta</span>
-                <div>
-                  <div className="action-text">Havuz ısıtma karşılaştırma içeriği</div>
-                  <div className="action-sub">Gemini&apos;de görünürlük %24&apos;te. İçerik taslağı hazır.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+      {/* 1.6 — Trend Grafigi */}
+      <TrendChart data={trendChartData as never} scoreHistory={scoreHistoryData} />
+
+      {/* 1.7 — Arama Bazli Kirilim */}
+      <KeywordTable prompts={keywordTableData as never} />
+
+      {/* 1.8 — En Cok Referans Alinan Siteler */}
+      <CitedSources sources={citedSourcesData as never} brandDomain="isitmax.com" />
+
+      {/* 1.9 — AI Sizi Nasil Anlatiyor */}
+      <AiResponses responses={aiResponseData as never} mentions={aiMentionsData as never} />
+
+      {/* Bottom CTA */}
+      <PageBottomCTA />
+    </div>
   );
 }
