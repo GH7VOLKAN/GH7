@@ -416,6 +416,7 @@ model QueryPage {
 
   mentions              QueryPageMention[]
   history               QueryPageHistory[]
+  blogPost              BlogPost?
 
   @@map("query_pages")
 }
@@ -453,4 +454,32 @@ model QueryPageHistory {
   createdAt                DateTime  @default(now()) @map("created_at")
 
   @@map("query_page_history")
+}
+
+// ─── Blog Posts (auto-generated from analysis) ──────
+
+model BlogPost {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  content         String    @db.Text
+  metaDescription String?   @map("meta_description")
+  sectorTag       String?   @map("sector_tag")
+  analysisType    String    @default("firma") @map("analysis_type")
+  queryLanguage   String    @default("tr") @map("query_language")
+  rankings        Json?
+  platforms       Json?
+  runCount        Int       @default(1) @map("run_count")
+  runDate         DateTime? @map("run_date")
+  ogImageUrl      String?   @map("og_image_url")
+  status          String    @default("queued")
+  generatedAt     DateTime? @map("generated_at")
+  publishedAt     DateTime? @map("published_at")
+  queryPageId     String?   @unique @map("query_page_id")
+  queryPage       QueryPage? @relation(fields: [queryPageId], references: [id], onDelete: SetNull)
+  isLegacy        Boolean   @default(false) @map("is_legacy")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
 }

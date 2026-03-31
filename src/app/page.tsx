@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GH7Logo } from "@/components/gh7-logo";
+import { AIPlatformIcon, PLATFORM_INFO, AI_PLATFORM_KEYS } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 export default function HomePage() {
   const [activeKapi, setActiveKapi] = useState("firma");
@@ -158,6 +160,15 @@ export default function HomePage() {
           <button className="btn-submit" onClick={handleMainSubmit}>Ücretsiz Test Et →</button>
         </div>
         <p className="kapi-note">Kayıt gerekmez · Kredi kartı yok · 60 saniye</p>
+        <div className="kapi-platforms">
+          {AI_PLATFORM_KEYS.map((key) => (
+            <span key={key} className="kapi-platform-chip">
+              <span className="kapi-platform-dot" style={{ background: PLATFORM_INFO[key].color }} />
+              <AIPlatformIcon platform={key} size={16} colored />
+              <span>{PLATFORM_INFO[key].name}</span>
+            </span>
+          ))}
+        </div>
       </section>
 
       {/* BÖLÜM 4: ÇÖZÜM — 4 Katman */}
@@ -310,16 +321,79 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* BÖLÜM 5.5: TÜRKİYE HARİTASI */}
+      <section className="map-sec reveal">
+        <div className="map-inner">
+          <h2 className="sec-h2">Her il ayrı bir pazar.<br/><span className="muted">Her ilde ayrı rakip.</span></h2>
+          <p className="sec-desc" style={{ marginBottom: 32 }}>81 ilde yapay zeka görünürlüğünüzü takip edin.</p>
+          <div className="map-grid">
+            <div className="map-visual">
+              {[
+                { name: "İstanbul", score: 82, x: 28, y: 18, color: "#22C55E" },
+                { name: "Ankara", score: 71, x: 42, y: 35, color: "#22C55E" },
+                { name: "Balıkesir", score: 91, x: 18, y: 30, color: "#22C55E" },
+                { name: "İzmir", score: 65, x: 12, y: 42, color: "#F59E0B" },
+                { name: "Bursa", score: 58, x: 24, y: 26, color: "#F59E0B" },
+                { name: "Antalya", score: 45, x: 30, y: 58, color: "#F59E0B" },
+                { name: "Konya", score: 38, x: 42, y: 50, color: "#EF4444" },
+                { name: "Trabzon", score: 22, x: 62, y: 18, color: "#EF4444" },
+                { name: "Erzurum", score: 15, x: 70, y: 25, color: "#EF4444" },
+                { name: "Diyarbakır", score: 12, x: 65, y: 40, color: "#EF4444" },
+              ].map((city) => (
+                <div
+                  key={city.name}
+                  className="map-pin"
+                  style={{ left: `${city.x}%`, top: `${city.y}%` }}
+                >
+                  <span className="map-dot" style={{ background: city.color }} />
+                  <span className="map-pin-label">{city.name} ({city.score})</span>
+                </div>
+              ))}
+            </div>
+            <div className="map-stats">
+              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#22C55E" }} /><span className="map-stat-num">3</span> güçlü il</div>
+              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#F59E0B" }} /><span className="map-stat-num">3</span> orta il</div>
+              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#EF4444" }} /><span className="map-stat-num">4</span> zayıf il</div>
+              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#E5E7EB" }} /><span className="map-stat-num">71</span> takip dışı</div>
+              <a href="#test" className="map-cta">Kendi illerinizi analiz edin →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BÖLÜM 5.6: AJANS PAKETLERİ */}
+      <section className="ajans-sec reveal">
+        <div className="ajans-inner">
+          <h2 className="sec-h2">Kendiniz yapamıyor musunuz?<br/><span className="muted">GEO ajans paketleri tek tıkla.</span></h2>
+          <p className="sec-desc" style={{ marginBottom: 32 }}>Tek seferlik hizmetler — abonelik yok, ihtiyacınız olan paketi alın.</p>
+          <div className="ajans-grid">
+            {[
+              { icon: "📦", title: "Schema Markup", desc: "Tüm sayfalarınıza AI uyumlu schema eklenir." },
+              { icon: "✍️", title: "İçerik Optimizasyonu", desc: "10 sayfa AI referans alacak formatta yeniden yazılır." },
+              { icon: "🌍", title: "Export Dil Paketi", desc: "5 sayfanın hedef dilde GEO uyumlu çevirisi." },
+            ].map((pkg) => (
+              <div key={pkg.title} className="ajans-card">
+                <span className="ajans-icon">{pkg.icon}</span>
+                <div className="ajans-title">{pkg.title}</div>
+                <p className="ajans-desc">{pkg.desc}</p>
+                <Link href="/panel/ajans-paketleri" className="ajans-link">Detay →</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* BÖLÜM 6: PLATFORM STRIP */}
       <div className="platform-strip reveal">
         <div className="platform-strip-label">6 AI platformunda anlık izleme</div>
         <div className="platform-row">
-          <div className="platform-item"><span className="platform-name">ChatGPT</span><span className="platform-type">Sohbet AI</span></div>
-          <div className="platform-item"><span className="platform-name">Gemini</span><span className="platform-type">Google AI</span></div>
-          <div className="platform-item"><span className="platform-name">AI Overview</span><span className="platform-type">Google Arama</span></div>
-          <div className="platform-item"><span className="platform-name">Perplexity</span><span className="platform-type">AI Arama</span></div>
-          <div className="platform-item"><span className="platform-name">Claude</span><span className="platform-type">Anthropic AI</span></div>
-          <div className="platform-item"><span className="platform-name">Copilot</span><span className="platform-type">Microsoft AI</span></div>
+          {AI_PLATFORM_KEYS.map((key) => (
+            <div key={key} className="platform-item">
+              <AIPlatformIcon platform={key} size={28} colored />
+              <span className="platform-name">{PLATFORM_INFO[key].name}</span>
+              <span className="platform-type">{PLATFORM_INFO[key].description}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -394,6 +468,14 @@ export default function HomePage() {
             onKeyDown={(e) => e.key === "Enter" && handleFinalSubmit()}
           />
           <button className="btn-submit" onClick={handleFinalSubmit}>Test Et →</button>
+        </div>
+        <div className="final-platforms">
+          {AI_PLATFORM_KEYS.map((key) => (
+            <span key={key} className="kapi-platform-chip">
+              <AIPlatformIcon platform={key} size={16} colored />
+              <span>{PLATFORM_INFO[key].name}</span>
+            </span>
+          ))}
         </div>
         <p className="final-badge">Bir <strong>ISITMAX</strong> projesidir · 1M+ aylık ziyaretçinin arkasındaki ekip</p>
       </section>

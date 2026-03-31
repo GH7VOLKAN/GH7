@@ -31,15 +31,15 @@ interface CreateOrUpdateInput {
 
 export async function createOrUpdateQueryPage(
   data: CreateOrUpdateInput,
-): Promise<void> {
+): Promise<string | null> {
   const { query, scanResults, profileId } = data;
 
-  if (!query || scanResults.length === 0) return;
+  if (!query || scanResults.length === 0) return null;
 
   const normalizedQ = normalizeQuery(query);
   const slug = generateQuerySlug(query);
 
-  if (!slug || !normalizedQ) return;
+  if (!slug || !normalizedQ) return null;
 
   // Build aggregated data
   const firmRanking = buildFirmRanking(scanResults);
@@ -75,8 +75,9 @@ export async function createOrUpdateQueryPage(
         metaDescription,
         profileId,
       });
+      return existing.id;
     } else {
-      await createNewPage({
+      const pageId = await createNewPage({
         slug,
         query,
         normalizedQ,
@@ -94,10 +95,12 @@ export async function createOrUpdateQueryPage(
         sourceCount,
         profileId,
       });
+      return pageId;
     }
   } catch (error) {
     // Log but never crash
     console.error("[query-pages] Pipeline error:", error);
+    return null;
   }
 }
 
@@ -207,6 +210,8 @@ async function createNewPage(data: {
 
   // Create mentions
   await upsertMentions(page.id, data.firmRanking);
+
+  return page.id;
 }
 
 // ─── Upsert Mentions ────────────────────────────────

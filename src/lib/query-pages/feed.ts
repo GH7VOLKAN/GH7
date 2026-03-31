@@ -7,6 +7,7 @@
 
 import { prisma } from "@/lib/db";
 import { createOrUpdateQueryPage } from "./pipeline";
+import { generateBlogFromAnalysis } from "@/lib/ai/blog-generator";
 import type { ScanResultForQueryPage } from "./index";
 
 /**
@@ -63,11 +64,42 @@ export async function feedScanToQueryPages(
   // Process each unique query (sequentially to avoid overwhelming DB)
   for (const [query, scanResults] of grouped) {
     try {
-      await createOrUpdateQueryPage({
+      const queryPageId = await createOrUpdateQueryPage({
         query,
         scanResults,
         profileId: brand?.profileId,
       });
+
+      // Fire-and-forget blog generation for each query page
+      if (queryPageId) {
+        const page = await prisma.queryPage.findUnique({
+          where: { id: queryPageId },
+          select: {
+            id: true,
+            originalQuery: true,
+            sector: true,
+            queryType: true,
+            firmRanking: true,
+            platformResponses: true,
+            summaryText: true,
+            timesQueried: true,
+          },
+        });
+        if (page) {
+          generateBlogFromAnalysis({
+            queryPageId: page.id,
+            query: page.originalQuery,
+            sector: page.sector,
+            queryType: page.queryType,
+            firmRanking: (page.firmRanking as Array<{ firmName: string; platformCount: number; rankPosition: number }>) ?? [],
+            platformResponses: (page.platformResponses as Array<{ platform: string; mentioned: boolean }>) ?? [],
+            summaryText: page.summaryText,
+            timesQueried: page.timesQueried,
+          }).catch((err) =>
+            console.error("[query-pages] Blog generation error:", err),
+          );
+        }
+      }
     } catch (error) {
       console.error(
         `[query-pages] Failed to process query "${query.slice(0, 50)}":`,
