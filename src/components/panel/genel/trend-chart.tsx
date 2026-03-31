@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { WeeklyTrendPoint } from "@/lib/dal/overview";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 import {
   LineChart,
   Line,
@@ -152,10 +154,7 @@ export function TrendChart({ data, scoreHistory }: TrendChartProps) {
         <div className="flex flex-wrap gap-4 mt-4 justify-center">
           {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
             <div key={key} className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span
-                className="inline-block h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: PLATFORM_COLORS[key] }}
-              />
+              <AIPlatformIcon platform={key as AIPlatform} size={14} colored />
               {label}
             </div>
           ))}

@@ -1194,11 +1194,11 @@ function AnalizPageInner() {
 
   const renderStep2 = () => {
     const platforms = [
-      { name: "ChatGPT" },
-      { name: "Gemini" },
-      { name: "AI Overview" },
-      { name: "Perplexity" },
-      { name: "Claude" },
+      { name: "ChatGPT", key: "chatgpt" as AIPlatform },
+      { name: "Gemini", key: "gemini" as AIPlatform },
+      { name: "AI Overview", key: "google_aio" as AIPlatform },
+      { name: "Perplexity", key: "perplexity" as AIPlatform },
+      { name: "Claude", key: "claude" as AIPlatform },
     ];
 
     return (
@@ -1240,6 +1240,7 @@ function AnalizPageInner() {
                   key={p.name}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-900 text-white"
                 >
+                  <AIPlatformIcon platform={p.key} size={14} />
                   {p.name}
                 </div>
               ))}

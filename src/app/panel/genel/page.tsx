@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 export default function GenelBakisPage() {
   // Gerçek tier burada DB'den gelecek — şimdilik demo
@@ -210,12 +212,16 @@ export default function GenelBakisPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>ChatGPT</td><td>74</td><td style={{ color: "var(--green)" }}>+8</td><td><span className="score-pill sp-green">Güçlü</span></td></tr>
-                <tr><td>Perplexity</td><td>83</td><td style={{ color: "var(--green)" }}>+12</td><td><span className="score-pill sp-green">Güçlü</span></td></tr>
-                <tr><td>Gemini</td><td>58</td><td style={{ color: "var(--green)" }}>+3</td><td><span className="score-pill sp-amber">Orta</span></td></tr>
-                <tr><td>AI Overview</td><td>61</td><td style={{ color: "var(--green)" }}>+5</td><td><span className="score-pill sp-amber">Orta</span></td></tr>
-                <tr><td>Claude</td><td>49</td><td style={{ color: "var(--red)" }}>-3</td><td><span className="score-pill sp-red">Zayıf</span></td></tr>
-                <tr><td>Copilot</td><td>41</td><td style={{ color: "var(--red)" }}>-1</td><td><span className="score-pill sp-red">Zayıf</span></td></tr>
+                {([
+                  { key: "chatgpt" as AIPlatform, name: "ChatGPT", score: 74, delta: "+8", deltaColor: "var(--green)", pill: "sp-green", status: "Güçlü" },
+                  { key: "perplexity" as AIPlatform, name: "Perplexity", score: 83, delta: "+12", deltaColor: "var(--green)", pill: "sp-green", status: "Güçlü" },
+                  { key: "gemini" as AIPlatform, name: "Gemini", score: 58, delta: "+3", deltaColor: "var(--green)", pill: "sp-amber", status: "Orta" },
+                  { key: "google_aio" as AIPlatform, name: "AI Overview", score: 61, delta: "+5", deltaColor: "var(--green)", pill: "sp-amber", status: "Orta" },
+                  { key: "claude" as AIPlatform, name: "Claude", score: 49, delta: "-3", deltaColor: "var(--red)", pill: "sp-red", status: "Zayıf" },
+                  { key: "copilot" as AIPlatform, name: "Copilot", score: 41, delta: "-1", deltaColor: "var(--red)", pill: "sp-red", status: "Zayıf" },
+                ]).map((p) => (
+                  <tr key={p.key}><td><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AIPlatformIcon platform={p.key} size={16} colored />{p.name}</span></td><td>{p.score}</td><td style={{ color: p.deltaColor }}>{p.delta}</td><td><span className={`score-pill ${p.pill}`}>{p.status}</span></td></tr>
+                ))}
               </tbody>
             </table>
           </div>

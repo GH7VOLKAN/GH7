@@ -2,6 +2,8 @@
 
 import type { AiResponseExcerpt, RecentMention } from "@/lib/dal/overview";
 import { platformLabels } from "@/lib/types";
+import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
+import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 
 interface AiResponsesProps {
   responses: AiResponseExcerpt[];
@@ -16,6 +18,7 @@ export function AiResponses({ responses, mentions }: AiResponsesProps) {
       (m) => m.platform === resp.platform && m.prompt === resp.promptText
     );
     return {
+      platformKey: resp.platform,
       platform: platformLabels[resp.platform]?.name ?? resp.platform,
       keyword: resp.promptText,
       excerpt: resp.excerpt,
@@ -51,7 +54,8 @@ export function AiResponses({ responses, mentions }: AiResponsesProps) {
           >
             {/* Header: provider + badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                <AIPlatformIcon platform={resp.platformKey as AIPlatform} size={14} colored />
                 {resp.platform}
               </span>
               {resp.excerpt && (
