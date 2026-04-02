@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { createBrowserClient } from "@supabase/ssr";
 import { GH7Logo } from "@/components/gh7-logo";
 import {
   LayoutDashboardIcon,
@@ -128,7 +129,16 @@ export function PanelSidebar({
   const isBusiness = plan === "business";
 
   const handleLogout = async () => {
-    router.push("/giris");
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      );
+      await supabase.auth.signOut();
+    } catch {
+      // Force logout even if signOut fails
+    }
+    window.location.href = "/login?logout=true";
   };
 
   return (
