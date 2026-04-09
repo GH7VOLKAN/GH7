@@ -4,6 +4,7 @@ import type { PlatformKey, Sentiment } from "@/lib/types";
 import { extractCompetitorNames } from "@/lib/ai/types";
 
 /**
+<<<<<<< Updated upstream
  * Strip markdown, URLs, garbled text from AI responses for clean display.
  */
 function cleanExcerpt(text: string): string {
@@ -22,10 +23,55 @@ function cleanExcerpt(text: string): string {
     .replace(/^>\s*/gm, "")
     .replace(/[_~|]/g, "")
     .replace(/\[\d+\]/g, "")
+=======
+ * Strip markdown formatting, URLs, and special characters from AI response text
+ * to produce a clean, human-readable excerpt.
+ */
+function cleanExcerpt(text: string): string {
+  return text
+    // Remove [ERROR] prefix and error messages
+    .replace(/^\[ERROR\]\s*/i, "")
+    // Remove markdown links [text](url) → text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    // Remove standalone URLs (including those with parentheses, commas, etc.)
+    .replace(/https?:\/\/[^\s)}\]"']+/g, "")
+    // Remove remaining bare domain-like strings (www.example.com)
+    .replace(/(?:www\.)[a-zA-Z0-9.-]+\.[a-z]{2,}[^\s]*/g, "")
+    // Remove markdown bold/italic (handle nested and multiline)
+    .replace(/\*{1,3}([^*]*?)\*{1,3}/g, "$1")
+    // Remove markdown headers
+    .replace(/^#{1,6}\s+/gm, "")
+    // Remove markdown list markers
+    .replace(/^[\s]*[-*+]\s+/gm, " ")
+    // Remove numbered list markers
+    .replace(/^[\s]*\d+\.\s+/gm, " ")
+    // Remove markdown code blocks
+    .replace(/```[\s\S]*?```/g, "")
+    // Remove markdown code backticks
+    .replace(/`([^`]*)`/g, "$1")
+    // Remove markdown blockquote markers
+    .replace(/^>\s*/gm, "")
+    // Remove remaining markdown characters (underscore, tilde, pipe)
+    .replace(/[_~|]/g, "")
+    // Remove stray bracket/paren artifacts from cleaned links
+    .replace(/[[\](){}]/g, " ")
+    // Remove citation markers like [1], [2], etc.
+    .replace(/\[\d+\]/g, "")
+    // Fix Turkish character display (ensure proper encoding)
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€\u009D/g, '"')
+    .replace(/â€"/g, "—")
+    .replace(/â€"/g, "–")
+    // Remove HTML entities
+    .replace(/&[a-zA-Z]+;/g, " ")
+    // Collapse multiple spaces / newlines into single space
+>>>>>>> Stashed changes
     .replace(/\s+/g, " ")
     .trim();
 }
 
+<<<<<<< Updated upstream
 /** Detect garbled/binary/error responses that shouldn't be shown */
 function isGarbledResponse(text: string): boolean {
   if (!text || text.length < 10) return false;
@@ -39,6 +85,57 @@ function isGarbledResponse(text: string): boolean {
   const spaceRatio = (text.match(/\s/g) || []).length / text.length;
   if (text.length > 50 && spaceRatio < 0.05) return true;
   return false;
+=======
+/** Check if a bold-extracted string is likely a company name (not a city, generic term, etc.) */
+export function isLikelyCompanyName(name: string, brandNameLower: string): boolean {
+  const lower = name.toLowerCase();
+  if (lower.includes(brandNameLower) && brandNameLower.length > 2) return false;
+  if (lower.length < 3 || lower.length > 50) return false;
+  if (lower.startsWith("http")) return false;
+  if (/^\d/.test(name)) return false;
+
+  // Turkish cities (use toLocaleLowerCase for proper İ→i handling)
+  const lowerTR = name.toLocaleLowerCase("tr");
+  const cities = ["ankara","istanbul","izmir","bursa","antalya","adana","konya","gaziantep","mersin",
+    "diyarbakır","kayseri","eskişehir","trabzon","samsun","denizli","malatya","erzurum","van","batman",
+    "şanlıurfa","elazığ","sakarya","kocaeli","balıkesir","manisa","hatay","kahramanmaraş","mardin",
+    "muğla","aydın","tekirdağ","ordu","afyon","tokat","çorum","aksaray","giresun","yalova","edirne",
+    "karabük","kırklareli","düzce","bolu","çanakkale","sinop","kastamonu","rize","artvin","iğdır",
+    "türkiye","turkey"];
+  const cityBase = cities.some(c => lowerTR === c);
+  const citySuffix = cities.some(c => lowerTR.startsWith(c) && /^['ʼ]/.test(lowerTR.slice(c.length)));
+  if (cityBase || citySuffix) return false;
+
+  // Generic Turkish terms that appear bold in AI responses
+  const generic = ["not","önemli","dikkat","sonuç","özet","kaynak","referans","avantaj","dezavantaj",
+    "alternatif","öneriler","karşılaştırma","fiyat","maliyet","garanti","kalite","hizmet",
+    "deneyim","firma","şirket","marka","ürün","sistem","çözüm","teknoloji","proje","uygulama",
+    "kurulum","montaj","bakım","onarım","destek","müşteri","güvenilir","profesyonel",
+    "neden öneriliyor","öne çıkan özellikler","firma öne çıkan","genel değerlendirme",
+    "önemli noktalar","tavsiye","uyarı","bilgi","açıklama","detay","tercih","seçim",
+    "fiyatlandırma","malzeme","ürün ve hizmet","müşteri hizmetleri","deneyim ve referans"];
+  if (generic.some(g => lower === g || lower.startsWith(g + ":") || lower.startsWith(g + " ve ") || lower.endsWith(":" ))) return false;
+
+  // Exclude question-like phrases and descriptive sentences
+  if (/[?]/.test(name)) return false;
+  if (lower.startsWith("hangi ") || lower.startsWith("nerede ") || lower.startsWith("nasıl ")) return false;
+  if (lower.startsWith("kapalı ·") || lower.startsWith("what ") || lower.startsWith("how ")) return false;
+  if (lower.includes("platformları") || lower.includes("siteleri") || lower.includes("mağazaları") || lower.includes("şirketleri")) return false;
+  if (lower.startsWith("doğal ") || lower.startsWith("yerel ") || lower.startsWith("büyük ") || lower.startsWith("genel ") || lower.startsWith("spesifik ")) return false;
+  if (lower.startsWith("öne çıkan") || lower.startsWith("seçim kriter")) return false;
+
+  // Exclude entries with markdown artifacts
+  if (/[\[\]|#]/.test(name)) return false;
+
+  // Must contain at least one uppercase letter (company names are typically capitalized)
+  if (!/[A-ZÇĞİÖŞÜ]/.test(name)) return false;
+
+  // Exclude overly long descriptive phrases (>6 words typically aren't company names)
+  const wordCount = name.split(/\s+/).length;
+  if (wordCount > 6) return false;
+
+  return true;
+>>>>>>> Stashed changes
 }
 
 export interface RecentMention {
@@ -102,6 +199,16 @@ export interface AiResponseExcerpt {
   excerpt: string;
 }
 
+/** Per-platform Q&A pair for detailed AI response display */
+export interface PlatformQA {
+  platform: PlatformKey;
+  promptText: string;
+  fullAnswer: string;
+  mentioned: boolean;
+  sentiment: Sentiment | null;
+  competitors: string[];
+}
+
 /** Checklist item summary for overview */
 export interface ChecklistOverviewItem {
   simpleTitle: string;
@@ -155,6 +262,8 @@ export interface DashboardOverview {
   worstPrompts: PromptSummaryItem[];
   /** AI response excerpts where brand is mentioned */
   aiResponseExcerpts: AiResponseExcerpt[];
+  /** Per-platform Q&A pairs for all platforms (mentioned or not) */
+  platformQAs: PlatformQA[];
   /** Easiest checklist items (highest feasibility, not complete) */
   easiestChecklistItems: ChecklistOverviewItem[];
   /** Highest impact checklist items (not complete) */
@@ -368,15 +477,30 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
   if (latestScan) {
     const allScanResults = await prisma.promptResult.findMany({
       where: { scanId: latestScan.id },
-      select: { platform: true, mentioned: true, competitors: true },
+      select: { platform: true, mentioned: true, competitors: true, fullResponse: true },
     });
+
+    const brandNameLower = (brand?.name ?? "").toLowerCase();
 
     // Count how many times each competitor name appears across all results
     const compCounts: Record<string, { total: number; perPlatform: Record<PlatformKey, { mentioned: number; total: number }> }> = {};
 
+<<<<<<< Updated upstream
     // Source 1: PromptResult.competitors field
+=======
+>>>>>>> Stashed changes
     for (const r of allScanResults) {
-      const comps = extractCompetitorNames(r.competitors);
+      let comps = extractCompetitorNames(r.competitors);
+
+      // FALLBACK: If competitors field is empty/null, extract from fullResponse using **bold** patterns
+      if (comps.length === 0 && r.fullResponse && !r.fullResponse.startsWith("[ERROR]")) {
+        const boldMatches = r.fullResponse.match(/\*\*([^*]{2,60})\*\*/g) ?? [];
+        const extracted = boldMatches
+          .map((m: string) => m.replace(/\*\*/g, "").trim())
+          .filter((name: string) => isLikelyCompanyName(name, brandNameLower));
+        comps = [...new Set(extracted)].slice(0, 5);
+      }
+
       for (const name of comps) {
         const key = name.trim();
         if (!key) continue;
@@ -460,9 +584,15 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     } else {
       merged.splice(brandPos, 0, brandEntry);
     }
+<<<<<<< Updated upstream
     competitorRanking = merged.slice(0, 10);
 
     // If brand is not in top 10, add it anyway
+=======
+    competitorRanking = merged.slice(0, 15);
+
+    // If brand is not in top 15, add it anyway
+>>>>>>> Stashed changes
     if (!competitorRanking.some((c) => c.isUser)) {
       competitorRanking.push(brandEntry);
     }
@@ -559,6 +689,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
   let bestPrompts: PromptSummaryItem[] = [];
   let worstPrompts: PromptSummaryItem[] = [];
   let aiResponseExcerpts: AiResponseExcerpt[] = [];
+  let platformQAs: PlatformQA[] = [];
 
   if (latestScan) {
     const promptResultsWithText = await prisma.promptResult.findMany({
@@ -568,6 +699,8 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
         mentioned: true,
         excerpt: true,
         fullResponse: true,
+        sentiment: true,
+        competitors: true,
         prompt: { select: { text: true } },
       },
     });
@@ -626,6 +759,11 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
 
       const rawText = r.fullResponse ?? r.excerpt ?? "";
       if (!rawText) continue;
+<<<<<<< Updated upstream
+=======
+
+      // Clean markdown/URLs before extracting snippet
+>>>>>>> Stashed changes
       const responseText = cleanExcerpt(rawText);
       if (!responseText) continue;
 
@@ -634,17 +772,41 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
       const brandIdx = lowerResponse.indexOf(brandNameLower);
       let snippet = "";
       if (brandIdx >= 0) {
-        const start = Math.max(0, brandIdx - 60);
-        const end = Math.min(responseText.length, brandIdx + brandName.length + 120);
+        // Find sentence boundaries for a cleaner cut
+        const start = Math.max(0, brandIdx - 80);
+        const end = Math.min(responseText.length, brandIdx + brandName.length + 150);
         snippet = (start > 0 ? "..." : "") + responseText.slice(start, end).trim() + (end < responseText.length ? "..." : "");
       } else {
-        snippet = responseText.slice(0, 180).trim() + (responseText.length > 180 ? "..." : "");
+        snippet = responseText.slice(0, 200).trim() + (responseText.length > 200 ? "..." : "");
       }
 
       aiResponseExcerpts.push({
         platform: r.platform as PlatformKey,
         promptText: r.prompt.text,
         excerpt: snippet,
+      });
+    }
+
+    // ── Platform Q&A pairs — ALL platforms, ALL questions ──
+    // Group by prompt, then for each prompt show each platform's response
+    for (const r of promptResultsWithText) {
+      const rawText = r.fullResponse ?? r.excerpt ?? "";
+      // Detect garbled/error responses (strip URLs first to avoid false positives on long URLs)
+      const textNoUrls = rawText.replace(/https?:\/\/[^\s)]+/g, "URL");
+      const isGarbled = rawText.startsWith("[ERROR]") || rawText.startsWith("ERROR") ||
+        (rawText.includes("mevcut değil") && rawText.length < 100) ||
+        (textNoUrls.length > 50 && (textNoUrls.match(/\s/g) || []).length / textNoUrls.length < 0.02) ||
+        textNoUrls.split(/\s+/).filter((w: string) => w.length > 40 && w !== "URL").length >= 2;
+      const cleaned = isGarbled ? "" : (rawText ? cleanExcerpt(rawText) : "");
+      const comps = extractCompetitorNames(r.competitors);
+
+      platformQAs.push({
+        platform: r.platform as PlatformKey,
+        promptText: r.prompt.text,
+        fullAnswer: cleaned,
+        mentioned: r.mentioned,
+        sentiment: (r.sentiment as Sentiment) ?? null,
+        competitors: comps,
       });
     }
   }
@@ -681,6 +843,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
   const sourceMap: SourceMapEntry[] = [];
 
   // Check which standard categories exist
+<<<<<<< Updated upstream
   // DB types vary: "kurumsal" | "dizin" | "ugc" | "referans" | "medya" | "directory" | "profile" | "news"
   const domainLower = brandDomain.replace(/^www\./, "").toLowerCase();
   const hasDomain = sourceDomains.some((s) => s.domain.toLowerCase().includes(domainLower) && domainLower.length > 0);
@@ -696,6 +859,16 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     s.type === "medya" || s.type === "news" || s.type === "article" ||
     ["haberturk.com", "medium.com", "youtube.com"].some((d) => s.domain.includes(d))
   );
+=======
+  // DB types: "kurumsal" | "dizin" | "ugc" | "referans" | "medya"
+  const hasDomain = sourceDomains.some((s) => s.domain.includes(brandDomain.replace(/^www\./, "")));
+  const hasDirectory = sourceDomains.some((s) => s.type === "dizin");
+  const hasGoogleBusiness = sourceDomains.some((s) =>
+    s.domain.includes("google") && (s.type === "dizin" || s.type === "referans")
+  );
+  const hasLinkedIn = sourceDomains.some((s) => s.domain.includes("linkedin"));
+  const hasNews = sourceDomains.some((s) => s.type === "medya");
+>>>>>>> Stashed changes
 
   sourceMap.push(
     { domain: brandDomain || "Web sitesi", type: "website", exists: hasDomain },
@@ -731,6 +904,7 @@ export const getOverviewData = cache(async (brandId: string): Promise<DashboardO
     bestPrompts,
     worstPrompts,
     aiResponseExcerpts,
+    platformQAs,
     easiestChecklistItems,
     highImpactChecklistItems,
     sourceMap,
