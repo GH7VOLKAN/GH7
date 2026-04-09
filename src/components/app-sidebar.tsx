@@ -374,7 +374,7 @@ export function AppSidebar({
               {initial}
             </div>
           )}
-          <div className="grid flex-1 text-left leading-tight">
+          <div className="grid flex-1 min-w-0 text-left leading-tight">
             <span className="truncate text-[13px] font-medium">{user?.name ?? "Demo"}</span>
             <span className="truncate text-[11px] text-muted-foreground">
               {user?.email ?? "demo@gh7.ai"}

@@ -105,6 +105,10 @@ export function normalizePhoneNumber(phone: string): string {
  */
 export function isValidTurkishPhone(phone: string): boolean {
   const normalized = normalizePhoneNumber(phone);
+<<<<<<< Updated upstream
   // Turkish mobile: 905XXXXXXXXX (12 digits total: 90 + 5XX + XXX XX XX)
+=======
+  // Turkish mobile: 905XXXXXXXXX (12 digits total, starts with 905)
+>>>>>>> Stashed changes
   return /^905\d{9}$/.test(normalized);
 }

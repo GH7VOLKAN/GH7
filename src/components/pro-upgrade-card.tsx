@@ -16,7 +16,7 @@ const messages: Record<UpgradeType, { title: string; desc: string; cta: string }
   },
   report: {
     title: "Her hafta raporunu al",
-    desc: "Rakiplerin ne yaptı? Sen ne kadar ilerldin? Her cuma raporun hazır.",
+    desc: "Rakiplerin ne yaptı? Sen ne kadar ilerledin? Her cuma raporun hazır.",
     cta: "Haftalık rapora başla",
   },
   competitor: {

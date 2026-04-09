@@ -56,11 +56,16 @@ export default function LoginPage() {
         setSessionCleared(true);
         window.history.replaceState({}, "", "/login");
       } else if (session) {
+<<<<<<< Updated upstream
         // Aktif session var — otomatik yönlendir
         if (session.user.email) {
           localStorage.setItem("gh7_email", session.user.email);
         }
         router.push("/panel/genel");
+=======
+        // There's an existing session — redirect to dashboard
+        router.push("/dashboard/genel");
+>>>>>>> Stashed changes
         return;
       }
     }

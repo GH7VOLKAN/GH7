@@ -48,7 +48,11 @@ export class GoogleProvider implements AIProvider {
       errors.push(`gemini-2.5-flash: ${msg}`);
     }
 
+<<<<<<< Updated upstream
     // Step 3: Fallback to gemini-2.5-flash-lite
+=======
+    // Step 3: Fallback to gemini-2.5-flash-lite (lightweight, no grounding)
+>>>>>>> Stashed changes
     try {
       const content = await this.tryModel("gemini-2.5-flash-lite", promptText, false);
       if (content.length > 0) {

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey, Sentiment } from "@/lib/types";
 import { extractCompetitorNames } from "@/lib/ai/types";
+import { isLikelyCompanyName } from "@/lib/dal/overview";
 
 export interface PlatformResult {
   platform: PlatformKey;
@@ -11,6 +12,7 @@ export interface PlatformResult {
   excerpt: string | null;
   fullResponse: string | null;
   citations: string[];
+  competitors: string[];
 }
 
 export interface PromptItemData {
@@ -32,6 +34,10 @@ export interface PromptItemData {
 }
 
 export const getPromptsData = cache(async (brandId: string) => {
+  // Get brand name for competitor filtering
+  const brand = await prisma.brand.findUnique({ where: { id: brandId }, select: { name: true } });
+  const brandNameLower = (brand?.name ?? "").toLowerCase();
+
   // Get latest completed scan for this brand
   const latestScan = await prisma.scan.findFirst({
     where: { brandId, status: "completed" },
@@ -78,6 +84,17 @@ export const getPromptsData = cache(async (brandId: string) => {
         excerpt: r.excerpt,
         fullResponse: r.fullResponse ?? null,
         citations: Array.isArray(r.citations) ? (r.citations as string[]) : [],
+        competitors: (() => {
+          let comps = extractCompetitorNames(r.competitors);
+          // Fallback: extract from **bold** text in fullResponse when competitors field is empty
+          if (comps.length === 0 && r.fullResponse && !r.fullResponse.startsWith("[ERROR]")) {
+            const boldMatches = r.fullResponse.match(/\*\*([^*]{2,60})\*\*/g) ?? [];
+            comps = [...new Set(boldMatches
+              .map((m: string) => m.replace(/\*\*/g, "").trim())
+              .filter((name: string) => isLikelyCompanyName(name, brandNameLower)))].slice(0, 5);
+          }
+          return comps;
+        })(),
       };
       platformResults.push(result);
 
@@ -89,10 +106,22 @@ export const getPromptsData = cache(async (brandId: string) => {
       }
     }
 
-    // Find top competitor for this prompt (from scan results)
+    // Find top competitor for this prompt (from scan results + fallback)
     const allCompetitors: string[] = [];
     for (const r of p.results) {
-      const comps = extractCompetitorNames(r.competitors);
+      let comps = extractCompetitorNames(r.competitors);
+      if (comps.length === 0 && r.fullResponse && !r.fullResponse.startsWith("[ERROR]")) {
+        const boldMatches = r.fullResponse.match(/\*\*([^*]{2,60})\*\*/g) ?? [];
+        comps = [...new Set(boldMatches
+          .map((m: string) => m.replace(/\*\*/g, "").trim())
+          .filter((name: string) => {
+            const lower = name.toLowerCase();
+            if (lower.includes(brandNameLower) && brandNameLower.length > 2) return false;
+            if (lower.length < 3 || lower.length > 50) return false;
+            if (lower.startsWith("http") || /^\d/.test(name)) return false;
+            return true;
+          }))].slice(0, 5);
+      }
       allCompetitors.push(...comps);
     }
     const compCounts: Record<string, number> = {};
@@ -101,7 +130,7 @@ export const getPromptsData = cache(async (brandId: string) => {
     }
     const sortedComps = Object.entries(compCounts).sort((a, b) => b[1] - a[1]);
     const topComp = sortedComps[0];
-    const topCompetitor = topComp ? `${topComp[0]} (${topComp[1]}/4 platformda)` : "—";
+    const topCompetitor = topComp ? `${topComp[0]} (${topComp[1]}/${p.results.length} platformda)` : "—";
 
     return {
       id: p.id,
@@ -112,7 +141,7 @@ export const getPromptsData = cache(async (brandId: string) => {
       businessArea: p.businessArea ?? null,
       searchIntent: p.searchIntent ?? null,
       salesPotential: p.salesPotential ?? null,
-      visibility: Math.round((mentionCount / 4) * 100),
+      visibility: p.results.length > 0 ? Math.round((mentionCount / p.results.length) * 100) : 0,
       position: bestPosition,
       sentiment,
       topCompetitor,

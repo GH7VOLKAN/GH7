@@ -53,6 +53,7 @@ export default async function GenelPage() {
       bestPrompts={data.bestPrompts}
       worstPrompts={data.worstPrompts}
       aiResponseExcerpts={data.aiResponseExcerpts}
+      platformQAs={data.platformQAs}
       easiestChecklistItems={data.easiestChecklistItems}
       highImpactChecklistItems={data.highImpactChecklistItems}
       sourceMap={data.sourceMap}
