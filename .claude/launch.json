@@ -2,11 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
+      "name": "gh7-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000,
-      "cwd": "/Users/volkansimsirkaya/GH7GEO/gh7-dashboard"
+      "port": 3000
     }
   ]
 }
