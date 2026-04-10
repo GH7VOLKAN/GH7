@@ -89,12 +89,6 @@ const BUSINESS_ITEMS = [
 
 const BOTTOM_ITEMS = [
   {
-    title: "Ajans Paketleri",
-    href: "/panel/ajans-paketleri",
-    emoji: "🛠",
-    icon: null,
-  },
-  {
     title: "Ayarlar",
     href: "/panel/ayarlar",
     icon: SettingsIcon,
@@ -207,10 +201,10 @@ export function PanelSidebar({
           );
         })}
 
-        {/* Divider before Business section */}
+        {/* Divider before Pro section */}
         <div className="h-px bg-gray-100 my-4" />
 
-        {/* Business Section Header */}
+        {/* Pro Section Header */}
         <div className="flex items-center gap-2 px-3 py-1.5">
           <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
             Pro
@@ -243,7 +237,7 @@ export function PanelSidebar({
           );
         })}
 
-        {/* Divider before Ajans + Settings */}
+        {/* Divider before Settings */}
         <div className="h-px bg-gray-100 my-4" />
 
         {BOTTOM_ITEMS.map((item) => {

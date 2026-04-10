@@ -348,6 +348,7 @@ h2.sec-h2{font-size:clamp(32px,4.5vw,56px);font-weight:800;letter-spacing:-.04em
 h2.sec-h2 .muted{color:var(--g300)}
 .sec-desc{font-size:16px;color:var(--g500);line-height:1.65}
 .cozum-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--g200);border:1px solid var(--g200);border-radius:14px;overflow:hidden}
+.cozum-steps-2col{grid-template-columns:repeat(2,1fr);max-width:720px;margin-left:auto;margin-right:auto}
 .cs{background:var(--white);padding:32px;position:relative}
 .cs-step{font-size:11px;font-weight:700;color:var(--g300);font-family:monospace;letter-spacing:.5px;margin-bottom:16px;display:block}
 .cs-title{font-size:20px;font-weight:800;color:var(--black);margin-bottom:8px;letter-spacing:-.03em;line-height:1.2}

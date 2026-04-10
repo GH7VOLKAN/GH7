@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { CheckIcon, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckIcon } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
-type PlanName = "Free" | "Pro" | "Business" | "Ajans";
+type PlanName = "Free" | "Pro";
 
 interface Plan {
   name: PlanName;
@@ -22,90 +22,69 @@ const PLANS: Plan[] = [
     period: "/ay",
     description: "Başlangıç için ideal",
     features: [
-      "1 marka",
-      "5 arama takibi",
-      "1 platform (AI Overview)",
-      "3 il takibi",
+      "1 marka takibi",
+      "10 arama sorgusu",
+      "5 AI platformu",
+      "1 il takibi",
       "Haftalık rapor",
       "Temel GEO skoru",
     ],
   },
   {
     name: "Pro",
-    price: "₺2.495",
+    price: "₺2.450",
     period: "/ay",
     description: "Büyüyen markalar için",
     popular: true,
     features: [
-      "1 marka",
-      "50 arama takibi",
-      "5 platform",
-      "81 il takibi",
+      "3 proje (firma + kişi + ürün)",
+      "20 arama sorgusu",
+      "5 AI platformu + Google AIO",
+      "5 il takibi",
       "Günlük rapor + PDF",
       "Rakip analizi",
       "İyileştirme önerileri",
-      "Keyword keşif",
-      "API erişimi",
-      "WhatsApp bildirimleri",
-    ],
-  },
-  {
-    name: "Business",
-    price: "₺4.995",
-    period: "/ay",
-    description: "Pro + aksiyon araçları",
-    features: [
-      "3 proje (karma kombinasyon)",
-      "Sınırsız sorgu + ürün + pazar",
-      "6 AI platformu + 10 il + günlük analiz",
+      "İçerik taslakları",
       "Haftalık aksiyon listesi",
-      "Opus içerik üretimi (hazır blog taslağı)",
-      "Rakip istihbarat",
-      "Korelasyon motoru",
-      "API erişimi",
-    ],
-  },
-  {
-    name: "Ajans",
-    price: "₺19.995",
-    period: "/ay",
-    description: "Ajanslar ve danışmanlar için",
-    features: [
-      "25 marka",
-      "Sınırsız arama",
-      "6 platform",
-      "81 il takibi",
-      "White-label raporlama",
-      "RaaS gelir paylaşımı",
-      "Müşteri yönetim paneli",
-      "Toplu tarama",
-      "SLA destekleri",
-      "Özel entegrasyonlar",
+      "E-posta + WhatsApp bildirimleri",
     ],
   },
 ];
 
-// Map plan names to the API plan slugs
 const PLAN_API_SLUG: Record<string, string> = {
   Pro: "pro",
-  Business: "business",
-  Ajans: "agency",
 };
 
 export default function AbonelikPage() {
-  // In a real app, currentPlan would come from user profile/session
-  const [currentPlan] = useState<PlanName>("Free");
+  const [currentPlan, setCurrentPlan] = useState<PlanName>("Free");
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
+  useEffect(() => {
+    async function loadPlan() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const res = await fetch("/api/panel/profile");
+        if (res.ok) {
+          const data = await res.json();
+          const plan = data.profile?.plan ?? "free";
+          if (plan === "pro" || plan === "business" || plan === "agency") {
+            setCurrentPlan("Pro");
+          }
+        }
+      }
+    }
+    loadPlan();
+  }, []);
+
   function canUpgrade(planName: PlanName): boolean {
-    const order: PlanName[] = ["Free", "Pro", "Business", "Ajans"];
+    const order: PlanName[] = ["Free", "Pro"];
     return order.indexOf(planName) > order.indexOf(currentPlan);
   }
 
   function getButtonLabel(planName: PlanName): string {
     if (planName === currentPlan) return "Mevcut Plan";
-    if (planName === "Ajans") return "İletişime Geçin";
-    if (currentPlan === "Free") return `${planName}'ya Geç`;
+    if (currentPlan === "Free") return "Pro'ya Geç";
     return `${planName}'a Yükselt`;
   }
 
@@ -122,7 +101,6 @@ export default function AbonelikPage() {
       });
       const data = await res.json();
       if (data.checkoutFormContent) {
-        // Iyzico returns an HTML form — render it in a new page/iframe
         const w = window.open("", "_blank");
         if (w) {
           w.document.write(data.checkoutFormContent);
@@ -156,11 +134,8 @@ export default function AbonelikPage() {
               {currentPlan}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {currentPlan === "Free" && "5 arama · 1 platform · 3 il"}
-              {currentPlan === "Pro" && "50 arama · 5 platform · 81 il"}
-              {currentPlan === "Business" &&
-                "Sınırsız sorgu · 6 platform · 10 il"}
-              {currentPlan === "Ajans" && "25 marka · Sınırsız arama · 81 il"}
+              {currentPlan === "Free" && "10 sorgu · 5 platform · 1 il"}
+              {currentPlan === "Pro" && "20 sorgu · 5 platform · 5 il · 3 proje"}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -182,7 +157,7 @@ export default function AbonelikPage() {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
         {PLANS.map((plan) => {
           const isCurrent = plan.name === currentPlan;
           const isUpgrade = canUpgrade(plan.name);
@@ -238,15 +213,6 @@ export default function AbonelikPage() {
                 >
                   Mevcut Plan
                 </button>
-              ) : plan.name === "Ajans" ? (
-                <button
-                  onClick={() => {
-                    window.location.href = "mailto:info@gh7.ai";
-                  }}
-                  className="w-full py-2.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  İletişime Geçin
-                </button>
               ) : isUpgrade ? (
                 <button
                   onClick={() => handleCheckout(plan.name)}
@@ -274,27 +240,6 @@ export default function AbonelikPage() {
         })}
       </div>
 
-      {/* Ajans Paketleri Link */}
-      <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium text-gray-900">
-              Tek seferlik hizmetler
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Aylık abonelik yerine tek seferlik GEO hizmet paketleri
-            </p>
-          </div>
-          <Link
-            href="/panel/ajans-paketleri"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Paketlere Git
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-
       {/* FAQ */}
       <div className="border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
         <h3 className="font-medium text-gray-900 mb-4">
@@ -311,8 +256,8 @@ export default function AbonelikPage() {
               a: "Evet, istediğiniz zaman iptal edebilirsiniz. Mevcut dönem sonuna kadar erişiminiz devam eder.",
             },
             {
-              q: "Ajans planı nasıl çalışır?",
-              a: "Ajans planı ile müşterilerinizin GEO performansını tek panelden yönetirsiniz. RaaS gelir paylaşımı ile ek gelir elde edersiniz.",
+              q: "Free planda ne yapabilirim?",
+              a: "1 marka için 10 sorgu ile 5 AI platformunda görünürlüğünüzü takip edebilirsiniz. Pro'ya geçerek 20 sorgu, 3 proje ve tüm gelişmiş özelliklere erişin.",
             },
           ].map((faq) => (
             <div key={faq.q}>
