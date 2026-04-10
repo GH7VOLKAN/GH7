@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAvailableProviders } from "@/lib/ai/provider-registry";
+import { getAllStatuses } from "@/lib/ai/circuit-breaker";
 
 const ENV_VARS_TO_CHECK = [
   "OPENAI_API_KEY",
@@ -38,15 +39,23 @@ export async function GET() {
     // provider registry error
   }
 
+  // 4. Circuit breaker statuses
+  const circuitBreakers = getAllStatuses();
+  const openCircuits = Object.entries(circuitBreakers).filter(
+    ([, v]) => v.state === "open"
+  );
+
   const isHealthy = databaseOk && providerCount > 0;
+  const isDegraded = openCircuits.length > 0;
 
   const body = {
-    status: isHealthy ? "healthy" : "degraded",
+    status: isHealthy ? (isDegraded ? "degraded" : "healthy") : "unhealthy",
     timestamp,
     checks: {
       database: databaseOk,
       envVars,
       providers: providerCount,
+      circuitBreakers,
     },
     version: "1.0.0",
   };

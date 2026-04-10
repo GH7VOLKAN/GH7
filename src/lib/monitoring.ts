@@ -1,8 +1,8 @@
 /**
- * GH7.ai Error Tracking
+ * GH7.ai Error Tracking & Monitoring
  *
- * Lightweight error tracking. Logs to console in dev,
- * can be extended with Sentry/LogRocket later.
+ * Console logging + optional Sentry integration.
+ * Install @sentry/nextjs and set NEXT_PUBLIC_SENTRY_DSN to enable Sentry.
  */
 
 export interface ErrorContext {
@@ -10,15 +10,28 @@ export interface ErrorContext {
   userId?: string;
   brandId?: string;
   extra?: Record<string, unknown>;
-  /** Legacy: callers may pass arbitrary keys directly */
   [key: string]: unknown;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _sentry: any = null;
+let _sentryChecked = false;
+
+async function trySentry() {
+  if (_sentryChecked) return _sentry;
+  _sentryChecked = true;
+  if (!process.env.NEXT_PUBLIC_SENTRY_DSN) return null;
+  try {
+    _sentry = await (Function('return import("@sentry/nextjs")')());
+  } catch {
+    _sentry = null;
+  }
+  return _sentry;
 }
 
 /**
  * Capture and log an error with optional context.
- *
- * Accepts both the new `ErrorContext` shape and the legacy
- * `Record<string, unknown>` shape so existing call-sites keep working.
+ * Sends to Sentry when configured, always logs to console.
  */
 export function captureError(
   error: unknown,
@@ -31,25 +44,18 @@ export function captureError(
       : "unknown";
 
   console.error(`[GH7 Error] ${contextLabel}:`, err.message);
-  if (err.stack) console.error(err.stack);
-
-  // Structured payload for future transport (Sentry, LogRocket, etc.)
-  if (process.env.NODE_ENV === "development") {
-    console.error("[GH7-ERROR]", {
-      message: err.message,
-      stack: err.stack,
-      ...ctx,
-      timestamp: new Date().toISOString(),
-    });
+  if (err.stack && process.env.NODE_ENV === "development") {
+    console.error(err.stack);
   }
 
-  // TODO: When Sentry is configured, uncomment:
-  // if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-  //   Sentry.captureException(error, {
-  //     tags: { context: contextLabel },
-  //     extra: ctx,
-  //   });
-  // }
+  trySentry().then((s) => {
+    if (s?.captureException) {
+      s.captureException(err, {
+        tags: { context: contextLabel },
+        extra: (ctx as Record<string, unknown>) ?? {},
+      });
+    }
+  });
 }
 
 export function captureMessage(
@@ -57,4 +63,10 @@ export function captureMessage(
   level: "info" | "warning" | "error" = "info",
 ): void {
   console.log(`[GH7 ${level}] ${message}`);
+
+  trySentry().then((s) => {
+    if (s?.captureMessage) {
+      s.captureMessage(message, level);
+    }
+  });
 }
