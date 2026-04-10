@@ -3,7 +3,7 @@ import IstihbaratContent from "./istihbarat-content";
 import { PageHero } from "@/components/panel/page-hero";
 
 export default async function IstihbaratPage() {
-  await checkPageAccess("business", "/panel/istihbarat");
+  await checkPageAccess("pro", "/panel/istihbarat");
   return (
     <>
       <PageHero

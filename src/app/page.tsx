@@ -69,7 +69,7 @@ export default function HomePage() {
       {/* BÖLÜM 1: HERO */}
       <section className="hero">
         <span className="hero-eyebrow">Generative Engine Optimization</span>
-        <h1 className="hero-h1">Yapay zeka<br/>sizi tanıyor <span className="muted">mu?</span></h1>
+        <h1 className="hero-h1">Yapay zeka<br/>sizi öneriyor <span className="muted">mu?</span></h1>
 
         <div className="hero-body">
           <p>Bunu kendiniz de yapabilirsiniz.</p>
@@ -171,83 +171,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* BÖLÜM 4: ÇÖZÜM — 4 Katman */}
+      {/* BÖLÜM 4: FİYATLANDIRMA — 2 Paket */}
       <div className="cozum-sec reveal" id="cozum">
         <div className="cozum-inner">
           <div className="cozum-header">
-            <span className="sec-tag">Çözümler</span>
-            <h2 className="sec-h2">Tespit et.<br/><span className="muted">Takip et. Çöz. Uygulat.</span></h2>
-            <p className="sec-desc">Nereye kadar gitmek istediğinizi siz seçin.</p>
+            <span className="sec-tag">Fiyatlandırma</span>
+            <h2 className="sec-h2">Net fiyat.<br/><span className="muted">Gizli maliyet yok.</span></h2>
+            <p className="sec-desc">Ücretsiz başlayın. Pro ile takip edin ve çözüm üretin.</p>
           </div>
 
-          <div className="cozum-steps" id="pricing">
+          <div className="cozum-steps" id="pricing" style={{ maxWidth: 800, margin: "0 auto" }}>
             {/* Ücretsiz */}
             <div className="cs">
-              <span className="cs-step">01 —</span>
-              <div className="cs-title">Tespit Et</div>
+              <div className="cs-title">Ücretsiz</div>
               <div className="cs-price">₺0</div>
               <div className="cs-period">tek seferlik</div>
-              <p className="cs-desc">Yapay zeka sizi nasıl görüyor? 6 platform, tüm rakipler, tek rapor.</p>
+              <p className="cs-desc">Yapay zeka sizi nasıl görüyor? 5 platform, 10 sorgu, tüm rakipler. Tam analiz, blur yok.</p>
               <ul className="cs-features">
-                <li>6 AI platformu taraması</li>
+                <li>5 AI platformu taraması</li>
+                <li>10 sorgu analizi</li>
                 <li>Rakip karşılaştırma</li>
                 <li>Ses payı, pozisyon, algı skoru</li>
+                <li>AI yanıtları tam metin</li>
                 <li>Kritik sorunlar listesi</li>
               </ul>
-              <a href="#test" className="cs-cta cs-cta-out">Ücretsiz Test Et</a>
+              <a href="#test" className="cs-cta cs-cta-out">Ücretsiz Analiz Et</a>
             </div>
 
-            {/* Takip */}
-            <div className="cs">
-              <span className="cs-step">02 —</span>
-              <div className="cs-title">Takip Et</div>
-              <div className="cs-price">₺2.450</div>
-              <div className="cs-period">/ay</div>
-              <p className="cs-desc">Her hafta otomatik audit. Rakip sizi geçince anında haberdar olun.</p>
-              <ul className="cs-features">
-                <li>Haftalık otomatik izleme</li>
-                <li>Rakip pozisyon değişimi</li>
-                <li>İl bazlı görünürlük</li>
-                <li>E-posta + WhatsApp özet</li>
-                <li>Trend grafikleri</li>
-              </ul>
-              <a href="#" className="cs-cta cs-cta-out">Takibe Başla</a>
-            </div>
-
-            {/* Çöz */}
+            {/* Pro */}
             <div className="cs">
               <div className="cs-badge">En Popüler</div>
-              <span className="cs-step">03 —</span>
-              <div className="cs-title">Çözüm Üret</div>
-              <div className="cs-price">₺4.450</div>
+              <div className="cs-title">Pro</div>
+              <div className="cs-price">₺2.450</div>
               <div className="cs-period">/ay</div>
-              <p className="cs-desc">Sorun tespit edildi, çözüm hazır. Schema kodu, içerik taslağı, aksiyon listesi — hepsi otomatik.</p>
+              <p className="cs-desc">Haftalık takip + çözüm üretimi. Rakip sizi geçince haberdar olun, hazır çözüm alın.</p>
               <ul className="cs-features">
-                <li>Takip&apos;teki her şey</li>
-                <li>Otomatik schema kodu üretimi</li>
-                <li>Opus ile hazır içerik taslağı</li>
-                <li>Haftalık &quot;Bu 3 şeyi yap&quot; listesi</li>
+                <li>Ücretsiz&apos;deki her şey</li>
+                <li>20 sorgu, haftalık otomatik tarama</li>
+                <li>Haftalık aksiyon listesi</li>
+                <li>İçerik taslakları (Opus)</li>
                 <li>Rakip istihbarat raporu</li>
-                <li>Yaptım → doğrulandı kontrol</li>
+                <li>Yaptım → doğrulandı kontrolü</li>
+                <li>Trend grafikleri + korelasyon</li>
+                <li>PDF rapor + WhatsApp özet</li>
+                <li>E-posta bildirimleri</li>
               </ul>
-              <a href="#" className="cs-cta cs-cta-black">Çözüm Üretimine Başla →</a>
-            </div>
-
-            {/* Uygulat */}
-            <div className="cs cs-ajans">
-              <span className="cs-step">04 —</span>
-              <div className="cs-title">Uygulat</div>
-              <div className="cs-price">₺9.450</div>
-              <div className="cs-period">/ay</div>
-              <p className="cs-desc">Siz sadece onaylayın, ajansımız uygulasın. Schema, içerik, optimizasyon — hepsi sizin yerinize.</p>
-              <ul className="cs-features">
-                <li>Çözüm Üret&apos;teki her şey</li>
-                <li>Ajans doğrudan sitenize erişir</li>
-                <li>Uygulama garantisi</li>
-                <li>Aylık etki raporu</li>
-                <li>Öncelikli destek</li>
-              </ul>
-              <a href="#" className="cs-cta cs-cta-out">Bizi Arayın</a>
+              <Link href="/giris" className="cs-cta cs-cta-black">Pro&apos;ya Başla →</Link>
             </div>
           </div>
         </div>
@@ -321,67 +290,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* BÖLÜM 5.5: TÜRKİYE HARİTASI */}
-      <section className="map-sec reveal">
-        <div className="map-inner">
-          <h2 className="sec-h2">Her il ayrı bir pazar.<br/><span className="muted">Her ilde ayrı rakip.</span></h2>
-          <p className="sec-desc" style={{ marginBottom: 32 }}>81 ilde yapay zeka görünürlüğünüzü takip edin.</p>
-          <div className="map-grid">
-            <div className="map-visual">
-              {[
-                { name: "İstanbul", score: 82, x: 28, y: 18, color: "#22C55E" },
-                { name: "Ankara", score: 71, x: 42, y: 35, color: "#22C55E" },
-                { name: "Balıkesir", score: 91, x: 18, y: 30, color: "#22C55E" },
-                { name: "İzmir", score: 65, x: 12, y: 42, color: "#F59E0B" },
-                { name: "Bursa", score: 58, x: 24, y: 26, color: "#F59E0B" },
-                { name: "Antalya", score: 45, x: 30, y: 58, color: "#F59E0B" },
-                { name: "Konya", score: 38, x: 42, y: 50, color: "#EF4444" },
-                { name: "Trabzon", score: 22, x: 62, y: 18, color: "#EF4444" },
-                { name: "Erzurum", score: 15, x: 70, y: 25, color: "#EF4444" },
-                { name: "Diyarbakır", score: 12, x: 65, y: 40, color: "#EF4444" },
-              ].map((city) => (
-                <div
-                  key={city.name}
-                  className="map-pin"
-                  style={{ left: `${city.x}%`, top: `${city.y}%` }}
-                >
-                  <span className="map-dot" style={{ background: city.color }} />
-                  <span className="map-pin-label">{city.name} ({city.score})</span>
-                </div>
-              ))}
-            </div>
-            <div className="map-stats">
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#22C55E" }} /><span className="map-stat-num">3</span> güçlü il</div>
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#F59E0B" }} /><span className="map-stat-num">3</span> orta il</div>
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#EF4444" }} /><span className="map-stat-num">4</span> zayıf il</div>
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#E5E7EB" }} /><span className="map-stat-num">71</span> takip dışı</div>
-              <a href="#test" className="map-cta">Kendi illerinizi analiz edin →</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* BÖLÜM 5.6: AJANS PAKETLERİ */}
-      <section className="ajans-sec reveal">
-        <div className="ajans-inner">
-          <h2 className="sec-h2">Kendiniz yapamıyor musunuz?<br/><span className="muted">GEO ajans paketleri tek tıkla.</span></h2>
-          <p className="sec-desc" style={{ marginBottom: 32 }}>Tek seferlik hizmetler — abonelik yok, ihtiyacınız olan paketi alın.</p>
-          <div className="ajans-grid">
-            {[
-              { icon: "📦", title: "Schema Markup", desc: "Tüm sayfalarınıza AI uyumlu schema eklenir." },
-              { icon: "✍️", title: "İçerik Optimizasyonu", desc: "10 sayfa AI referans alacak formatta yeniden yazılır." },
-              { icon: "🌍", title: "Export Dil Paketi", desc: "5 sayfanın hedef dilde GEO uyumlu çevirisi." },
-            ].map((pkg) => (
-              <div key={pkg.title} className="ajans-card">
-                <span className="ajans-icon">{pkg.icon}</span>
-                <div className="ajans-title">{pkg.title}</div>
-                <p className="ajans-desc">{pkg.desc}</p>
-                <Link href="/panel/ajans-paketleri" className="ajans-link">Detay →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Harita ve ajans bölümleri kaldırıldı */}
 
       {/* BÖLÜM 6: PLATFORM STRIP */}
       <div className="platform-strip reveal">
@@ -430,15 +339,14 @@ export default function HomePage() {
           <details className="faq"><summary className="faq-q">GEO nedir, SEO&apos;dan farkı ne? <span className="faq-plus">+</span></summary><p className="faq-a">SEO sizi Google&apos;da sıralar. GEO ise ChatGPT, Gemini, Perplexity gibi yapay zeka motorlarının sizi güvenilir kaynak olarak önermesini sağlar. Princeton araştırmasına göre GEO optimize içerikler AI yanıtlarında %40 daha fazla görünüyor. İkisi tamamlayıcı — biri olmadan diğeri eksik kalır.</p></details>
           <details className="faq"><summary className="faq-q">Ücretsiz test ne gösteriyor? <span className="faq-plus">+</span></summary><p className="faq-a">6 AI platformunda markanızı tarıyoruz. Hangi sorgularda görünüyorsunuz, hangilerinde rakibiniz öne çıkıyor, ses payınız ne, algı skorunuz ne — tek raporda görüyorsunuz. Kayıt gerekmez, 60 saniye.</p></details>
           <details className="faq"><summary className="faq-q">Tespit ile Takip arasındaki fark nedir? <span className="faq-plus">+</span></summary><p className="faq-a">Tespit tek seferlik bir fotoğraftır — bugün neredesiniz. Takip ise sürekli izleme — rakip sizi geçtiğinde, yeni bir sorguda görünmediğinizde, skorunuz değiştiğinde anında haberdar olursunuz. Haftalık otomatik çalışır, siz bakmak zorunda kalmazsınız.</p></details>
-          <details className="faq"><summary className="faq-q">Çözüm Üret ne anlama geliyor, siz uyguluyor musunuz? <span className="faq-plus">+</span></summary><p className="faq-a">Hayır — çözümü hazırlıyoruz, uygulamıyoruz. Size hazır schema kodu, hazır içerik taslağı, hazır aksiyon listesi sunuyoruz. Siz veya ekibiniz uygular. Uygulamak istemiyorsanız Uygulat paketi var — ajansımız sizin yerinize yapar.</p></details>
-          <details className="faq"><summary className="faq-q">Uygulat paketinde ajans ne yapıyor? <span className="faq-plus">+</span></summary><p className="faq-a">GH7&apos;nin tespit ettiği sorunları doğrudan sitenize uyguluyoruz. Schema markup ekleme, AI uyumlu içerik yazma ve yayınlama, teknik optimizasyonlar. Aylık etki raporu ile ne değiştiğini görüyorsunuz.</p></details>
+          <details className="faq"><summary className="faq-q">Ücretsiz ile Pro arasındaki fark ne? <span className="faq-plus">+</span></summary><p className="faq-a">Ücretsiz tek seferlik bir fotoğraftır — bugün neredesiniz. Pro ise sürekli takip + çözüm üretimi. Rakip sizi geçtiğinde haberdar olursunuz, haftalık aksiyon listesi alırsınız, hazır içerik taslakları üretilir, yaptığınız iyileştirmeler doğrulanır.</p></details>
           <details className="faq"><summary className="faq-q">Ne kadar sürede sonuç görürüm? <span className="faq-plus">+</span></summary><p className="faq-a">İlk analiz 60 saniye. Optimizasyon uygulamalarının AI platformlarına yansıması 2-4 hafta. ISITMAX&apos;ta 3 haftada GEO skoru 71&apos;den 74&apos;e çıktı, ses payı %24&apos;ten %26&apos;ya yükseldi.</p></details>
         </div>
       </section>
 
       {/* BÖLÜM 9: FINAL CTA */}
       <section className="final-sec reveal">
-        <h2 className="final-h2">Yapay zekanın<br/><span className="muted">sizi tanımasını</span><br/>sağlayın</h2>
+        <h2 className="final-h2">Yapay zekanın<br/><span className="muted">sizi önermesini</span><br/>sağlayın</h2>
         <p className="final-sub">60 saniye. Kayıt gerekmez. Firma, kişi, ürün veya export — hepsi ücretsiz.</p>
         <div className="final-kapi">
           {["Firma", "Kişi", "E-Ticaret", "Export"].map((label) => {
@@ -489,7 +397,7 @@ export default function HomePage() {
               <p className="footer-desc">Türkiye&apos;nin ilk GEO platformu. Bir ISITMAX projesidir.</p>
             </div>
             <div className="footer-cols">
-              <div className="fcol"><h4>Çözümler</h4><ul><li><a href="#">Tespit Et</a></li><li><a href="#">Takip Et</a></li><li><a href="#">Çözüm Üret</a></li><li><a href="#">Uygulat</a></li></ul></div>
+              <div className="fcol"><h4>Ürünler</h4><ul><li><a href="#test">Ücretsiz Analiz</a></li><li><a href="#pricing">Pro Paket</a></li></ul></div>
               <div className="fcol"><h4>Platform</h4><ul><li><a href="#">Fiyatlar</a></li><li><Link href="/giris">Giriş</Link></li><li><a href="#">API</a></li></ul></div>
               <div className="fcol"><h4>Kaynaklar</h4><ul><li><a href="#">GEO Nedir?</a></li><li><Link href="/blog">Blog</Link></li><li><a href="#faq">SSS</a></li><li><a href="#">İletişim</a></li></ul></div>
             </div>
