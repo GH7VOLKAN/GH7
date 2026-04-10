@@ -80,8 +80,8 @@ export function SectionPlatformResponses({
                       {resp.firmsMentioned.join(", ")}
                     </p>
                   )}
-                  <div className="mt-3 max-h-64 overflow-y-auto rounded bg-muted/30 p-3 text-sm leading-relaxed text-foreground/80">
-                    {resp.response || "Yanit metni mevcut degil."}
+                  <div className="mt-3 rounded bg-muted/30 p-4 text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                    {resp.response || "Yanıt metni mevcut değil."}
                   </div>
                 </div>
               )}

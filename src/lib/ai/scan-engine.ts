@@ -235,7 +235,7 @@ export async function executeScan(
                   position: analysis.position,
                   sentiment: analysis.sentiment,
                   excerpt: analysis.excerpt,
-                  fullResponse: aiResponse.error ? `[ERROR] ${aiResponse.error}` : aiResponse.content.slice(0, 3000),
+                  fullResponse: aiResponse.error ? `[ERROR] ${aiResponse.error}` : aiResponse.content,
                   citations: analysis.citations,
                   competitors: JSON.parse(JSON.stringify(analysis.competitors ?? [])),
                   citationSources: analysis.citationSources.length > 0 ? JSON.parse(JSON.stringify(analysis.citationSources)) : undefined,
