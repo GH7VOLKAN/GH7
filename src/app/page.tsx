@@ -171,55 +171,120 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* BÖLÜM 4: ÇÖZÜM — 4 Katman */}
-      <div className="cozum-sec reveal" id="cozum">
-        <div className="cozum-inner">
-          <div className="cozum-header">
-            <span className="sec-tag">Çözümler</span>
-            <h2 className="sec-h2">Tespit et.<br/><span className="muted">Takip et. Çöz. Uygulat.</span></h2>
-            <p className="sec-desc">Nereye kadar gitmek istediğinizi siz seçin.</p>
+      {/* BÖLÜM 4: FİYATLANDIRMA */}
+      <div className="pricing-sec reveal" id="cozum">
+        <div className="pricing-inner">
+          <div className="pricing-header">
+            <span className="sec-tag">Fiyatlandırma</span>
+            <h2 className="sec-h2">İhtiyacınıza göre<br/><span className="muted">doğru planı seçin.</span></h2>
+            <p className="sec-desc">Her iki planda da tüm AI platformları dahil. Kredi kartı gerekmez.</p>
           </div>
 
-          <div className="cozum-steps cozum-steps-2col" id="pricing">
+          <div className="pricing-grid" id="pricing">
             {/* Free */}
-            <div className="cs">
-              <span className="cs-step">01 —</span>
-              <div className="cs-title">Free</div>
-              <div className="cs-price">₺0</div>
-              <div className="cs-period">/ay</div>
-              <p className="cs-desc">Yapay zeka sizi nasıl görüyor? 5 platform, tüm rakipler, haftalık rapor.</p>
-              <ul className="cs-features">
-                <li>1 marka takibi</li>
-                <li>10 arama sorgusu</li>
-                <li>5 AI platformu taraması</li>
-                <li>1 il takibi</li>
-                <li>Haftalık otomatik rapor</li>
-                <li>Temel GEO skoru</li>
-                <li>Rakip karşılaştırma</li>
+            <div className="pricing-card">
+              <div className="pricing-card-head">
+                <div className="pricing-plan-name">Free</div>
+                <p className="pricing-plan-desc">Başlangıç için ideal</p>
+                <div className="pricing-price-row">
+                  <span className="pricing-price">₺0</span>
+                  <span className="pricing-period">/ay · Sonsuza kadar</span>
+                </div>
+              </div>
+
+              <a href="#test" className="pricing-cta pricing-cta-outline">Ücretsiz Başla</a>
+              <p className="pricing-cta-note">Kayıt gerekmez · 60 saniye</p>
+
+              <div className="pricing-divider" />
+
+              <ul className="pricing-features">
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>1</strong> marka takibi</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>10</strong> arama sorgusu</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>5</strong> AI platformu izleme</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>1</strong> il takibi</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Haftalık otomatik tarama</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Temel GEO skoru</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Rakip karşılaştırma</span></li>
+                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>E-posta bildirimleri</span></li>
               </ul>
-              <a href="#test" className="cs-cta cs-cta-out">Ücretsiz Başla</a>
+
+              <div className="pricing-platforms-row">
+                <span className="pricing-platforms-label">Dahil:</span>
+                <div className="pricing-platforms-icons">
+                  {(["chatgpt", "gemini", "perplexity", "claude", "google_aio"] as AIPlatform[]).map((p) => (
+                    <AIPlatformIcon key={p} platform={p} size={18} colored />
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Pro */}
-            <div className="cs">
-              <div className="cs-badge">En Popüler</div>
-              <span className="cs-step">02 —</span>
-              <div className="cs-title">Pro</div>
-              <div className="cs-price">₺2.450</div>
-              <div className="cs-period">/ay</div>
-              <p className="cs-desc">Tam izleme, rakip istihbaratı, içerik önerileri ve haftalık aksiyon listesi.</p>
-              <ul className="cs-features">
-                <li>3 proje (firma + kişi + ürün)</li>
-                <li>20 arama sorgusu</li>
-                <li>5 AI platformu + Google AIO</li>
-                <li>5 il takibi</li>
-                <li>Günlük rapor + PDF</li>
-                <li>Rakip istihbarat analizi</li>
-                <li>AI destekli içerik taslakları</li>
-                <li>Haftalık aksiyon listesi</li>
-                <li>E-posta + WhatsApp bildirimleri</li>
+            <div className="pricing-card pricing-card-pro">
+              <div className="pricing-badge-wrap">
+                <span className="pricing-badge">En Popüler</span>
+              </div>
+              <div className="pricing-card-head">
+                <div className="pricing-plan-name">Pro</div>
+                <p className="pricing-plan-desc">Büyüyen markalar için</p>
+                <div className="pricing-price-row">
+                  <span className="pricing-price">₺2.450</span>
+                  <span className="pricing-period">/ay</span>
+                </div>
+                <p className="pricing-annual">₺24.900/yıl <span className="pricing-save">(2 ay hediye)</span></p>
+              </div>
+
+              <a href="/login" className="pricing-cta pricing-cta-filled">7 Gün Ücretsiz Dene</a>
+              <p className="pricing-cta-note">7 gün boyunca ücret yok</p>
+
+              <div className="pricing-divider" />
+
+              <p className="pricing-includes">Free&apos;deki her şey, artı:</p>
+              <ul className="pricing-features">
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>3 proje</strong> (firma + kişi + ürün)</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>20</strong> arama sorgusu</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>5 il</strong> takibi</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Günlük tarama + PDF rapor</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>Rakip istihbarat</strong> analizi</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>AI içerik taslakları</strong></span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>Haftalık aksiyon listesi</strong></span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Korelasyon motoru</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>E-posta + WhatsApp bildirimleri</span></li>
+                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Öncelikli destek</span></li>
               </ul>
-              <a href="#" className="cs-cta cs-cta-black">Pro&apos;ya Geç →</a>
+
+              <div className="pricing-platforms-row">
+                <span className="pricing-platforms-label">Dahil:</span>
+                <div className="pricing-platforms-icons">
+                  {(["chatgpt", "gemini", "perplexity", "claude", "google_aio", "copilot"] as AIPlatform[]).map((p) => (
+                    <AIPlatformIcon key={p} platform={p} size={18} colored />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust Signals */}
+          <div className="pricing-trust">
+            <div className="pricing-trust-item">
+              <svg className="pricing-trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+              <div>
+                <strong>Güvenli Altyapı</strong>
+                <span>256-bit SSL · KVKK uyumlu</span>
+              </div>
+            </div>
+            <div className="pricing-trust-item">
+              <svg className="pricing-trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg>
+              <div>
+                <strong>Destek</strong>
+                <span>E-posta + WhatsApp desteği</span>
+              </div>
+            </div>
+            <div className="pricing-trust-item">
+              <svg className="pricing-trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+              <div>
+                <strong>14 Gün İade</strong>
+                <span>Memnun kalmazsanız iade</span>
+              </div>
             </div>
           </div>
         </div>
