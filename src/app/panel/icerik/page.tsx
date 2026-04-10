@@ -3,7 +3,7 @@ import IcerikContent from "./icerik-content";
 import { PageHero } from "@/components/panel/page-hero";
 
 export default async function IcerikPage() {
-  await checkPageAccess("business", "/panel/icerik");
+  await checkPageAccess("pro", "/panel/icerik");
   return (
     <>
       <PageHero

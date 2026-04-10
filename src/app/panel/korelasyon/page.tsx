@@ -3,7 +3,7 @@ import KorelasyonContent from "./korelasyon-content";
 import { PageHero } from "@/components/panel/page-hero";
 
 export default async function KorelasyonPage() {
-  await checkPageAccess("business", "/panel/korelasyon");
+  await checkPageAccess("pro", "/panel/korelasyon");
   return (
     <>
       <PageHero
