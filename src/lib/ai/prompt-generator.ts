@@ -266,7 +266,29 @@ async function callClaude(
   source: "ai_generated" | "sonar",
   tier: "haiku" | "sonnet" = "sonnet",
   brandDomain?: string,
+  userPlan?: string,
 ): Promise<GeneratedPrompt[]> {
+  // Free kullanıcılar için Qwen (maliyet: $0.003 vs $0.01)
+  const { callQwen: callQwenFn, isQwenAvailable: isQwenAvailableFn } = await import("./qwen-client");
+  if (userPlan === "free" && isQwenAvailableFn()) {
+    try {
+      const result = await callQwenFn({ systemPrompt, userMessage: `Marka: ${brandName}`, maxTokens: 4096 });
+      if (result) {
+        const parsed = JSON.parse(result);
+        const prompts = Array.isArray(parsed) ? parsed : parsed.prompts ?? [];
+        return prompts.slice(0, expectedCount).map((p: Record<string, string>) => ({
+          text: p.text || p.prompt || "",
+          category: p.category || "tavsiye",
+          salesPotential: p.salesPotential || "MEDIUM",
+          businessArea: p.businessArea || "",
+          source,
+        }));
+      }
+    } catch {
+      console.warn("[prompt-gen] Qwen failed, falling back to Claude");
+    }
+  }
+
   const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Anthropic API key not configured");
 

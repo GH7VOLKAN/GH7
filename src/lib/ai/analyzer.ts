@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AnalysisResult, CompetitorDetail } from "./types";
+import { callQwen, isQwenAvailable } from "./qwen-client";
 
 // Reuse Anthropic client across analysis calls
 let _analyzerClient: Anthropic | null = null;
@@ -133,6 +134,7 @@ export async function analyzeResponse(
   rawResponse: string,
   brandName: string,
   _promptText: string,
+  tier: "free" | "pro" | "business" = "pro",
 ): Promise<AnalysisResult> {
   // Stage 1: Quick regex pre-check with Turkish normalization
   const normalizedResponse = normalizeTurkish(rawResponse);
@@ -156,7 +158,49 @@ export async function analyzeResponse(
   // Stage 1.5: Regex-based position detection (more reliable than LLM for this)
   const regexPosition = detectPositionFromText(rawResponse, brandName);
 
-  // Stage 2: Use Claude Haiku for detailed analysis
+  // Stage 2: Free kullanıcılar için Qwen, Pro+ için Claude Sonnet
+  // Qwen %90 daha ucuz — free analizlerde maliyet $0.15 → $0.015
+
+  if (tier === "free" && isQwenAvailable()) {
+    try {
+      const qwenResult = await callQwen({
+        systemPrompt: SYSTEM_PROMPT,
+        userMessage: `Marka: "${brandName}"\n\nAI Platformunun Yanıtı:\n${rawResponse.slice(0, 3000)}`,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+
+      if (qwenResult) {
+        const parsed = JSON.parse(qwenResult) as AnalysisResult;
+        let finalPosition = parsed.position ?? "bahsediliyor";
+        if ((finalPosition === "bahsediliyor" || finalPosition === null) && regexPosition) {
+          finalPosition = regexPosition;
+        }
+        const normalizedCompetitors: CompetitorDetail[] = (parsed.competitors ?? []).map(
+          (c: string | CompetitorDetail) =>
+            typeof c === "string" ? { name: c, position: null, sentiment: "nötr" } : c,
+        );
+
+        return {
+          mentioned: parsed.mentioned ?? true,
+          mentionType: parsed.mentionType ?? "direct",
+          position: finalPosition,
+          sentiment: parsed.sentiment ?? "nötr",
+          excerpt: parsed.excerpt?.slice(0, 200) ?? extractExcerpt(rawResponse, brandName),
+          citations: [...new Set([...(parsed.citations ?? []), ...extractUrls(rawResponse)])],
+          competitors: normalizedCompetitors,
+          citationSources: parsed.citationSources ?? [],
+          mentionContext: parsed.mentionContext ?? null,
+          competitorAdvantage: parsed.competitorAdvantage ?? null,
+        };
+      }
+    } catch {
+      // Qwen başarısız — Claude'a fallback
+      console.warn("[analyzer] Qwen failed for free tier, falling back to Claude");
+    }
+  }
+
+  // Stage 2b: Claude Sonnet (Pro+ veya Qwen fallback)
   const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     const excerpt = extractExcerpt(rawResponse, brandName);

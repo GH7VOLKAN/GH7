@@ -153,6 +153,7 @@ export async function executeScan(
                   aiResponse.content,
                   brand.name,
                   prompt.text,
+                  userPlan === "free" ? "free" : "pro",
                 );
 
                 // Ek basarili varyasyonlarin analizini yap ve en iyi sonucu sec
@@ -164,6 +165,7 @@ export async function executeScan(
                         fulfilledResponses[vi].content,
                         brand.name,
                         variations[vi] || prompt.text,
+                        userPlan === "free" ? "free" : "pro",
                       );
                       // Eger ana analiz mentioned=false ama varyasyon mentioned=true ise, varyasyonu kullan
                       if (!analysis.mentioned && varAnalysis.mentioned) {

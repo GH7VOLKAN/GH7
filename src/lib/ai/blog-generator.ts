@@ -163,8 +163,6 @@ export async function generateBlogFromAnalysis(
   }
 
   try {
-    const client = getClient();
-
     const userMessage = `Sorgu: "${input.query}"
 Sektor: ${input.sector ?? "Genel"}
 Sorgu Tipi: ${input.queryType}
@@ -178,6 +176,40 @@ ${platforms.map((p) => `- ${p.platform}: ${p.mentioned ? "Marka bahsedildi" : "M
 
 Ozet: ${input.summaryText ?? "Ozet mevcut degil."}`;
 
+    // Qwen ile blog üret (maliyet: $0.008 vs $0.05 Opus)
+    const { callQwen: callQwenFn, isQwenAvailable: isQwenAvailableFn } = await import("./qwen-client");
+    if (isQwenAvailableFn()) {
+      try {
+        const qwenContent = await callQwenFn({
+          systemPrompt: BLOG_SYSTEM_PROMPT,
+          userMessage,
+          maxTokens: 6000,
+          temperature: 0.7,
+        });
+        if (qwenContent && qwenContent.length > 500) {
+          // Qwen başarılı — kaydet ve dön
+          const metaDescription = (input.summaryText ?? input.query).slice(0, 155);
+          const now = new Date();
+          if (postId) {
+            await prisma.blogPost.update({
+              where: { id: postId },
+              data: { content: qwenContent, metaDescription, rankings: top3, platforms, runCount: input.timesQueried, runDate: input.runDate ?? now, ogImageUrl, status: "published", generatedAt: now, publishedAt: now },
+            });
+            return { blogPostId: postId, status: "published" };
+          }
+          const post = await prisma.blogPost.create({
+            data: { title, slug: await ensureUniqueSlug(slug), content: qwenContent, metaDescription, sectorTag: input.sector, analysisType, queryLanguage, rankings: top3, platforms, runCount: input.timesQueried, runDate: input.runDate ?? now, ogImageUrl, status: "published", generatedAt: now, publishedAt: now, queryPageId: input.queryPageId },
+          });
+          console.log(`[blog-generator] Published (Qwen): ${title.slice(0, 50)}`);
+          return { blogPostId: post.id, status: "published" };
+        }
+      } catch {
+        console.warn("[blog-generator] Qwen failed, falling back to Opus");
+      }
+    }
+
+    // Opus fallback (Pro kullanıcılar veya Qwen yoksa)
+    const client = getClient();
     const response = await client.messages.create({
       model: "claude-opus-4-20250514",
       max_tokens: 6000,
