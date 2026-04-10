@@ -180,74 +180,46 @@ export default function HomePage() {
             <p className="sec-desc">Nereye kadar gitmek istediğinizi siz seçin.</p>
           </div>
 
-          <div className="cozum-steps" id="pricing">
-            {/* Ücretsiz */}
+          <div className="cozum-steps cozum-steps-2col" id="pricing">
+            {/* Free */}
             <div className="cs">
               <span className="cs-step">01 —</span>
-              <div className="cs-title">Tespit Et</div>
+              <div className="cs-title">Free</div>
               <div className="cs-price">₺0</div>
-              <div className="cs-period">tek seferlik</div>
-              <p className="cs-desc">Yapay zeka sizi nasıl görüyor? 6 platform, tüm rakipler, tek rapor.</p>
-              <ul className="cs-features">
-                <li>6 AI platformu taraması</li>
-                <li>Rakip karşılaştırma</li>
-                <li>Ses payı, pozisyon, algı skoru</li>
-                <li>Kritik sorunlar listesi</li>
-              </ul>
-              <a href="#test" className="cs-cta cs-cta-out">Ücretsiz Test Et</a>
-            </div>
-
-            {/* Takip */}
-            <div className="cs">
-              <span className="cs-step">02 —</span>
-              <div className="cs-title">Takip Et</div>
-              <div className="cs-price">₺2.450</div>
               <div className="cs-period">/ay</div>
-              <p className="cs-desc">Her hafta otomatik audit. Rakip sizi geçince anında haberdar olun.</p>
+              <p className="cs-desc">Yapay zeka sizi nasıl görüyor? 5 platform, tüm rakipler, haftalık rapor.</p>
               <ul className="cs-features">
-                <li>Haftalık otomatik izleme</li>
-                <li>Rakip pozisyon değişimi</li>
-                <li>İl bazlı görünürlük</li>
-                <li>E-posta + WhatsApp özet</li>
-                <li>Trend grafikleri</li>
+                <li>1 marka takibi</li>
+                <li>10 arama sorgusu</li>
+                <li>5 AI platformu taraması</li>
+                <li>1 il takibi</li>
+                <li>Haftalık otomatik rapor</li>
+                <li>Temel GEO skoru</li>
+                <li>Rakip karşılaştırma</li>
               </ul>
-              <a href="#" className="cs-cta cs-cta-out">Takibe Başla</a>
+              <a href="#test" className="cs-cta cs-cta-out">Ücretsiz Başla</a>
             </div>
 
-            {/* Çöz */}
+            {/* Pro */}
             <div className="cs">
               <div className="cs-badge">En Popüler</div>
-              <span className="cs-step">03 —</span>
-              <div className="cs-title">Çözüm Üret</div>
-              <div className="cs-price">₺4.450</div>
+              <span className="cs-step">02 —</span>
+              <div className="cs-title">Pro</div>
+              <div className="cs-price">₺2.450</div>
               <div className="cs-period">/ay</div>
-              <p className="cs-desc">Sorun tespit edildi, çözüm hazır. Schema kodu, içerik taslağı, aksiyon listesi — hepsi otomatik.</p>
+              <p className="cs-desc">Tam izleme, rakip istihbaratı, içerik önerileri ve haftalık aksiyon listesi.</p>
               <ul className="cs-features">
-                <li>Takip&apos;teki her şey</li>
-                <li>Otomatik schema kodu üretimi</li>
-                <li>Opus ile hazır içerik taslağı</li>
-                <li>Haftalık &quot;Bu 3 şeyi yap&quot; listesi</li>
-                <li>Rakip istihbarat raporu</li>
-                <li>Yaptım → doğrulandı kontrol</li>
+                <li>3 proje (firma + kişi + ürün)</li>
+                <li>20 arama sorgusu</li>
+                <li>5 AI platformu + Google AIO</li>
+                <li>5 il takibi</li>
+                <li>Günlük rapor + PDF</li>
+                <li>Rakip istihbarat analizi</li>
+                <li>AI destekli içerik taslakları</li>
+                <li>Haftalık aksiyon listesi</li>
+                <li>E-posta + WhatsApp bildirimleri</li>
               </ul>
-              <a href="#" className="cs-cta cs-cta-black">Çözüm Üretimine Başla →</a>
-            </div>
-
-            {/* Uygulat */}
-            <div className="cs cs-ajans">
-              <span className="cs-step">04 —</span>
-              <div className="cs-title">Uygulat</div>
-              <div className="cs-price">₺9.450</div>
-              <div className="cs-period">/ay</div>
-              <p className="cs-desc">Siz sadece onaylayın, ajansımız uygulasın. Schema, içerik, optimizasyon — hepsi sizin yerinize.</p>
-              <ul className="cs-features">
-                <li>Çözüm Üret&apos;teki her şey</li>
-                <li>Ajans doğrudan sitenize erişir</li>
-                <li>Uygulama garantisi</li>
-                <li>Aylık etki raporu</li>
-                <li>Öncelikli destek</li>
-              </ul>
-              <a href="#" className="cs-cta cs-cta-out">Bizi Arayın</a>
+              <a href="#" className="cs-cta cs-cta-black">Pro&apos;ya Geç →</a>
             </div>
           </div>
         </div>
@@ -361,27 +333,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* BÖLÜM 5.6: AJANS PAKETLERİ */}
-      <section className="ajans-sec reveal">
-        <div className="ajans-inner">
-          <h2 className="sec-h2">Kendiniz yapamıyor musunuz?<br/><span className="muted">GEO ajans paketleri tek tıkla.</span></h2>
-          <p className="sec-desc" style={{ marginBottom: 32 }}>Tek seferlik hizmetler — abonelik yok, ihtiyacınız olan paketi alın.</p>
-          <div className="ajans-grid">
-            {[
-              { icon: "📦", title: "Schema Markup", desc: "Tüm sayfalarınıza AI uyumlu schema eklenir." },
-              { icon: "✍️", title: "İçerik Optimizasyonu", desc: "10 sayfa AI referans alacak formatta yeniden yazılır." },
-              { icon: "🌍", title: "Export Dil Paketi", desc: "5 sayfanın hedef dilde GEO uyumlu çevirisi." },
-            ].map((pkg) => (
-              <div key={pkg.title} className="ajans-card">
-                <span className="ajans-icon">{pkg.icon}</span>
-                <div className="ajans-title">{pkg.title}</div>
-                <p className="ajans-desc">{pkg.desc}</p>
-                <Link href="/panel/ajans-paketleri" className="ajans-link">Detay →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* BÖLÜM 6: PLATFORM STRIP */}
       <div className="platform-strip reveal">
@@ -430,8 +381,7 @@ export default function HomePage() {
           <details className="faq"><summary className="faq-q">GEO nedir, SEO&apos;dan farkı ne? <span className="faq-plus">+</span></summary><p className="faq-a">SEO sizi Google&apos;da sıralar. GEO ise ChatGPT, Gemini, Perplexity gibi yapay zeka motorlarının sizi güvenilir kaynak olarak önermesini sağlar. Princeton araştırmasına göre GEO optimize içerikler AI yanıtlarında %40 daha fazla görünüyor. İkisi tamamlayıcı — biri olmadan diğeri eksik kalır.</p></details>
           <details className="faq"><summary className="faq-q">Ücretsiz test ne gösteriyor? <span className="faq-plus">+</span></summary><p className="faq-a">6 AI platformunda markanızı tarıyoruz. Hangi sorgularda görünüyorsunuz, hangilerinde rakibiniz öne çıkıyor, ses payınız ne, algı skorunuz ne — tek raporda görüyorsunuz. Kayıt gerekmez, 60 saniye.</p></details>
           <details className="faq"><summary className="faq-q">Tespit ile Takip arasındaki fark nedir? <span className="faq-plus">+</span></summary><p className="faq-a">Tespit tek seferlik bir fotoğraftır — bugün neredesiniz. Takip ise sürekli izleme — rakip sizi geçtiğinde, yeni bir sorguda görünmediğinizde, skorunuz değiştiğinde anında haberdar olursunuz. Haftalık otomatik çalışır, siz bakmak zorunda kalmazsınız.</p></details>
-          <details className="faq"><summary className="faq-q">Çözüm Üret ne anlama geliyor, siz uyguluyor musunuz? <span className="faq-plus">+</span></summary><p className="faq-a">Hayır — çözümü hazırlıyoruz, uygulamıyoruz. Size hazır schema kodu, hazır içerik taslağı, hazır aksiyon listesi sunuyoruz. Siz veya ekibiniz uygular. Uygulamak istemiyorsanız Uygulat paketi var — ajansımız sizin yerinize yapar.</p></details>
-          <details className="faq"><summary className="faq-q">Uygulat paketinde ajans ne yapıyor? <span className="faq-plus">+</span></summary><p className="faq-a">GH7&apos;nin tespit ettiği sorunları doğrudan sitenize uyguluyoruz. Schema markup ekleme, AI uyumlu içerik yazma ve yayınlama, teknik optimizasyonlar. Aylık etki raporu ile ne değiştiğini görüyorsunuz.</p></details>
+          <details className="faq"><summary className="faq-q">Free ile Pro arasındaki fark nedir? <span className="faq-plus">+</span></summary><p className="faq-a">Free ile 1 marka, 10 sorgu ve 1 ilde temel izleme yaparsınız. Pro&apos;da 3 proje, 20 sorgu, 5 il, rakip istihbaratı, içerik taslakları ve haftalık aksiyon listesi dahil — tüm gelişmiş özellikler açılır.</p></details>
           <details className="faq"><summary className="faq-q">Ne kadar sürede sonuç görürüm? <span className="faq-plus">+</span></summary><p className="faq-a">İlk analiz 60 saniye. Optimizasyon uygulamalarının AI platformlarına yansıması 2-4 hafta. ISITMAX&apos;ta 3 haftada GEO skoru 71&apos;den 74&apos;e çıktı, ses payı %24&apos;ten %26&apos;ya yükseldi.</p></details>
         </div>
       </section>

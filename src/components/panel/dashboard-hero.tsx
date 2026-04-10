@@ -231,24 +231,12 @@ function FreeHero() {
 
 /* ── MAIN EXPORT ───────────────────────────────────── */
 export default function DashboardHero({ tier, brandName, weekData }: DashboardHeroProps) {
-  const activeTier = (() => {
-    if (tier === "free") return "free";
-    if (tier === "pro") return "takip";
-    if (tier === "business" || tier === "business_cozum") return "cozum";
-    if (tier === "business_uygulat") return "uygulat";
-    return "cozum";
-  })();
+  const activeTier = tier === "free" ? "free" : "takip";
 
   return (
     <div className="hero-zone">
       <div className={`tier-panel${activeTier === "takip" ? " active" : ""}`}>
         <TakipHero weekData={weekData} />
-      </div>
-      <div className={`tier-panel${activeTier === "cozum" ? " active" : ""}`}>
-        <CozumHero />
-      </div>
-      <div className={`tier-panel${activeTier === "uygulat" ? " active" : ""}`}>
-        <UygulatHero />
       </div>
       <div className={`tier-panel${activeTier === "free" ? " active" : ""}`}>
         <FreeHero />
