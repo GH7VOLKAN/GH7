@@ -56,16 +56,11 @@ export default function LoginPage() {
         setSessionCleared(true);
         window.history.replaceState({}, "", "/login");
       } else if (session) {
-<<<<<<< Updated upstream
         // Aktif session var — otomatik yönlendir
         if (session.user.email) {
           localStorage.setItem("gh7_email", session.user.email);
         }
         router.push("/panel/genel");
-=======
-        // There's an existing session — redirect to dashboard
-        router.push("/dashboard/genel");
->>>>>>> Stashed changes
         return;
       }
     }
@@ -556,35 +551,7 @@ export default function LoginPage() {
                   <div style={{ flex: 1, height: 1, background: "var(--g200)" }} />
                 </div>
 
-                {/* Email / Phone tabs */}
-                <div style={{ display: "flex", gap: 2, marginBottom: 20, background: "var(--g100)", borderRadius: 10, padding: 3 }}>
-                  <button
-                    type="button"
-                    onClick={() => switchMethod("email")}
-                    style={{
-                      flex: 1, padding: "10px", borderRadius: 8, border: "none",
-                      fontSize: 13, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "var(--font)", transition: "all .15s",
-                      background: method === "email" ? "var(--black)" : "transparent",
-                      color: method === "email" ? "var(--white)" : "var(--g500)",
-                    }}
-                  >
-                    E-posta
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => switchMethod("phone")}
-                    style={{
-                      flex: 1, padding: "10px", borderRadius: 8, border: "none",
-                      fontSize: 13, fontWeight: 700, cursor: "pointer",
-                      fontFamily: "var(--font)", transition: "all .15s",
-                      background: method === "phone" ? "var(--black)" : "transparent",
-                      color: method === "phone" ? "var(--white)" : "var(--g500)",
-                    }}
-                  >
-                    Telefon
-                  </button>
-                </div>
+                {/* E-posta girişi (telefon kaldırıldı) */}
 
                 {/* Email form */}
                 {method === "email" && (
@@ -610,40 +577,7 @@ export default function LoginPage() {
                   </form>
                 )}
 
-                {/* Phone form */}
-                {method === "phone" && (
-                  <form onSubmit={handleSendSmsOtp}>
-                    <div style={{
-                      display: "flex", alignItems: "center", border: "1.5px solid var(--g200)",
-                      borderRadius: 10, background: "var(--white)", marginBottom: 12,
-                      transition: "border-color .15s",
-                    }}>
-                      <span style={{ paddingLeft: 16, fontSize: 15, color: "var(--g400)", userSelect: "none" }}>+90</span>
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={handlePhoneChange}
-                        placeholder="5XX XXX XX XX"
-                        required
-                        autoFocus
-                        maxLength={13}
-                        style={{
-                          width: "100%", padding: "14px 12px", fontSize: 15,
-                          border: "none", background: "transparent",
-                          color: "var(--black)", outline: "none",
-                          fontFamily: "var(--font)", boxSizing: "border-box",
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={loading || phone.replace(/\D/g, "").length < 10}
-                      style={{ ...primaryBtnStyle, opacity: loading || phone.replace(/\D/g, "").length < 10 ? 0.5 : 1 }}
-                    >
-                      {loading ? "Gönderiliyor..." : "Kod gönder \u2192"}
-                    </button>
-                  </form>
-                )}
+                {/* Telefon girişi kaldırıldı */}
               </>
             ) : (
               <>

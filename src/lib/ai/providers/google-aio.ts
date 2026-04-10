@@ -56,16 +56,12 @@ export class GoogleAIOProvider implements AIProvider {
     // 1. Try ai_overview field (Google's AI-generated summary)
     if (data.ai_overview) {
       const text = this.parseAIOverviewField(data.ai_overview);
-<<<<<<< Updated upstream
       // Validate: must have spaces (readable text, not base64/encoded)
       if (text && text.length > 10) {
         const spaceRatio = (text.match(/\s/g) || []).length / text.length;
         const hasLongGarble = text.split(/\s+/).some((w: string) => w.length > 50);
         if (spaceRatio > 0.05 && !hasLongGarble) return text;
       }
-=======
-      if (text && this.isReadableText(text)) return text;
->>>>>>> Stashed changes
     }
 
     // 2. Try answer_box field
@@ -136,28 +132,17 @@ export class GoogleAIOProvider implements AIProvider {
     // Try "answer" field
     if (typeof obj.answer === "string" && obj.answer.length > 0) return obj.answer;
 
-    // Walk all string values as last resort (but NEVER return garbled/encoded data)
+    // Walk all string values as last resort (but NEVER return raw JSON)
     const allTexts: string[] = [];
     for (const value of Object.values(obj)) {
-      if (typeof value === "string" && value.length > 10 && this.isReadableText(value)) {
+      if (typeof value === "string" && value.length > 10) {
         allTexts.push(value);
       }
     }
     if (allTexts.length > 0) return allTexts.join("\n\n");
 
+    // Do NOT fall back to JSON.stringify — that's what caused the raw JSON bug
     return "";
-  }
-
-  /** Check if a string is readable text (not base64, encoded, or garbled) */
-  private isReadableText(text: string): boolean {
-    if (!text || text.length < 3) return false;
-    // Must have spaces (readable text has words)
-    const spaceRatio = (text.match(/\s/g) || []).length / text.length;
-    if (text.length > 30 && spaceRatio < 0.05) return false;
-    // Must not have extremely long "words" (base64/hash)
-    const words = text.split(/\s+/);
-    if (words.some(w => w.length > 50)) return false;
-    return true;
   }
 
   private parseAIOverviewBlock(block: unknown): string {

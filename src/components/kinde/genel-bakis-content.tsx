@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   LineChart,
@@ -35,7 +34,6 @@ import type {
   ChecklistProgress,
   PromptSummaryItem,
   AiResponseExcerpt,
-  PlatformQA,
   ChecklistOverviewItem,
   SourceMapEntry,
 } from "@/lib/dal/overview";
@@ -50,8 +48,6 @@ import {
   XCircleIcon,
   StarIcon,
   ZapIcon,
-  ChevronDownIcon,
-  MessageSquareIcon,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────
@@ -79,7 +75,6 @@ interface GenelBakisContentProps {
   bestPrompts: PromptSummaryItem[];
   worstPrompts: PromptSummaryItem[];
   aiResponseExcerpts: AiResponseExcerpt[];
-  platformQAs: PlatformQA[];
   easiestChecklistItems: ChecklistOverviewItem[];
   highImpactChecklistItems: ChecklistOverviewItem[];
   sourceMap: SourceMapEntry[];
@@ -115,16 +110,12 @@ export function GenelBakisContent({
   bestPrompts,
   worstPrompts,
   aiResponseExcerpts,
-  platformQAs,
   easiestChecklistItems,
   highImpactChecklistItems,
   sourceMap,
   brandDomain,
 }: GenelBakisContentProps) {
-  // A platform "knows" the brand if it mentions in at least 20% of questions (min 2)
-  const platformsWithMentions = platformStats.filter(
-    (p) => p.mentioned >= 2 && p.total > 0 && (p.mentioned / p.total) >= 0.2
-  ).length;
+  const platformsWithMentions = platformStats.filter((p) => p.mentioned > 0).length;
   const mentionRate = totalResultCount > 0 ? Math.round((totalMentionCount / totalResultCount) * 100) : 0;
   const isPro = plan !== "free";
   const promptsWithMentions = bestPrompts.length;
@@ -188,39 +179,35 @@ export function GenelBakisContent({
             const color = getPlatformColor(stat.platform);
             const displayName = getPlatformDisplayName(stat.platform);
             const isActive = stat.mentioned > 0;
-            const pct = stat.total > 0 ? Math.round((stat.mentioned / stat.total) * 100) : 0;
 
             return (
               <div
                 key={stat.platform}
-                className="kinde-card p-4 sm:p-5 lg:p-6 cursor-default min-w-[160px] sm:min-w-0 shrink-0 sm:shrink"
+                className="kinde-card p-4 sm:p-5 lg:p-7 cursor-default min-w-[160px] sm:min-w-0 shrink-0 sm:shrink"
                 style={{
                   borderColor: isActive ? `${color}30` : undefined,
                 }}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <PlatformLogo
                     platform={stat.platform}
                     size={36}
                     mentioned={isActive}
                   />
-                  <span
+                  <div
                     style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: isActive ? "#22c55e" : "#ef4444",
-                      background: isActive ? "#f0fdf4" : "#fef2f2",
-                      padding: "2px 8px",
-                      borderRadius: 6,
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      background: isActive ? "#22c55e" : "#ef4444",
+                      flexShrink: 0,
                     }}
-                  >
-                    {isActive ? `%${pct}` : "0"}
-                  </span>
+                  />
                 </div>
                 <p
                   style={{
                     fontSize: 13,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
                     marginTop: 12,
                   }}
@@ -229,42 +216,25 @@ export function GenelBakisContent({
                 </p>
                 <p
                   style={{
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: 800,
                     color: isActive ? "var(--foreground)" : "#ddd",
-                    marginTop: 2,
+                    marginTop: 4,
                     lineHeight: 1,
                   }}
                 >
-                  {stat.mentioned}<span style={{ fontSize: 14, fontWeight: 500, color: "var(--muted-foreground)" }}>/{stat.total}</span>
+                  {stat.mentioned}/{stat.total}
                 </p>
-                {/* Mini progress bar */}
-                <div style={{ marginTop: 10, height: 4, borderRadius: 2, background: "#f0f0f0", overflow: "hidden" }}>
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${pct}%`,
-                      background: isActive ? color : "#e5e5e5",
-                      borderRadius: 2,
-                      transition: "width 1s ease",
-                    }}
-                  />
-                </div>
                 <p
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     color: "var(--muted-foreground)",
                     marginTop: 6,
                   }}
                 >
                   {isActive
-<<<<<<< Updated upstream
                     ? `${stat.total} sorunun ${stat.mentioned}'${stat.mentioned > 1 ? "i" : "u"}nde öneriyor`
                     : "Henüz tanımıyor"}
-=======
-                    ? `${stat.mentioned} soruda seni öneriyor`
-                    : "Henüz seni tanımıyor"}
->>>>>>> Stashed changes
                 </p>
               </div>
             );
@@ -320,11 +290,14 @@ export function GenelBakisContent({
                           </span>
                           <div className="flex items-center gap-1">
                             {PLATFORMS.map((plat) => (
-                              <PlatformLogo
+                              <div
                                 key={plat}
-                                platform={plat}
-                                size={16}
-                                mentioned={!!p.platformResults[plat]}
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: p.platformResults[plat] ? "#22c55e" : "#e5e5e5",
+                                }}
                               />
                             ))}
                           </div>
@@ -374,11 +347,15 @@ export function GenelBakisContent({
                           </span>
                           <div className="flex items-center gap-1">
                             {PLATFORMS.map((plat) => (
-                              <PlatformLogo
+                              <div
                                 key={plat}
-                                platform={plat}
-                                size={16}
-                                mentioned={false}
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: "#ef4444",
+                                  opacity: 0.3,
+                                }}
                               />
                             ))}
                           </div>
@@ -408,11 +385,7 @@ export function GenelBakisContent({
         <PageSection className="mt-12">
           <SectionTitle
             title="Senin yerine kim öneriliyor?"
-<<<<<<< Updated upstream
             subtitle={`Yapay zekaların önerdiği ${competitorRanking.filter((c) => !c.isUser).length} firma${competitorRanking.some((c) => c.isUser) ? ` — sen ${competitorRanking.findIndex((c) => c.isUser) + 1}. sıradasın` : ""}`}
-=======
-            subtitle={`Yapay zekaların önerdiği ${competitorRanking.length} firma — sen ${competitorRanking.findIndex((c) => c.isUser) + 1}. sıradasın`}
->>>>>>> Stashed changes
           />
           <div className="kinde-card p-4 sm:p-6 lg:p-8" style={{ cursor: "default" }}>
             <div className="flex flex-col gap-4 sm:gap-5">
@@ -530,19 +503,52 @@ export function GenelBakisContent({
       )}
 
       {/* ══════════════════════════════════════════════════════
-          4. YAPAY ZEKA NE DiYOR? (AI Response — Per-Platform Q&A)
+          4. YAPAY ZEKA NE DiYOR? (AI Response Preview)
           ══════════════════════════════════════════════════════ */}
-      {platformQAs.length > 0 && (
+      {aiResponseExcerpts.length > 0 && (
         <PageSection className="mt-12">
           <SectionTitle
-<<<<<<< Updated upstream
             title="Yapay zeka senden nasil bahsediyor?"
-=======
-            title="Yapay zeka senden nasıl bahsediyor?"
->>>>>>> Stashed changes
             subtitle="Seni öneren platformların gerçek yanıtlarından örnekler"
           />
-          <PlatformQASection platformQAs={platformQAs} />
+          <div className="flex flex-col gap-4">
+            {aiResponseExcerpts.slice(0, 2).map((item, i) => {
+              const color = getPlatformColor(item.platform);
+              const name = getPlatformDisplayName(item.platform);
+              return (
+                <div key={i} className="kinde-card p-4 sm:p-6 lg:p-7 cursor-default">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <PlatformLogo platform={item.platform} size={24} mentioned />
+                    <p style={{ fontSize: 13, fontWeight: 600, color }}>
+                      {name} diyor ki:
+                    </p>
+                  </div>
+                  <div
+                    style={{
+                      background: "#f8f8f8",
+                      borderRadius: 12,
+                      padding: "14px 18px",
+                      borderLeft: `3px solid ${color}`,
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "var(--foreground)",
+                        lineHeight: 1.7,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      &ldquo;{item.excerpt}&rdquo;
+                    </p>
+                  </div>
+                  <p style={{ fontSize: 11, color: "var(--muted-foreground)", marginTop: 8 }}>
+                    Soru: &ldquo;{item.promptText.length > 60 ? item.promptText.slice(0, 60) + "..." : item.promptText}&rdquo;
+                  </p>
+                </div>
+              );
+            })}
+          </div>
           <div className="mt-4 text-right">
             <Link
               href="/dashboard/sorular"
@@ -659,11 +665,7 @@ export function GenelBakisContent({
       </PageSection>
 
       {/* ══════════════════════════════════════════════════════
-<<<<<<< Updated upstream
           6. GELiSiM PLANI OZETi (Professional Single Card)
-=======
-          6. GELiSiM PLANI OZETi (Checklist — Unified Professional Design)
->>>>>>> Stashed changes
           ══════════════════════════════════════════════════════ */}
       <PageSection className="mt-12">
         <SectionTitle
@@ -671,7 +673,6 @@ export function GenelBakisContent({
           subtitle={`${checklistProgress.total || 22} adımdan ${checklistProgress.completed} tamamlandı`}
         />
         <div className="kinde-card p-5 sm:p-6 lg:p-8 cursor-default">
-<<<<<<< Updated upstream
           {/* Top: Progress + CTA */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -680,23 +681,6 @@ export function GenelBakisContent({
                 style={{ width: 44, height: 44, background: "#f5f5f5" }}
               >
                 <ListChecksIcon className="size-5" />
-=======
-          {/* Progress header */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  background: "linear-gradient(135deg, #111 0%, #333 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ListChecksIcon className="size-5 text-white" />
->>>>>>> Stashed changes
               </div>
               <div>
                 <p style={{ fontSize: 24, fontWeight: 800, color: "var(--foreground)", lineHeight: 1 }}>
@@ -705,7 +689,6 @@ export function GenelBakisContent({
                 <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>
                   tamamlandı
                 </p>
-<<<<<<< Updated upstream
               </div>
             </div>
             <Link
@@ -798,123 +781,6 @@ export function GenelBakisContent({
           <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 12, textAlign: "center" }}>
             İlk adımı atarak yapay zekalarda daha görünür ol.
           </p>
-=======
-              </div>
-            </div>
-            <Link
-              href="/dashboard/gelisim"
-              className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12px] font-bold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Planı gör <ArrowRightIcon className="size-3" />
-            </Link>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mt-4 mb-6">
-            <AnimBar
-              percent={checklistProgress.total > 0 ? (checklistProgress.completed / checklistProgress.total) * 100 : 0}
-              color="#111"
-              height={6}
-            />
-          </div>
-
-          {/* Combined checklist items — deduplicated, unified list */}
-          {(() => {
-            // Merge easiest + high impact, deduplicate by title, max 5
-            const seen = new Set<string>();
-            const allItems: { title: string; time: string | null; impact: string; feasibility: number }[] = [];
-            for (const item of [...easiestChecklistItems, ...highImpactChecklistItems]) {
-              if (seen.has(item.simpleTitle)) continue;
-              seen.add(item.simpleTitle);
-              allItems.push({
-                title: item.simpleTitle,
-                time: item.estimatedTime,
-                impact: item.impact,
-                feasibility: item.feasibilityScore,
-              });
-            }
-            return (
-              <div className="flex flex-col gap-0">
-                {allItems.slice(0, 5).map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 py-3"
-                    style={{
-                      borderBottom: i < allItems.length - 1 && i < 4 ? "1px solid #f0f0f0" : undefined,
-                    }}
-                  >
-                    {/* Step number */}
-                    <span
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        background: "#f5f5f5",
-                        color: "#666",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {i + 1}
-                    </span>
-                    {/* Title + meta */}
-                    <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>
-                        {item.title}
-                      </p>
-                    </div>
-                    {/* Badges */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {item.time && (
-                        <span style={{ fontSize: 11, color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                          {item.time}
-                        </span>
-                      )}
-                      {item.impact === "HIGH" && (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            color: "#7c3aed",
-                            background: "#ede9fe",
-                            padding: "2px 8px",
-                            borderRadius: 6,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          Yüksek Etki
-                        </span>
-                      )}
-                      <div className="hidden sm:flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, si) => (
-                          <div
-                            key={si}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: "50%",
-                              background: si < item.feasibility ? "#d97706" : "#e5e5e5",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-
-          {checklistProgress.completed === 0 && (
-            <p style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 12, textAlign: "center" }}>
-              İlk adımı atarak yapay zekalarda daha görünür ol.
-            </p>
-          )}
->>>>>>> Stashed changes
         </div>
       </PageSection>
 
@@ -1001,16 +867,12 @@ export function GenelBakisContent({
           8. GENEL DURUM STATS (Enriched)
           ══════════════════════════════════════════════════════ */}
       <PageSection className="mt-12">
-        <SectionTitle
-          title="Genel durum"
-          subtitle="Yapay zeka görünürlüğünün özeti"
-        />
+        <SectionTitle title="Genel durum" />
         <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5" staggerMs={80}>
           <EnrichedStatCard
             icon={<SearchIcon className="size-4" />}
-            label="Analiz edilen soru"
+            label="Toplam soru"
             value={activePromptCount}
-<<<<<<< Updated upstream
             description={`${activePromptCount} soru analiz edildi, ${promptsWithMentions > 0 ? `${totalMentionCount}'inde çıkıyorsun` : "henüz çıkamıyorsun"}`}
             linkHref="/dashboard/sorular"
             linkText="Soruları gör"
@@ -1024,55 +886,23 @@ export function GenelBakisContent({
           <EnrichedStatCard
             icon={<ListChecksIcon className="size-4" />}
             label="Gelişim planı"
-=======
-            description={promptsWithMentions > 0
-              ? `${mentionRate}% bahsedilme oranıyla ${totalMentionCount} kez önerildin`
-              : `${activePromptCount} soru 5 yapay zekaya soruldu`}
-            linkHref="/dashboard/sorular"
-            linkText="Detaylı analiz"
-          />
-          <EnrichedStatCard
-            icon={<BarChart3Icon className="size-4" />}
-            label="Yapılan tarama"
-            value={totalScanCount}
-            description={totalScanCount === 1
-              ? "İlk tarama tamamlandı — Pro ile haftalık takip yap"
-              : `${totalScanCount} tarama ile trendler ölçülüyor`}
-          />
-          <EnrichedStatCard
-            icon={<ListChecksIcon className="size-4" />}
-            label="Gelişim adımları"
->>>>>>> Stashed changes
             value={checklistProgress.completed}
             suffix={`/${checklistProgress.total || 22}`}
             description={
               checklistProgress.completed === 0
-<<<<<<< Updated upstream
                 ? "Henüz başlamadın — ilk adımı at"
                 : `${checklistProgress.completed} adım tamamlandı`
-=======
-                ? `${checklistProgress.total || 22} adım seni bekliyor — hemen başla`
-                : `${checklistProgress.total - checklistProgress.completed} adım kaldı`
->>>>>>> Stashed changes
             }
             linkHref="/dashboard/gelisim"
             linkText="Planı gör"
           />
           <EnrichedStatCard
             icon={<LinkIcon className="size-4" />}
-<<<<<<< Updated upstream
             label="Kaynak sayısı"
             value={totalSourceCount}
             description={`Yapay zekalar ${totalSourceCount} farklı kaynağa referans verdi`}
             linkHref="/dashboard/kaynaklar"
             linkText="Kaynakları gör"
-=======
-            label="Bulunan kaynak"
-            value={totalSourceCount}
-            description={`${activeSourceCount} aktif kaynak. ${activeSourceCount < sourceMap.length ? `${sourceMap.length - activeSourceCount} kaynak eksik.` : "Tüm kaynaklar mevcut."}`}
-            linkHref="/dashboard/kaynaklar"
-            linkText="Kaynakları yönet"
->>>>>>> Stashed changes
           />
         </Stagger>
       </PageSection>
@@ -1090,246 +920,6 @@ export function GenelBakisContent({
         platformCount={platformsWithMentions}
         plan={plan}
       />
-    </div>
-  );
-}
-
-/* ── Platform Q&A Section ────────────────────────────── */
-const SENTIMENT_MAP = {
-  pozitif: { label: "Pozitif", color: "#22c55e", bg: "#f0fdf4" },
-  nötr: { label: "Nötr", color: "#d97706", bg: "#fffbeb" },
-  negatif: { label: "Negatif", color: "#ef4444", bg: "#fef2f2" },
-} as const;
-
-function PlatformQASection({ platformQAs }: { platformQAs: PlatformQA[] }) {
-  // Group by question text
-  const grouped = useMemo(() => {
-    const map = new Map<string, PlatformQA[]>();
-    for (const qa of platformQAs) {
-      const existing = map.get(qa.promptText) ?? [];
-      existing.push(qa);
-      map.set(qa.promptText, existing);
-    }
-    return Array.from(map.entries());
-  }, [platformQAs]);
-
-  // Show first 3 questions
-  return (
-    <div className="flex flex-col gap-4">
-      {grouped.slice(0, 3).map(([question, qas], idx) => (
-        <QACard key={idx} question={question} qas={qas} />
-      ))}
-    </div>
-  );
-}
-
-function QACard({ question, qas }: { question: string; qas: PlatformQA[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const mentionedCount = qas.filter((q) => q.mentioned).length;
-
-  return (
-    <div className="kinde-card overflow-hidden">
-      {/* Header — always visible */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left p-4 sm:p-5 lg:p-6 cursor-pointer hover:bg-[#fafafa] transition-colors"
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <MessageSquareIcon className="size-4 text-muted-foreground" />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)" }}>
-            SORULAN SORU
-          </span>
-        </div>
-        <p style={{ fontSize: 15, fontWeight: 700, color: "var(--foreground)", lineHeight: 1.4 }}>
-          &ldquo;{question}&rdquo;
-        </p>
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-2">
-            {PLATFORMS.map((p) => {
-              const qa = qas.find((q) => q.platform === p);
-              const mentioned = qa?.mentioned ?? false;
-              return (
-                <div key={p} className="flex items-center gap-0.5">
-                  <PlatformLogo platform={p} size={22} mentioned={mentioned} />
-                  {mentioned ? (
-                    <CheckCircle2Icon className="size-3" style={{ color: "#22c55e" }} />
-                  ) : (
-                    <XCircleIcon className="size-3" style={{ color: "#ddd" }} />
-                  )}
-                </div>
-              );
-            })}
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--foreground)", marginLeft: 4 }}>
-              {mentionedCount}/{qas.length}
-            </span>
-          </div>
-          <ChevronDownIcon
-            className="size-5 text-muted-foreground transition-transform"
-            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-        </div>
-      </button>
-
-      {/* Expanded: per-platform responses */}
-      {expanded && (
-        <div style={{ borderTop: "1px solid #f0f0f0", background: "#fafafa" }}>
-          {PLATFORMS.map((p) => {
-            const qa = qas.find((q) => q.platform === p);
-            if (!qa) return null;
-            return <QAPlatformRow key={p} qa={qa} />;
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Detect garbled/error responses (base64-like, [ERROR] prefix, etc.) */
-function isGarbledResponse(text: string): boolean {
-  if (!text) return false;
-  if (text.startsWith("ERROR") || text.startsWith("error") || text.startsWith("[ERROR]")) return true;
-  // "AI Bakışı mevcut değil" = Google AIO no-result
-  if (text.includes("mevcut değil") && text.length < 100) return true;
-  // Strip URLs before checking (URLs have long "words" but that's normal)
-  const textNoUrls = text.replace(/https?:\/\/[^\s)]+/g, "URL");
-  // Detect base64/hash-like strings: long sequences without spaces (after URL removal)
-  const words = textNoUrls.split(/\s+/);
-  const longNonsenseWords = words.filter((w) => w.length > 40 && !/^URL$/.test(w));
-  if (longNonsenseWords.length >= 2) return true;
-  // Very few spaces relative to length = garbled (after URL removal)
-  const spaceCount = (textNoUrls.match(/\s/g) || []).length;
-  if (textNoUrls.length > 50 && spaceCount / textNoUrls.length < 0.02) return true;
-  return false;
-}
-
-function QAPlatformRow({ qa }: { qa: PlatformQA }) {
-  const [showFull, setShowFull] = useState(false);
-  const color = getPlatformColor(qa.platform);
-  const name = getPlatformDisplayName(qa.platform);
-  const garbled = isGarbledResponse(qa.fullAnswer);
-  const cleanAnswer = garbled ? "" : qa.fullAnswer;
-  const isLong = cleanAnswer.length > 250;
-  const displayText = showFull ? cleanAnswer : cleanAnswer.slice(0, 250) + (isLong ? "..." : "");
-  const sentimentInfo = qa.sentiment ? SENTIMENT_MAP[qa.sentiment] : null;
-
-  return (
-    <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f0f0" }}>
-      {/* Platform header */}
-      <div className="flex items-center gap-2 mb-2">
-        <PlatformLogo platform={qa.platform} size={22} mentioned={qa.mentioned} />
-        <span style={{ fontSize: 13, fontWeight: 700, color }}>{name}</span>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: qa.mentioned ? "#22c55e" : "#ef4444",
-            background: qa.mentioned ? "#f0fdf4" : "#fef2f2",
-            padding: "1px 8px",
-            borderRadius: 6,
-          }}
-        >
-          {qa.mentioned ? "Bahsetti" : "Bahsetmedi"}
-        </span>
-        {sentimentInfo && qa.mentioned && (
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: sentimentInfo.color,
-              background: sentimentInfo.bg,
-              padding: "1px 8px",
-              borderRadius: 6,
-            }}
-          >
-            {sentimentInfo.label}
-          </span>
-        )}
-      </div>
-
-      {/* Response text */}
-      {garbled ? (
-        <div style={{ marginLeft: 34 }}>
-          <p
-            style={{
-              fontSize: 12,
-              color: "#ef4444",
-              background: "#fef2f2",
-              borderRadius: 8,
-              padding: "10px 14px",
-              borderLeft: "3px solid #fca5a5",
-              fontStyle: "italic",
-            }}
-          >
-            Bu platformdan hatalı yanıt alındı. Sonraki taramada tekrar denenecek.
-          </p>
-        </div>
-      ) : cleanAnswer ? (
-        <div style={{ marginLeft: 34 }}>
-          <p
-            style={{
-              fontSize: 13,
-              color: "var(--foreground)",
-              lineHeight: 1.6,
-              background: "#fff",
-              borderRadius: 8,
-              padding: "10px 14px",
-              borderLeft: `3px solid ${qa.mentioned ? color : "#e5e5e5"}`,
-            }}
-          >
-            {displayText}
-          </p>
-          {isLong && (
-            <button
-              onClick={() => setShowFull(!showFull)}
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color,
-                marginTop: 4,
-                cursor: "pointer",
-                background: "none",
-                border: "none",
-                padding: 0,
-              }}
-            >
-              {showFull ? "Kısalt" : "Devamını gör"}
-            </button>
-          )}
-        </div>
-      ) : (
-        <p style={{ marginLeft: 34, fontSize: 12, color: "var(--muted-foreground)", fontStyle: "italic" }}>
-          Yanıt alınamadı.
-        </p>
-      )}
-
-      {/* Competitors */}
-      {qa.competitors.length > 0 && (
-        <div style={{ marginLeft: 34, marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: "var(--muted-foreground)", fontWeight: 500 }}>
-            Önerilen rakipler:
-          </span>
-          {qa.competitors.slice(0, 6).map((comp) => (
-            <span
-              key={comp}
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                padding: "2px 8px",
-                borderRadius: 6,
-                background: "#f5f5f5",
-                color: "#555",
-              }}
-            >
-              {comp}
-            </span>
-          ))}
-          {qa.competitors.length > 6 && (
-            <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>
-              +{qa.competitors.length - 6}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
