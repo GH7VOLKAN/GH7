@@ -69,7 +69,7 @@ export default function HomePage() {
       {/* BÖLÜM 1: HERO */}
       <section className="hero">
         <span className="hero-eyebrow">Generative Engine Optimization</span>
-        <h1 className="hero-h1">Yapay zeka<br/>sizi tanıyor <span className="muted">mu?</span></h1>
+        <h1 className="hero-h1">Yapay zeka<br/>sizi öneriyor <span className="muted">mu?</span></h1>
 
         <div className="hero-body">
           <p>Bunu kendiniz de yapabilirsiniz.</p>
@@ -438,7 +438,7 @@ export default function HomePage() {
 
       {/* BÖLÜM 9: FINAL CTA */}
       <section className="final-sec reveal">
-        <h2 className="final-h2">Yapay zekanın<br/><span className="muted">sizi tanımasını</span><br/>sağlayın</h2>
+        <h2 className="final-h2">Yapay zekanın<br/><span className="muted">sizi önermesini</span><br/>sağlayın</h2>
         <p className="final-sub">60 saniye. Kayıt gerekmez. Firma, kişi, ürün veya export — hepsi ücretsiz.</p>
         <div className="final-kapi">
           {["Firma", "Kişi", "E-Ticaret", "Export"].map((label) => {

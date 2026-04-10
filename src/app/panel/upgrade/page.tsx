@@ -84,34 +84,34 @@ export default async function UpgradePage({ searchParams }: UpgradePageProps) {
           {/* Business Card */}
           <div
             className={`border rounded-xl p-6 text-left ${
-              required === "business"
+              required === "pro"
                 ? "border-gray-900 ring-1 ring-gray-900"
                 : "border-gray-200"
             }`}
           >
-            <h3 className="text-lg font-bold text-gray-900">Business</h3>
+            <h3 className="text-lg font-bold text-gray-900">Pro</h3>
             <div className="mt-2">
               <span className="text-2xl font-bold text-gray-900">
-                &#8378;4.995
+                &#8378;4.995#8378;2.450
               </span>
               <span className="text-sm text-gray-500">/ay</span>
             </div>
             <ul className="mt-4 space-y-2 text-sm text-gray-600">
               <li className="flex items-center gap-2">
                 <span className="text-gray-400">&#10003;</span>
-                Pro planın tüm özellikleri
+                20 sorgu, haftalık tarama
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-gray-400">&#10003;</span>
-                Aksiyon planları
+                Haftalık aksiyon listesi
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-gray-400">&#10003;</span>
-                Rakip istihbaratı
+                Rakip istihbarat raporu
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-gray-400">&#10003;</span>
-                3 marka takibi
+                Korelasyon motoru
               </li>
             </ul>
           </div>

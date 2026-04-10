@@ -125,7 +125,7 @@ export function PanelSidebar({
   const router = useRouter();
   const [brandOpen, setBrandOpen] = React.useState(false);
   const brandInitials = brandName.substring(0, 2).toUpperCase();
-  const isBusiness = plan === "business";
+  const isPro = plan === "pro" || plan === "business" || plan === "agency";
 
   const handleLogout = async () => {
     router.push("/giris");
@@ -213,9 +213,9 @@ export function PanelSidebar({
         {/* Business Section Header */}
         <div className="flex items-center gap-2 px-3 py-1.5">
           <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-            Business
+            Pro
           </span>
-          {!isBusiness && (
+          {!isPro && (
             <span className="text-xs">🔒</span>
           )}
         </div>
@@ -236,7 +236,7 @@ export function PanelSidebar({
             >
               <span className="w-[18px] h-[18px] flex items-center justify-center text-sm leading-none">{item.emoji}</span>
               <span className="flex-1">{item.title}</span>
-              {!isBusiness && (
+              {!isPro && (
                 <span className="text-xs opacity-50">🔒</span>
               )}
             </Link>

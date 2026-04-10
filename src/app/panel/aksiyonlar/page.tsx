@@ -3,7 +3,7 @@ import AksiyonlarContent from "./aksiyonlar-content";
 import { PageHero } from "@/components/panel/page-hero";
 
 export default async function AksiyonlarPage() {
-  await checkPageAccess("business", "/panel/aksiyonlar");
+  await checkPageAccess("pro", "/panel/aksiyonlar");
   return (
     <>
       <PageHero
