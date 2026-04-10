@@ -11,6 +11,7 @@ export default function HomePage() {
   const [activeKapi, setActiveKapi] = useState("firma");
   const [mainInput, setMainInput] = useState("");
   const [finalKapi, setFinalKapi] = useState("");
+  const [isYearly, setIsYearly] = useState(false);
   const [finalInput, setFinalInput] = useState("");
   const router = useRouter();
 
@@ -177,7 +178,19 @@ export default function HomePage() {
           <div className="pricing-header">
             <span className="sec-tag">Fiyatlandırma</span>
             <h2 className="sec-h2">İhtiyacınıza göre<br/><span className="muted">doğru planı seçin.</span></h2>
-            <p className="sec-desc">Her iki planda da tüm AI platformları dahil. Kredi kartı gerekmez.</p>
+            <p className="sec-desc">Her iki planda da 5 AI platformu dahil. Kredi kartı gerekmez.</p>
+          </div>
+
+          {/* Aylık / Yıllık Toggle */}
+          <div className="pricing-toggle-wrap">
+            <div className="pricing-toggle">
+              <button className={`pricing-toggle-btn${!isYearly ? " active" : ""}`} onClick={() => setIsYearly(false)}>Aylık</button>
+              <button className={`pricing-toggle-btn${isYearly ? " active" : ""}`} onClick={() => setIsYearly(true)}>
+                Yıllık
+              </button>
+            </div>
+            {!isYearly && <span className="pricing-toggle-badge">Yıllıkta ~₺4.500 tasarruf</span>}
+            {isYearly && <span className="pricing-toggle-badge pricing-toggle-badge-active">₺4.500 tasarruf edildi!</span>}
           </div>
 
           <div className="pricing-grid" id="pricing">
@@ -185,10 +198,10 @@ export default function HomePage() {
             <div className="pricing-card">
               <div className="pricing-card-head">
                 <div className="pricing-plan-name">Free</div>
-                <p className="pricing-plan-desc">Başlangıç için ideal</p>
+                <p className="pricing-plan-desc">Markanızı keşfedin</p>
                 <div className="pricing-price-row">
                   <span className="pricing-price">₺0</span>
-                  <span className="pricing-period">/ay · Sonsuza kadar</span>
+                  <span className="pricing-period">/sonsuza kadar</span>
                 </div>
               </div>
 
@@ -198,14 +211,17 @@ export default function HomePage() {
               <div className="pricing-divider" />
 
               <ul className="pricing-features">
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>1</strong> marka takibi</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>10</strong> arama sorgusu</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>5</strong> AI platformu izleme</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>1</strong> il takibi</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Haftalık otomatik tarama</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Temel GEO skoru</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Rakip karşılaştırma</span></li>
-                <li><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>E-posta bildirimleri</span></li>
+                {[
+                  { text: "5 AI platformu", bold: "5" },
+                  { text: "1 kez tarama (tek seferlik)", bold: "1 kez" },
+                  { text: "10 sorgu limiti", bold: "10" },
+                  { text: "1 il · 1 proje", bold: "1" },
+                  { text: "Temel GEO skoru" },
+                  { text: "Rakip karşılaştırma" },
+                  { text: "Sonuç raporu + Pro önerisi" },
+                ].map((f, i) => (
+                  <li key={i}><svg className="pricing-check" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>{f.bold ? <><strong>{f.bold}</strong> {f.text.replace(f.bold, "").trim()}</> : f.text}</span></li>
+                ))}
               </ul>
 
               <div className="pricing-platforms-row">
@@ -225,37 +241,45 @@ export default function HomePage() {
               </div>
               <div className="pricing-card-head">
                 <div className="pricing-plan-name">Pro</div>
-                <p className="pricing-plan-desc">Büyüyen markalar için</p>
+                <p className="pricing-plan-desc">Tam izleme + rekabet yönetimi</p>
                 <div className="pricing-price-row">
-                  <span className="pricing-price">₺2.450</span>
+                  <span className="pricing-price">{isYearly ? "₺2.075" : "₺2.450"}</span>
                   <span className="pricing-period">/ay</span>
                 </div>
-                <p className="pricing-annual">₺24.900/yıl <span className="pricing-save">(2 ay hediye)</span></p>
+                {isYearly ? (
+                  <p className="pricing-annual">₺24.900/yıl <span className="pricing-save">(2 ay hediye)</span></p>
+                ) : (
+                  <p className="pricing-annual">veya ₺24.900/yıl <span className="pricing-save">(₺2.075/ay)</span></p>
+                )}
               </div>
 
-              <a href="/login" className="pricing-cta pricing-cta-filled">7 Gün Ücretsiz Dene</a>
-              <p className="pricing-cta-note">7 gün boyunca ücret yok</p>
+              <a href="/login" className="pricing-cta pricing-cta-filled">{isYearly ? "Yıllık Planla Başla" : "7 Gün Ücretsiz Dene"}</a>
+              <p className="pricing-cta-note">{isYearly ? "Yıllık ödemede 2 ay hediye" : "7 gün boyunca ücret yok"}</p>
 
               <div className="pricing-divider" />
 
               <p className="pricing-includes">Free&apos;deki her şey, artı:</p>
               <ul className="pricing-features">
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>3 proje</strong> (firma + kişi + ürün)</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>20</strong> arama sorgusu</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>5 il</strong> takibi</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Günlük tarama + PDF rapor</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>Rakip istihbarat</strong> analizi</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>AI içerik taslakları</strong></span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span><strong>Haftalık aksiyon listesi</strong></span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Korelasyon motoru</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>E-posta + WhatsApp bildirimleri</span></li>
-                <li><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>Öncelikli destek</span></li>
+                {[
+                  { text: "3 proje (firma + kişi + ürün)", bold: "3 proje" },
+                  { text: "20 sorgu · 5 il takibi", bold: "20 sorgu" },
+                  { text: "Haftada 3 varyasyonlu sorgu (Pzt/Çar/Cum)", bold: "Haftada 3" },
+                  { text: "Haftada 1 aksiyon listesi", bold: "Haftada 1" },
+                  { text: "Ayda 1 detaylı rapor (PDF)", bold: "Ayda 1" },
+                  { text: "Tam şeffaf sorgu görünürlüğü", bold: "Tam şeffaf" },
+                  { text: "Rakip istihbaratı + audit", bold: "Rakip istihbaratı" },
+                  { text: "AI içerik taslakları", bold: "AI içerik" },
+                  { text: "Korelasyon motoru (aksiyon→sonuç)" },
+                  { text: "E-posta + WhatsApp bildirimleri" },
+                ].map((f, i) => (
+                  <li key={i}><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>{f.bold ? <><strong>{f.bold}</strong> {f.text.replace(f.bold, "").trim()}</> : f.text}</span></li>
+                ))}
               </ul>
 
               <div className="pricing-platforms-row">
                 <span className="pricing-platforms-label">Dahil:</span>
                 <div className="pricing-platforms-icons">
-                  {(["chatgpt", "gemini", "perplexity", "claude", "google_aio", "copilot"] as AIPlatform[]).map((p) => (
+                  {(["chatgpt", "gemini", "perplexity", "claude", "google_aio"] as AIPlatform[]).map((p) => (
                     <AIPlatformIcon key={p} platform={p} size={18} colored />
                   ))}
                 </div>

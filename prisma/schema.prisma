@@ -483,3 +483,23 @@ model BlogPost {
 
   @@map("blog_posts")
 }
+
+// ─── Failed Results (Dead-Letter Queue) ──────────────
+
+model FailedResult {
+  id          String    @id @default(cuid())
+  scanId      String    @map("scan_id")
+  promptId    String    @map("prompt_id")
+  platform    String
+  error       String
+  payload     Json?
+  retryCount  Int       @default(0) @map("retry_count")
+  maxRetries  Int       @default(3) @map("max_retries")
+  nextRetryAt DateTime? @map("next_retry_at")
+  resolvedAt  DateTime? @map("resolved_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([resolvedAt, nextRetryAt])
+  @@map("failed_results")
+}

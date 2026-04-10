@@ -351,6 +351,14 @@ h2.sec-h2 .muted{color:var(--g300)}
 .pricing-header{text-align:center;margin-bottom:56px}
 .pricing-header .sec-tag{margin-bottom:16px}
 .pricing-header .sec-desc{max-width:420px;margin:0 auto}
+
+/* Toggle */
+.pricing-toggle-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:40px}
+.pricing-toggle{display:inline-flex;background:var(--g100);border-radius:10px;padding:3px}
+.pricing-toggle-btn{font-family:var(--font);font-size:14px;font-weight:600;padding:8px 24px;border:none;border-radius:8px;cursor:pointer;transition:all .15s;background:transparent;color:var(--g500)}
+.pricing-toggle-btn.active{background:var(--black);color:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.pricing-toggle-badge{font-size:12px;font-weight:700;color:var(--green);background:var(--green-bg);padding:4px 12px;border-radius:20px;white-space:nowrap}
+.pricing-toggle-badge-active{animation:pulse-green .6s ease}
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
 
 /* Card base */

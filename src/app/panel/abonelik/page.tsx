@@ -15,39 +15,44 @@ interface Plan {
   features: string[];
 }
 
-const PLANS: Plan[] = [
+const FREE_FEATURES = [
+  "5 AI platformu",
+  "1 kez tarama (tek seferlik)",
+  "10 sorgu limiti",
+  "1 il · 1 proje",
+  "Temel GEO skoru",
+  "Rakip karşılaştırma",
+  "Sonuç raporu + Pro önerisi",
+];
+
+const PRO_FEATURES = [
+  "3 proje (firma + kişi + ürün)",
+  "20 sorgu · 5 il takibi",
+  "Haftada 3 varyasyonlu sorgu",
+  "Haftada 1 aksiyon listesi",
+  "Ayda 1 detaylı rapor (PDF)",
+  "Tam şeffaf sorgu görünürlüğü",
+  "Rakip istihbaratı + audit",
+  "AI içerik taslakları",
+  "Korelasyon motoru",
+  "E-posta + WhatsApp bildirimleri",
+];
+
+const getPlans = (yearly: boolean): Plan[] => [
   {
     name: "Free",
     price: "₺0",
-    period: "/ay",
-    description: "Başlangıç için ideal",
-    features: [
-      "1 marka takibi",
-      "10 arama sorgusu",
-      "5 AI platformu",
-      "1 il takibi",
-      "Haftalık rapor",
-      "Temel GEO skoru",
-    ],
+    period: "/sonsuza kadar",
+    description: "Markanızı keşfedin",
+    features: FREE_FEATURES,
   },
   {
     name: "Pro",
-    price: "₺2.450",
+    price: yearly ? "₺2.075" : "₺2.450",
     period: "/ay",
-    description: "Büyüyen markalar için",
+    description: "Tam izleme + rekabet yönetimi",
     popular: true,
-    features: [
-      "3 proje (firma + kişi + ürün)",
-      "20 arama sorgusu",
-      "5 AI platformu + Google AIO",
-      "5 il takibi",
-      "Günlük rapor + PDF",
-      "Rakip analizi",
-      "İyileştirme önerileri",
-      "İçerik taslakları",
-      "Haftalık aksiyon listesi",
-      "E-posta + WhatsApp bildirimleri",
-    ],
+    features: PRO_FEATURES,
   },
 ];
 
@@ -58,6 +63,8 @@ const PLAN_API_SLUG: Record<string, string> = {
 export default function AbonelikPage() {
   const [currentPlan, setCurrentPlan] = useState<PlanName>("Free");
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [isYearly, setIsYearly] = useState(false);
+  const PLANS = getPlans(isYearly);
 
   useEffect(() => {
     async function loadPlan() {
@@ -97,7 +104,7 @@ export default function AbonelikPage() {
       const res = await fetch("/api/payment/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: slug, period: "monthly" }),
+        body: JSON.stringify({ plan: slug, period: isYearly ? "yearly" : "monthly" }),
       });
       const data = await res.json();
       if (data.checkoutFormContent) {
@@ -154,6 +161,27 @@ export default function AbonelikPage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Aylık/Yıllık Toggle */}
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <div className="inline-flex bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setIsYearly(false)}
+            className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors ${!isYearly ? "bg-gray-900 text-white shadow-sm" : "text-gray-500"}`}
+          >
+            Aylık
+          </button>
+          <button
+            onClick={() => setIsYearly(true)}
+            className={`px-5 py-2 rounded-md text-sm font-semibold transition-colors ${isYearly ? "bg-gray-900 text-white shadow-sm" : "text-gray-500"}`}
+          >
+            Yıllık
+          </button>
+        </div>
+        <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+          {isYearly ? "₺4.500 tasarruf!" : "Yıllıkta ~₺4.500 tasarruf"}
+        </span>
       </div>
 
       {/* Plans Grid */}
