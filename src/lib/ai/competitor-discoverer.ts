@@ -137,14 +137,16 @@ SADECE JSON döndür — başka hiçbir şey yazma:
 }
 
 KURALLAR:
-- 5-10 rakip döndür (hem Türkiye hem global)
-- "direct": Aynı ürün kategorisinde doğrudan rakip (öncelik)
+- EN FAZLA 5 rakip döndür — KALİTE > SAYI! Emin olmadığın firmayı EKLEME.
+- "direct": Aynı ürün/hizmet kategorisinde doğrudan rakip (öncelik)
 - "indirect": Yakın/komşu kategoride, kısmen rekabet ediyor
 - Domain bulunamadıysa boş string ("") koy
 - Her rakibin GERÇEKTEN aynı ürünü/hizmeti sunduğundan EMİN OL
 - Türkiye pazarındaki firmalara ağırlık ver ama global markalar da dahil
-- KRİTİK: ${brand.name} firmaSININ KENDİSİNİ rakip listesine KOYMA! Firma kendisinin rakibi olamaz.
-  Domain "${brand.domain}" olan firma da dahil — kendi markayı ASLA listeye ekleme.`;
+- KRİTİK: ${brand.name} firmaSININ KENDİSİNİ rakip listesine KOYMA! Domain "${brand.domain}" olan firmayı ASLA listeye ekleme.
+- DOĞRULAMA: Rakip firmanın web sitesinin GERÇEKTEN var olduğundan ve açılabildiğinden emin ol. Sonar araştırmasında bahsedilmeyen, uydurma veya artık mevcut olmayan firmaları EKLEME.
+- KATEGORİ DOĞRULAMA: Sadece genel sektör adı (ısıtma, soğutma, yazılım) değil, SPESİFİK ürün/hizmet alt kategorisi eşleşmesi ara. Örnek: "yerden ısıtma" ile "kombi" FARKLI kategorilerdir.
+- ÖNCELİK: Kullanıcının belirttiği rakipleri (eğer varsa) EN BAŞA koy ve doğrula. Sonra Sonar araştırmasından doğrulanmış olanları ekle.`;
 
   try {
     const response = await client.messages.create({
