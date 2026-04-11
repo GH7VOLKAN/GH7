@@ -135,7 +135,7 @@ export default function OnboardPage() {
         setApprovedName(data.companyName || domain.replace(/\.(com|net|org|com\.tr|tr)$/i, ""));
         setApprovedSector(data.sector || "");
         setApprovedCategories(data.categories);
-        setApprovedCompetitors(data.competitors);
+        setApprovedCompetitors(data.competitors.slice(0, 5));
         setApprovedRegions(data.regions);
         setStep("approval");
       } catch (err) {
@@ -312,7 +312,7 @@ export default function OnboardPage() {
   // ── Editable list helpers ──
   function addCategory() { const v = newCategoryInput.trim(); if (v && !approvedCategories.includes(v)) { setApprovedCategories((p) => [...p, v]); setNewCategoryInput(""); } }
   function removeCategory(i: number) { setApprovedCategories((p) => p.filter((_, idx) => idx !== i)); }
-  function addCompetitor() { const n = newCompetitorName.trim(); if (n) { setApprovedCompetitors((p) => [...p, { name: n, domain: newCompetitorDomain.trim() || null }]); setNewCompetitorName(""); setNewCompetitorDomain(""); } }
+  function addCompetitor() { const n = newCompetitorName.trim(); if (n && approvedCompetitors.length < 5) { setApprovedCompetitors((p) => [...p, { name: n, domain: newCompetitorDomain.trim() || null }]); setNewCompetitorName(""); setNewCompetitorDomain(""); } }
   function removeCompetitor(i: number) { setApprovedCompetitors((p) => p.filter((_, idx) => idx !== i)); }
   function addRegion() { const v = newRegionInput.trim(); if (v && !approvedRegions.includes(v)) { setApprovedRegions((p) => [...p, v]); setNewRegionInput(""); } }
   function removeRegion(i: number) { setApprovedRegions((p) => p.filter((_, idx) => idx !== i)); }
@@ -503,7 +503,7 @@ export default function OnboardPage() {
               <EditableChipSection title="Faaliyet Alanları" subtitle="Sorular bu alanlara göre üretilecek" items={approvedCategories} onRemove={removeCategory} inputValue={newCategoryInput} onInputChange={setNewCategoryInput} onAdd={addCategory} placeholder="Yeni alan ekle..." chipClass={chipClass} inputClass={inputClass} />
 
               <div className="rounded-2xl border border-border/50 bg-white p-4 sm:p-6 shadow-sm">
-                <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold tracking-[-0.01em]">Rakipler ({approvedCompetitors.length})</h2><p className="mt-0.5 text-xs text-muted-foreground">Bu markalarla kıyaslanacaksınız</p></div></div>
+                <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold tracking-[-0.01em]">Rakipler ({approvedCompetitors.length}/5)</h2><p className="mt-0.5 text-xs text-muted-foreground">En önemli 5 rakibinizi belirleyin — tüm rekabet analizi bu firmalara göre yapılacak</p></div></div>
                 <div className="mt-4 space-y-2.5">
                   {approvedCompetitors.map((comp, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/10 px-4 py-2.5">

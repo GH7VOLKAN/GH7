@@ -1330,13 +1330,14 @@ function AnalizPageInner() {
     const brandName = displayName || "ISITMAX";
 
     /* ---------- LAYER 4 DATA: Digital footprint ---------- */
+    const userDomain = formData.heroInput?.replace(/^https?:\/\//, "").replace(/\/.*$/, "") || "";
     const digitalSources = [
-      { icon: "🌐", name: "Website", status: "active" as const, detail: "isitmax.com" },
-      { icon: "in", name: "LinkedIn", status: "active" as const, detail: "Şirket sayfası aktif" },
-      { icon: "G", name: "Google Business", status: "active" as const, detail: "Profil doğrulanmış" },
-      { icon: "📋", name: "Rehberler", status: "missing" as const, detail: "Sektör rehberlerinde yok" },
-      { icon: "📰", name: "Haberler", status: "active" as const, detail: "3 haber kaynağı" },
-      { icon: "📱", name: "Sosyal Medya", status: "missing" as const, detail: "Aktif profil bulunamadı" },
+      { icon: "🌐", name: "Website", status: (userDomain ? "active" : "missing") as "active" | "missing", detail: userDomain || "Web sitesi bulunamadı", url: userDomain ? `https://${userDomain}` : null },
+      { icon: "in", name: "LinkedIn", status: "missing" as const, detail: "LinkedIn profili kontrol edin", url: `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(displayName || "")}` },
+      { icon: "G", name: "Google Business", status: "missing" as const, detail: "GBP doğrulaması gerekli", url: `https://www.google.com/search?q=${encodeURIComponent(displayName || "")}+google+business` },
+      { icon: "📋", name: "Rehberler", status: "missing" as const, detail: "Sektör rehberlerinde kontrol edin", url: `https://www.google.com/search?q=${encodeURIComponent(displayName || "")}+rehber+dizin` },
+      { icon: "📰", name: "Haberler", status: "missing" as const, detail: "Haber kaynaklarını kontrol edin", url: `https://www.google.com/search?q=${encodeURIComponent(displayName || "")}&tbm=nws` },
+      { icon: "📱", name: "Sosyal Medya", status: "missing" as const, detail: "Sosyal medya profillerini kontrol edin", url: `https://www.google.com/search?q=${encodeURIComponent(displayName || "")}+sosyal+medya` },
     ];
     const activeSources = digitalSources.filter((s) => s.status === "active").length;
 
@@ -1456,7 +1457,7 @@ function AnalizPageInner() {
         {/* ================================================================ */}
         <section>
           <h3 className="text-xl font-bold text-gray-900 mb-1">
-            Opus Analizi — Kişiselleştirilmiş Değerlendirme
+            GH7 Analizi — Kişiselleştirilmiş Değerlendirme
           </h3>
           <p className="text-sm text-gray-500 mb-6">
             Tüm platform yanıtları analiz edildi
@@ -1582,13 +1583,6 @@ function AnalizPageInner() {
                               {trendIcon} {rank.trendNote}
                             </span>
                           ) : null}
-                          <button
-                            disabled
-                            className={`text-xs underline cursor-not-allowed ${isUser ? "text-gray-500" : "text-gray-300"}`}
-                            title="Yakında"
-                          >
-                            Neden Önde?
-                          </button>
                         </div>
                       );
                     })}
@@ -1693,9 +1687,15 @@ function AnalizPageInner() {
                     <span className={`text-sm font-medium ${isActive ? "text-gray-900" : "text-gray-400"}`}>
                       {source.name}
                     </span>
-                    <span className={`text-xs ${isActive ? "text-gray-500" : "text-gray-400"}`}>
-                      {source.detail}
-                    </span>
+                    {source.url ? (
+                      <a href={source.url} target="_blank" rel="noopener noreferrer" className={`text-xs underline ${isActive ? "text-gray-500 hover:text-gray-700" : "text-gray-400 hover:text-gray-500"}`}>
+                        {source.detail}
+                      </a>
+                    ) : (
+                      <span className={`text-xs ${isActive ? "text-gray-500" : "text-gray-400"}`}>
+                        {source.detail}
+                      </span>
+                    )}
                     <span
                       className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                         isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400"
@@ -1783,65 +1783,66 @@ function AnalizPageInner() {
         <div className="border-t border-gray-100 my-12" />
 
         {/* ================================================================ */}
-        {/* BOTTOM CTA                                                       */}
+        {/* BOTTOM CTA — Pro Üyelik                                        */}
         {/* ================================================================ */}
         <section className="text-center">
           <p className="text-lg font-semibold text-gray-900 mb-2">
-            Bu anlık bir fotoğraf. Yapay zeka yanıtları her hafta değişiyor.
+            Yapay zeka yanıtları sürekli değişiyor.
+          </p>
+          <p className="text-sm text-gray-500 mb-8 max-w-lg mx-auto">
+            Şu an {displayName || "markanız"} için yapılan analiz sonuçları bu. Pro üyelik ile haftada 3 kez varyasyonlu tarama, haftalık aksiyon listesi ve aylık detaylı rapor ile rakiplerinizin önüne geçin.
           </p>
 
-          {/* Pro & Business cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-8 text-left max-w-[640px] mx-auto">
-            {/* Pro */}
-            <div className="border-2 border-gray-900 rounded-xl p-5 relative">
-              <div className="absolute -top-2.5 left-4 bg-gray-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
-                Popüler
-              </div>
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Pro</p>
-              <p className="text-xl font-bold text-gray-900 mb-1">₺2.495<span className="text-sm font-normal text-gray-400">/ay</span></p>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Haftalık otomatik takip, sıralama savaşı, değişim bildirimi, trend grafikleri
-              </p>
+          {/* Pro Plan Card */}
+          <div className="border-2 border-gray-900 rounded-xl p-6 relative max-w-md mx-auto text-left mb-6">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold px-4 py-1 rounded-full">
+              Pro Plan
             </div>
-
-            {/* Business */}
-            <div className="border border-gray-200 rounded-xl p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Business</p>
-              <p className="text-xl font-bold text-gray-900 mb-1">₺4.995<span className="text-sm font-normal text-gray-400">/ay</span></p>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Pro&apos;daki her şey + haftalık aksiyon listesi, Opus içerik üretimi, rakip istihbarat, korelasyon motoru
-              </p>
+            <div className="flex items-baseline gap-2 mb-4 mt-2">
+              <span className="text-3xl font-bold text-gray-900">₺2.450</span>
+              <span className="text-sm text-gray-400">/ay</span>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <p className="text-xs text-gray-400 mb-4">
+              veya ₺24.900/yıl <span className="text-green-600 font-bold">(2 ay hediye — ₺2.075/ay)</span>
+            </p>
+            <ul className="space-y-2 text-sm text-gray-700 mb-6">
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span><strong>Haftada 3</strong> varyasyonlu sorgu (Pzt/Çar/Cum)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span><strong>Haftada 1</strong> aksiyon listesi (ne yapmalısın?)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span><strong>Ayda 1</strong> detaylı rapor (PDF)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>20 sorgu · 5 il · 3 proje</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>Rakip istihbaratı + korelasyon motoru</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>AI içerik taslakları + tam şeffaflık</span>
+              </li>
+            </ul>
             <Link
-              href="/panel/abonelik"
-              className="bg-gray-900 text-white rounded-lg px-8 py-3 font-medium hover:bg-gray-800 transition-colors"
+              href="/login"
+              className="block w-full bg-gray-900 text-white rounded-lg py-3 font-semibold text-center hover:bg-gray-800 transition-colors"
             >
-              Haftalık Takibi Başlat &rarr; Pro
+              Pro Üye Ol &rarr;
             </Link>
-            <button
-              onClick={() => {
-                const message = generatePdfShareMessage(
-                  displayName || "Marka",
-                  window.location.href,
-                );
-                const url = generateWhatsAppShareLink({ text: message });
-                window.open(url, "_blank", "noopener");
-              }}
-              className="flex items-center justify-center gap-2 border border-green-600 text-green-600 rounded-lg px-8 py-3 font-medium hover:bg-green-50 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Raporu WhatsApp&apos;a Gönder
-            </button>
-            <button
-              onClick={() => setShowCallPopup(true)}
-              className="border border-gray-300 rounded-lg px-8 py-3 font-medium hover:bg-gray-50 transition-colors"
-            >
-              Sizi Arayalım
-            </button>
+            <p className="text-xs text-gray-400 text-center mt-2">7 gün ücretsiz dene · İstediğin zaman iptal</p>
           </div>
+
+          <p className="text-xs text-gray-400">
+            Analiz sonuçlarınız dashboard&apos;unuza kaydedildi. Pro üye olmasanız bile temel analizi her zaman görebilirsiniz.
+          </p>
         </section>
       </div>
     );
