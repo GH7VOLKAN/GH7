@@ -75,6 +75,74 @@ const SCAN_VERIFICATION_RULES: Record<string, (ctx: ScanVerificationContext) => 
       ? { verified: true, note: `${count}/4 platformda bahsediliyorsun.` }
       : { verified: false, note: `Sadece ${count}/4 platformda bahsedilme — daha geniş kapsam gerekli.` };
   },
+
+  // ── Yeni GEO maddeleri ──────────────────────────────────
+
+  "1.8": async (ctx) => {
+    // Chunk yapısı: fullResponse'ta marka doğrudan cümle olarak geçiyor mu?
+    const mentionedResults = await prisma.promptResult.count({
+      where: { scanId: ctx.scanId, mentioned: true },
+    });
+    return mentionedResults >= 3
+      ? { verified: true, note: `${mentionedResults} soruda doğrudan bahsediliyorsun — içerik yapın AI uyumlu.` }
+      : { verified: false, note: "AI yanıtlarında doğrudan bahsedilme az — chunk yapısı iyileştirilmeli." };
+  },
+
+  "1.9": async (ctx) => {
+    // Çapraz platform varlık: 3+ farklı kaynak türünde var mı?
+    const sourceTypes = await prisma.sourceDomain.findMany({
+      where: { brandId: ctx.brandId },
+      select: { type: true },
+      distinct: ["type"],
+    });
+    const typeCount = sourceTypes.length;
+    return typeCount >= 3
+      ? { verified: true, note: `${typeCount} farklı kaynak türünde varlığın tespit edildi (çapraz platform doğrulama aktif).` }
+      : { verified: false, note: `Sadece ${typeCount} kaynak türünde varsın — en az 3 farklı tür gerekli.` };
+  },
+
+  "2.9": async (ctx) => {
+    // Entity Recognition: Knowledge Panel gibi sinyaller Sonar ile kontrol edilmeli (ağır mod)
+    // Hafif kontrol: Wikipedia/Wikidata kaynaklarında referans var mı?
+    const wikiSource = await prisma.sourceDomain.count({
+      where: { brandId: ctx.brandId, domain: { contains: "wikipedia" } },
+    });
+    return wikiSource > 0
+      ? { verified: true, note: "Wikipedia kaynaklarında referans tespit edildi — entity tanıma aktif." }
+      : { verified: false, note: "Wikipedia/Wikidata'da referans bulunamadı — entity tanıma zayıf." };
+  },
+
+  "2.10": async (ctx) => {
+    // Güvenilir dış kaynak referansları: Kaynak çeşitliliği
+    const sources = await prisma.sourceDomain.count({ where: { brandId: ctx.brandId } });
+    return sources >= 5
+      ? { verified: true, note: `${sources} kaynak domain tespit edildi — dış referans ağı güçlü.` }
+      : { verified: false, note: `Sadece ${sources} kaynak domain — güvenilir dış referanslar artırılmalı.` };
+  },
+
+  "3.8": async (ctx) => {
+    // Platform-spesifik strateji: Her platformda en az 1 mention var mı?
+    const platforms = Object.values(ctx.platformMentions);
+    const activeCount = platforms.filter((m) => m > 0).length;
+    const totalPlatforms = platforms.length;
+    return activeCount >= totalPlatforms
+      ? { verified: true, note: `Tüm ${activeCount} platformda görünüyorsun — platform-spesifik strateji etkili.` }
+      : { verified: false, note: `${activeCount}/${totalPlatforms} platformda görünüyorsun — eksik platformlar için strateji gerekli.` };
+  },
+
+  "3.9": async (ctx) => {
+    // Duygu analizi: Pozitif sentiment oranı %70+ mı?
+    const allResults = await prisma.promptResult.findMany({
+      where: { scanId: ctx.scanId, mentioned: true },
+      select: { sentiment: true },
+    });
+    if (allResults.length === 0) return { verified: false, note: "Sentiment verisi yok — henüz yeterli bahsedilme yok." };
+    const positive = allResults.filter((r) => r.sentiment === "pozitif" || r.sentiment === "positive").length;
+    const rate = Math.round((positive / allResults.length) * 100);
+    return rate >= 70
+      ? { verified: true, note: `Pozitif sentiment oranı %${rate} — itibar yönetimi iyi durumda.` }
+      : { verified: false, note: `Pozitif sentiment oranı %${rate} — hedef %70+. İtibar yönetimi gerekli.` };
+  },
 };
 
 /**
@@ -289,6 +357,12 @@ function buildVerificationPrompt(
     "3.5": `"${entity}" farklı soru tiplerinde (tavsiye, karşılaştırma, fiyat, lokasyon) yapay zekada çıkıyor mu?`,
     "3.6": `"${domain}" web sitesinde llms.txt dosyası var mı?`,
     "3.7": `"${entity}" rakiplerine kıyasla yapay zekada daha sık mı bahsediliyor?`,
+    "1.8": `"${domain}" web sitesinde içerikler AI'ın alıntılayacağı kısa paragraf formatında mı? Chunk-level yapı var mı?`,
+    "1.9": `"${entity}" Reddit, YouTube, Medium, Ekşi Sözlük, sektörel forumlar gibi farklı platformlarda bahsediliyor mu?`,
+    "2.9": `"${entity}" Google Knowledge Panel'de veya Wikipedia/Wikidata'da bir varlık olarak tanınıyor mu?`,
+    "2.10": `"${domain}" web sitesinde akademik, resmi kurum veya sektör kuruluşlarına outbound referanslar var mı?`,
+    "3.8": `"${entity}" her AI platformu (ChatGPT, Claude, Gemini, Perplexity) için ayrı içerik stratejisi uyguluyor mu?`,
+    "3.9": `"${entity}" hakkında yapay zeka yanıtlarında olumlu mu bahsediliyor? Negatif kaynaklar var mı?`,
   };
 
   const question = verificationQuestions[itemNumber] ?? `"${entity}" için şu durum geçerli mi: ${simpleTitle}`;
