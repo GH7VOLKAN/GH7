@@ -89,23 +89,51 @@ MEVCUT SKORLAR:
 AUDIT SONUCLARI:
 ${auditSummary}
 
+GEO SINYAL AGIRLIKLARI (ONCELIK SIRASI):
+1. Capraz Platform Dogrulama (en yuksek oncelik) — Ayni bilginin 3+ bagimsiz kaynakta tutarli olmasi %72 daha fazla guven saglar
+2. Yapilandirilmis Veri / Schema (cok yuksek) — JSON-LD kullanan siteler citation 2.7x daha yuksek
+3. Icerik Kalitesi / Chunk Yapisi (yuksek) — 40-80 kelimelik dogrudan yanit bloklari olusturmak kritik
+4. Varlik Tanima / Entity (yuksek) — Knowledge Graph'ta net tanimlama
+5. Konu Otoritesi (yuksek) — Derinlemesine, guncel, orijinal icerik
+6. Yorum Hacmi & Duygu (orta) — Cok platformlu, guncel, pozitif geri bildirim
+
+PLATFORM-SPESIFIK TERCIHLER (her platform farkli kaynaklari onceliklendirir):
+- ChatGPT: Wikipedia, akademik kaynaklar, earned media tercih eder
+- Perplexity: Guncel web, Q&A formati, YouTube, e-ticaret siteleri tercih eder
+- Claude: Uzun form icerik, arastirma, detayli analiz tercih eder
+- Gemini: Google ekosistemi (GBP, YouTube, Scholar) tercih eder
+
+KRITIK ARASTIRMA VERILERI:
+- 3+ bagimsiz kaynaktan dogrulama = %72 daha fazla guven
+- Istatistik iceren sayfalar = citation olasiligi 5.3x daha yuksek
+- FAQ Schema = direct answer kaynagi 3.8x daha yuksek
+- 6 aydan eski icerikler %45 gerileme gosteriyor
+- %70+ pozitif kaynak = %91 varsayilan oneri
+- 5 farkli kaynak turu, 20 tek tur kaynaktan %44 daha etkili
+- First-mover avantaji: bos alan sorgularinda ilk giren %85 varsayilan kaynak
+
 GOREV:
-Yukaridaki verileri analiz ederek yapay zeka gorunurlugunu artirmak icin en etkili aksiyonlari belirle.
+Yukaridaki verileri VE GEO sinyal agirliklarini kullanarak en etkili aksiyonlari belirle.
 
 KURALLAR:
-1. Tam olarak 22 aksiyon uret — 3 katmana dagit:
-   - Katman 1: BULUYOR MU? (7 aksiyon) — AI'nin markayi bulabilmesi icin temel adimlar
-   - Katman 2: GUVENIYOR MU? (8 aksiyon) — AI'nin markaya guven duymasi icin adimlar
-   - Katman 3: ONERIYOR MU? (7 aksiyon) — AI'nin markayi aktif olarak onermesi icin adimlar
+1. Tam olarak 28 aksiyon uret — 3 katmana dagit:
+   - Katman 1: BULUYOR MU? (9 aksiyon) — AI'nin markayi bulabilmesi icin temel adimlar (Google, LinkedIn, site, GBP, dizinler, bot erisimi, llms.txt, chunk yapisi, capraz platform)
+   - Katman 2: GUVENIYOR MU? (10 aksiyon) — AI'nin markaya guven duymasi icin adimlar (medya, veri, guncellik, FAQ, site saglik, schema, tutarlilik, referanslar, entity, akademik kaynak)
+   - Katman 3: ONERIYOR MU? (9 aksiyon) — AI'nin markayi aktif olarak onermesi icin adimlar (coklu platform, citation, kaynak ustunlugu, otorite, soru cesitliligi, sentiment, bos alanlar, platform-spesifik strateji, itibar yonetimi)
 2. Her aksiyonu oncelik, zorluk ve etki bazinda degerlendir
-3. "canWeDoIt" = GH7.ai ekibinin bu isi musteri adina RaaS (Result as a Service) olarak yapip yapamayacagi
-4. "selfServiceSteps" = Musterinin kendisi yapmak isterse adim adim talimatlar
-5. "raasEligible" = RaaS kapsaminda sunulabilir mi
-6. Katman 1 aksiyonlari once, sonra Katman 2, sonra Katman 3 gelsin
-7. Her aksiyonun gercekci bir tahmini suresi olsun
-8. Fail olan audit check'lerine ozel aksiyonlar uret
-9. Mention score dusukse gorunurluk artirici aksiyonlar ekle
-10. Her aksiyonun hangi katmana ait oldugunu title basinda belirt: "[K1] ...", "[K2] ...", "[K3] ..."
+3. Capraz Platform Dogrulama aksiyonlarina EN YUKSEK oncelik ver
+4. Chunk-level icerik yapisi olusturma aksiyonlari dahil et
+5. Her platform icin spesifik optimizasyon oner (ChatGPT vs Perplexity vs Claude vs Gemini)
+6. Istatistik/veri paylasimi aksiyonlarini ust siralara koy (5.3x citation artisi)
+7. Negatif duygu kaynaklari varsa "reputation management" aksiyonu ekle
+8. "canWeDoIt" = GH7.ai ekibinin RaaS olarak yapip yapamayacagi
+9. "selfServiceSteps" = Musterinin kendisi yapmak isterse adim adim talimatlar
+10. "raasEligible" = RaaS kapsaminda sunulabilir mi
+11. Katman 1 once, sonra Katman 2, sonra Katman 3 gelsin
+12. Her aksiyonun gercekci tahmini suresi olsun
+13. Fail olan audit check'lerine ozel aksiyonlar uret
+14. Mention score dusukse gorunurluk artirici aksiyonlar ekle
+15. Her aksiyonun hangi katmana ait oldugunu title basinda belirt: "[K1] ...", "[K2] ...", "[K3] ..."
 
 ZORLUK SEVIYELERI:
 - EASY: Kullanici tek basina 30 dk icinde yapabilir
@@ -116,9 +144,9 @@ JSON formatinda dondur — baska hicbir sey yazma:
 [
   {
     "title": "Kisa ve net baslik",
-    "description": "Detayli aciklama (ne yapilacak, neden onemli)",
+    "description": "Detayli aciklama (ne yapilacak, neden onemli, hangi arastirma destekliyor)",
     "priority": "high|medium|low",
-    "impact": "Bu aksiyonun beklenen etkisi (1 cumle)",
+    "impact": "Bu aksiyonun beklenen etkisi + ilgili istatistik (1 cumle)",
     "difficulty": "EASY|MEDIUM|HARD",
     "estimatedTime": "30 dakika|1 saat|2-3 saat|1 gun|1 hafta",
     "canWeDoIt": true/false,
@@ -130,7 +158,7 @@ JSON formatinda dondur — baska hicbir sey yazma:
   try {
     const response = await client.messages.create({
       model: "claude-opus-4-20250514",
-      max_tokens: 4096,
+      max_tokens: 6000,
       temperature: 0.7,
       messages: [{ role: "user", content: prompt }],
     });

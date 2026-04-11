@@ -8,10 +8,10 @@
  *   Detaylı teknik kapsam, teknoloji listesi, araştırma referansları.
  *   "Yeğen" veya danışmana gönderilebilir.
  *
- * V3 Spec Section H: 3 Katman (7+8+7) = 22 kontrol noktası
- * Layer 1: AI seni buluyor mu? (7 madde)
- * Layer 2: AI sana güveniyor mu? (8 madde)
- * Layer 3: AI seni öneriyor mu? (7 madde, Pro-only)
+ * V4: 3 Katman (9+10+9) = 28 kontrol noktası
+ * Layer 1: AI seni buluyor mu? (9 madde)
+ * Layer 2: AI sana güveniyor mu? (10 madde)
+ * Layer 3: AI seni öneriyor mu? (9 madde, Pro-only)
  */
 
 export interface TechnicalDetail {
@@ -43,7 +43,7 @@ export const LAYER_NAMES: Record<number, string> = {
 
 export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
   // ═══════════════════════════════════════════════════════════
-  // KATMAN 1: BULUYOR MU? (7 madde)
+  // KATMAN 1: BULUYOR MU? (9 madde)
   // ═══════════════════════════════════════════════════════════
 
   // 1.1 — Google'da adın/firman çıkıyor mu?
@@ -285,8 +285,78 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     agencyPrice: "2.000₺",
   },
 
+  // 1.8 — Chunk-level içerik yapısı var mı?
+  {
+    layer: 1,
+    itemNumber: "1.8",
+    simpleTitle: "İçeriğin AI'ın alıntılayacağı formatta mı?",
+    simpleDescription:
+      "Yapay zekalar tüm sayfayı değil, soruya en iyi yanıt veren paragrafı seçer. Rakiplerin kısa, net cevap blokları varsa AI onları alıntılar — sen uzun metinler yazıyorsan kaybolursun.",
+    difficulty: "MEDIUM",
+    impact: "HIGH",
+    feasibilityScore: 3,
+    estimatedTime: "1-2 hafta",
+    selfServiceSteps: [
+      "Her sayfanın başına 40-80 kelimelik özet paragraf ekle — soruyu doğrudan yanıtla",
+      "H2 başlıklarını soru formatında yaz (örn: 'Yerden ısıtma maliyeti ne kadar?')",
+      "Her bölümü kendi başına anlamlı olacak şekilde yapılandır — bağlamsız okunabilmeli",
+      "Liste ve tablo formatlarını kullan — AI'lar yapılandırılmış veriyi tercih eder",
+      "Her sayfada en az 1 istatistik veya somut veri noktası ekle",
+    ],
+    technicalDetail: {
+      scope: [
+        "Chunk-level ranking optimizasyonu — AI tüm sayfayı değil paragrafları puanlar",
+        "Semantik benzerlik artırma — sorgu ile içerik vektörleri yakınlaştırma",
+        "40-80 kelimelik 'citable snippet' formatı her ana bölüm için",
+        "Soru-cevap yapısı (H2 soru, altında direkt yanıt)",
+        "İstatistik ve veri noktası içeren paragraflar (citation 5.3x artış)",
+        "Featured snippet uyumlu format (paragraf/liste/tablo)",
+      ],
+      researchNote:
+        "Princeton araştırmasına göre chunk-level optimize edilen içerikler AI yanıtlarında %40 daha fazla görünüyor. İstatistik içeren paragraflar 5.3x daha fazla alıntılanıyor.",
+      researchSource: "Princeton GEO Study (ACM KDD 2024) + Bain AI Search Report 2025",
+    },
+    canAgencyDo: true,
+    agencyPrice: "7.000₺",
+  },
+
+  // 1.9 — Çapraz platform varlık var mı?
+  {
+    layer: 1,
+    itemNumber: "1.9",
+    simpleTitle: "Farklı platformlarda (Reddit, YouTube, forum) var mısın?",
+    simpleDescription:
+      "Yapay zekalar aynı bilgiyi 3+ bağımsız kaynakta gördüğünde %72 daha fazla güveniyor. Sadece kendi sitenizde olmak yetmez — Reddit, YouTube, Medium, sektörel forumlarda da bahsedilmelisiniz.",
+    difficulty: "MEDIUM",
+    impact: "HIGH",
+    feasibilityScore: 3,
+    estimatedTime: "2-4 hafta",
+    selfServiceSteps: [
+      "Reddit'te sektörel subreddit'lerde değer katan cevaplar yaz (marka adını doğal ekle)",
+      "Medium veya LinkedIn'de sektörel makaleler yayınla",
+      "YouTube'a 'nasıl yapılır' tarzı kısa videolar yükle",
+      "Sektörel forumlarda (Ekşi Sözlük, DonanımHaber vb.) uzman olarak katkı yap",
+      "Quora veya sektörel Q&A platformlarında soruları yanıtla",
+    ],
+    technicalDetail: {
+      scope: [
+        "Çapraz platform varlık stratejisi — en az 5 farklı platform türünde mevcut olma",
+        "Reddit, Quora, YouTube, Medium, LinkedIn, Ekşi Sözlük, sektörel forumlar",
+        "Her platformda tutarlı marka bilgisi (isim, açıklama, link)",
+        "UGC (User Generated Content) tetikleme — müşterilerden yorum/paylaşım isteme",
+        "Platform-spesifik içerik formatı (Reddit: detaylı cevap, YouTube: video, Medium: makale)",
+        "Düzenli aktivite — ayda en az 2-3 katkı her platformda",
+      ],
+      researchNote:
+        "3+ bağımsız kaynaktan doğrulanan bilgilere yapay zekalar %72 daha fazla güveniyor. 5 farklı kaynak türü, 20 tek tür kaynaktan %44 daha etkili.",
+      researchSource: "Bain & Company AI Trust Report 2025 + GEO Multi-Source Validation Study",
+    },
+    canAgencyDo: true,
+    agencyPrice: "8.000₺/ay",
+  },
+
   // ═══════════════════════════════════════════════════════════
-  // KATMAN 2: GÜVENİYOR MU? (8 madde)
+  // KATMAN 2: GÜVENİYOR MU? (10 madde)
   // ═══════════════════════════════════════════════════════════
 
   // 2.1 — Hakkında başkaları yazmış mı?
@@ -562,8 +632,78 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     agencyPrice: null,
   },
 
+  // 2.9 — Varlık tanıma (Entity Recognition) var mı?
+  {
+    layer: 2,
+    itemNumber: "2.9",
+    simpleTitle: "Yapay zeka seni bir 'varlık' olarak tanıyor mu?",
+    simpleDescription:
+      "AI motorları Knowledge Graph'ta tanımlı varlıklara öncelik verir. Google Knowledge Panel, Wikipedia/Wikidata girişi veya sektörel veritabanlarında yer almak, AI'ın sizi güvenilir bir entity olarak görmesini sağlar.",
+    difficulty: "HARD",
+    impact: "HIGH",
+    feasibilityScore: 1,
+    estimatedTime: "1-3 ay",
+    selfServiceSteps: [
+      "Google'da marka adınızı arat — sağ tarafta Knowledge Panel çıkıyor mu kontrol et",
+      "Wikipedia'da sektörel maddelere katkı yap (doğrudan marka sayfası zor ama sektör sayfasına referans eklenebilir)",
+      "Wikidata'da marka/kişi girişi oluştur (wikidata.org)",
+      "Google Knowledge Panel için doğrulama başvurusu yap (Google Search Console)",
+      "Crunchbase, LinkedIn Company, sektörel veritabanlarına kayıt ol",
+    ],
+    technicalDetail: {
+      scope: [
+        "Knowledge Graph entegrasyonu — Google, Bing, Wikidata varlık tanıma",
+        "Wikipedia/Wikidata entity oluşturma veya mevcut sayfaya referans ekleme",
+        "Google Knowledge Panel doğrulama ve optimizasyonu",
+        "Organization/Person Schema JSON-LD ile sameAs bağlantıları (Wikipedia, LinkedIn, Crunchbase)",
+        "Entity disambiguation — aynı isimli diğer varlıklardan ayrışma",
+        "Sektörel veritabanları ve dizinlerde entity kaydı",
+      ],
+      researchNote:
+        "Knowledge Graph'ta tanımlı varlıklar yapay zeka tarafından %85 daha fazla referans gösteriliyor. Entity tanıma, AI'ın 'bu kim/ne' sorusuna net cevap vermesini sağlar.",
+      researchSource: "Google Knowledge Graph API Documentation + Entity SEO Research 2024",
+    },
+    canAgencyDo: true,
+    agencyPrice: "15.000₺",
+  },
+
+  // 2.10 — Güvenilir dış kaynaklara stratejik referans veriyor musun?
+  {
+    layer: 2,
+    itemNumber: "2.10",
+    simpleTitle: "Akademik ve resmi kaynaklara referans veriyor musun?",
+    simpleDescription:
+      "Yapay zekalar, güvenilir dış kaynaklara referans veren içeriklere %35 daha fazla güveniyor. Kendi iddialarınızı akademik çalışmalar, resmi istatistikler ve sektör raporlarıyla destekleyin.",
+    difficulty: "EASY",
+    impact: "MEDIUM",
+    feasibilityScore: 5,
+    estimatedTime: "Sürekli",
+    selfServiceSteps: [
+      "Her blog/makale yazısında en az 2-3 güvenilir dış kaynak referansı ekle",
+      "TÜİK, sektör dernekleri, üniversite araştırmaları gibi resmi kaynaklara link ver",
+      "İstatistik ve veri noktalarının kaynağını belirt (tarih + kurum)",
+      "Eski referansları güncelle — 2+ yıllık kaynaklara dikkat et",
+      "Outbound link kalitesini kontrol et — spam/düşük kaliteli sitelere link verme",
+    ],
+    technicalDetail: {
+      scope: [
+        "Outbound link stratejisi — akademik, resmi kurum, sektör kuruluşlarına bağlantı",
+        "Citation formatı — veri noktalarında kaynak+tarih belirtme",
+        "Kaynak çeşitliliği — sektörel + akademik + resmi + uluslararası kaynaklar",
+        "Broken link monitoring — kırık referansları tespit ve güncelleme",
+        "Link equity dengesi — internal vs external link oranı optimizasyonu",
+        "Referans güncelleme takvimi — çeyreklik kaynak denetimi",
+      ],
+      researchNote:
+        "Güvenilir dış kaynaklara referans veren sayfalar yapay zeka tarafından %35 daha güvenilir kabul ediliyor. Akademik referanslar citation olasılığını 2.1x artırıyor.",
+      researchSource: "Google E-E-A-T Guidelines 2024 + Stanford AI Trust Study",
+    },
+    canAgencyDo: false,
+    agencyPrice: null,
+  },
+
   // ═══════════════════════════════════════════════════════════
-  // KATMAN 3: ÖNERİYOR MU? (7 madde — Pro only, Free'de blur)
+  // KATMAN 3: ÖNERİYOR MU? (9 madde — Pro only, Free'de blur)
   // ═══════════════════════════════════════════════════════════
 
   // 3.1 — Birden fazla yapay zeka seni tanıyor mu?
@@ -805,5 +945,77 @@ export const CHECKLIST_DEFAULTS: ChecklistDefault[] = [
     },
     canAgencyDo: true,
     agencyPrice: "10.000₺/ay",
+  },
+
+  // 3.8 — Platform-spesifik içerik stratejin var mı?
+  {
+    layer: 3,
+    itemNumber: "3.8",
+    simpleTitle: "Her AI platformu için ayrı strateji var mı?",
+    simpleDescription:
+      "ChatGPT Wikipedia ve akademik kaynakları, Perplexity güncel web ve Q&A formatını, Claude uzun form araştırmayı, Gemini Google ekosistemini tercih eder. Tek tip içerik tüm platformlarda çalışmaz.",
+    difficulty: "HARD",
+    feasibilityScore: 2,
+    impact: "HIGH",
+    estimatedTime: "2-4 ay",
+    selfServiceSteps: [
+      "GH7'de platform bazlı görünürlük skorlarını kontrol et — hangi platformda zayıfsın?",
+      "ChatGPT için: Wikipedia referanslarını güçlendir, akademik kaynaklara bağlan",
+      "Perplexity için: Soru-cevap formatında güncel içerikler oluştur",
+      "Claude için: Uzun form, araştırma bazlı, detaylı rehberler yaz",
+      "Gemini için: Google Business, YouTube ve Google Scholar varlığını güçlendir",
+    ],
+    technicalDetail: {
+      scope: [
+        "Platform-spesifik kaynak tercihi analizi",
+        "ChatGPT: Wikipedia + akademik + earned media ağırlıklı",
+        "Perplexity: Güncel web + Q&A formatı + YouTube + e-ticaret",
+        "Claude: Uzun form içerik + araştırma + detaylı analiz",
+        "Gemini: Google ekosistemi (GBP, YouTube, Scholar, News)",
+        "Her platform için ayrı içerik formatı ve dağıtım stratejisi",
+        "Düzenli platform-bazlı performans takibi ve optimizasyonu",
+      ],
+      researchNote:
+        "Her AI platformu farklı kaynakları önceliklendirir. Claude ve ChatGPT earned media'ya, Perplexity YouTube ve e-ticaret sitelerine daha çok ağırlık verir. Platform-spesifik strateji genel stratejiden %60 daha etkili.",
+      researchSource: "GH7.ai Cross-Platform Analysis 2024 + AI Source Preference Study",
+    },
+    canAgencyDo: true,
+    agencyPrice: "12.000₺/ay",
+  },
+
+  // 3.9 — Duygu analizi yönetimi yapıyor musun?
+  {
+    layer: 3,
+    itemNumber: "3.9",
+    simpleTitle: "Yapay zekadaki itibarını aktif yönetiyor musun?",
+    simpleDescription:
+      "Bahsedilmek yetmez — %70+ pozitif kaynak olan markalar %91 oranında varsayılan öneri oluyor. %30 negatif = uyarı notu. Negatif kaynakları tespit edip, pozitif içerikle dengelemelisin.",
+    difficulty: "MEDIUM",
+    feasibilityScore: 3,
+    impact: "HIGH",
+    estimatedTime: "Sürekli",
+    selfServiceSteps: [
+      "GH7'de sentiment analizini kontrol et — pozitif/negatif/nötr dağılım ne?",
+      "Negatif bahis varsa kaynağını belirle (şikayet sitesi, eski haber, forum)",
+      "Negatif kaynağa karşı aynı konuda pozitif içerik üret",
+      "Müşteri başarı hikayeleri ve case study'ler yayınla",
+      "Google ve sektörel platformlarda olumlu yorum hacmini artır",
+    ],
+    technicalDetail: {
+      scope: [
+        "Sentiment monitoring — AI yanıtlarında pozitif/negatif/nötr oranını takip",
+        "Negatif kaynak tespiti — hangi siteler/platformlar olumsuz bilgi veriyor",
+        "Pozitif içerik stratejisi — negatifi bastıracak kaliteli içerik üretimi",
+        "Review management — Google, Yelp, sektörel platformlarda yorum yönetimi",
+        "Case study + testimonial pipeline — düzenli başarı hikayesi üretimi",
+        "Kriz iletişimi — viral negatif duruma hazırlık planı",
+        "Reputation score tracking — aylık sentiment trendi",
+      ],
+      researchNote:
+        "%70+ pozitif kaynak olan markalar %91 oranında varsayılan öneri oluyor. %30'dan fazla negatif kaynak varsa yapay zeka uyarı notu ekliyor. Pozitif/negatif dengesini yönetmek, bahsedilmekten bile önemli.",
+      researchSource: "GH7.ai Sentiment-Recommendation Correlation Study 2024",
+    },
+    canAgencyDo: true,
+    agencyPrice: "8.000₺/ay",
   },
 ];
