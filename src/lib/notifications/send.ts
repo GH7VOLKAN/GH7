@@ -8,12 +8,24 @@ import type { Prisma } from "@prisma/client";
 import {
   sendScanCompleteEmail,
   sendScoreChangeEmail,
+  sendSmartAlertEmail,
 } from "@/lib/email/resend";
 import { sendSms } from "@/lib/sms/netgsm";
 
+type NotificationType =
+  | "scan_completed"
+  | "scan_failed"
+  | "score_up"
+  | "score_down"
+  // Smart alert types
+  | "mention_lost"
+  | "competitor_surge"
+  | "score_drop_major"
+  | "new_competitor";
+
 interface NotifyOptions {
   brandId: string;
-  type: "scan_completed" | "scan_failed" | "score_up" | "score_down";
+  type: NotificationType;
   title: string;
   message: string;
   data?: Record<string, unknown>;
@@ -53,6 +65,8 @@ export async function sendNotification(options: NotifyOptions) {
   const emailScoreChange = (brand.profile as Record<string, unknown>).emailScoreChange !== false;
 
   // 2. Email notification (respects per-type preferences)
+  const isSmartAlert = ["mention_lost", "competitor_surge", "score_drop_major", "new_competitor"].includes(type);
+
   try {
     if (type === "scan_completed" && data?.score !== undefined && emailScanComplete) {
       await sendScanCompleteEmail(email, brand.name, data.score as number);
@@ -68,6 +82,9 @@ export async function sendNotification(options: NotifyOptions) {
         data.oldScore as number,
         data.newScore as number
       );
+    } else if (isSmartAlert && emailScoreChange) {
+      // Smart alerts use the generic alert email
+      await sendSmartAlertEmail(email, brand.name, type, title, message);
     }
   } catch (err) {
     console.error("[notification] Email send failed:", err);

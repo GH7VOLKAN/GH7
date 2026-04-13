@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronDown, ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronDown, ChevronRight, MessageCircle, TrendingUp, TrendingDown, Clock } from "lucide-react";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import {
   generateWhatsAppShareLink,
@@ -220,6 +220,79 @@ export default function AksiyonlarContent({ actionTasks, situationAnalysis, bran
           </div>
         </div>
       </div>
+
+      {/* Impact Cards — Before/After tracking */}
+      {completedTasks.some((t) => t.impactSnapshot) && (
+        <div className="mb-8">
+          <h2 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-green-500" />
+            Aksiyon Etki Takibi
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {completedTasks
+              .filter((t) => t.impactSnapshot)
+              .slice(0, 6)
+              .map((task) => {
+                const hasResult = !!task.impactResult;
+                const delta = task.impactResult?.delta ?? 0;
+                const before = task.impactSnapshot?.mentionScore ?? 0;
+                const after = task.impactResult?.mentionScoreAfter ?? 0;
+
+                return (
+                  <div
+                    key={task.id}
+                    className={`border rounded-xl p-4 ${
+                      hasResult
+                        ? delta > 0
+                          ? "border-green-200 bg-green-50/50"
+                          : delta < 0
+                          ? "border-orange-200 bg-orange-50/50"
+                          : "border-gray-200 bg-gray-50/50"
+                        : "border-gray-200 bg-gray-50/50"
+                    }`}
+                  >
+                    <p className="text-xs font-medium text-gray-500 truncate mb-2">
+                      {task.title}
+                    </p>
+                    {hasResult ? (
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-500">Skor: {before}</span>
+                        <span className="text-gray-300">&rarr;</span>
+                        <span className="text-sm font-semibold text-gray-900">{after}</span>
+                        <span
+                          className={`text-sm font-bold ${
+                            delta > 0
+                              ? "text-green-600"
+                              : delta < 0
+                              ? "text-orange-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {delta > 0 ? (
+                            <span className="flex items-center gap-0.5">
+                              <TrendingUp className="w-3.5 h-3.5" /> +{delta}
+                            </span>
+                          ) : delta < 0 ? (
+                            <span className="flex items-center gap-0.5">
+                              <TrendingDown className="w-3.5 h-3.5" /> {delta}
+                            </span>
+                          ) : (
+                            "0"
+                          )}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <Clock className="w-3.5 h-3.5" />
+                        Sonraki taramada etki ölçülecek
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* Incomplete Actions by Priority */}
       {incompleteTasks.length > 0 ? (

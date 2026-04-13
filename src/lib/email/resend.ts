@@ -17,6 +17,7 @@ import { passwordResetTemplate } from "./templates/password-reset";
 import { adminMessageTemplate } from "./templates/admin-message";
 import { agencyPackageTemplate } from "./templates/agency-package";
 import { proFeatureTemplate } from "./templates/pro-feature";
+import { smartAlertTemplate } from "./templates/smart-alert";
 import { ticketCreatedTemplate } from "./templates/ticket-created";
 import { ticketReplyTemplate } from "./templates/ticket-reply";
 import { ticketResolvedTemplate } from "./templates/ticket-resolved";
@@ -83,6 +84,29 @@ export async function sendScoreChangeEmail(
     to: email,
     subject: `Skorunuz ${direction}: ${oldScore} → ${newScore}`,
     html: scoreChangeTemplate(brandName, oldScore, newScore),
+  });
+}
+
+// ─── Smart Alert ───────────────────────────────────
+
+export async function sendSmartAlertEmail(
+  email: string,
+  brandName: string,
+  alertType: string,
+  title: string,
+  message: string
+) {
+  const subjectMap: Record<string, string> = {
+    mention_lost: `Bahsedilme Kaybı — ${brandName}`,
+    competitor_surge: `Rakip Yükselişi — ${brandName}`,
+    score_drop_major: `Skor Düşüşü — ${brandName}`,
+    new_competitor: `Yeni Rakip Keşfedildi — ${brandName}`,
+  };
+  return getResend().emails.send({
+    from: `GH7 <${FROM}>`,
+    to: email,
+    subject: subjectMap[alertType] ?? `Dikkat — ${brandName}`,
+    html: smartAlertTemplate(brandName, alertType, title, message),
   });
 }
 

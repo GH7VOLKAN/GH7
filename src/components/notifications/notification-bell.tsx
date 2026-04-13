@@ -15,6 +15,9 @@ import {
   XCircleIcon,
   TrendingUpIcon,
   TrendingDownIcon,
+  AlertTriangleIcon,
+  UsersIcon,
+  UserPlusIcon,
 } from "lucide-react";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions";
 
@@ -38,6 +41,11 @@ const typeIcons: Record<string, React.ReactNode> = {
   scan_failed: <XCircleIcon className="size-4 text-red-500" />,
   score_up: <TrendingUpIcon className="size-4 text-green-500" />,
   score_down: <TrendingDownIcon className="size-4 text-orange-500" />,
+  // Smart alert types
+  mention_lost: <AlertTriangleIcon className="size-4 text-orange-500" />,
+  competitor_surge: <UsersIcon className="size-4 text-red-500" />,
+  score_drop_major: <TrendingDownIcon className="size-4 text-red-600" />,
+  new_competitor: <UserPlusIcon className="size-4 text-blue-500" />,
 };
 
 function formatTimeAgo(date: Date): string {

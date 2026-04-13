@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
-import type { BlogPostData } from "@/lib/dal/blog";
+import type { BlogPostData, BlogImpactPrediction, ContentSuggestion } from "@/lib/dal/blog";
+import { Lightbulb, Zap, Copy, Check } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   published: { label: "Yayında", color: "text-green-700", bg: "bg-green-50" },
@@ -21,11 +22,14 @@ const ANALYSIS_TYPE_LABELS: Record<string, string> = {
 
 interface Props {
   blogPosts: BlogPostData[];
+  impactPredictions?: BlogImpactPrediction[];
+  contentSuggestions?: ContentSuggestion[];
 }
 
-export default function IcerikContent({ blogPosts }: Props) {
+export default function IcerikContent({ blogPosts, impactPredictions = [], contentSuggestions = [] }: Props) {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filters = [
     { id: "all", label: "Tümü", count: blogPosts.length },
@@ -67,6 +71,87 @@ export default function IcerikContent({ blogPosts }: Props) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Impact Predictions */}
+      {impactPredictions.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <h2 className="text-sm font-bold text-gray-900">Etki Tahmini</h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {impactPredictions.map((pred) => (
+              <div
+                key={pred.blogId}
+                className="border border-amber-200 bg-amber-50/50 rounded-xl p-4"
+              >
+                <h3 className="text-sm font-semibold text-gray-900 truncate mb-2">
+                  {pred.blogTitle}
+                </h3>
+                <p className="text-xs text-amber-700 mb-3">
+                  Bu icerigi yayinlarsaniz <strong>{pred.impactEstimate} sorguda</strong> gorunme sansiniz artar
+                </p>
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {pred.matchingWeakQueries.slice(0, 3).map((q, i) => (
+                    <span key={i} className="text-[10px] px-2 py-0.5 bg-white rounded-full text-gray-600 border border-gray-200">
+                      {q.length > 40 ? q.slice(0, 40) + "..." : q}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    const blog = blogPosts.find((b) => b.id === pred.blogId);
+                    if (blog) {
+                      navigator.clipboard.writeText(blog.content);
+                      setCopiedId(pred.blogId);
+                      setTimeout(() => setCopiedId(null), 2000);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  {copiedId === pred.blogId ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" /> Kopyalandı
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" /> İçeriği Kopyala
+                    </>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Content Suggestions */}
+      {contentSuggestions.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-4 h-4 text-blue-500" />
+            <h2 className="text-sm font-bold text-gray-900">İçerik Önerileri</h2>
+            <span className="text-xs text-gray-400">— Bu konularda içerik üretin</span>
+          </div>
+          <div className="border border-blue-200 bg-blue-50/30 rounded-xl p-4">
+            <div className="space-y-2">
+              {contentSuggestions.slice(0, 5).map((s, i) => (
+                <div key={i} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-gray-700 truncate flex-1">
+                    &ldquo;{s.promptText}&rdquo;
+                  </span>
+                  <span className="text-xs text-red-600 font-medium shrink-0">
+                    {s.platformsMissing.length}/{s.totalPlatforms} platformda yok
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-3">
+              Bu sorgulara yönelik blog/makale üretirseniz AI platformlarında bahsedilme şansınız artar.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6">
         {filters.map((filter) => (

@@ -1,6 +1,6 @@
 import { checkPageAccess } from "@/lib/check-access";
 import { getActiveBrand } from "@/lib/dal/brand";
-import { getBlogPostsData } from "@/lib/dal/blog";
+import { getBlogPostsData, getBlogImpactPredictions, getContentSuggestions } from "@/lib/dal/blog";
 import { PageHero } from "@/components/panel/page-hero";
 import { EmptyState } from "@/components/panel/empty-state";
 import IcerikContent from "./icerik-content";
@@ -14,7 +14,11 @@ export default async function IcerikPage() {
   if (!activeBrand?.brand) redirect("/panel");
   const brandId = activeBrand.brand.id;
 
-  const data = await getBlogPostsData(brandId);
+  const [data, impactPredictions, contentSuggestions] = await Promise.all([
+    getBlogPostsData(brandId),
+    getBlogImpactPredictions(brandId),
+    getContentSuggestions(brandId),
+  ]);
 
   if (data.totalCount === 0) {
     return (
@@ -52,7 +56,11 @@ export default async function IcerikPage() {
           { label: "Kuyrukta", value: String(data.queuedCount + data.generatingCount) },
         ]}
       />
-      <IcerikContent blogPosts={data.blogPosts} />
+      <IcerikContent
+        blogPosts={data.blogPosts}
+        impactPredictions={impactPredictions}
+        contentSuggestions={contentSuggestions}
+      />
     </>
   );
 }
