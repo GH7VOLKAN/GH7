@@ -86,6 +86,11 @@ const BUSINESS_ITEMS = [
     href: "/panel/korelasyon",
     emoji: "📈",
   },
+  {
+    title: "Canlı Savaş",
+    href: "/panel/canli-savas",
+    emoji: "⚡",
+  },
 ];
 
 const BOTTOM_ITEMS = [
