@@ -63,7 +63,7 @@ export async function Navbar() {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isLoggedIn ? (
             <Link
-              href="/dashboard/genel"
+              href="/panel/genel"
               style={{
                 padding: "9px 22px",
                 borderRadius: 100,

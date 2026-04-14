@@ -25,14 +25,17 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ── Get profile + brand ─────────────────────────────────
-  const profile = await prisma.profile.findUnique({
+  // ── Get profile + brand (upsert to ensure it exists) ────
+  const profile = await prisma.profile.upsert({
     where: { id: user.id },
+    update: { email: user.email ?? "" },
+    create: {
+      id: user.id,
+      email: user.email ?? "",
+      fullName: user.user_metadata?.full_name ?? null,
+      avatarUrl: user.user_metadata?.avatar_url ?? null,
+    },
   });
-
-  if (!profile) {
-    return NextResponse.json({ error: "Profil bulunamadı" }, { status: 404 });
-  }
 
   // ── PRO+ plan check ─────────────────────────────────────
   const plan = profile.plan ?? "free";

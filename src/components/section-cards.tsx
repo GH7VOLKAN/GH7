@@ -177,7 +177,7 @@ export function SectionCards({
           <p className="text-muted-foreground">{competitorText}</p>
           {topCompetitorName && (
             <Link
-              href="/dashboard/rakipler"
+              href="/panel/rakipler"
               className="group inline-flex items-center gap-1 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground"
             >
               Tüm rakipleri gör

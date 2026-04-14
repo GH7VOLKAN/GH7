@@ -50,14 +50,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Gecersiz donem" }, { status: 400 });
     }
 
-    // ── Profile ──────────────────────────────────────
-    const profile = await prisma.profile.findUnique({
+    // ── Profile (upsert to ensure it exists) ─────────
+    const profile = await prisma.profile.upsert({
       where: { id: user.id },
+      update: { email: user.email ?? "" },
+      create: {
+        id: user.id,
+        email: user.email ?? "",
+        fullName: user.user_metadata?.full_name ?? null,
+        avatarUrl: user.user_metadata?.avatar_url ?? null,
+      },
     });
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profil bulunamadı" }, { status: 404 });
-    }
 
     const price = getPlanPrice(plan, period);
 
