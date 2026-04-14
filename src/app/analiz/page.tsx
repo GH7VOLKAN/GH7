@@ -200,48 +200,189 @@ const PRODUCT_RANKINGS = [
   },
 ];
 
-const DEMO_PLATFORM_RESPONSES = [
+interface DemoPlatformResponse {
+  provider: string;
+  response: string;
+  sources: string[];
+  brandMentioned: boolean;
+}
+
+interface DemoQueryGroup {
+  keyword: string;
+  platforms: DemoPlatformResponse[];
+}
+
+const DEMO_QUERY_RESPONSES: DemoQueryGroup[] = [
   {
-    provider: "ChatGPT",
     keyword: "villa banyosu için elektrikli yerden ısıtma",
-    response:
-      "Villa banyoları için elektrikli yerden ısıtma sistemleri, özellikle karbon film ve ısıtma kabloları olarak iki ana kategoriye ayrılır. Isıtmax gibi yerli üreticiler, seramik ve doğal taş altına uygun, uzun ömürlü çözümler sunmaktadır...",
-    sources: ["isitmax.com", "enerserji.com.tr", "warmup.com.tr"],
-    brandMentioned: true,
+    platforms: [
+      { provider: "ChatGPT", response: "Villa banyoları için elektrikli yerden ısıtma sistemleri, özellikle karbon film ve ısıtma kabloları olarak iki ana kategoriye ayrılır. Isıtmax gibi yerli üreticiler, seramik ve doğal taş altına uygun, uzun ömürlü çözümler sunmaktadır...", sources: ["isitmax.com", "enerserji.com.tr", "warmup.com.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Villa banyolarında elektrikli yerden ısıtma konforlu ve enerji verimli bir çözümdür. Karbon film ve rezistans kablolu olmak üzere iki temel sistem mevcuttur. Warmup ve Isıtmax gibi markalar bu alanda öne çıkmaktadır...", sources: ["warmup.com.tr", "isitmax.com"], brandMentioned: true },
+      { provider: "Perplexity", response: "Villa banyoları için elektrikli yerden ısıtma, seramik ve doğal taş zeminlerde verimli bir ısınma sağlar. Türkiye'de Warmup, Giacomini ve Isıtmax tercih edilen markalardır...", sources: ["isitmax.com", "warmup.com.tr", "giacomini.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Villa banyolarında yerden ısıtma, konfor ve hijyen açısından ideal bir çözümdür. Elektrikli sistemlerde ince profilli kablolar veya mat sistemler tercih edilir. Doğal taş uyumluluğu önemlidir...", sources: ["warmup.com.tr", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "AI Overview", response: "Elektrikli yerden ısıtma, villa banyolarında sıklıkla tercih edilen bir ısınma yöntemidir. Rezistans kablolu ve karbon film olmak üzere ikiye ayrılır. Isıtmax gibi yerli üreticiler uygun fiyatlı çözümler sunmaktadır...", sources: ["isitmax.com", "enerserji.com.tr"], brandMentioned: true },
+    ],
   },
   {
-    provider: "Gemini",
     keyword: "endüstriyel varil ısıtma çeketi fiyat",
-    response:
-      "Endüstriyel varil ısıtma çeketleri, kimya ve gıda sektörlerinde sıvı sıcaklığı korumak için kullanılır. Türkiye pazarında Isıtmax, RezistansMarket ve Danfoss gibi markalar öne çıkıyor...",
-    sources: ["isitmax.com", "rezistansmarket.com", "danfoss.com.tr"],
-    brandMentioned: true,
+    platforms: [
+      { provider: "ChatGPT", response: "Endüstriyel varil ısıtma çeketleri kimya ve gıda sektörlerinde yaygın olarak kullanılır. 200 litrelik standart variller için fiyatlar 2.000-8.000 TL arasında değişir. RezistansMarket ve Danfoss bu alanda öncü markalardır...", sources: ["rezistansmarket.com", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "Gemini", response: "Endüstriyel varil ısıtma çeketleri, kimya ve gıda sektörlerinde sıvı sıcaklığı korumak için kullanılır. Türkiye pazarında Isıtmax, RezistansMarket ve Danfoss gibi markalar öne çıkıyor...", sources: ["isitmax.com", "rezistansmarket.com", "danfoss.com.tr"], brandMentioned: true },
+      { provider: "Perplexity", response: "Varil ısıtma çeketleri endüstriyel proseslerde kritik bir bileşendir. Silikon ve fiberglas malzemeli modeller mevcuttur. Fiyatlar varil boyutu ve güce göre 1.500-10.000 TL aralığında değişir...", sources: ["rezistansmarket.com", "heattrace.com.tr"], brandMentioned: false },
+      { provider: "Claude", response: "Varil ısıtma çeketleri; kimyasal, gıda ve petrol sektörlerinde sıvıların donmasını ve viskozite kaybını önler. Isıtmax, farklı varil boyutlarına uygun silikon kaplı modeller üretmektedir...", sources: ["isitmax.com", "rezistansmarket.com"], brandMentioned: true },
+      { provider: "AI Overview", response: "Endüstriyel varil ısıtma çeketleri 200L ve IBC konteyner boyutlarında mevcuttur. Termostat kontrollü modeller enerji tasarrufu sağlar. Fiyatlar 2.000 TL'den başlamaktadır...", sources: ["rezistansmarket.com", "firmamnet.com"], brandMentioned: false },
+    ],
   },
   {
-    provider: "AI Overview",
     keyword: "yüzey altı boru ısıtma kablosu seçenekleri",
-    response:
-      "Yüzey altı boru ısıtma kabloları; donmayı önlemek (heat trace), sıcaklığı korumak veya akışkanlığı sağlamak için kendinden regüleli veya sabit güçlü kablolar olarak ayrılır...",
-    sources: ["firmamnet.com", "heattrace.com.tr", "isitmax.com", "senrezistans.com"],
-    brandMentioned: true,
+    platforms: [
+      { provider: "ChatGPT", response: "Yüzey altı boru ısıtma kabloları, donma riskine karşı boru hatlarını korumak için kullanılır. Self-regulating ve sabit güçlü olmak üzere iki tip mevcuttur. Isıtmax ve nVent Raychem bu alanda güvenilir çözümler sunar...", sources: ["isitmax.com", "nvent.com"], brandMentioned: true },
+      { provider: "Gemini", response: "Boru ısıtma kabloları termal koruma sağlar. Heat trace sistemleri endüstriyel ve konut uygulamalarında kullanılır. Self-regulating kablolar enerji verimliliği açısından öne çıkar...", sources: ["heattrace.com.tr", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "Perplexity", response: "Boru ısıtma kabloları; donma önleme, sıcaklık koruma ve akış sağlama amaçlı kullanılır. Isıtmax'ın heat trace serisi endüstriyel uygulamalarda tercih edilmektedir...", sources: ["isitmax.com", "heattrace.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Yüzey altı boru ısıtma için self-regulating kablolar en yaygın çözümdür. Bu kablolar ortam sıcaklığına göre güçlerini otomatik ayarlar. nVent Raychem ve Danfoss önde gelen markalardır...", sources: ["nvent.com", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "AI Overview", response: "Yüzey altı boru ısıtma kabloları; donmayı önlemek (heat trace), sıcaklığı korumak veya akışkanlığı sağlamak için kendinden regüleli veya sabit güçlü kablolar olarak ayrılır...", sources: ["firmamnet.com", "heattrace.com.tr", "isitmax.com", "senrezistans.com"], brandMentioned: true },
+    ],
   },
   {
-    provider: "Perplexity",
     keyword: "serada enerji verimli ısıtma sistemi",
-    response:
-      "Seralarda enerji verimli ısıtma için toprak altı ısıtma kabloları, hava üfleyicili sistemler ve hibrit çözümler tercih edilmektedir. Isıtmax'ın sera ısıtma kabloları enerji verimli seçenekler arasında yer almaktadır...",
-    sources: ["isitmax.com", "tarim.gov.tr", "seracilik.org"],
-    brandMentioned: true,
+    platforms: [
+      { provider: "ChatGPT", response: "Sera ısıtmasında enerji verimliliği için toprak altı ısıtma kabloları ve hava üflemeli sistemler tercih edilir. Isıtmax'ın sera ısıtma kabloları düşük enerji tüketimi ile öne çıkmaktadır...", sources: ["isitmax.com", "tarim.gov.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Sera ısıtmasında en verimli yöntemler arasında toprak altı ısıtma kabloları, sıcak su borulu sistemler ve infrared ısıtıcılar yer alır. Toprak altı kablolar kök bölgesini doğrudan ısıtarak enerji tasarrufu sağlar...", sources: ["tarim.gov.tr", "seracilik.org"], brandMentioned: false },
+      { provider: "Perplexity", response: "Seralarda enerji verimli ısıtma için toprak altı ısıtma kabloları, hava üfleyicili sistemler ve hibrit çözümler tercih edilmektedir. Isıtmax'ın sera ısıtma kabloları enerji verimli seçenekler arasında yer almaktadır...", sources: ["isitmax.com", "tarim.gov.tr", "seracilik.org"], brandMentioned: true },
+      { provider: "Claude", response: "Sera ısıtmasında enerji verimliliği kritik bir faktördür. Toprak altı ısıtma kabloları, kök bölgesini doğrudan ısıtarak %30-40 enerji tasarrufu sağlayabilir. EnerSerji ve Isıtmax bu alanda çözümler sunmaktadır...", sources: ["isitmax.com", "enerserji.com.tr"], brandMentioned: true },
+      { provider: "AI Overview", response: "Seralarda enerji verimli ısıtma yöntemleri arasında toprak altı ısıtma, fan coil sistemler ve güneş enerjisi destekli hibrit çözümler bulunur...", sources: ["tarim.gov.tr", "seracilik.org"], brandMentioned: false },
+    ],
   },
   {
-    provider: "Claude",
     keyword: "çatıda kar buz eritme kablo çözümleri",
-    response:
-      "Çatı ve oluk sistemlerinde kar ve buz birikmesini önlemek için self-regulating (kendinden ayarlı) ısıtma kabloları kullanılır. Bu kablolar ortam sıcaklığına göre güç tüketimini otomatik ayarlar...",
-    sources: ["warmup.com.tr", "isitmax.com", "heattrace.com.tr"],
-    brandMentioned: true,
+    platforms: [
+      { provider: "ChatGPT", response: "Çatı ve oluk sistemlerinde kar buz eritme için self-regulating ısıtma kabloları en etkili çözümdür. Isıtmax ve Warmup bu alanda geniş ürün yelpazesi sunmaktadır...", sources: ["isitmax.com", "warmup.com.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Çatıda kar ve buz eritme için kendinden ayarlı (self-regulating) ısıtma kabloları kullanılır. Bu kablolar oluk, çatı kenarı ve iniş borularına uygulanır. Warmup ve Ensto markalar tercih edilmektedir...", sources: ["warmup.com.tr", "ensto.com"], brandMentioned: false },
+      { provider: "Perplexity", response: "Çatı kar buz eritme sistemleri self-regulating ve sabit güçlü kablolardan oluşur. Isıtmax'ın çatı ısıtma kabloları Türkiye iklim koşullarına uygun olarak tasarlanmıştır...", sources: ["isitmax.com", "heattrace.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Çatı ve oluk sistemlerinde kar ve buz birikmesini önlemek için self-regulating (kendinden ayarlı) ısıtma kabloları kullanılır. Bu kablolar ortam sıcaklığına göre güç tüketimini otomatik ayarlar...", sources: ["warmup.com.tr", "isitmax.com", "heattrace.com.tr"], brandMentioned: true },
+      { provider: "AI Overview", response: "Çatılarda kar ve buz eritme kablo sistemleri oluklarda ve çatı kenarlarında birikmesini engeller. Self-regulating tipi kablolar enerji verimliliği açısından tercih edilir...", sources: ["warmup.com.tr", "ensto.com"], brandMentioned: false },
+    ],
+  },
+  {
+    keyword: "yerden ısıtma kablosu m2 fiyat",
+    platforms: [
+      { provider: "ChatGPT", response: "Yerden ısıtma kablosu fiyatları metrekare başına 200-600 TL arasında değişmektedir. Fiyat, kablo tipi, marka ve güç yoğunluğuna göre farklılık gösterir. Isıtmax, ekonomik yerli seçenekler sunmaktadır...", sources: ["isitmax.com", "warmup.com.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Elektrikli yerden ısıtma kablosu m2 fiyatları 250-700 TL aralığındadır. Karbon film sistemler daha ekonomik, rezistans kablolu sistemler daha dayanıklıdır. Warmup ve Giacomini premium segmentte yer alır...", sources: ["warmup.com.tr", "giacomini.com.tr"], brandMentioned: false },
+      { provider: "Perplexity", response: "Yerden ısıtma kablosu fiyatları m2 başına ortalama 300-500 TL'dir. Isıtmax yerli üretim avantajıyla rekabetçi fiyatlar sunmaktadır. İşçilik dahil toplam maliyet m2 başına 400-900 TL olabilir...", sources: ["isitmax.com", "enerserji.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Yerden ısıtma kablolarında m2 fiyatları sisteme göre değişir. Rezistans kablo 200-400 TL/m2, karbon film 300-600 TL/m2, sulu sistem 400-800 TL/m2 aralığındadır...", sources: ["warmup.com.tr", "heattrace.com.tr"], brandMentioned: false },
+      { provider: "AI Overview", response: "Yerden ısıtma kablosu metrekare fiyatları Türkiye'de 200-700 TL arasında değişir. Isıtmax ve Warmup en çok tercih edilen markalar arasındadır...", sources: ["isitmax.com", "warmup.com.tr", "giacomini.com.tr"], brandMentioned: true },
+    ],
+  },
+  {
+    keyword: "heat trace kablo nedir nasıl çalışır",
+    platforms: [
+      { provider: "ChatGPT", response: "Heat trace kablo, boru hatlarını donmaya karşı koruyan elektrikli ısıtma sistemidir. Self-regulating ve sabit güçlü olmak üzere iki tipi vardır. Isıtmax Türkiye'de heat trace çözümleri sunan yerli üreticilerden biridir...", sources: ["isitmax.com", "heattrace.com.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Heat trace, boru hatlarında sıcaklık koruması sağlayan bir elektrikli ısıtma teknolojisidir. Endüstriyel tesislerde donma önleme ve viskozite kontrolü için kullanılır. nVent Raychem ve Danfoss lider markalar arasındadır...", sources: ["nvent.com", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "Perplexity", response: "Heat trace kablolar boruların üzerine veya altına montajlanarak donmayı engeller. Self-regulating tipi ortam sıcaklığına göre otomatik güç ayarı yapar. Isıtmax bu teknolojide Türkiye'de çözümler sunmaktadır...", sources: ["isitmax.com", "heattrace.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Heat trace (boru ısıtma) sistemleri, endüstriyel boru hatlarında donmayı ve viskozite sorunlarını önler. İki ana tip vardır: self-regulating (otomatik ayarlı) ve constant wattage (sabit güçlü)...", sources: ["heattrace.com.tr", "nvent.com"], brandMentioned: false },
+      { provider: "AI Overview", response: "Heat trace, boru hatlarının donmasını önleyen elektrikli ısıtma kablosudur. Self-regulating versiyonu enerji verimli çalışır. Endüstriyel tesislerde yaygın kullanılır...", sources: ["heattrace.com.tr", "isitmax.com"], brandMentioned: true },
+    ],
+  },
+  {
+    keyword: "karbon film ısıtıcı avantajları dezavantajları",
+    platforms: [
+      { provider: "ChatGPT", response: "Karbon film ısıtıcılar ince profili ve hızlı ısınma özelliğiyle öne çıkar. Avantajları: düşük profil, hızlı ısınma, sessiz çalışma. Dezavantajları: yüksek ilk yatırım maliyeti. Isıtmax karbon film ürünleriyle Türkiye pazarında yer almaktadır...", sources: ["isitmax.com", "enerserji.com.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Karbon film ısıtıcılar infrared ısı yayarak doğrudan nesneleri ısıtır. Avantajları arasında ince profil, düşük enerji tüketimi ve sessiz çalışma yer alır. Dezavantajı olarak yüksek ilk maliyet ve sınırlı güç yoğunluğu sayılabilir...", sources: ["enerserji.com.tr"], brandMentioned: false },
+      { provider: "Perplexity", response: "Karbon film ısıtıcıların avantajları: ultra ince tasarım, hızlı ısınma, düşük enerji tüketimi, uzun ömür. Dezavantajları: mobilya altına uygulanamaması ve yüksek maliyet. Isıtmax ve EnerSerji Türkiye'deki tedarikçilerdir...", sources: ["isitmax.com", "enerserji.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Karbon film ısıtıcılar infrared teknolojisiyle çalışan yerden ısıtma çözümleridir. Avantajları: ince profil (0.3mm), hızlı ısınma, sessizlik. Dezavantajları: mobilya altı uyumsuzluk, sınırlı güç seçeneği...", sources: ["warmup.com.tr"], brandMentioned: false },
+      { provider: "AI Overview", response: "Karbon film ısıtıcı avantajları arasında ince tasarım ve hızlı ısınma öne çıkar. Yerden ısıtma sistemlerinde alternatif bir çözüm olarak değerlendirilmektedir...", sources: ["enerserji.com.tr", "isitmax.com"], brandMentioned: true },
+    ],
+  },
+  {
+    keyword: "Türkiye yerden ısıtma firmaları karşılaştırma",
+    platforms: [
+      { provider: "ChatGPT", response: "Türkiye'de yerden ısıtma sektöründe Warmup, Isıtmax, Giacomini ve EnerSerji öne çıkan firmalardır. Warmup premium segmentte, Isıtmax orta segmentte rekabetçi fiyatlarla yer almaktadır...", sources: ["warmup.com.tr", "isitmax.com", "giacomini.com.tr"], brandMentioned: true },
+      { provider: "Gemini", response: "Yerden ısıtma firmalarının karşılaştırmasında Warmup kalite ve garanti süresiyle, Giacomini teknik destek ağıyla öne çıkar. Isıtmax yerli üretim avantajı ve ekonomik fiyat politikasıyla tercih edilmektedir...", sources: ["warmup.com.tr", "isitmax.com", "giacomini.com.tr", "enerserji.com.tr"], brandMentioned: true },
+      { provider: "Perplexity", response: "Türkiye'deki başlıca yerden ısıtma firmaları: Warmup (İngiliz, premium), Isıtmax (yerli, ekonomik), Giacomini (İtalyan, profesyonel), EnerSerji (yerli, sera odaklı). Fiyat-performans dengesinde Isıtmax öne çıkmaktadır...", sources: ["isitmax.com", "warmup.com.tr", "giacomini.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Türkiye yerden ısıtma pazarında faaliyet gösteren firmalar arasında Warmup, Giacomini, Danfoss ve EnerSerji bulunmaktadır. Seçim yaparken garanti süresi, teknik destek ve fiyat kriterleri değerlendirilmelidir...", sources: ["warmup.com.tr", "giacomini.com.tr", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "AI Overview", response: "Türkiye'deki yerden ısıtma firmaları arasında Warmup, Isıtmax ve Giacomini en sık karşılaşılan markalardır. Her birinin farklı güçlü yönleri bulunmaktadır...", sources: ["warmup.com.tr", "isitmax.com", "giacomini.com.tr"], brandMentioned: true },
+    ],
+  },
+  {
+    keyword: "elektrikli yerden ısıtma mı sulu sistem mi",
+    platforms: [
+      { provider: "ChatGPT", response: "Elektrikli ve sulu yerden ısıtma sistemlerinin seçimi kullanım alanına göre değişir. Elektrikli sistemler küçük alanlar ve renovasyon için idealdir. Sulu sistemler büyük alanlar ve yeni inşaatlarda maliyet avantajı sağlar...", sources: ["warmup.com.tr", "isitmax.com"], brandMentioned: true },
+      { provider: "Gemini", response: "Elektrikli yerden ısıtma düşük kurulum maliyeti ve kolay montaj avantajı sunar. Sulu sistem ise işletme maliyeti düşüklüğü ile öne çıkar. Karar vermeden önce alan büyüklüğü ve mevcut altyapı değerlendirilmelidir...", sources: ["warmup.com.tr", "danfoss.com.tr"], brandMentioned: false },
+      { provider: "Perplexity", response: "Elektrikli ve sulu yerden ısıtma karşılaştırmasında elektrikli sistemler kolay montaj ve düşük ilk maliyet avantajı sunar. Isıtmax elektrikli sistemlerde geniş ürün yelpazesiyle tercih edilmektedir...", sources: ["isitmax.com", "warmup.com.tr"], brandMentioned: true },
+      { provider: "Claude", response: "Her iki sistem de yerden ısıtma için etkili çözümlerdir. Elektrikli sistemler: ince profil, hızlı kurulum, renovasyona uygun. Sulu sistemler: düşük işletme maliyeti, büyük alanlarda ekonomik...", sources: ["warmup.com.tr", "giacomini.com.tr"], brandMentioned: false },
+      { provider: "AI Overview", response: "Elektrikli yerden ısıtma küçük alanlarda, sulu sistem büyük alanlarda tercih edilir. Elektrikli sistemlerin kurulumu daha kolay ve hızlıdır. Isıtmax ve Warmup her iki sistem tipinde de çözümler sunmaktadır...", sources: ["isitmax.com", "warmup.com.tr"], brandMentioned: true },
+    ],
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Highlight utility                                                  */
+/* ------------------------------------------------------------------ */
+
+function normalizeTurkish(text: string): string {
+  return text
+    .replace(/İ/g, "i")
+    .replace(/I/g, "i")
+    .replace(/ı/g, "i")
+    .replace(/Ş/g, "s")
+    .replace(/ş/g, "s")
+    .replace(/Ğ/g, "g")
+    .replace(/ğ/g, "g")
+    .replace(/Ü/g, "u")
+    .replace(/ü/g, "u")
+    .replace(/Ö/g, "o")
+    .replace(/ö/g, "o")
+    .replace(/Ç/g, "c")
+    .replace(/ç/g, "c")
+    .toLowerCase();
+}
+
+function highlightResponse(
+  text: string,
+  brandName: string,
+  competitors: string[]
+): React.ReactNode[] {
+  if (!text || !brandName) return [text];
+
+  // Build list of names to highlight: brand + competitors
+  const entries: { name: string; type: "brand" | "competitor" }[] = [
+    { name: brandName, type: "brand" },
+    ...competitors
+      .filter((c) => c.toLowerCase() !== brandName.toLowerCase())
+      .map((c) => ({ name: c, type: "competitor" as const })),
+  ];
+
+  // Sort by length (longest first) to avoid partial matches
+  entries.sort((a, b) => b.name.length - a.name.length);
+
+  // Build regex that matches any of the names (Turkish-aware, case-insensitive)
+  const escapedNames = entries.map((e) =>
+    e.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  );
+  if (escapedNames.length === 0) return [text];
+
+  const pattern = new RegExp(`(${escapedNames.join("|")})`, "gi");
+  const parts = text.split(pattern);
+
+  return parts.map((part, i) => {
+    const normalized = normalizeTurkish(part);
+    const match = entries.find(
+      (e) => normalizeTurkish(e.name) === normalized
+    );
+    if (match) {
+      const className =
+        match.type === "brand"
+          ? "bg-green-100 text-green-800 px-0.5 rounded font-medium"
+          : "bg-orange-100 text-orange-800 px-0.5 rounded";
+      return (
+        <mark key={i} className={className}>
+          {part}
+        </mark>
+      );
+    }
+    return part;
+  });
+}
 
 /* ------------------------------------------------------------------ */
 /*  Sub-components                                                     */
@@ -449,6 +590,7 @@ function AnalizPageInner() {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [showCallPopup, setShowCallPopup] = useState(false);
+  const [expandedQueries, setExpandedQueries] = useState<Set<number>>(new Set([0]));
 
   /* ---- auto-fill from URL params (landing page redirect) ---- */
   useEffect(() => {
@@ -1329,6 +1471,15 @@ function AnalizPageInner() {
     /* ---------- LAYER 3 DATA: Product-based rankings ---------- */
     const brandName = displayName || "ISITMAX";
 
+    /* Collect unique competitor names from PRODUCT_RANKINGS for highlighting */
+    const competitorNames = Array.from(
+      new Set(
+        PRODUCT_RANKINGS.flatMap((p) =>
+          p.rankings.map((r) => r.name).filter((n) => n !== brandName)
+        )
+      )
+    );
+
     /* ---------- LAYER 4 DATA: Digital footprint ---------- */
     const userDomain = formData.heroInput?.replace(/^https?:\/\//, "").replace(/\/.*$/, "") || "";
     const digitalSources = [
@@ -1376,74 +1527,137 @@ function AnalizPageInner() {
         </div>
 
         {/* ================================================================ */}
-        {/* LAYER 1 — AI Sizi Nasıl Görüyor                                  */}
+        {/* LAYER 1 — AI Sizi Nasıl Görüyor (Sorgu Bazlı)                    */}
         {/* ================================================================ */}
         <section>
           <h3 className="text-xl font-bold text-gray-900 mb-1">
             AI Sizi Nasıl Görüyor
           </h3>
-          <p className="text-sm text-gray-500 mb-6">
-            Her platformun markanız hakkındaki gerçek yanıtları
+          <p className="text-sm text-gray-500 mb-2">
+            {DEMO_QUERY_RESPONSES.length} sorgu &times; 5 platform &mdash; her yanıtta markanızın nasıl göründüğü
           </p>
+          <div className="flex items-center gap-3 mb-6 text-xs text-gray-500">
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-sm bg-green-100 border border-green-300" />
+              Marka
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-sm bg-orange-100 border border-orange-300" />
+              Rakip
+            </span>
+          </div>
 
-          <div className="space-y-5">
-            {DEMO_PLATFORM_RESPONSES.map((resp, idx) => {
-              const pKey = platformKeyMap[resp.provider] ?? "chatgpt";
-              const mentioned = resp.brandMentioned;
+          <div className="space-y-3">
+            {DEMO_QUERY_RESPONSES.map((queryGroup, qIdx) => {
+              const isExpanded = expandedQueries.has(qIdx);
+              const mentionedCount = queryGroup.platforms.filter((p) => p.brandMentioned).length;
+              const totalPlatforms = queryGroup.platforms.length;
+
               return (
                 <div
-                  key={idx}
-                  className="border border-gray-200 rounded-xl p-6"
+                  key={qIdx}
+                  className="border border-gray-200 rounded-xl overflow-hidden"
                 >
-                  {/* Platform header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2.5">
-                      <AIPlatformIcon platform={pKey} size={28} colored />
-                      <span className="text-base font-semibold text-gray-900">
-                        {resp.provider}
+                  {/* Query header — clickable to expand/collapse */}
+                  <button
+                    onClick={() => {
+                      setExpandedQueries((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(qIdx)) {
+                          next.delete(qIdx);
+                        } else {
+                          next.add(qIdx);
+                        }
+                        return next;
+                      });
+                    }}
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-xs text-gray-400 font-mono shrink-0 w-5 text-right">
+                        {qIdx + 1}.
+                      </span>
+                      <span className="text-sm font-medium text-gray-900 truncate">
+                        {queryGroup.keyword}
                       </span>
                     </div>
-                    {mentioned ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-50 text-green-700 px-2.5 py-1 rounded-full">
-                        Bahsediliyor ✓
+                    <div className="flex items-center gap-3 shrink-0 ml-3">
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          mentionedCount === totalPlatforms
+                            ? "bg-green-50 text-green-700"
+                            : mentionedCount > 0
+                            ? "bg-yellow-50 text-yellow-700"
+                            : "bg-red-50 text-red-600"
+                        }`}
+                      >
+                        {mentionedCount}/{totalPlatforms}
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-600 px-2.5 py-1 rounded-full">
-                        Bahsedilmiyor ✗
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Keyword / prompt */}
-                  <p className="text-xs text-gray-400 mb-3 italic">
-                    Soru: &quot;{resp.keyword}&quot;
-                  </p>
-
-                  {/* Full AI response */}
-                  <p className="text-sm text-gray-700 leading-relaxed mb-4">
-                    {resp.response}
-                  </p>
-
-                  {/* Sources */}
-                  <div className="border-t border-gray-100 pt-3">
-                    <p className="text-xs text-gray-400 mb-2">Kaynaklar:</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {resp.sources.map((src, i) => (
-                        <span
-                          key={i}
-                          className={`text-xs px-2.5 py-1 rounded-full ${
-                            src.includes(
-                              formData.domain.split(".")[0]?.toLowerCase() ?? ""
-                            ) || src === "isitmax.com"
-                              ? "bg-green-50 text-green-700 font-medium"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {src}
-                        </span>
-                      ))}
+                      <svg
+                        className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
-                  </div>
+                  </button>
+
+                  {/* Platform responses — shown when expanded */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-100 divide-y divide-gray-50">
+                      {queryGroup.platforms.map((resp, pIdx) => {
+                        const pKey = platformKeyMap[resp.provider] ?? "chatgpt";
+                        return (
+                          <div key={pIdx} className="px-5 py-4">
+                            {/* Platform header */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <AIPlatformIcon platform={pKey} size={22} colored />
+                                <span className="text-sm font-medium text-gray-900">
+                                  {resp.provider}
+                                </span>
+                              </div>
+                              {resp.brandMentioned ? (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                  Bahsediliyor
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-600 px-2 py-0.5 rounded-full">
+                                  Bahsedilmiyor
+                                </span>
+                              )}
+                            </div>
+
+                            {/* AI response with highlighting */}
+                            <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                              {highlightResponse(resp.response, brandName, competitorNames)}
+                            </p>
+
+                            {/* Sources */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {resp.sources.map((src, i) => (
+                                <span
+                                  key={i}
+                                  className={`text-xs px-2 py-0.5 rounded-full ${
+                                    src.includes(
+                                      formData.domain.split(".")[0]?.toLowerCase() ?? ""
+                                    ) || src === "isitmax.com"
+                                      ? "bg-green-50 text-green-700 font-medium"
+                                      : "bg-gray-100 text-gray-500"
+                                  }`}
+                                >
+                                  {src}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}

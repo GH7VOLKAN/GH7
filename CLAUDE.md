@@ -34,6 +34,10 @@ Türkiye'nin ilk Türkçe GEO (Generative Engine Optimization) platformu. 5 AI p
 | `src/lib/ai/circuit-breaker.ts` | Provider devre kesici (3 hata → 60s timeout) |
 | `src/lib/ai/retry.ts` | Exponential backoff (2 retry, 1-10s) |
 | `src/lib/ai/dead-letter.ts` | Başarısız sonuç kurtarma (FailedResult tablosu) |
+| `src/lib/ai/smart-alerts.ts` | Akıllı alarm: mention_lost, competitor_surge, score_drop, new_competitor |
+| `src/lib/ai/impact-tracker.ts` | Before/After etki ölçümü (aksiyon → tarama delta) |
+| `src/lib/roi/benchmarks.ts` | Platform trafik benchmark'ları (mention → tahmini ziyaret) |
+| `src/lib/dal/roi.ts` | ROI trafik tahmini DAL |
 
 ### Panel Sayfaları (Tümü Gerçek DB Verisi Kullanıyor)
 | Sayfa | Durum | DAL |
@@ -47,7 +51,7 @@ Türkiye'nin ilk Türkçe GEO (Generative Engine Optimization) platformu. 5 AI p
 | `/panel/icerik` | ✅ Çalışıyor (PR #56) | `getBlogPostsData()` |
 | `/panel/korelasyon` | ✅ Çalışıyor (PR #56) | `getCorrelationData()` |
 | `/panel/raporlar` | ✅ Çalışıyor | Prisma scan query |
-| `/panel/genel` | ⚠️ Demo data | Hardcoded DEMO_* constants |
+| `/panel/genel` | ✅ Çalışıyor | `getOverviewData()` + `GenelContent` |
 | `/panel/rakipler` | ⚠️ Shell | Hardcoded stats |
 
 ### Landing + Analiz Sayfaları
@@ -79,22 +83,17 @@ Türkiye'nin ilk Türkçe GEO (Generative Engine Optimization) platformu. 5 AI p
 
 ## Devam Edilecek Görevler (Öncelik Sırasıyla)
 
+### ✅ Tamamlandı (Bu Session)
+1. ~~**Analiz sayfasında 10 sorgunun TÜM yanıtlarını göster**~~ — Sorgu bazlı accordion UI, 10 sorgu × 5 platform
+2. ~~**Yanıtlarda marka + rakip isimlerini highlight et**~~ — Yeşil (marka) + turuncu (rakip) highlight, Turkish normalize
+3. ~~**Genel bakış paneli** (`/panel/genel`) — demo data → gerçek DB~~ — Server component + `getOverviewData()` DAL bağlantısı
+4. ~~**Akıllı Alarm Sistemi**~~ — 4 alarm tipi (mention_lost, competitor_surge, score_drop_major, new_competitor), scan-engine entegrasyonu, email template, notification bell güncelleme
+5. ~~**Before/After Etki Takibi**~~ — Aksiyon/checklist tamamlandığında snapshot, sonraki taramada delta ölçümü, aksiyonlar sayfasında etki kartları
+6. ~~**İçerik Etki Tahmini**~~ — Blog/zayıf sorgu eşleştirme, etki tahmin kartları, içerik önerileri, kopyala butonu
+7. ~~**ROI Trafik Tahmini**~~ — Platform benchmark'ları ile tahmini aylık ziyaret hesaplama, genel panelde ROI kartı
+
 ### 🔴 Kritik (Sonraki Session)
-1. **Analiz sayfasında 10 sorgunun TÜM yanıtlarını göster**
-   - Mevcut: QueryPage tek sorgu bazlı, her sorgu ayrı sayfa
-   - Hedef: Tek sayfada tüm sorguların tüm platform yanıtları
-   - Mimari: Scan sonuçlarından (PromptResult) direkt çekip render etmeli
-   - Dosyalar: `src/app/analiz/page.tsx` (1860+ satır, refactor gerekli)
-
-2. **Yanıtlarda marka + rakip isimlerini highlight et**
-   - fullResponse içinde marka adı geçiyorsa yeşil highlight
-   - Rakip adı geçiyorsa kırmızı/turuncu highlight
-   - Her platformun yanıtında kimin bahsedildiği net görünmeli
-   - Şeffaflık ilkesi: "bahsediliyor" diyorsa kanıtını göstermeli
-
-3. **Genel bakış paneli** (`/panel/genel`) — demo data → gerçek DB
-   - `getOverviewData()` DAL zaten var ve çalışıyor
-   - Sadece page.tsx'i server component'a çevirip DAL bağlamak lazım
+- **Prisma migration deploy** — `npx prisma db push` (impactSnapshot + impactResult alanları ActionTask ve ChecklistItem'a eklendi)
 
 ### 🟡 Önemli
 4. **Rakipler paneli** (`/panel/rakipler`) — shell → gerçek DB

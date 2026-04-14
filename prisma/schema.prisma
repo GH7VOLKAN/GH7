@@ -253,6 +253,10 @@ model ActionTask {
   canWeDoIt        Boolean  @default(false) @map("can_we_do_it")
   selfServiceSteps Json?    @map("self_service_steps") // string[]
 
+  // Before/After impact tracking
+  impactSnapshot Json? @map("impact_snapshot") // { mentionScore, scanIdBefore, completedAt }
+  impactResult   Json? @map("impact_result")   // { mentionScoreAfter, delta, scanIdAfter, measuredAt }
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -335,6 +339,11 @@ model ChecklistItem {
   reminderDate      DateTime? @map("reminder_date")
   lastCheckedAt     DateTime? @map("last_checked_at")
   verificationNote  String?   @map("verification_note")
+
+  // Before/After impact tracking
+  impactSnapshot Json? @map("impact_snapshot")
+  impactResult   Json? @map("impact_result")
+
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

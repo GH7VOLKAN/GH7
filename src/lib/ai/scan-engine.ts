@@ -273,6 +273,14 @@ export async function executeScan(
     await discoverSourceDomains(scanId, brandId);
     await verifyScanChecklistItems(scanId, brandId);
 
+    // Smart alerts: detect mention losses, competitor surges, etc.
+    const { generateSmartAlerts } = await import("@/lib/ai/smart-alerts");
+    await generateSmartAlerts(scanId, brandId);
+
+    // Impact tracking: measure effect of completed actions
+    const { measureCompletionImpact } = await import("@/lib/ai/impact-tracker");
+    await measureCompletionImpact(scanId, brandId);
+
     // Get current score for notification
     const today = new Date();
     today.setHours(0, 0, 0, 0);

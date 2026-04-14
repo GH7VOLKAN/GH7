@@ -1,6 +1,20 @@
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { cache } from "react";
 import type { Priority } from "@/lib/types";
+
+export interface ImpactSnapshot {
+  mentionScore: number;
+  scanIdBefore: string | null;
+  completedAt: string;
+}
+
+export interface ImpactResult {
+  mentionScoreAfter: number;
+  delta: number;
+  scanIdAfter: string;
+  measuredAt: string;
+}
 
 export interface ActionTaskData {
   id: string;
@@ -17,6 +31,9 @@ export interface ActionTaskData {
   estimatedTime: string | null;
   canWeDoIt: boolean;
   selfServiceSteps: string[];
+  // Impact tracking
+  impactSnapshot: ImpactSnapshot | null;
+  impactResult: ImpactResult | null;
 }
 
 export interface SituationAnalysis {
@@ -55,6 +72,8 @@ export const getActionsData = cache(async (brandId: string) => {
     estimatedTime: t.estimatedTime,
     canWeDoIt: t.canWeDoIt,
     selfServiceSteps: (t.selfServiceSteps as string[]) ?? [],
+    impactSnapshot: (t.impactSnapshot as unknown as ImpactSnapshot) ?? null,
+    impactResult: (t.impactResult as unknown as ImpactResult) ?? null,
   }));
 
   const completedCount = actionTasks.filter((t) => t.completed).length;
@@ -155,8 +174,38 @@ export const getSituationAnalysis = cache(async (brandId: string): Promise<Situa
 });
 
 export async function toggleActionComplete(taskId: string, completed: boolean) {
+  // Capture impact snapshot when marking as completed
+  let impactSnapshot = undefined;
+
+  if (completed) {
+    const task = await prisma.actionTask.findUnique({
+      where: { id: taskId },
+      select: { brandId: true },
+    });
+    if (task) {
+      const latestScore = await prisma.scoreHistory.findFirst({
+        where: { brandId: task.brandId },
+        orderBy: { date: "desc" },
+      });
+      const lastScan = await prisma.scan.findFirst({
+        where: { brandId: task.brandId, status: "completed" },
+        orderBy: { completedAt: "desc" },
+      });
+      impactSnapshot = {
+        mentionScore: latestScore?.mentionScore ?? 0,
+        scanIdBefore: lastScan?.id ?? null,
+        completedAt: new Date().toISOString(),
+      };
+    }
+  }
+
   return prisma.actionTask.update({
     where: { id: taskId },
-    data: { completed },
+    data: {
+      completed,
+      ...(completed
+        ? { impactSnapshot: impactSnapshot as unknown as Prisma.InputJsonValue }
+        : { impactSnapshot: Prisma.DbNull, impactResult: Prisma.DbNull }),
+    },
   });
 }
