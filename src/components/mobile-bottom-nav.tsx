@@ -26,27 +26,27 @@ interface TabItem {
 const tabs: TabItem[] = [
   {
     label: "Genel",
-    href: "/dashboard/genel",
+    href: "/panel/genel",
     icon: LayoutDashboardIcon,
   },
   {
     label: "Sorular",
-    href: "/dashboard/promptlar",
+    href: "/panel/aramalar",
     icon: MessageSquareTextIcon,
   },
   {
     label: "Rakipler",
-    href: "/dashboard/rakipler",
+    href: "/panel/rakipler",
     icon: UsersIcon,
   },
   {
     label: "Dijital",
-    href: "/dashboard/site",
+    href: "/panel/iyilestirme",
     icon: GlobeIcon,
   },
   {
     label: "Gelisim",
-    href: "/dashboard/gelisim",
+    href: "/panel/iyilestirme",
     icon: ClipboardListIcon,
     showProgress: true,
   },

@@ -29,7 +29,7 @@ export function TopActionCard({ action }: TopActionCardProps) {
           </div>
         </div>
         <Link
-          href="/dashboard/gelisim"
+          href="/panel/iyilestirme"
           className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
           Başla

@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import { GH7Logo } from "@/components/gh7-logo";
 import {
   LayoutDashboardIcon,
@@ -122,6 +123,8 @@ export function PanelSidebar({
   const isPro = plan === "pro" || plan === "business" || plan === "agency";
 
   const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     router.push("/giris");
   };
 

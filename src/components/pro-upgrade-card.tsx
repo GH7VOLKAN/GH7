@@ -52,7 +52,7 @@ export function ProUpgradeCard({ type, plan, competitorName }: ProUpgradeCardPro
       <p className="text-base sm:text-lg font-semibold text-foreground">{msg.title}</p>
       <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">{desc}</p>
       <Link
-        href="/dashboard/ayarlar"
+        href="/panel/abonelik"
         className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-6 sm:px-8 py-3 text-xs sm:text-sm font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
       >
         {msg.cta} → 2.495₺/ay

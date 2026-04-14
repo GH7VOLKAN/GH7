@@ -112,7 +112,7 @@ export function CompetitorRankingCard({ ranking, totalResults }: CompetitorRanki
         {/* Link to Rakipler page */}
         <div className="flex justify-end">
           <Link
-            href="/dashboard/rakipler"
+            href="/panel/rakipler"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             Detaylı karşılaştırma
