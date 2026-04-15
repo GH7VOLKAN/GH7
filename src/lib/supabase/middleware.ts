@@ -10,6 +10,37 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // OAuth error on root → redirect to login
+  const oauthError = request.nextUrl.searchParams.get("error");
+  if (oauthError && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.delete("error_code");
+    url.searchParams.delete("error_description");
+    url.searchParams.set("error", "auth");
+    return NextResponse.redirect(url);
+  }
+
+  // OAuth code on root → redirect to /auth/callback
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
+  // Public route ise Supabase'e hiç gitme
+  const isProtectedOrAuth =
+    request.nextUrl.pathname.startsWith("/panel") ||
+    request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/onboard") ||
+    request.nextUrl.pathname === "/login";
+
+  if (!isProtectedOrAuth) {
+    return supabaseResponse;
+  }
+
+  // Sadece korumalı rotalarda Supabase client oluştur ve getUser çağır
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -31,42 +62,23 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // If OAuth error lands on root (bad_oauth_state etc.), redirect to login with error
-  const oauthError = request.nextUrl.searchParams.get("error");
-  if (oauthError && request.nextUrl.pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.delete("error_code");
-    url.searchParams.delete("error_description");
-    url.searchParams.set("error", "auth");
-    return NextResponse.redirect(url);
-  }
-
-  // If OAuth code lands on root, redirect to /auth/callback
-  const code = request.nextUrl.searchParams.get("code");
-  if (code && request.nextUrl.pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/callback";
-    return NextResponse.redirect(url);
-  }
-
-  // Refresh session — DO NOT remove this
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /panel, /dashboard and /onboard routes — redirect to /login if no session
+  // Korumalı rota + kullanıcı yok → login'e yönlendir
   const isProtected =
     request.nextUrl.pathname.startsWith("/panel") ||
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/onboard");
+
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from /login (unless they want to log out)
+  // Giriş yapmış kullanıcı /login'e gelirse → panel'e yönlendir
   if (user && request.nextUrl.pathname === "/login") {
     const wantsLogout = request.nextUrl.searchParams.get("logout") === "true";
     if (!wantsLogout) {
@@ -76,7 +88,7 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Redirect old /dashboard routes to new /panel routes
+  // /dashboard → /panel yönlendirmesi
   if (user && request.nextUrl.pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
     const subpath = request.nextUrl.pathname.replace("/dashboard", "/panel");
@@ -84,7 +96,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ── RBAC: Check plan-gated routes ──────────────────
+  // RBAC: Plan kontrolü
   if (user) {
     const pathname = request.nextUrl.pathname;
     const requiredTier = Object.entries(PROTECTED_ROUTES).find(
@@ -92,11 +104,7 @@ export async function updateSession(request: NextRequest) {
     )?.[1] as SubscriptionTier | undefined;
 
     if (requiredTier) {
-      // Read plan from Supabase user metadata (set during login/profile update).
-      // Falls back to "free" if not present — server components do a full DB check.
-      const userPlan =
-        (user.user_metadata?.plan as string) ?? "free";
-
+      const userPlan = (user.user_metadata?.plan as string) ?? "free";
       if (!hasAccess(userPlan, requiredTier)) {
         const url = request.nextUrl.clone();
         url.pathname = "/panel/upgrade";
