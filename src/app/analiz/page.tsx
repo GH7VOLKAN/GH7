@@ -1157,9 +1157,7 @@ function AnalizPageInner() {
             onClick={handleStep1Next}
             disabled={
               isFirma
-                ? !formData.brandName ||
-                  !formData.sector ||
-                  formData.cities.length === 0
+                ? !formData.brandName || formData.cities.length === 0
                 : !formData.fullName ||
                   !formData.profession ||
                   formData.cities.length === 0
