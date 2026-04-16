@@ -29,6 +29,7 @@ import {
 import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
+import { CityMultiselect } from "@/components/ui/city-multiselect";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -59,49 +60,6 @@ interface FormData {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-
-const SECTORS = [
-  "Isıtma ve Tesisat",
-  "İnşaat ve Mimarlık",
-  "Sağlık ve Klinik",
-  "Hukuk ve Danışmanlık",
-  "Restoran ve Yiyecek",
-  "Otel ve Konaklama",
-  "E-ticaret",
-  "Güzellik ve Bakım",
-  "Eğitim",
-  "Otomotiv",
-  "Teknoloji",
-  "Gayrimenkul",
-  "Finans ve Sigorta",
-  "Lojistik ve Taşımacılık",
-  "Tarım ve Hayvancılık",
-  "Enerji",
-  "Diğer",
-];
-
-const ALL_CITIES = [
-  "İstanbul",
-  "Ankara",
-  "İzmir",
-  "Bursa",
-  "Antalya",
-  "Adana",
-  "Konya",
-  "Gaziantep",
-  "Mersin",
-  "Diyarbakır",
-  "Kayseri",
-  "Eskişehir",
-  "Samsun",
-  "Denizli",
-  "Malatya",
-  "Trabzon",
-  "Erzurum",
-  "Balıkesir",
-  "Manisa",
-  "Sakarya",
-];
 
 const DEFAULT_KEYWORDS = [
   "yerden ısıtma yaptıracağım firma önerir misin",
@@ -591,6 +549,8 @@ function AnalizPageInner() {
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [showCallPopup, setShowCallPopup] = useState(false);
   const [expandedQueries, setExpandedQueries] = useState<Set<number>>(new Set([0]));
+  const [websiteAnalyzing, setWebsiteAnalyzing] = useState(false);
+  const [queriesGenerating, setQueriesGenerating] = useState(false);
 
   /* ---- auto-fill from URL params (landing page redirect) ---- */
   useEffect(() => {
@@ -722,14 +682,10 @@ function AnalizPageInner() {
     }
   };
 
-  const handleStep1Next = () => {
+  const handleStep1Next = async () => {
     if (formData.analysisType === "firma") {
-      if (
-        !formData.brandName ||
-        !formData.sector ||
-        formData.cities.length === 0
-      )
-        return;
+      if (!formData.brandName || formData.cities.length === 0) return;
+      // Set fallback demo data immediately
       setProducts([...DEMO_FIRMA_PRODUCTS]);
       setServices([...DEMO_FIRMA_SERVICES]);
     } else {
@@ -739,26 +695,82 @@ function AnalizPageInner() {
       setServices([]);
     }
     setStep(1.5);
+
+    // Firma: Gerçek website analizi (background, non-blocking)
+    if (formData.analysisType === "firma" && formData.domain) {
+      setWebsiteAnalyzing(true);
+      try {
+        const res = await fetch("/api/analiz/analyze-website", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domain: formData.domain }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.products) && data.products.length > 0) {
+            setProducts(
+              data.products.map((name: string) => ({
+                name,
+                checked: true,
+                autoDetected: true,
+              }))
+            );
+          }
+          if (Array.isArray(data.services) && data.services.length > 0) {
+            setServices(
+              data.services.map((name: string) => ({
+                name,
+                checked: true,
+                autoDetected: true,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("[analiz] Website analysis failed, using fallback:", err);
+      } finally {
+        setWebsiteAnalyzing(false);
+      }
+    }
   };
 
-  const handleStep1_5Next = () => {
+  const handleStep1_5Next = async () => {
     setStep(2);
+
+    // Gerçek sorgu üretimi (background)
+    const selectedProducts = products.filter((p) => p.checked).map((p) => p.name);
+    const selectedServices = services.filter((s) => s.checked).map((s) => s.name);
+
+    if (selectedProducts.length === 0 && selectedServices.length === 0) return;
+
+    setQueriesGenerating(true);
+    try {
+      const res = await fetch("/api/analiz/generate-queries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          products: selectedProducts,
+          services: selectedServices,
+          cities: formData.cities,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.queries) && data.queries.length >= 5) {
+          setFormData((prev) => ({ ...prev, keywords: data.queries.slice(0, 10) }));
+        }
+      }
+    } catch (err) {
+      console.warn("[analiz] Query generation failed, using fallback:", err);
+    } finally {
+      setQueriesGenerating(false);
+    }
   };
 
   const handleStartAnalysis = () => {
     setStep(3);
     setLoading(true);
     setLoadingStepIndex(0);
-  };
-
-  const toggleCity = (city: string) => {
-    setFormData((prev) => {
-      if (prev.cities.includes(city)) {
-        return { ...prev, cities: prev.cities.filter((c) => c !== city) };
-      }
-      if (prev.cities.length >= 3) return prev;
-      return { ...prev, cities: [...prev.cities, city] };
-    });
   };
 
   const updateKeyword = (index: number, value: string) => {
@@ -1076,24 +1088,6 @@ function AnalizPageInner() {
                 />
               </div>
 
-              {/* Sector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sektör
-                </label>
-                <select
-                  value={formData.sector}
-                  onChange={(e) => updateField("sector", e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                >
-                  <option value="">Sektör seçin</option>
-                  {SECTORS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </>
           ) : (
             <>
@@ -1146,34 +1140,16 @@ function AnalizPageInner() {
             </>
           )}
 
-          {/* Cities */}
+          {/* Cities - searchable dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {isFirma ? "Hizmet Verilen İller" : "Faaliyet gösterilen iller"}{" "}
-              <span className="text-gray-400 font-normal">(maks. 3)</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {isFirma ? "Hizmet Verilen İller" : "Faaliyet Gösterilen İller"}
             </label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {ALL_CITIES.map((city) => {
-                const isSelected = formData.cities.includes(city);
-                const isDisabled = !isSelected && formData.cities.length >= 3;
-                return (
-                  <button
-                    key={city}
-                    onClick={() => toggleCity(city)}
-                    disabled={isDisabled}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      isSelected
-                        ? "bg-gray-900 text-white"
-                        : isDisabled
-                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {city}
-                  </button>
-                );
-              })}
-            </div>
+            <CityMultiselect
+              selected={formData.cities}
+              onChange={(cities) => setFormData((prev) => ({ ...prev, cities }))}
+              max={3}
+            />
           </div>
 
           {/* Next */}
@@ -1226,6 +1202,16 @@ function AnalizPageInner() {
               ? "Web sitenizden tespit ettiğimiz ürün ve hizmetlerinizi onaylayın."
               : "Profilinizden tespit ettiğimiz uzmanlık alanlarınızı onaylayın."}
           </p>
+
+          {websiteAnalyzing && (
+            <div className="mb-4 flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
+              <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm text-blue-700">Web siteniz analiz ediliyor... (birkaç saniye)</span>
+            </div>
+          )}
 
           {/* Products / Specialties */}
           <div className="mb-4">
@@ -1354,6 +1340,16 @@ function AnalizPageInner() {
           <p className="text-sm text-gray-500 mb-6">
             AI otomatik 10 arama önerdi. Dilediğinizi düzenleyebilirsiniz.
           </p>
+
+          {queriesGenerating && (
+            <div className="mb-4 flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
+              <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm text-blue-700">Ürünlerinize özel arama sorguları oluşturuluyor...</span>
+            </div>
+          )}
 
           <div className="space-y-3 mb-6">
             {formData.keywords.map((kw, i) => (
