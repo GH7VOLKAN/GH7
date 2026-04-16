@@ -51,6 +51,7 @@ model Brand {
   competitorNames   String[] @map("competitor_names")   // onboarding'de girilen rakip adlari
   competitorDomains String[] @map("competitor_domains") // rakip web siteleri
   type         String   @default("firma") @map("brand_type") // firma, kisisel
+  userType     String   @default("firma") @map("user_type")  // firma, kisi, eticaret, yurtdisi
   // V3 spec — Profile-centric fields
   businessCategories String[] @map("business_categories") // faaliyet alanlari (Sonar'dan)
   serviceRegions     String[] @map("service_regions")     // hizmet bolgeleri
@@ -511,4 +512,106 @@ model FailedResult {
 
   @@index([resolvedAt, nextRetryAt])
   @@map("failed_results")
+}
+
+// ─── GEO Audit (43-item structured audit) ──────────────
+
+model GeoAudit {
+  id                    String   @id @default(cuid())
+  url                   String
+  brandName             String   @map("brand_name")
+  location              String?
+  sector                String?
+  userType              String   @map("user_type") // firma | kisi | eticaret | yurtdisi
+  overallScore          Int      @map("overall_score")
+  competitorScore       Int?     @map("competitor_score")
+  competitorName        String?  @map("competitor_name")
+  competitorUrl         String?  @map("competitor_url")
+  auditItems            Json     @map("audit_items")     // 43 madde detayı
+  categoryScores        Json     @map("category_scores") // 6 kategori skoru
+  estimatedMonthlyLoss  Int?     @map("estimated_monthly_loss")
+  estimatedYearlyLoss   Int?     @map("estimated_yearly_loss")
+  personalAnalysis      String?  @map("personal_analysis") @db.Text
+  categorySummaries     Json?    @map("category_summaries")
+  rawDataforseo         Json?    @map("raw_dataforseo")
+  rawAiVisibility       Json?    @map("raw_ai_visibility")
+  isFree                Boolean  @default(true) @map("is_free")
+  userId                String?  @map("user_id")
+  source                String?  // utm_source (isitmax, direct, vb.)
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("geo_audits")
+}
+
+// ─── Service Packages (Marketplace) ────────────────────
+
+model ServicePackage {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  userType            String   @map("user_type") // firma | kisi | eticaret | yurtdisi
+  tier                String   // temel | buyume | hakimiyet
+  price               Int      // TRY
+  description         String   @db.Text
+  deliverables        Json     // string[]
+  auditItemsFixed     Json     @map("audit_items_fixed") // string[]
+  estimatedScoreBoost Int      @map("estimated_score_boost")
+  deliveryDays        Int      @default(7) @map("delivery_days")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  orders              ServiceOrder[]
+
+  @@unique([userType, tier])
+  @@map("service_packages")
+}
+
+// ─── Service Orders (Escrow) ───────────────────────────
+
+model ServiceOrder {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  packageId         String   @map("package_id")
+  package           ServicePackage @relation(fields: [packageId], references: [id])
+  auditId           String?  @map("audit_id")
+  postAuditId       String?  @map("post_audit_id")
+  status            String   @default("pending") // pending | in_progress | delivered | approved | paid | cancelled
+  iyzicoPaymentRef  String?  @map("iyzico_payment_ref")
+  iyzicoTokenRef    String?  @map("iyzico_token_ref")
+  amount            Int
+  deliveredAt       DateTime? @map("delivered_at")
+  approvedAt        DateTime? @map("approved_at")
+  paidAt            DateTime? @map("paid_at")
+  autoApproveAt     DateTime? @map("auto_approve_at")
+  preScore          Int?     @map("pre_score")
+  postScore         Int?     @map("post_score")
+  itemsFixed        Json?    @map("items_fixed")
+  adminNotes        String?  @map("admin_notes") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([autoApproveAt])
+  @@map("service_orders")
+}
+
+// ─── Weekly Audit Snapshots (Pro) ──────────────────────
+
+model WeeklyAuditSnapshot {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  url             String
+  weekStart       DateTime @map("week_start")
+  overallScore    Int      @map("overall_score")
+  competitorScore Int?     @map("competitor_score")
+  auditItems      Json     @map("audit_items")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, url, weekStart])
+  @@index([userId, weekStart])
+  @@map("weekly_audit_snapshots")
 }

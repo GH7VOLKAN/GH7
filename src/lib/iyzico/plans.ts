@@ -14,7 +14,7 @@ export interface PlanPrice {
 }
 
 export const PLAN_PRICES: Record<Exclude<PlanType, "free">, PlanPrice> = {
-  pro: { monthly: 2495, yearly: 23950 },
+  pro: { monthly: 699, yearly: 8388 },
   business: { monthly: 4995, yearly: 47950 },
   agency: { monthly: 19995, yearly: 191950 },
 };

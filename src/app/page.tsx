@@ -244,14 +244,13 @@ export default function HomePage() {
                 <div className="pricing-plan-name">Pro</div>
                 <p className="pricing-plan-desc">Tam izleme + rekabet yönetimi</p>
                 <div className="pricing-price-row">
-                  <span className="pricing-price">{isYearly ? "₺2.075" : "₺2.450"}</span>
+                  <span className="pricing-price">₺699</span>
                   <span className="pricing-period">/ay</span>
                 </div>
-                {isYearly ? (
-                  <p className="pricing-annual">₺24.900/yıl <span className="pricing-save">(2 ay hediye)</span></p>
-                ) : (
-                  <p className="pricing-annual">veya ₺24.900/yıl <span className="pricing-save">(₺2.075/ay)</span></p>
-                )}
+                <p className="pricing-annual">
+                  Yıllık tek ödeme: <strong>₺8.388</strong>
+                  <span className="pricing-save"> (aylık ₺699)</span>
+                </p>
               </div>
 
               <a href="/login" className="pricing-cta pricing-cta-filled">{isYearly ? "Yıllık Planla Başla" : "7 Gün Ücretsiz Dene"}</a>

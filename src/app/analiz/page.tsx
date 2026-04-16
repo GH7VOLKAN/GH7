@@ -30,6 +30,9 @@ import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 import { CityMultiselect } from "@/components/ui/city-multiselect";
+import { Audit43Report } from "@/components/analiz/audit-43-report";
+import { PersonalAnalysisBox } from "@/components/analiz/personal-analysis-box";
+import { ServicePackagesCTA } from "@/components/analiz/service-packages-cta";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -551,6 +554,18 @@ function AnalizPageInner() {
   const [expandedQueries, setExpandedQueries] = useState<Set<number>>(new Set([0]));
   const [websiteAnalyzing, setWebsiteAnalyzing] = useState(false);
   const [queriesGenerating, setQueriesGenerating] = useState(false);
+  // 43-item audit state
+  const [audit43, setAudit43] = useState<{
+    overallScore: number;
+    competitorScore?: number;
+    competitorName?: string;
+    categoryScores: Record<string, number>;
+    items: Array<{ key: string; label: string; category: string; status: "pass" | "partial" | "fail"; score: 0 | 5 | 10; value?: string | number; recommendation?: string }>;
+    estimatedMonthlyLoss: number;
+    estimatedYearlyLoss: number;
+    personalAnalysis?: string;
+  } | null>(null);
+  const [audit43Loading, setAudit43Loading] = useState(false);
 
   /* ---- auto-fill from URL params (landing page redirect) ---- */
   useEffect(() => {
@@ -767,10 +782,38 @@ function AnalizPageInner() {
     }
   };
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = async () => {
     setStep(3);
     setLoading(true);
     setLoadingStepIndex(0);
+
+    // Kick off 43-item audit in background (firma için)
+    if (formData.analysisType === "firma" && formData.domain) {
+      setAudit43Loading(true);
+      const source = searchParams.get("utm_source") ?? undefined;
+      try {
+        const res = await fetch("/api/analiz/run-audit-43", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: formData.domain,
+            brandName: formData.brandName,
+            userType: "firma", // TODO: eticaret/yurtdisi için genişlet
+            location: formData.cities[0],
+            keywords: formData.keywords,
+            source,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAudit43(data);
+        }
+      } catch (err) {
+        console.warn("[analiz] 43-item audit failed:", err);
+      } finally {
+        setAudit43Loading(false);
+      }
+    }
   };
 
   const updateKeyword = (index: number, value: string) => {
@@ -1519,6 +1562,69 @@ function AnalizPageInner() {
             5 platform üzerinden analiz tamamlandı
           </p>
         </div>
+
+        {/* ================================================================ */}
+        {/* BÖLÜM A: KİŞİSEL ANALİZ (Opus) + TAHMİNİ KAYIP                    */}
+        {/* ================================================================ */}
+        {audit43?.personalAnalysis && (
+          <section className="mb-12">
+            <h3 className="text-xl font-bold text-gray-900 mb-1">
+              Kişisel Durum Analiziniz
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Opus yapay zekası, audit sonuçlarınızı inceleyip size özel yorum hazırladı
+            </p>
+            <PersonalAnalysisBox
+              brandName={displayName || formData.brandName}
+              analysis={audit43.personalAnalysis}
+              monthlyLoss={audit43.estimatedMonthlyLoss}
+              yearlyLoss={audit43.estimatedYearlyLoss}
+              competitorName={audit43.competitorName}
+            />
+          </section>
+        )}
+
+        {/* ================================================================ */}
+        {/* BÖLÜM B: 43 MADDE AUDIT RAPORU                                    */}
+        {/* ================================================================ */}
+        {audit43 ? (
+          <section className="mb-12">
+            <h3 className="text-xl font-bold text-gray-900 mb-1">
+              43 Maddelik GEO Audit
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              6 kategoride detaylı teknik inceleme — yeşil/sarı/kırmızı skorlama
+            </p>
+            <Audit43Report
+              items={audit43.items as never}
+              categoryScores={audit43.categoryScores}
+              overallScore={audit43.overallScore}
+              competitorScore={audit43.competitorScore}
+            />
+          </section>
+        ) : audit43Loading ? (
+          <section className="mb-12 border border-gray-200 rounded-2xl p-8 text-center">
+            <div className="inline-flex items-center gap-3 text-sm text-gray-500">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              43 maddelik GEO audit çalışıyor... (yaklaşık 45 saniye)
+            </div>
+          </section>
+        ) : null}
+
+        {/* ================================================================ */}
+        {/* BÖLÜM C: HİZMET PAKETLERİ CTA                                     */}
+        {/* ================================================================ */}
+        {audit43 && (
+          <section className="mb-12">
+            <ServicePackagesCTA
+              userType="firma"
+              currentScore={audit43.overallScore}
+            />
+          </section>
+        )}
 
         {/* ================================================================ */}
         {/* LAYER 1 — AI Sizi Nasıl Görüyor (Sorgu Bazlı)                    */}
