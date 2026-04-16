@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon, PLATFORM_INFO, AI_PLATFORM_KEYS } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
+import { TurkeyMapRealistic } from "@/components/landing/turkey-map-realistic";
 
 export default function HomePage() {
   const [activeKapi, setActiveKapi] = useState("firma");
@@ -73,7 +74,7 @@ export default function HomePage() {
         <h1 className="hero-h1">Yapay zeka<br/>sizi öneriyor <span className="muted">mu?</span></h1>
 
         <div className="hero-body">
-          <p>Bunu kendiniz de yapabilirsiniz.</p>
+          <p>Bunu kendiniz de öğrenebilirsiniz.</p>
           <p style={{ marginTop: 12 }}>ChatGPT&apos;yi açın. &quot;Sektörümde en iyi firma hangisi?&quot; yazın. Cevabı görün.</p>
 
           <span className="ama">Ama...</span>
@@ -99,35 +100,8 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* BÖLÜM 2: KORKU — Virüsü Göster */}
-      <div className="fear-sec reveal" id="test">
-        <div className="fear-inner">
-          <div className="fear-stat">
-            <span className="fear-stat-num">%73</span>
-            <p className="fear-stat-label">Test eden firmaların %73&apos;ünde en az 1 kritik sorun bulundu. Rakipler önde, marka görünmüyor.</p>
-          </div>
-          <div className="fear-findings">
-            <div className="ff">
-              <span className="ff-label">En sık karşılaşılan sorun</span>
-              <div className="ff-finding">&quot;ChatGPT rakibinizi öneriyor, sizi değil.&quot;</div>
-              <p className="ff-sub">Aynı sektör, aynı ürün — ama AI hep rakibi seçiyor. Neden? Çünkü rakibin dijital ayak izi daha güçlü.</p>
-            </div>
-            <div className="ff">
-              <span className="ff-label">İkinci en sık sorun</span>
-              <div className="ff-finding">&quot;3 kritik sorguda hiç görünmüyorsunuz.&quot;</div>
-              <p className="ff-sub">Müşterinizin sorduğu soruların bir kısmında siz yoksunuz. O satış rakibe gidiyor.</p>
-            </div>
-            <div className="ff">
-              <span className="ff-label">Üçüncü en sık sorun</span>
-              <div className="ff-finding">&quot;AI sizi güvenilir kaynak saymıyor.&quot;</div>
-              <p className="ff-sub">Görünüyorsunuz ama önerilmiyorsunuz. AI tereddüt ediyor — ve başka bir firma öneriyor.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* BÖLÜM 3: 4 KAPI + INPUT — Testi Başlat */}
-      <section className="kapi-sec reveal">
+      {/* BÖLÜM 2: 4 KAPI + INPUT — Testi Başlat (ÜCRETSIZ AUDIT) */}
+      <section className="kapi-sec reveal" id="test">
         <span className="kapi-sec-tag">Ücretsiz Audit</span>
         <h2 className="kapi-title">Sizi test edelim.<br/>60 saniye, ücretsiz.</h2>
         <p className="kapi-sub">Firma mı, kişi mi, ürün mü, yurt dışı mı? Seçin, domain girin, sonuçları görün.</p>
@@ -171,6 +145,33 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* BÖLÜM 3: KORKU — Virüsü Göster (%73) */}
+      <div className="fear-sec reveal">
+        <div className="fear-inner">
+          <div className="fear-stat">
+            <span className="fear-stat-num">%73</span>
+            <p className="fear-stat-label">Test eden firmaların %73&apos;ünde en az 1 kritik sorun bulundu. Rakipler önde, marka görünmüyor.</p>
+          </div>
+          <div className="fear-findings">
+            <div className="ff">
+              <span className="ff-label">En sık karşılaşılan sorun</span>
+              <div className="ff-finding">&quot;ChatGPT rakibinizi öneriyor, sizi değil.&quot;</div>
+              <p className="ff-sub">Aynı sektör, aynı ürün — ama AI hep rakibi seçiyor. Neden? Çünkü rakibin dijital ayak izi daha güçlü.</p>
+            </div>
+            <div className="ff">
+              <span className="ff-label">İkinci en sık sorun</span>
+              <div className="ff-finding">&quot;3 kritik sorguda hiç görünmüyorsunuz.&quot;</div>
+              <p className="ff-sub">Müşterinizin sorduğu soruların bir kısmında siz yoksunuz. O satış rakibe gidiyor.</p>
+            </div>
+            <div className="ff">
+              <span className="ff-label">Üçüncü en sık sorun</span>
+              <div className="ff-finding">&quot;AI sizi güvenilir kaynak saymıyor.&quot;</div>
+              <p className="ff-sub">Görünüyorsunuz ama önerilmiyorsunuz. AI tereddüt ediyor — ve başka bir firma öneriyor.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* BÖLÜM 4: FİYATLANDIRMA */}
       <div className="pricing-sec reveal" id="cozum">
@@ -317,66 +318,55 @@ export default function HomePage() {
       {/* BÖLÜM 5: ISITMAX CASE STUDY */}
       <div className="case-sec reveal">
         <div className="case-inner">
-          <div className="case-header">
+          <div className="case-header" style={{ textAlign: "center", marginBottom: 48 }}>
             <span className="sec-tag">İlk Müşteri &amp; Referans</span>
-            <h2 className="sec-h2">GH7&apos;yi biz yaptık.<br/><span className="muted">İlk kendimizde denedik.</span></h2>
-            <p className="case-sub">isitmax.com — Türkiye&apos;nin lider ısıtma platformu, 1M+ aylık ziyaretçi. GH7&apos;yi kurmadan önce kendi verilerimizi analiz ettik. Gördüklerimiz bu platformu inşa ettirdi.</p>
+            <h2 className="sec-h2">GH7 kullananlar.<br/><span className="muted">İlk biz denedik, şimdi sıra sizde.</span></h2>
           </div>
-          <div className="case-body">
-            <div className="case-story">
-              <div className="case-step">
-                <span className="case-step-num">01</span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+            {/* Kart 1: ISITMAX */}
+            <div style={{ border: "1px solid #e5e5e5", borderRadius: 16, padding: 24, background: "#fff" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#92400e" }}>IS</div>
                 <div>
-                  <div className="case-step-title">ChatGPT&apos;ye sorduk</div>
-                  <p className="case-step-desc">&quot;Türkiye&apos;de en iyi ısıtma firması&quot; — çıktık. Güzel. Ama 50 farklı soruda ne olduğunu bilmiyorduk.</p>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#09090b" }}>ISITMAX</div>
+                  <div style={{ fontSize: 12, color: "#71717a" }}>isitmax.com · Isıtma Sistemleri</div>
                 </div>
               </div>
-              <div className="case-step">
-                <span className="case-step-num">02</span>
+              <p style={{ fontSize: 13, color: "#52525b", lineHeight: 1.6, marginBottom: 16 }}>
+                GH7&apos;nin ilk müşterisi. 3 haftada GEO skoru 71&apos;den 74&apos;e çıktı. &quot;Çatı kar eritme&quot; sorgusunda %14&apos;ten %24&apos;e yükseldi.
+              </p>
+              <div style={{ display: "flex", gap: 16, paddingTop: 16, borderTop: "1px solid #f4f4f5" }}>
                 <div>
-                  <div className="case-step-title">Gerçeği gördük</div>
-                  <p className="case-step-desc">Bazı sorgularda rakipler önümüzdeydi. &quot;Çatı kar eritme&quot; ve &quot;sera ısıtma&quot;da görünürlüğümüz %14&apos;tü.</p>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "#09090b" }}>74</div>
+                  <div style={{ fontSize: 11, color: "#a1a1aa" }}>GEO Skoru</div>
                 </div>
-              </div>
-              <div className="case-step">
-                <span className="case-step-num">03</span>
                 <div>
-                  <div className="case-step-title">Çözüm ürettik, uyguladık</div>
-                  <p className="case-step-desc">Schema ekledik, zayıf sayfaları yeniden yazdık. 3 haftada GEO skoru 71&apos;den 74&apos;e çıktı.</p>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "#09090b" }}>%26</div>
+                  <div style={{ fontSize: 11, color: "#a1a1aa" }}>Ses Payı</div>
                 </div>
-              </div>
-              <div className="case-step" style={{ borderBottom: "none" }}>
-                <span className="case-step-num">04</span>
                 <div>
-                  <div className="case-step-title">GH7&apos;yi kurduk</div>
-                  <p className="case-step-desc">Bu süreci her firma için otomatize etmek için GH7&apos;yi inşa ettik. ISITMAX canlı referans olarak çalışıyor.</p>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "#16a34a" }}>↑3</div>
+                  <div style={{ fontSize: 11, color: "#a1a1aa" }}>Haftalık</div>
                 </div>
               </div>
             </div>
-            <div className="case-metrics">
-              <div className="case-metrics-header">
-                <span className="case-brand">ISITMAX</span>
-                <span className="case-domain">isitmax.com · Isıtma Sistemleri</span>
-              </div>
-              <div className="case-score-row">
-                <div className="case-score-big">
-                  <span className="csb-num">74</span>
-                  <span className="csb-label">GEO Skoru</span>
-                  <span className="csb-delta">↑ 3 puan / hafta</span>
-                </div>
-                <div className="case-score-grid">
-                  <div className="csg-item"><span className="csg-num">%26</span><span className="csg-lbl">Ses Payı</span><span className="csg-delta">↑ %2</span></div>
-                  <div className="csg-item"><span className="csg-num">%100</span><span className="csg-lbl">Kapsam</span><span className="csg-delta">→ sabit</span></div>
-                  <div className="csg-item"><span className="csg-num">1.4</span><span className="csg-lbl">Ort. Sıra</span><span className="csg-delta">↑ 0.1</span></div>
-                </div>
-              </div>
-              <div className="case-keywords">
-                <div className="ck-header">Arama bazlı görünürlük</div>
-                <div className="ck-row"><span className="ck-query">villa banyosu elektrikli yerden ısıtma</span><span className="ck-bar-wrap"><span className="ck-bar" style={{ width: "25%" }}></span></span><span className="ck-val">%25</span></div>
-                <div className="ck-row"><span className="ck-query">yüzey altı boru ısıtma kablosu</span><span className="ck-bar-wrap"><span className="ck-bar" style={{ width: "36%" }}></span></span><span className="ck-val">%36</span></div>
-                <div className="ck-row"><span className="ck-query">endüstriyel varil ısıtma ceketi</span><span className="ck-bar-wrap"><span className="ck-bar" style={{ width: "24%" }}></span></span><span className="ck-val">%24</span></div>
-                <div className="ck-row ck-weak"><span className="ck-query">çatıda kar buz eritme kablo çözümleri</span><span className="ck-bar-wrap"><span className="ck-bar ck-bar-weak" style={{ width: "14%" }}></span></span><span className="ck-val ck-val-weak">%14 ↓</span></div>
-              </div>
+
+            {/* Kart 2: Yakında */}
+            <div style={{ border: "1px dashed #e5e5e5", borderRadius: 16, padding: 24, background: "#fafafa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: 200 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#52525b", marginBottom: 4 }}>Yakında</div>
+              <p style={{ fontSize: 12, color: "#a1a1aa", lineHeight: 1.5 }}>
+                2. müşteri case study&apos;si için yer ayrıldı. Siz olabilir misiniz?
+              </p>
+            </div>
+
+            {/* Kart 3: Yakında */}
+            <div style={{ border: "1px dashed #e5e5e5", borderRadius: 16, padding: 24, background: "#fafafa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: 200 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#52525b", marginBottom: 4 }}>Yakında</div>
+              <p style={{ fontSize: 12, color: "#a1a1aa", lineHeight: 1.5 }}>
+                3. müşteri case study&apos;si için yer ayrıldı. Erken kullanıcı avantajını kaçırmayın.
+              </p>
             </div>
           </div>
         </div>
@@ -387,55 +377,13 @@ export default function HomePage() {
         <div className="map-inner">
           <h2 className="sec-h2">Her il ayrı bir pazar.<br/><span className="muted">Her ilde ayrı rakip.</span></h2>
           <p className="sec-desc" style={{ marginBottom: 32 }}>81 ilde yapay zeka görünürlüğünüzü takip edin.</p>
-          <div className="map-grid">
-            <div className="map-visual">
-              {[
-                { name: "İstanbul", score: 82, x: 28, y: 18, color: "#22C55E" },
-                { name: "Ankara", score: 71, x: 42, y: 35, color: "#22C55E" },
-                { name: "Balıkesir", score: 91, x: 18, y: 30, color: "#22C55E" },
-                { name: "İzmir", score: 65, x: 12, y: 42, color: "#F59E0B" },
-                { name: "Bursa", score: 58, x: 24, y: 26, color: "#F59E0B" },
-                { name: "Antalya", score: 45, x: 30, y: 58, color: "#F59E0B" },
-                { name: "Konya", score: 38, x: 42, y: 50, color: "#EF4444" },
-                { name: "Trabzon", score: 22, x: 62, y: 18, color: "#EF4444" },
-                { name: "Erzurum", score: 15, x: 70, y: 25, color: "#EF4444" },
-                { name: "Diyarbakır", score: 12, x: 65, y: 40, color: "#EF4444" },
-              ].map((city) => (
-                <div
-                  key={city.name}
-                  className="map-pin"
-                  style={{ left: `${city.x}%`, top: `${city.y}%` }}
-                >
-                  <span className="map-dot" style={{ background: city.color }} />
-                  <span className="map-pin-label">{city.name} ({city.score})</span>
-                </div>
-              ))}
-            </div>
-            <div className="map-stats">
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#22C55E" }} /><span className="map-stat-num">3</span> güçlü il</div>
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#F59E0B" }} /><span className="map-stat-num">3</span> orta il</div>
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#EF4444" }} /><span className="map-stat-num">4</span> zayıf il</div>
-              <div className="map-stat"><span className="map-stat-dot" style={{ background: "#E5E7EB" }} /><span className="map-stat-num">71</span> takip dışı</div>
-              <a href="#test" className="map-cta">Kendi illerinizi analiz edin →</a>
-            </div>
+          <TurkeyMapRealistic />
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <a href="#test" className="map-cta">Kendi illerinizi analiz edin →</a>
           </div>
         </div>
       </section>
 
-
-      {/* BÖLÜM 6: PLATFORM STRIP */}
-      <div className="platform-strip reveal">
-        <div className="platform-strip-label">6 AI platformunda anlık izleme</div>
-        <div className="platform-row">
-          {AI_PLATFORM_KEYS.map((key) => (
-            <div key={key} className="platform-item">
-              <AIPlatformIcon platform={key} size={28} colored />
-              <span className="platform-name">{PLATFORM_INFO[key].name}</span>
-              <span className="platform-type">{PLATFORM_INFO[key].description}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* BÖLÜM 7: ARAŞTIRMA */}
       <div className="research-sec reveal">
