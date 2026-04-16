@@ -26,6 +26,19 @@ const INITIAL_PLATFORMS: PlatformState[] = [
   { key: "google_aio", label: "Google AIO", icon: "google_aio", text: "", status: "waiting", mentioned: null },
 ];
 
+const EXAMPLE_QUESTIONS = [
+  "İstanbul'da en iyi yerden ısıtma firması hangisi?",
+  "Türkiye'de güvenilir SEO ajansları nelerdir?",
+  "Ankara'da en iyi diş hekimleri kimlerdir?",
+  "E-ticaret sitesi için en iyi hosting firmaları?",
+];
+
+function isUrl(text: string): boolean {
+  const trimmed = text.trim();
+  return /^(https?:\/\/|www\.)/i.test(trimmed) ||
+    /^[a-z0-9-]+\.[a-z]{2,}(\/|$)/i.test(trimmed);
+}
+
 interface Props {
   /** Hide the CTA section (for panel version) */
   hideCTA?: boolean;
@@ -47,6 +60,24 @@ export function BattleArena({ hideCTA = false, checkFreeLimit = false }: Props) 
 
   const startBattle = useCallback(async () => {
     if (!question.trim() || !brandName.trim()) return;
+
+    // Validate: reject URLs
+    if (isUrl(question)) {
+      setError("Lütfen bir soru yazın, URL değil. Örn: \"İstanbul'da en iyi yerden ısıtma firması hangisi?\"");
+      return;
+    }
+
+    // Validate: question too short
+    if (question.trim().length < 10) {
+      setError("Sorunuz çok kısa. Lütfen daha detaylı bir soru yazın (en az 10 karakter).");
+      return;
+    }
+
+    // Validate: brand name too short
+    if (brandName.trim().length < 2) {
+      setError("Marka adı çok kısa. Lütfen en az 2 karakterlik bir marka adı girin.");
+      return;
+    }
 
     // Free limit check
     if (checkFreeLimit) {
@@ -197,19 +228,41 @@ export function BattleArena({ hideCTA = false, checkFreeLimit = false }: Props) 
           <div className="max-w-2xl mx-auto space-y-3">
             <input
               type="text"
-              placeholder={"Örn: \"İstanbul'da en iyi yerden ısıtma firması hangisi?\""}
+              placeholder="Sorunuzu yazın (örn: en iyi, güvenilir, tavsiye...)"
               value={question}
-              onChange={(e) => setQuestion(e.target.value)}
+              onChange={(e) => {
+                setQuestion(e.target.value);
+                if (error) setError(null);
+              }}
               disabled={isRunning}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
               onKeyDown={(e) => e.key === "Enter" && !isRunning && startBattle()}
             />
+
+            {/* Example question chips */}
+            {!question && !isRunning && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs text-gray-400 py-1.5">Örnek sorular:</span>
+                {EXAMPLE_QUESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setQuestion(q)}
+                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex gap-3">
               <input
                 type="text"
                 placeholder="Marka adınız (örn: ISITMAX)"
                 value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+                onChange={(e) => {
+                  setBrandName(e.target.value);
+                  if (error) setError(null);
+                }}
                 disabled={isRunning}
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
               />
