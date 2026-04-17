@@ -23,6 +23,13 @@ interface CheckoutFormResult {
   checkoutFormContent: string;
 }
 
+interface CheckoutPaymentItem {
+  paymentTransactionId?: string;
+  price?: number | string;
+  paidPrice?: number | string;
+  itemId?: string;
+}
+
 interface CheckoutFormRetrieveResult {
   status: string;
   paymentStatus: string;
@@ -32,6 +39,8 @@ interface CheckoutFormRetrieveResult {
   currency: string;
   basketId: string;
   token: string;
+  paymentItems?: CheckoutPaymentItem[];
+  errorMessage?: string;
 }
 
 export async function createCheckoutForm(
