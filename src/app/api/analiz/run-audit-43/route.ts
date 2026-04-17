@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       keywords,
       userId,
       source,
+      discoveredCompetitors,
     } = body as {
       url?: string;
       brandName?: string;
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
       keywords?: string[];
       userId?: string;
       source?: string;
+      discoveredCompetitors?: Array<{
+        name: string;
+        url?: string;
+        reason?: string;
+      }>;
     };
 
     if (!url || !brandName || !userType) {
@@ -92,6 +98,59 @@ export async function POST(req: NextRequest) {
         source: source ?? null,
       },
     });
+
+    // Giriş yapmış kullanıcıların rakiplerini Competitor tablosuna kaydet
+    if (userId) {
+      try {
+        const brand = await prisma.brand.findFirst({
+          where: { profileId: userId },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        });
+
+        if (brand) {
+          const { upsertCompetitor } = await import(
+            "@/lib/ai/competitor-matching"
+          );
+
+          // Kullanıcının manuel girdiği rakip
+          if (competitorUrl) {
+            const { extractRootDomain } = await import("@/lib/utils/turkish");
+            const name =
+              auditResult.competitorName || extractRootDomain(competitorUrl);
+            if (name) {
+              await upsertCompetitor({
+                brandId: brand.id,
+                name,
+                domain: competitorUrl,
+                source: "free_audit",
+                reason: "Free audit karşılaştırması",
+              });
+            }
+          }
+
+          // Discovery'den gelen rakipler (frontend'den payload ile gelebilir)
+          if (discoveredCompetitors && discoveredCompetitors.length > 0) {
+            for (const c of discoveredCompetitors.slice(0, 5)) {
+              if (!c.name) continue;
+              await upsertCompetitor({
+                brandId: brand.id,
+                name: c.name,
+                domain: c.url,
+                source: "discovery",
+                reason: c.reason ?? "Perplexity keşfi",
+              });
+            }
+          }
+        }
+      } catch (err) {
+        // Non-fatal: audit sonucu yine de dönsün
+        console.error(
+          "[api/run-audit-43] Competitor upsert failed:",
+          err
+        );
+      }
+    }
 
     return NextResponse.json({
       auditId: savedAudit.id,

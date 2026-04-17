@@ -955,6 +955,8 @@ function AnalizPageInner() {
             location: formData.cities[0],
             keywords: formData.keywords,
             source,
+            competitorUrl: formData.competitor || undefined,
+            discoveredCompetitors: discovery?.competitors?.slice(0, 5) ?? [],
           }),
         });
         if (res.ok) {

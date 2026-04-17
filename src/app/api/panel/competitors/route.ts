@@ -37,22 +37,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const competitor = await prisma.competitor.create({
-      data: {
-        brandId: activeBrand.brand.id,
-        name: name.trim(),
-        domain: domain?.trim() ?? "",
-        mentionScore: 0,
-        readinessScore: 0,
-        platforms: {
-          chatgpt: 0,
-          claude: 0,
-          gemini: 0,
-          perplexity: 0,
-          google_aio: 0,
-        },
-        source: "manual",
-      },
+    // Duplicate detection + upsert
+    const { upsertCompetitor } = await import("@/lib/ai/competitor-matching");
+    const competitor = await upsertCompetitor({
+      brandId: activeBrand.brand.id,
+      name: name.trim(),
+      domain: domain?.trim(),
+      source: "manual",
     });
 
     return NextResponse.json({ competitor }, { status: 201 });

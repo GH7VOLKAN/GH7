@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { extractCompetitorNames } from "./types";
 import { normalizeTurkish } from "@/lib/utils/turkish";
+import { upsertCompetitor } from "./competitor-matching";
+import { updateAllCompetitorReadiness } from "./competitor-readiness";
 
 export async function updateCompetitorScores(
   scanId: string,
@@ -39,22 +41,15 @@ export async function updateCompetitorScores(
 
   if (toAdd.length > 0) {
     try {
-      await prisma.competitor.createMany({
-        data: toAdd.map(([name]) => ({
+      for (const [name] of toAdd) {
+        await upsertCompetitor({
           brandId,
           name,
-          domain: "",
-          mentionScore: 0,
-          readinessScore: 0,
-          platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, google_aio: 0 },
           source: "scan_discovered",
           reason: "Tarama sonuçlarında otomatik tespit edildi",
-          products: [],
-          relevance: "direct",
-        })),
-        skipDuplicates: true,
-      });
-      console.log(`[competitor-scorer] Auto-discovered ${toAdd.length} new competitors`);
+        });
+      }
+      console.log(`[competitor-scorer] Auto-discovered/merged ${toAdd.length} competitors`);
       // Refresh competitor list
       competitors = await prisma.competitor.findMany({ where: { brandId } });
     } catch (err) {
@@ -120,4 +115,14 @@ export async function updateCompetitorScores(
   console.log(
     `[competitor-scorer] Updated ${competitors.length} competitors for scan ${scanId}`,
   );
+
+  // Auto-calculate readiness scores (mention-based formula)
+  try {
+    const readinessResult = await updateAllCompetitorReadiness(brandId);
+    console.log(
+      `[competitor-scorer] Readiness: ${readinessResult.updated} updated, ${readinessResult.skipped} unchanged`
+    );
+  } catch (err) {
+    console.error("[competitor-scorer] Readiness update failed:", err);
+  }
 }

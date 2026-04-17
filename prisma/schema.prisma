@@ -157,26 +157,30 @@ model PromptResult {
 // ─── Competitors ─────────────────────────────────────
 
 model Competitor {
-  id             String @id @default(cuid())
-  brandId        String @map("brand_id")
-  brand          Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  id             String  @id @default(cuid())
+  brandId        String  @map("brand_id")
+  brand          Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
   name           String
+  normalizedName String? @map("normalized_name") // turkishToAscii + lowercase + alphanumeric only
   domain         String
-  mentionScore   Int    @default(0) @map("mention_score")
-  readinessScore Int    @default(0) @map("readiness_score")
+  normalizedDomain String? @map("normalized_domain") // root domain (www + TLD suffix yok)
+  mentionScore   Int     @default(0) @map("mention_score")
+  readinessScore Int     @default(0) @map("readiness_score")
   // per-platform scores stored as JSON
-  platforms      Json?  // { chatgpt: 65, claude: 52, gemini: 58, perplexity: 61 }
+  platforms      Json?   // { chatgpt: 65, claude: 52, gemini: 58, perplexity: 61 }
 
   // AI discovery metadata
   reason       String?            // Why this is a competitor (AI explanation)
   products     String[]           // Their product/service lines
   relevance    String  @default("direct") // "direct" | "indirect"
-  source       String  @default("manual") // "manual" | "ai_discovered"
+  source       String  @default("manual") // "manual" | "ai_discovered" | "scan_discovered" | "free_audit" | "discovery"
   discoveredAt DateTime? @map("discovered_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([brandId, normalizedName])
+  @@index([normalizedDomain])
   @@map("competitors")
 }
 
