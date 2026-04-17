@@ -19,7 +19,9 @@ import {
   Loader2,
   Check,
   X,
+  Eye,
 } from "lucide-react";
+import Link from "next/link";
 import { EmptyState } from "@/components/panel/empty-state";
 import type { PromptItemData } from "@/lib/dal/prompts";
 import type { PlatformKey } from "@/lib/types";
@@ -484,6 +486,13 @@ export function AramalarContent({
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-1">
+              <Link
+                href={`/panel/aramalar/${item.id}`}
+                className="rounded-md p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                title="Tam cevapları gör"
+              >
+                <Eye className="size-3.5" />
+              </Link>
               <button
                 type="button"
                 onClick={() => {

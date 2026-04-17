@@ -150,7 +150,10 @@ model PromptResult {
   createdAt       DateTime @default(now()) @map("created_at")
   scanWeek        Int?     @map("scan_week")
   scanDay         Int?     @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
+  responseQuality String?  @map("response_quality") // direct_list | general_info | refused | clarification_asked | error
+  retryAttempt    Int      @default(0) @map("retry_attempt") // 0=ilk deneme, 1=retry sonrası
 
+  @@index([scanId, responseQuality])
   @@map("prompt_results")
 }
 

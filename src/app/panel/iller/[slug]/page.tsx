@@ -30,6 +30,7 @@ function getScoreColor(score: number): string {
 
 // --- Types ---
 export interface CityPromptResult {
+  promptId: string;
   promptText: string;
   platform: string;
   mentioned: boolean;
@@ -97,7 +98,7 @@ export default async function CityDetailPage({
   if (lastScan) {
     const results = await prisma.promptResult.findMany({
       where: { scanId: lastScan.id },
-      include: { prompt: { select: { text: true } } },
+      include: { prompt: { select: { id: true, text: true } } },
     });
 
     const cityLower = cityName.toLowerCase();
@@ -118,6 +119,7 @@ export default async function CityDetailPage({
       // Collect prompt results
       const cites = (r.citations as string[]) ?? [];
       promptResults.push({
+        promptId: r.prompt.id,
         promptText: r.prompt.text,
         platform: r.platform,
         mentioned: r.mentioned,

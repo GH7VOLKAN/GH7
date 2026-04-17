@@ -152,3 +152,112 @@ export const getPromptsData = cache(async (brandId: string) => {
     sourceBreakdown,
   };
 });
+
+export interface PromptDetailPlatformResult {
+  platform: PlatformKey;
+  mentioned: boolean;
+  position: string | null;
+  sentiment: Sentiment | null;
+  excerpt: string | null;
+  fullResponse: string | null;
+  citations: string[];
+  competitors: string[];
+  mentionContext: string | null;
+  responseQuality: string | null;
+  retryAttempt: number;
+}
+
+export interface PromptDetailData {
+  id: string;
+  text: string;
+  tags: string[];
+  source: string;
+  category: string | null;
+  businessArea: string | null;
+  searchIntent: string | null;
+  salesPotential: string | null;
+  lastScanAt: string | null;
+  platformResults: PromptDetailPlatformResult[];
+  history: {
+    scanId: string;
+    completedAt: string | null;
+    mentionCount: number;
+    position: string | null;
+  }[];
+}
+
+export const getPromptDetail = cache(
+  async (promptId: string, brandId: string): Promise<PromptDetailData | null> => {
+    const prompt = await prisma.prompt.findFirst({
+      where: { id: promptId, brandId },
+      include: {
+        results: {
+          orderBy: { createdAt: "desc" },
+          take: 50, // son 10 scan × 5 platform = 50
+          include: {
+            scan: { select: { id: true, completedAt: true } },
+          },
+        },
+      },
+    });
+
+    if (!prompt) return null;
+
+    // En son scan'in sonuçlarını al — platformResults için
+    const latestScanId = prompt.results[0]?.scanId;
+    const latestResults = latestScanId
+      ? prompt.results.filter((r) => r.scanId === latestScanId)
+      : [];
+
+    const platformResults: PromptDetailPlatformResult[] = latestResults.map((r) => ({
+      platform: r.platform as PlatformKey,
+      mentioned: r.mentioned,
+      position: r.position,
+      sentiment: (r.sentiment as Sentiment) ?? null,
+      excerpt: r.excerpt,
+      fullResponse: r.fullResponse ?? null,
+      citations: Array.isArray(r.citations) ? (r.citations as string[]) : [],
+      competitors: extractCompetitorNames(r.competitors),
+      mentionContext: r.mentionContext ?? null,
+      responseQuality: (r as unknown as { responseQuality?: string | null }).responseQuality ?? null,
+      retryAttempt: (r as unknown as { retryAttempt?: number }).retryAttempt ?? 0,
+    }));
+
+    // History — scan bazlı mention count
+    const byScan = new Map<string, { completedAt: Date | null; mentions: number; position: string | null }>();
+    for (const r of prompt.results) {
+      const key = r.scanId;
+      const prev = byScan.get(key) ?? {
+        completedAt: r.scan?.completedAt ?? null,
+        mentions: 0,
+        position: null,
+      };
+      if (r.mentioned) prev.mentions += 1;
+      if (r.position && !prev.position) prev.position = r.position;
+      byScan.set(key, prev);
+    }
+    const history = Array.from(byScan.entries())
+      .map(([scanId, v]) => ({
+        scanId,
+        completedAt: v.completedAt?.toISOString() ?? null,
+        mentionCount: v.mentions,
+        position: v.position,
+      }))
+      .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))
+      .slice(0, 10);
+
+    return {
+      id: prompt.id,
+      text: prompt.text,
+      tags: prompt.tags,
+      source: prompt.source,
+      category: prompt.category,
+      businessArea: prompt.businessArea ?? null,
+      searchIntent: prompt.searchIntent ?? null,
+      salesPotential: prompt.salesPotential ?? null,
+      lastScanAt: prompt.lastScanAt?.toISOString() ?? null,
+      platformResults,
+      history,
+    };
+  },
+);

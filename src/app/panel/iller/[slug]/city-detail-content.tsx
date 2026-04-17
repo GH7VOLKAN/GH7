@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { Eye } from "lucide-react";
 import type { CityPromptResult, CityPlatformBreakdown } from "./page";
 
 interface Props {
@@ -24,11 +26,18 @@ export function CityDetailContent({
   // Deduplicate prompt results by prompt text for the table
   const uniquePrompts = new Map<
     string,
-    { text: string; platforms: Record<string, boolean>; mentionCount: number; totalPlatforms: number }
+    {
+      id: string;
+      text: string;
+      platforms: Record<string, boolean>;
+      mentionCount: number;
+      totalPlatforms: number;
+    }
   >();
   for (const pr of promptResults) {
     if (!uniquePrompts.has(pr.promptText)) {
       uniquePrompts.set(pr.promptText, {
+        id: pr.promptId,
         text: pr.promptText,
         platforms: {},
         mentionCount: 0,
@@ -81,6 +90,7 @@ export function CityDetailContent({
                   <th className="px-4 py-3">Arama</th>
                   <th className="px-4 py-3">Mention</th>
                   <th className="px-4 py-3">Platformlar</th>
+                  <th className="px-4 py-3 text-right">Detay</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,6 +119,16 @@ export function CityDetailContent({
                           </span>
                         ))}
                       </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/panel/aramalar/${ps.id}`}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                        title="Tam cevapları gör"
+                      >
+                        <Eye className="size-3.5" />
+                        Detay
+                      </Link>
                     </td>
                   </tr>
                 ))}
