@@ -40,6 +40,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const validUserTypes: UserType[] = ["firma", "kisi", "eticaret", "yurtdisi"];
+    if (!validUserTypes.includes(userType)) {
+      return NextResponse.json(
+        { error: `Invalid userType: ${userType}. Must be one of ${validUserTypes.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     // Run 43-item audit
     const auditResult = await runAudit43({
       url,

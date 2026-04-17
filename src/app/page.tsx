@@ -39,16 +39,22 @@ export default function HomePage() {
     return () => obs.disconnect();
   }, []);
 
+  const getInputParam = (kapi: string): string => {
+    if (kapi === "kisi") return "name";
+    if (kapi === "eticaret") return "input"; // URL veya marka adı
+    return "domain"; // firma, export/yurtdisi
+  };
+
   const handleMainSubmit = () => {
     if (!mainInput.trim()) return;
-    const param = activeKapi === "kisi" ? "name" : "domain";
+    const param = getInputParam(activeKapi);
     router.push(`/analiz?type=${activeKapi}&${param}=${encodeURIComponent(mainInput)}`);
   };
 
   const handleFinalSubmit = () => {
     if (!finalInput.trim()) return;
     const type = finalKapi || "firma";
-    const param = type === "kisi" ? "name" : "domain";
+    const param = getInputParam(type);
     router.push(`/analiz?type=${type}&${param}=${encodeURIComponent(finalInput)}`);
   };
 
