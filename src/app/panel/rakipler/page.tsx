@@ -1,4 +1,5 @@
 import { getActiveBrand } from "@/lib/dal/brand";
+import { getCompetitorsData } from "@/lib/dal/competitors";
 import { EmptyState } from "@/components/panel/empty-state";
 import { Building } from "lucide-react";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
@@ -21,16 +22,66 @@ export default async function RakiplerPage() {
 
   const userName = activeBrand.brand?.name ?? "Siz";
 
+  // Gerçek rakip verisi
+  let competitorsData;
+  try {
+    competitorsData = await getCompetitorsData(brandId);
+  } catch (error) {
+    console.error("[rakipler] Data fetch error:", error);
+    return (
+      <EmptyState
+        icon={Building}
+        title="Veri yüklenirken hata oluştu"
+        description="Rakip verileri yüklenirken bir sorun oluştu. Lütfen tekrar deneyin."
+      />
+    );
+  }
+
+  const competitorsList = competitorsData?.rows?.filter((r) => !r.isUser) ?? [];
+  const totalCompetitors = competitorsList.length;
+  const leadersCount = competitorsList.filter((c) => c.mentionScore > 50).length;
+  const laggardsCount = competitorsList.filter((c) => c.mentionScore < 20).length;
+
+  // Empty state: hiç rakip yoksa ve veri yoksa
+  const hasData = totalCompetitors > 0 || (competitorsData?.totalResults ?? 0) > 0;
+
+  if (!hasData) {
+    return (
+      <>
+        <PageHero
+          title="Senin Yerine Kim"
+          description="Ürün bazlı rakip sıralaması ve rekabet analizi"
+        />
+        <EmptyState
+          icon={Building}
+          title="Henüz rakip verisi yok"
+          description="İlk tarama tamamlandıktan sonra rakip analizi burada görünecek."
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <PageHero
         title="Senin Yerine Kim"
         description="Ürün bazlı rakip sıralaması ve rekabet analizi"
         stats={[
-          { label: "Ürün Kategorisi", value: "8" },
-          { label: "Takip Edilen Rakip", value: "12" },
-          { label: "Lider Olduğunuz", value: "3", deltaType: "positive" },
-          { label: "Geride Olduğunuz", value: "5", deltaType: "negative" },
+          { label: "Takip Edilen Rakip", value: String(totalCompetitors) },
+          {
+            label: "Lider Rakipler",
+            value: String(leadersCount),
+            deltaType: leadersCount > 0 ? "negative" : undefined,
+          },
+          {
+            label: "Geride Kalan Rakipler",
+            value: String(laggardsCount),
+            deltaType: "positive",
+          },
+          {
+            label: "Sizin Skorunuz",
+            value: `${competitorsData?.userMentionScore ?? 0}/100`,
+          },
         ]}
       />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

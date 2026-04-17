@@ -91,6 +91,11 @@ const BUSINESS_ITEMS = [
     href: "/panel/canli-savas",
     emoji: "⚡",
   },
+  {
+    title: "Hizmet Paketleri",
+    href: "/panel/hizmetler",
+    emoji: "🛠️",
+  },
 ];
 
 const BOTTOM_ITEMS = [

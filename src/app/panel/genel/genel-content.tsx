@@ -12,6 +12,7 @@ import { ActionItems } from "@/components/panel/genel/action-items";
 import { TurkeyMap } from "@/components/panel/turkey-map";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { RoiEstimateCard } from "@/components/panel/genel/roi-estimate-card";
+import { AuditTrendChart } from "@/components/panel/genel/audit-trend-chart";
 import type {
   PlatformStat,
   CompetitorRankEntry,
@@ -42,6 +43,7 @@ export interface GenelContentProps {
   priorityActions: { title: string; impact: string }[];
   checklistProgress: ChecklistProgress;
   roiEstimate?: RoiEstimate;
+  auditTrendData?: Array<{ weekStart: string; overallScore: number; competitorScore: number | null }>;
 }
 
 export function GenelContent({
@@ -62,6 +64,7 @@ export function GenelContent({
   priorityActions,
   checklistProgress,
   roiEstimate,
+  auditTrendData,
 }: GenelContentProps) {
   const router = useRouter();
 
@@ -86,6 +89,11 @@ export function GenelContent({
       {/* 1.2b — ROI Tahmini */}
       {roiEstimate && roiEstimate.totalMentions > 0 && (
         <RoiEstimateCard roi={roiEstimate} />
+      )}
+
+      {/* 1.2c — 43 Madde GEO Trend (Pro) */}
+      {auditTrendData && auditTrendData.length > 0 && (
+        <AuditTrendChart data={auditTrendData} />
       )}
 
       {/* 1.3 — Türkiye Isı Haritası */}
