@@ -700,13 +700,14 @@ function AnalizPageInner() {
   const handleStep1Next = async () => {
     if (formData.analysisType === "firma") {
       if (!formData.brandName || formData.cities.length === 0) return;
-      // Set fallback demo data immediately
-      setProducts([...DEMO_FIRMA_PRODUCTS]);
-      setServices([...DEMO_FIRMA_SERVICES]);
+      // BOŞ state ile başla — Perplexity sonucu beklenirken
+      // eski mock data artık gösterilmiyor (villa firması isıtma ürünleri göremez)
+      setProducts([]);
+      setServices([]);
     } else {
       if (!formData.fullName || !formData.profession || formData.cities.length === 0)
         return;
-      setProducts([...DEMO_PERSONAL_PRODUCTS]);
+      setProducts([]);
       setServices([]);
     }
     setStep(1.5);
@@ -714,6 +715,7 @@ function AnalizPageInner() {
     // Firma: Gerçek website analizi (background, non-blocking)
     if (formData.analysisType === "firma" && formData.domain) {
       setWebsiteAnalyzing(true);
+      let gotApiResponse = false;
       try {
         const res = await fetch("/api/analiz/analyze-website", {
           method: "POST",
@@ -722,7 +724,9 @@ function AnalizPageInner() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data.products) && data.products.length > 0) {
+          gotApiResponse = true;
+          // API yanıt verdi — ne dönerse ekrana yansıt (boş olsa bile)
+          if (Array.isArray(data.products)) {
             setProducts(
               data.products.map((name: string) => ({
                 name,
@@ -731,7 +735,7 @@ function AnalizPageInner() {
               }))
             );
           }
-          if (Array.isArray(data.services) && data.services.length > 0) {
+          if (Array.isArray(data.services)) {
             setServices(
               data.services.map((name: string) => ({
                 name,
@@ -742,10 +746,21 @@ function AnalizPageInner() {
           }
         }
       } catch (err) {
-        console.warn("[analiz] Website analysis failed, using fallback:", err);
+        console.warn("[analiz] Website analysis failed:", err);
       } finally {
         setWebsiteAnalyzing(false);
       }
+
+      // API hiç yanıt vermediyse (network hatası vb.) demo fallback
+      // Perplexity boş array döndürdüyse kullanıcı manuel ekler
+      if (!gotApiResponse) {
+        setProducts([...DEMO_FIRMA_PRODUCTS]);
+        setServices([...DEMO_FIRMA_SERVICES]);
+      }
+    } else if (formData.analysisType === "kisisel") {
+      // Personal için demo şimdilik
+      setProducts([...DEMO_PERSONAL_PRODUCTS]);
+      setServices([]);
     }
   };
 
@@ -1264,6 +1279,13 @@ function AnalizPageInner() {
               )}
             </p>
             <div className="space-y-2">
+              {products.length === 0 && !websiteAnalyzing && (
+                <div className="p-4 bg-gray-50 border border-dashed border-gray-200 rounded-lg text-sm text-gray-500 text-center">
+                  {isFirma
+                    ? "Web sitenizde satılan ürün tespit edilmedi. Aşağıdan manuel ekleyebilirsiniz."
+                    : "Uzmanlık alanı tespit edilmedi. Aşağıdan manuel ekleyebilirsiniz."}
+                </div>
+              )}
               {products.map((product, i) => (
                 <label
                   key={i}
