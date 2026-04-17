@@ -26,6 +26,7 @@ interface Props {
   userType: string;
   currentScore: number;
   auditId?: string;
+  plan?: string;
 }
 
 const TIER_CONFIG: Record<
@@ -131,7 +132,9 @@ export function HizmetlerContent({
   userType,
   currentScore,
   auditId,
+  plan = "free",
 }: Props) {
+  const isProPlan = plan !== "free";
   const searchParams = useSearchParams();
   const preselectedTier = searchParams.get("tier");
   const [isPending, startTransition] = useTransition();
@@ -400,13 +403,24 @@ export function HizmetlerContent({
                   </ul>
                 </div>
 
-                <button
-                  onClick={() => handleOrder(pkg.id)}
-                  disabled={isOrdering || isPending}
-                  className="w-full bg-gray-900 text-white text-sm font-semibold py-3 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                >
-                  {isOrdering ? "Sipariş oluşturuluyor..." : "Sipariş Ver"}
-                </button>
+                {isProPlan ? (
+                  <button
+                    onClick={() => handleOrder(pkg.id)}
+                    disabled={isOrdering || isPending}
+                    className="w-full bg-gray-900 text-white text-sm font-semibold py-3 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  >
+                    {isOrdering ? "Sipariş oluşturuluyor..." : "Sipariş Ver"}
+                  </button>
+                ) : (
+                  <a
+                    href="/panel/abonelik"
+                    className="w-full flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 text-sm font-semibold py-3 rounded-lg hover:bg-gray-200 transition-colors"
+                    title="Hizmet paketleri Pro üyelere açıktır"
+                  >
+                    <Crown className="size-3.5" />
+                    Pro&apos;ya Geç → Satın Al
+                  </a>
+                )}
               </div>
             );
           })}

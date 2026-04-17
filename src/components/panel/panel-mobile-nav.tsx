@@ -4,19 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboardIcon,
-  BarChart3Icon,
-  SearchIcon,
-  ClipboardListIcon,
-  MenuIcon,
+  ClipboardCheckIcon,
+  CrownIcon,
+  PackageIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Genel", href: "/panel/genel", icon: LayoutDashboardIcon },
-  { label: "Sıralama", href: "/panel/gorunurluk", icon: BarChart3Icon },
-  { label: "Aramalar", href: "/panel/aramalar", icon: SearchIcon },
-  { label: "Aksiyonlar", href: "/panel/aksiyonlar", icon: ClipboardListIcon },
-  { label: "Menü", href: "/panel/ayarlar", icon: MenuIcon },
+  { label: "Audit", href: "/panel/audit-detay", icon: ClipboardCheckIcon },
+  { label: "Rakipler", href: "/panel/aramalar", icon: CrownIcon },
+  { label: "Hizmetler", href: "/panel/hizmetler", icon: PackageIcon },
+  { label: "Ayarlar", href: "/panel/ayarlar", icon: SettingsIcon },
 ];
 
 export function PanelMobileNav() {

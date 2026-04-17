@@ -59,6 +59,7 @@ export default async function HizmetlerPage() {
         userType={userType}
         currentScore={latestAudit?.score ?? 0}
         auditId={latestAudit?.auditId}
+        plan={activeBrand.plan ?? "free"}
       />
     </>
   );
