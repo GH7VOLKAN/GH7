@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         select: { id: true },
       },
       profile: {
-        select: { plan: true },
+        select: { id: true, plan: true },
       },
     },
   });
@@ -153,6 +153,74 @@ export async function GET(request: NextRequest) {
         }
       } catch (err) {
         console.error(`[auto-scan] Checklist verify failed for ${brand.id}:`, err);
+      }
+    }
+  }
+
+  // ── Weekly: 43-item GEO audit snapshot (Pazartesi, Pro+) ──
+  let weeklyAuditResults = { saved: 0, failed: 0 };
+  if (dayOfWeekNow === 1) {
+    const { runAudit43 } = await import("@/lib/ai/audit-43");
+
+    // Haftanın başı (Pazartesi 00:00 UTC)
+    const weekStart = new Date(now);
+    weekStart.setUTCHours(0, 0, 0, 0);
+
+    for (const brand of brands) {
+      const plan = brand.profile?.plan ?? "free";
+      if (!isPro(plan)) continue;
+      if (!brand.profile?.id) continue;
+
+      try {
+        const activePrompts = await prisma.prompt.findMany({
+          where: { brandId: brand.id, isActive: true },
+          select: { text: true },
+        });
+
+        const audit = await runAudit43({
+          url: brand.domain,
+          brandName: brand.name,
+          userType: (brand.userType ?? "firma") as
+            | "firma"
+            | "kisi"
+            | "eticaret"
+            | "yurtdisi",
+          sector: brand.sector ?? undefined,
+          location: brand.city ?? undefined,
+          keywords: activePrompts.map((p) => p.text).slice(0, 10),
+          brandId: brand.id,
+        });
+
+        await prisma.weeklyAuditSnapshot.upsert({
+          where: {
+            userId_url_weekStart: {
+              userId: brand.profile.id,
+              url: brand.domain,
+              weekStart,
+            },
+          },
+          update: {
+            overallScore: audit.overallScore,
+            competitorScore: audit.competitorScore ?? null,
+            auditItems: audit.items as never,
+          },
+          create: {
+            userId: brand.profile.id,
+            url: brand.domain,
+            weekStart,
+            overallScore: audit.overallScore,
+            competitorScore: audit.competitorScore ?? null,
+            auditItems: audit.items as never,
+          },
+        });
+
+        weeklyAuditResults.saved++;
+        console.log(
+          `[auto-scan] Weekly audit snapshot saved for ${brand.id}: ${audit.overallScore}/100`
+        );
+      } catch (err) {
+        weeklyAuditResults.failed++;
+        console.error(`[auto-scan] Weekly audit failed for ${brand.id}:`, err);
       }
     }
   }
@@ -302,6 +370,7 @@ export async function GET(request: NextRequest) {
     brandsChecked: brands.length,
     scansTriggered: triggered,
     checklistVerification: checklistResults,
+    weeklyAuditSnapshot: weeklyAuditResults,
     promptFreshness: freshnessResults,
     monthlyReport: monthlyReportResults,
     planExpiry: planResults,

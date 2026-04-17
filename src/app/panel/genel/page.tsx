@@ -1,6 +1,7 @@
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getOverviewData } from "@/lib/dal/overview";
 import { getRoiEstimate } from "@/lib/dal/roi";
+import { getWeeklyTrendData } from "@/lib/dal/service-orders";
 import { redirect } from "next/navigation";
 import { LayoutDashboard } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
@@ -13,12 +14,17 @@ export default async function GenelBakisPage() {
   if (!activeBrand?.brand) redirect("/panel");
   const brandId = activeBrand.brand.id;
 
+  const userId = activeBrand.profile?.id;
+  const domain = activeBrand.brand.domain;
+
   let overviewData;
   let roiData;
+  let weeklyTrendData: Awaited<ReturnType<typeof getWeeklyTrendData>> = [];
   try {
-    [overviewData, roiData] = await Promise.all([
+    [overviewData, roiData, weeklyTrendData] = await Promise.all([
       getOverviewData(brandId),
       getRoiEstimate(brandId),
+      userId && domain ? getWeeklyTrendData(userId, domain) : Promise.resolve([]),
     ]);
   } catch (error) {
     console.error("[genel] Data fetch error:", error);
@@ -102,6 +108,7 @@ export default async function GenelBakisPage() {
         priorityActions={priorityActions}
         checklistProgress={checklistProgress}
         roiEstimate={roiData ?? undefined}
+        auditTrendData={weeklyTrendData}
       />
     </>
   );
