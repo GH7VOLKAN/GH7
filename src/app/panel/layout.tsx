@@ -65,8 +65,8 @@ export default async function PanelLayout({
       </Suspense>
       <div className="min-h-screen bg-white">
         <PanelSidebar
-          brandName={brandData?.name ?? "ISITMAX"}
-          userEmail={profileData?.email ?? "demo@gh7.ai"}
+          brandName={brandData?.name ?? "Markanız"}
+          userEmail={profileData?.email ?? ""}
           plan={plan}
         />
         <main className="md:pl-64">

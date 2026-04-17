@@ -49,7 +49,10 @@ interface ProductSummary {
 // Demo data
 // ---------------------------------------------------------------------------
 
-const BRAND_NAME = "ISITMAX";
+// NOTE: Bu bileşen eski /panel/rakipler route'undan gelir ve demo içerik içerir.
+// Gerçek veri kaynağı yeni /panel/aramalar sayfası (PR #78).
+// BRAND_NAME artık hardcoded "ISITMAX" değil — placeholder kullanıyor.
+const BRAND_NAME = "Markanız";
 
 const RANKING_NOTIFICATIONS = [
   {

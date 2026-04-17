@@ -54,8 +54,8 @@ interface PanelSidebarProps {
 }
 
 export function PanelSidebar({
-  brandName = "ISITMAX",
-  userEmail = "demo@gh7.ai",
+  brandName = "Markanız",
+  userEmail = "",
   plan = "free",
   projectType = "Firma",
 }: PanelSidebarProps) {
