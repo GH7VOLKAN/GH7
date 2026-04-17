@@ -41,17 +41,20 @@ export async function analyzeWebsite(domain: string): Promise<WebsiteAnalysis> {
 Website: ${cleanDomain}
 
 Görevin:
-1. Bu şirketin sattığı ÜRÜNLERİ listele (fiziksel ürünler, cihazlar, malzemeler)
-2. Bu şirketin sunduğu HİZMETLERİ listele (proje, danışmanlık, kurulum, destek vb.)
+1. Bu şirketin sattığı ÜRÜNLERİ listele — sadece fiziksel ürünler, cihazlar, malzemeler (ör: "yerden ısıtma kablosu", "varil ısıtma ceketi")
+2. Bu şirketin sunduğu ANA HİZMETLERİ listele — ana faaliyet alanları (ör: "proje danışmanlığı", "kurulum", "bungalov konaklama", "sağlık danışmanlığı")
 3. Şirketin faaliyet gösterdiği SEKTÖRÜ belirle
 4. Şirket hakkında 1 cümlelik açıklama yaz
 
-ÖNEMLİ:
-- Sadece GERÇEKTEN sattıkları/sundukları şeyleri listele, tahmin yapma
-- Her ürün/hizmet kısa olsun (1-4 kelime), kategori adı değil spesifik olsun
+KESİN KURALLAR:
+- Sadece GERÇEKTEN sattıkları/sundukları şeyleri listele, tahmin yapma, HALÜSİNASYON yapma
+- Bir şirket HİZMET sunuyorsa (otel, villa, klinik, danışmanlık vb.) "products" dizisini BOŞ bırak, sadece "services" doldur
+- Bir şirket sadece ÜRÜN satıyorsa (e-ticaret, üretici) "services" dizisini BOŞ bırak, sadece "products" doldur
+- SATIŞ KAMPANYASI DEĞİL: "peşin ödeme indirimi", "kargo ücretsiz", "taksit imkanı" HİZMET DEĞİLDİR — listeye KOYMA
+- Her madde kısa olsun (1-4 kelime), kategori adı değil spesifik olsun
 - Maksimum 8 ürün, 5 hizmet listele
 - Türkçe cevapla
-- Bilgi bulamazsan boş array dön
+- Bilgi bulamazsan boş array dön ([])
 
 SADECE aşağıdaki JSON formatında cevapla, başka hiçbir metin yazma:
 
