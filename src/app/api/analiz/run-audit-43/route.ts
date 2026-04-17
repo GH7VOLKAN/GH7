@@ -154,6 +154,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       auditId: savedAudit.id,
+      userId: userId ?? null,
       overallScore: auditResult.overallScore,
       categoryScores: auditResult.categoryScores,
       competitorScore: auditResult.competitorScore,

@@ -62,7 +62,11 @@ interface AramalarContentProps {
   promptItems: PromptItemData[];
   activeCount: number;
   brandId: string;
+  plan?: string;
+  serviceRegions?: string[];
 }
+
+const FREE_VISIBLE_QUERY_COUNT = 3;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -72,7 +76,11 @@ export function AramalarContent({
   promptItems,
   activeCount,
   brandId,
+  plan = "free",
+  serviceRegions = [],
 }: AramalarContentProps) {
+  const isPro = plan !== "free";
+  void serviceRegions; // reserved for future il filter UI
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -391,10 +399,14 @@ export function AramalarContent({
         </div>
 
         {/* Rows */}
-        {filteredPrompts.map((item) => (
+        {filteredPrompts.map((item, rowIdx) => (
           <div
             key={item.id}
-            className="grid grid-cols-[40px_1fr_120px_120px_80px] items-center gap-2 border-b border-gray-50 px-4 py-3 text-sm transition-colors hover:bg-gray-50"
+            className={`grid grid-cols-[40px_1fr_120px_120px_80px] items-center gap-2 border-b border-gray-50 px-4 py-3 text-sm transition-colors hover:bg-gray-50 ${
+              !isPro && rowIdx >= FREE_VISIBLE_QUERY_COUNT
+                ? "pointer-events-none opacity-40 blur-[2px]"
+                : ""
+            }`}
           >
             <div className="flex items-center justify-center">
               <Checkbox
@@ -522,6 +534,24 @@ export function AramalarContent({
         {filteredPrompts.length === 0 && (
           <div className="px-4 py-12 text-center text-sm text-gray-400">
             Aramanızla eşleşen sonuç bulunamadı.
+          </div>
+        )}
+
+        {/* Free plan — kilit overlay (4+ sorgu için) */}
+        {!isPro && filteredPrompts.length > FREE_VISIBLE_QUERY_COUNT && (
+          <div className="border-t border-gray-100 bg-gradient-to-b from-transparent to-white px-6 py-8 text-center">
+            <p className="mx-auto max-w-md text-sm text-gray-700">
+              Toplam <strong>{filteredPrompts.length}</strong> sorguda marka/rakip
+              karşılaştırması yapıldı. İlk {FREE_VISIBLE_QUERY_COUNT} sorgu ücretsiz
+              görünür. Tüm sorguları, AI tam cevaplarını ve il bazlı filtreleri
+              Pro ile açın.
+            </p>
+            <Link
+              href="/panel/abonelik"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-800"
+            >
+              Pro&apos;ya Geç → Tüm Sorguları Gör
+            </Link>
           </div>
         )}
 

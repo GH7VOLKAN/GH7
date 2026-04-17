@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   DEMO_PERSONAL_KEYWORDS,
   PERSONAL_PROFESSIONS,
@@ -519,6 +519,7 @@ function SiziArayalimPopup({
 
 function AnalizPageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [step, setStep] = useState<Step | null>(null); // null = hero
   const [formData, setFormData] = useState<FormData>({
     analysisType: "firma",
@@ -962,6 +963,14 @@ function AnalizPageInner() {
         if (res.ok) {
           const data = await res.json();
           setAudit43(data);
+          // Kullanıcı authenticated ise dashboard'a yönlendir
+          // (GeoAudit kaydı userId ile ilişkilendirildi)
+          if (data?.userId) {
+            setTimeout(() => {
+              router.replace("/panel/genel?newAudit=1");
+            }, 500);
+            return;
+          }
         }
       } catch (err) {
         console.warn("[analiz] 43-item audit failed:", err);

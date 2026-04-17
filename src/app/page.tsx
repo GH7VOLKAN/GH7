@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon, PLATFORM_INFO, AI_PLATFORM_KEYS } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
-import { TurkeyMapRealistic } from "@/components/landing/turkey-map-realistic";
 
 export default function HomePage() {
   const [activeKapi, setActiveKapi] = useState("firma");
@@ -376,19 +375,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* BÖLÜM 5.5: TÜRKİYE HARİTASI */}
-      <section className="map-sec reveal">
-        <div className="map-inner">
-          <h2 className="sec-h2">Her il ayrı bir pazar.<br/><span className="muted">Her ilde ayrı rakip.</span></h2>
-          <p className="sec-desc" style={{ marginBottom: 32 }}>81 ilde yapay zeka görünürlüğünüzü takip edin.</p>
-          <TurkeyMapRealistic />
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <a href="#test" className="map-cta">Kendi illerinizi analiz edin →</a>
-          </div>
-        </div>
-      </section>
-
 
       {/* BÖLÜM 7: ARAŞTIRMA */}
       <div className="research-sec reveal">
