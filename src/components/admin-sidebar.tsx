@@ -14,6 +14,8 @@ import {
   Heart,
   Settings,
   ArrowLeft,
+  ShoppingCart,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +24,8 @@ const NAV_ITEMS = [
   { href: "/admin/users", label: "Kullan\u0131c\u0131lar", icon: Users },
   { href: "/admin/brands", label: "Markalar", icon: Building2 },
   { href: "/admin/scans", label: "Taramalar", icon: Search },
+  { href: "/admin/orders", label: "Siparişler", icon: ShoppingCart },
+  { href: "/admin/packages", label: "Paketler", icon: Package },
   { href: "/admin/revenue", label: "Gelir", icon: DollarSign },
   { href: "/admin/costs", label: "Maliyetler", icon: BarChart3 },
   { href: "/admin/notifications", label: "Bildirimler", icon: Bell },
