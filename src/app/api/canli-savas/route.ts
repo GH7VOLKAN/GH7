@@ -18,18 +18,9 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-type PlatformKey = "chatgpt" | "claude" | "gemini" | "perplexity" | "google_aio";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
-function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
-    .replace(/Ş/g, "s").replace(/ş/g, "s")
-    .replace(/Ğ/g, "g").replace(/ğ/g, "g")
-    .replace(/Ü/g, "u").replace(/ü/g, "u")
-    .replace(/Ö/g, "o").replace(/ö/g, "o")
-    .replace(/Ç/g, "c").replace(/ç/g, "c")
-    .toLowerCase();
-}
+type PlatformKey = "chatgpt" | "claude" | "gemini" | "perplexity" | "google_aio";
 
 export async function POST(request: NextRequest) {
   let body: { question?: string; brandName?: string };

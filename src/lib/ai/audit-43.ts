@@ -272,7 +272,8 @@ async function auditEntity(
 ): Promise<Partial<Record<string, AuditItemResult>>> {
   const results: Partial<Record<string, AuditItemResult>> = {};
 
-  const cacheKey = makeCacheKey("audit-entity", brandName.toLowerCase(), domain);
+  // makeCacheKey artık Türkçe-aware normalize ediyor, manual .toLowerCase() gereksiz
+  const cacheKey = makeCacheKey("audit-entity", brandName, domain);
   const cached = await cacheGet<Partial<Record<string, AuditItemResult>>>(cacheKey);
   if (cached) return cached;
 

@@ -23,10 +23,14 @@ export async function GET(request: Request) {
   }
 
   if (search) {
-    where.OR = [
-      { email: { contains: search, mode: "insensitive" } },
-      { fullName: { contains: search, mode: "insensitive" } },
-    ];
+    // Türkçe aware: orijinal + ASCII sürümüyle ara
+    const { turkishToAscii } = await import("@/lib/utils/turkish");
+    const asciiSearch = turkishToAscii(search);
+    const terms = asciiSearch === search ? [search] : [search, asciiSearch];
+    where.OR = terms.flatMap((term) => [
+      { email: { contains: term, mode: "insensitive" } },
+      { fullName: { contains: term, mode: "insensitive" } },
+    ]);
   }
 
   const [users, total] = await Promise.all([

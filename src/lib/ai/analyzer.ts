@@ -11,23 +11,9 @@ function getAnalyzerClient(apiKey: string): Anthropic {
 }
 
 // ── Turkish character normalization ──────────────────
-// Fixes: "Isıtmax" vs "ISITMAX" — Turkish ı/i and İ/I don't match with simple toLowerCase()
-export function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "I")
-    .replace(/ı/g, "i")
-    .replace(/Ş/g, "S")
-    .replace(/ş/g, "s")
-    .replace(/Ğ/g, "G")
-    .replace(/ğ/g, "g")
-    .replace(/Ü/g, "U")
-    .replace(/ü/g, "u")
-    .replace(/Ö/g, "O")
-    .replace(/ö/g, "o")
-    .replace(/Ç/g, "C")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
+// Merkezi utility'den re-export. analyzer.test.ts bu dosyadan import ediyor.
+import { normalizeTurkish } from "@/lib/utils/turkish";
+export { normalizeTurkish };
 
 // ── Regex-based position detection ───────────────────
 // Detects numbered lists (1. Brand, 2. Brand) and bold headers (**Brand**)

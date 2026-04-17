@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { cache } from "react";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
 export interface BlogPostData {
   id: string;
@@ -53,17 +54,6 @@ export const getBlogPostsData = cache(async (brandId: string) => {
 });
 
 // ── Content Impact Predictions ─────────────────────────────
-
-function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
-    .replace(/Ş/g, "s").replace(/ş/g, "s")
-    .replace(/Ğ/g, "g").replace(/ğ/g, "g")
-    .replace(/Ü/g, "u").replace(/ü/g, "u")
-    .replace(/Ö/g, "o").replace(/ö/g, "o")
-    .replace(/Ç/g, "c").replace(/ç/g, "c")
-    .toLowerCase();
-}
 
 function tokenize(text: string): string[] {
   return normalizeTurkish(text)

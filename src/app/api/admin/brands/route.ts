@@ -24,10 +24,15 @@ export async function GET(request: Request) {
   }
 
   if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { domain: { contains: search, mode: "insensitive" } },
-    ];
+    // Türkçe aware: hem orijinal hem ASCII sürümüyle ara.
+    // "isıtma" ararken "isitma" (Türkçe-less DB entry) de eşleşir.
+    const { turkishToAscii } = await import("@/lib/utils/turkish");
+    const asciiSearch = turkishToAscii(search);
+    const terms = asciiSearch === search ? [search] : [search, asciiSearch];
+    where.OR = terms.flatMap((term) => [
+      { name: { contains: term, mode: "insensitive" } },
+      { domain: { contains: term, mode: "insensitive" } },
+    ]);
   }
 
   const [brands, total] = await Promise.all([

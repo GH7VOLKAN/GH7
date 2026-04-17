@@ -2,6 +2,7 @@
 
 import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 import React from "react";
 
 interface Props {
@@ -11,17 +12,6 @@ interface Props {
   status: "waiting" | "streaming" | "done";
   mentioned: boolean | null;
   brandName: string;
-}
-
-function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
-    .replace(/Ş/g, "s").replace(/ş/g, "s")
-    .replace(/Ğ/g, "g").replace(/ğ/g, "g")
-    .replace(/Ü/g, "u").replace(/ü/g, "u")
-    .replace(/Ö/g, "o").replace(/ö/g, "o")
-    .replace(/Ç/g, "c").replace(/ç/g, "c")
-    .toLowerCase();
 }
 
 function highlightBrand(text: string, brandName: string): React.ReactNode[] {

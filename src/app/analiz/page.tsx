@@ -30,6 +30,7 @@ import { GH7Logo } from "@/components/gh7-logo";
 import { AIPlatformIcon } from "@/components/ui/ai-platform-badge";
 import type { AIPlatform } from "@/components/ui/ai-platform-badge";
 import { CityMultiselect } from "@/components/ui/city-multiselect";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 import { Audit43Report } from "@/components/analiz/audit-43-report";
 import { PersonalAnalysisBox } from "@/components/analiz/personal-analysis-box";
 import { ServicePackagesCTA } from "@/components/analiz/service-packages-cta";
@@ -279,24 +280,6 @@ const DEMO_QUERY_RESPONSES: DemoQueryGroup[] = [
 /* ------------------------------------------------------------------ */
 /*  Highlight utility                                                  */
 /* ------------------------------------------------------------------ */
-
-function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "i")
-    .replace(/I/g, "i")
-    .replace(/ı/g, "i")
-    .replace(/Ş/g, "s")
-    .replace(/ş/g, "s")
-    .replace(/Ğ/g, "g")
-    .replace(/ğ/g, "g")
-    .replace(/Ü/g, "u")
-    .replace(/ü/g, "u")
-    .replace(/Ö/g, "o")
-    .replace(/ö/g, "o")
-    .replace(/Ç/g, "c")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
 
 function highlightResponse(
   text: string,
