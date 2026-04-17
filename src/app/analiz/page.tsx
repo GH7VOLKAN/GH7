@@ -1888,7 +1888,7 @@ function AnalizPageInner() {
     };
 
     /* ---------- LAYER 3 DATA: Product-based rankings ---------- */
-    const brandName = displayName || "ISITMAX";
+    const brandName = displayName || formData.brandName || formData.fullName || "Markanız";
 
     /* Collect unique competitor names from PRODUCT_RANKINGS for highlighting */
     const competitorNames = Array.from(
@@ -2126,7 +2126,7 @@ function AnalizPageInner() {
                                   className={`text-xs px-2 py-0.5 rounded-full ${
                                     src.includes(
                                       formData.domain.split(".")[0]?.toLowerCase() ?? ""
-                                    ) || src === "isitmax.com"
+                                    )
                                       ? "bg-green-50 text-green-700 font-medium"
                                       : "bg-gray-100 text-gray-500"
                                   }`}
@@ -2243,7 +2243,7 @@ function AnalizPageInner() {
                   </p>
                   <div className="space-y-3">
                     {productRanking.rankings.map((rank, ri) => {
-                      const isUser = rank.name === brandName || rank.name === "ISITMAX";
+                      const isUser = rank.name === brandName;
                       const trendIcon =
                         rank.trend === "up" ? "↑" :
                         rank.trend === "down" ? "↓" :
@@ -2307,7 +2307,7 @@ function AnalizPageInner() {
                 const sorted = Object.entries(scoreMap).sort((a, b) => b[1] - a[1]);
                 const maxScore = sorted[0]?.[1] || 1;
                 return sorted.map(([name, score], i) => {
-                  const isUser = name === brandName || name === "ISITMAX";
+                  const isUser = name === brandName;
                   return (
                     <div key={i} className="flex items-center gap-3">
                       <span className={`text-sm w-36 truncate ${isUser ? "font-bold text-gray-900" : "text-gray-700"}`}>
