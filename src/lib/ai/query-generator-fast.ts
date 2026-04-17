@@ -8,12 +8,38 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
+import type { DiscoveryResult } from "./discovery-types";
 
 interface GenerateQueriesParams {
   products: string[];
   services: string[];
   cities?: string[];
   brandName?: string;
+}
+
+/**
+ * Discovery-first sorgu üretimi.
+ * 1. DiscoveryResult'ta targetQueries varsa → kullan (Perplexity zaten 10-15 üretti)
+ * 2. Yoksa Claude Haiku ile generate et (fallback)
+ *
+ * Bu sayede ikinci AI çağrısı atlanır (maliyet tasarrufu).
+ */
+export async function getQueriesForAnalysis(
+  discovery: DiscoveryResult | null,
+  fallback: GenerateQueriesParams
+): Promise<string[]> {
+  if (discovery?.targetQueries && discovery.targetQueries.length >= 5) {
+    const queries = discovery.targetQueries
+      .map((q) => (typeof q === "string" ? q : q.query))
+      .filter((q) => typeof q === "string" && q.length > 0)
+      .slice(0, 10);
+    if (queries.length >= 5) {
+      console.log(`[queries] Discovery-based (${queries.length} queries)`);
+      return queries;
+    }
+  }
+  console.log(`[queries] Falling back to Haiku generation`);
+  return generateQueriesFromProducts(fallback);
 }
 
 const FALLBACK_QUERIES = [

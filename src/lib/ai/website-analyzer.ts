@@ -1,12 +1,70 @@
 /**
- * Website Analyzer — Perplexity Sonar ile bir web sitesinden
- * ürün ve hizmet bilgilerini çıkarır.
+ * Website Analyzer — 4 kullanıcı tipi için unified discovery.
  *
- * Redis ile 7 gün cache. Aynı domain tekrar analiz edilirse sıfır maliyet.
+ * Başlangıçta sadece firma için domain → products/services tespit ediyordu.
+ * Şimdi 4 tip için genişletildi (firma/kisi/eticaret/yurtdisi).
+ *
+ * Backward compat: analyzeWebsite(domain) fn imzası korunur (firma shortcut).
+ * Yeni kod: runDiscovery(input: DiscoveryInput)
+ *
+ * Redis ile 7 gün cache.
  */
 
 import { querySonar } from "@/lib/ai/sonar-research";
 import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
+import { buildPromptByType } from "./discovery-prompts";
+import {
+  DEFAULT_DISCOVERY,
+  type DiscoveryInput,
+  type DiscoveryResult,
+  type CompanyType,
+  type DiscoveredQuery,
+} from "./discovery-types";
+
+const CACHE_TTL = 7 * 24 * 60 * 60;
+
+// ═══════════════════════════════════════════════════════════
+// Public API
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * 4 tip için unified Perplexity discovery.
+ *
+ * Girdi `DiscoveryInput`:
+ *   - firma/yurtdisi: `{ companyType, url, brandName? }`
+ *   - kisi: `{ companyType: "kisi", fullName, expertise, socialMedia? }`
+ *   - eticaret: `{ companyType: "eticaret", ecommerceMode, url/marketplaceUrl/brandOrProductName }`
+ */
+export async function runDiscovery(
+  input: DiscoveryInput
+): Promise<DiscoveryResult> {
+  const cacheKey = buildDiscoveryCacheKey(input);
+  const cached = await cacheGet<DiscoveryResult>(cacheKey);
+  if (cached) {
+    console.log(`[discovery] Cache hit for ${input.companyType}`);
+    return cached;
+  }
+
+  console.log(`[discovery] Cache miss, querying Perplexity for ${input.companyType}`);
+
+  try {
+    const prompt = buildPromptByType(input);
+    const response = await querySonar(prompt);
+    const parsed = parseDiscoveryResponse(response, input.companyType);
+
+    if (hasValidData(parsed)) {
+      await cacheSet(cacheKey, parsed, CACHE_TTL);
+    }
+    return parsed;
+  } catch (err) {
+    console.error(`[discovery] Error for ${input.companyType}:`, err);
+    return { ...DEFAULT_DISCOVERY, companyType: input.companyType };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Backward-compat: eski firma-only API
+// ═══════════════════════════════════════════════════════════
 
 export interface WebsiteAnalysis {
   products: string[];
@@ -15,83 +73,164 @@ export interface WebsiteAnalysis {
   description: string;
 }
 
-const DEFAULT_ANALYSIS: WebsiteAnalysis = {
-  products: [],
-  services: [],
-  sector: "",
-  description: "",
-};
-
 export async function analyzeWebsite(domain: string): Promise<WebsiteAnalysis> {
-  const cleanDomain = domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "").trim();
-  if (!cleanDomain) return DEFAULT_ANALYSIS;
+  const result = await runDiscovery({
+    companyType: "firma",
+    url: domain,
+  });
+  return {
+    products: result.products,
+    services: result.services,
+    sector: result.sector,
+    description: result.description,
+  };
+}
 
-  // Check cache first
-  const cacheKey = makeCacheKey("website-analysis", cleanDomain);
-  const cached = await cacheGet<WebsiteAnalysis>(cacheKey);
-  if (cached) {
-    console.log(`[analyzeWebsite] Cache hit for ${cleanDomain}`);
-    return cached;
+// ═══════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════
+
+function buildDiscoveryCacheKey(input: DiscoveryInput): string {
+  const parts: string[] = [];
+  if (input.url) parts.push(cleanDomain(input.url));
+  if (input.brandName) parts.push(input.brandName);
+  if (input.fullName) parts.push(input.fullName);
+  if (input.expertise) parts.push(input.expertise);
+  if (input.marketplaceUrl) parts.push(input.marketplaceUrl);
+  if (input.brandOrProductName) parts.push(input.brandOrProductName);
+  if (input.location) parts.push(input.location);
+  if (input.targetMarkets) parts.push(input.targetMarkets);
+  if (parts.length === 0) parts.push("empty");
+  return makeCacheKey(`discovery-${input.companyType}`, ...parts);
+}
+
+function cleanDomain(url: string): string {
+  return url
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .trim();
+}
+
+function parseDiscoveryResponse(
+  response: string,
+  expectedType: CompanyType
+): DiscoveryResult {
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.warn(`[discovery] No JSON in response`);
+    return { ...DEFAULT_DISCOVERY, companyType: expectedType };
   }
 
-  console.log(`[analyzeWebsite] Cache miss, querying Perplexity for ${cleanDomain}`);
-
-  const prompt = `Aşağıdaki web sitesini incele ve şirket hakkında bilgi topla:
-
-Website: ${cleanDomain}
-
-Görevin:
-1. Bu şirketin sattığı ÜRÜNLERİ listele — sadece fiziksel ürünler, cihazlar, malzemeler (ör: "yerden ısıtma kablosu", "varil ısıtma ceketi")
-2. Bu şirketin sunduğu ANA HİZMETLERİ listele — ana faaliyet alanları (ör: "proje danışmanlığı", "kurulum", "bungalov konaklama", "sağlık danışmanlığı")
-3. Şirketin faaliyet gösterdiği SEKTÖRÜ belirle
-4. Şirket hakkında 1 cümlelik açıklama yaz
-
-KESİN KURALLAR:
-- Sadece GERÇEKTEN sattıkları/sundukları şeyleri listele, tahmin yapma, HALÜSİNASYON yapma
-- Bir şirket HİZMET sunuyorsa (otel, villa, klinik, danışmanlık vb.) "products" dizisini BOŞ bırak, sadece "services" doldur
-- Bir şirket sadece ÜRÜN satıyorsa (e-ticaret, üretici) "services" dizisini BOŞ bırak, sadece "products" doldur
-- SATIŞ KAMPANYASI DEĞİL: "peşin ödeme indirimi", "kargo ücretsiz", "taksit imkanı" HİZMET DEĞİLDİR — listeye KOYMA
-- Her madde kısa olsun (1-4 kelime), kategori adı değil spesifik olsun
-- Maksimum 8 ürün, 5 hizmet listele
-- Türkçe cevapla
-- Bilgi bulamazsan boş array dön ([])
-
-SADECE aşağıdaki JSON formatında cevapla, başka hiçbir metin yazma:
-
-{
-  "products": ["ürün 1", "ürün 2"],
-  "services": ["hizmet 1", "hizmet 2"],
-  "sector": "Sektör Adı",
-  "description": "Kısa açıklama."
-}`;
-
+  let parsed: Partial<DiscoveryResult> & {
+    [key: string]: unknown;
+  };
   try {
-    const response = await querySonar(prompt);
-
-    // Parse JSON response — may be wrapped in markdown code fence
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn(`[analyzeWebsite] No JSON found in response for ${cleanDomain}`);
-      return DEFAULT_ANALYSIS;
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as Partial<WebsiteAnalysis>;
-
-    const result: WebsiteAnalysis = {
-      products: Array.isArray(parsed.products) ? parsed.products.slice(0, 8).filter(Boolean) : [],
-      services: Array.isArray(parsed.services) ? parsed.services.slice(0, 5).filter(Boolean) : [],
-      sector: typeof parsed.sector === "string" ? parsed.sector : "",
-      description: typeof parsed.description === "string" ? parsed.description : "",
-    };
-
-    // Cache for 7 days (only if we got some data)
-    if (result.products.length > 0 || result.services.length > 0) {
-      await cacheSet(cacheKey, result, 7 * 24 * 60 * 60);
-    }
-
-    return result;
+    parsed = JSON.parse(jsonMatch[0]);
   } catch (err) {
-    console.error(`[analyzeWebsite] Error for ${cleanDomain}:`, err);
-    return DEFAULT_ANALYSIS;
+    console.error("[discovery] JSON parse error:", err);
+    return { ...DEFAULT_DISCOVERY, companyType: expectedType };
   }
+
+  // Tüm alanları güvenli şekilde extract et
+  const result: DiscoveryResult = {
+    companyType: expectedType,
+    sector: typeof parsed.sector === "string" ? parsed.sector : "",
+    description:
+      typeof parsed.description === "string" ? parsed.description : "",
+    location:
+      parsed.location && typeof parsed.location === "object"
+        ? (parsed.location as DiscoveryResult["location"])
+        : {},
+    competitors: Array.isArray(parsed.competitors)
+      ? (parsed.competitors as DiscoveryResult["competitors"])
+          .filter(
+            (c): c is DiscoveryResult["competitors"][number] =>
+              !!c && typeof c === "object" && "name" in c
+          )
+          .slice(0, 5)
+      : [],
+    targetQueries: normalizeTargetQueries(parsed.targetQueries),
+    products: Array.isArray(parsed.products)
+      ? (parsed.products as string[]).filter(
+          (p) => typeof p === "string" && p.length > 0
+        ).slice(0, 10)
+      : [],
+    services: Array.isArray(parsed.services)
+      ? (parsed.services as string[]).filter(
+          (s) => typeof s === "string" && s.length > 0
+        ).slice(0, 8)
+      : [],
+    platforms: Array.isArray(parsed.platforms)
+      ? (parsed.platforms as DiscoveryResult["platforms"])
+      : undefined,
+  };
+
+  // Tip bazlı ek alanlar
+  if (expectedType === "kisi" && Array.isArray(parsed.expertise)) {
+    result.expertise = (parsed.expertise as string[])
+      .filter((e) => typeof e === "string")
+      .slice(0, 6);
+  }
+
+  if (expectedType === "eticaret") {
+    if (typeof parsed.priceSegment === "string") {
+      const seg = parsed.priceSegment as string;
+      if (["ekonomik", "orta", "premium", "luks"].includes(seg)) {
+        result.priceSegment = seg as DiscoveryResult["priceSegment"];
+      }
+    }
+    if (typeof parsed.category === "string") {
+      result.category = parsed.category;
+    }
+  }
+
+  if (expectedType === "yurtdisi") {
+    if (Array.isArray(parsed.targetCountries)) {
+      result.targetCountries = (parsed.targetCountries as string[]).filter(
+        (c) => typeof c === "string"
+      );
+    }
+    if (Array.isArray(parsed.siteLanguages)) {
+      result.siteLanguages = (parsed.siteLanguages as string[]).filter(
+        (l) => typeof l === "string"
+      );
+    }
+  }
+
+  return result;
+}
+
+function normalizeTargetQueries(raw: unknown): DiscoveredQuery[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item): DiscoveredQuery | null => {
+      if (typeof item === "string") {
+        return { query: item };
+      }
+      if (item && typeof item === "object" && "query" in item) {
+        const obj = item as { query: unknown; language?: unknown };
+        if (typeof obj.query === "string") {
+          return {
+            query: obj.query,
+            language:
+              typeof obj.language === "string" ? obj.language : undefined,
+          };
+        }
+      }
+      return null;
+    })
+    .filter((q): q is DiscoveredQuery => q !== null)
+    .slice(0, 15);
+}
+
+function hasValidData(result: DiscoveryResult): boolean {
+  return (
+    result.products.length > 0 ||
+    result.services.length > 0 ||
+    result.competitors.length > 0 ||
+    result.targetQueries.length > 0 ||
+    !!result.sector ||
+    !!result.description
+  );
 }

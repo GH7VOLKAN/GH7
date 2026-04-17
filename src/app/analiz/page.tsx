@@ -40,7 +40,13 @@ import { ServicePackagesCTA } from "@/components/analiz/service-packages-cta";
 /* ------------------------------------------------------------------ */
 
 type Step = 0 | 1 | 1.5 | 2 | 3;
-type AnalysisType = "firma" | "kisisel";
+// Legacy "kisisel" kod için backward compat: "kisi" === "kisisel" semantik olarak
+type AnalysisType = "firma" | "kisi" | "kisisel" | "eticaret" | "yurtdisi";
+
+// kisisel → kisi migration helper
+function isPersonalType(t: AnalysisType): boolean {
+  return t === "kisi" || t === "kisisel";
+}
 
 interface FormData {
   analysisType: AnalysisType;
@@ -55,10 +61,22 @@ interface FormData {
   sector: string;
   cities: string[];
   keywords: string[];
-  // kisisel fields
+  // kisisel/kisi fields
   fullName: string;
   profession: string;
   linkedinUrl: string;
+  expertise: string; // YENİ: uzmanlık alanı (kisi için zorunlu)
+  socialMedia: string; // YENİ: sosyal medya handle (kisi için ops)
+  // E-ticaret fields
+  ecommerceMode: "website" | "marketplace" | "brand";
+  marketplaceUrl: string;
+  brandOrProductName: string;
+  category: string;
+  // Yurtdışı fields
+  targetMarkets: string;
+  siteLanguage: string;
+  // Ortak opsiyonel
+  competitor: string; // Bilinen rakip (hint)
 }
 
 /* ------------------------------------------------------------------ */
@@ -518,6 +536,15 @@ function AnalizPageInner() {
     fullName: "",
     profession: "",
     linkedinUrl: "",
+    expertise: "",
+    socialMedia: "",
+    ecommerceMode: "website",
+    marketplaceUrl: "",
+    brandOrProductName: "",
+    category: "",
+    targetMarkets: "",
+    siteLanguage: "",
+    competitor: "",
   });
 
   const [products, setProducts] = useState<ProductItem[]>([]);
@@ -549,14 +576,32 @@ function AnalizPageInner() {
     personalAnalysis?: string;
   } | null>(null);
   const [audit43Loading, setAudit43Loading] = useState(false);
+  // Perplexity discovery sonucu (Step 1 sonrası dolar)
+  const [discovery, setDiscovery] = useState<
+    import("@/lib/ai/discovery-types").DiscoveryResult | null
+  >(null);
 
   /* ---- auto-fill from URL params (landing page redirect) ---- */
   useEffect(() => {
-    const type = searchParams.get("type");
+    const rawType = searchParams.get("type");
     const domain = searchParams.get("domain");
     const name = searchParams.get("name");
+    const input = searchParams.get("input"); // eticaret için generic
 
-    if (type === "firma" && domain) {
+    // Landing tipi → Analiz tipi map
+    const typeMap: Record<string, AnalysisType> = {
+      firma: "firma",
+      kisi: "kisi",
+      kisisel: "kisi", // legacy
+      eticaret: "eticaret",
+      export: "yurtdisi", // landing "export" → "yurtdisi"
+      yurtdisi: "yurtdisi",
+    };
+    const analyzedType: AnalysisType | null = rawType
+      ? (typeMap[rawType] ?? null)
+      : null;
+
+    if (analyzedType === "firma" && domain) {
       const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
       const brandGuess = cleanDomain.split(".")[0];
       setFormData((prev) => ({
@@ -568,13 +613,46 @@ function AnalizPageInner() {
         websiteUrl: `https://${cleanDomain}`,
       }));
       setStep(0);
-    } else if (type === "kisi" && name) {
+    } else if (analyzedType === "kisi" && name) {
       setFormData((prev) => ({
         ...prev,
-        analysisType: "kisisel",
+        analysisType: "kisi",
         heroInput: name,
         fullName: name,
         keywords: [...DEMO_PERSONAL_KEYWORDS],
+      }));
+      setStep(0);
+    } else if (analyzedType === "eticaret" && (input || domain)) {
+      const val = input ?? domain ?? "";
+      // URL mı yoksa marka adı mı?
+      const isUrl = /^https?:\/\//.test(val) || val.includes(".");
+      setFormData((prev) => ({
+        ...prev,
+        analysisType: "eticaret",
+        heroInput: val,
+        ecommerceMode: isUrl
+          ? val.includes("trendyol") ||
+            val.includes("hepsiburada") ||
+            val.includes("n11") ||
+            val.includes("amazon")
+            ? "marketplace"
+            : "website"
+          : "brand",
+        domain: isUrl ? val.replace(/^https?:\/\//, "").replace(/\/$/, "") : "",
+        marketplaceUrl: isUrl && val.includes("trendyol") ? val : "",
+        brandOrProductName: !isUrl ? val : "",
+      }));
+      setStep(0);
+    } else if (analyzedType === "yurtdisi" && domain) {
+      const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      const brandGuess = cleanDomain.split(".")[0];
+      setFormData((prev) => ({
+        ...prev,
+        analysisType: "yurtdisi",
+        heroInput: cleanDomain,
+        domain: cleanDomain,
+        brandName: brandGuess.charAt(0).toUpperCase() + brandGuess.slice(1),
+        websiteUrl: `https://${cleanDomain}`,
       }));
       setStep(0);
     }
@@ -680,70 +758,132 @@ function AnalizPageInner() {
     }
   };
 
+  const buildDiscoveryInput = (): import("@/lib/ai/discovery-types").DiscoveryInput => {
+    const companyType =
+      formData.analysisType === "kisisel" ? "kisi" : formData.analysisType;
+    const base = {
+      companyType,
+      location: formData.cities[0],
+      competitor: formData.competitor || undefined,
+    } as import("@/lib/ai/discovery-types").DiscoveryInput;
+
+    if (companyType === "firma") {
+      return {
+        ...base,
+        url: formData.domain || formData.websiteUrl,
+        brandName: formData.brandName,
+      };
+    }
+    if (companyType === "kisi") {
+      return {
+        ...base,
+        fullName: formData.fullName,
+        expertise: formData.expertise || formData.profession,
+        socialMedia: formData.socialMedia || undefined,
+        url: formData.linkedinUrl || undefined,
+      };
+    }
+    if (companyType === "eticaret") {
+      return {
+        ...base,
+        ecommerceMode: formData.ecommerceMode,
+        url: formData.ecommerceMode === "website" ? formData.domain : undefined,
+        marketplaceUrl:
+          formData.ecommerceMode === "marketplace"
+            ? formData.marketplaceUrl
+            : undefined,
+        brandOrProductName:
+          formData.ecommerceMode === "brand"
+            ? formData.brandOrProductName
+            : undefined,
+        category: formData.category || undefined,
+      };
+    }
+    if (companyType === "yurtdisi") {
+      return {
+        ...base,
+        url: formData.domain || formData.websiteUrl,
+        brandName: formData.brandName,
+        targetMarkets: formData.targetMarkets || undefined,
+        siteLanguage: formData.siteLanguage || undefined,
+      };
+    }
+    return base;
+  };
+
   const handleStep1Next = async () => {
+    // Tipe göre validation
     if (formData.analysisType === "firma") {
       if (!formData.brandName || formData.cities.length === 0) return;
-      // BOŞ state ile başla — Perplexity sonucu beklenirken
-      // eski mock data artık gösterilmiyor (villa firması isıtma ürünleri göremez)
-      setProducts([]);
-      setServices([]);
-    } else {
-      if (!formData.fullName || !formData.profession || formData.cities.length === 0)
+    } else if (isKisi) {
+      if (
+        !formData.fullName ||
+        !(formData.expertise || formData.profession) ||
+        formData.cities.length === 0
+      )
         return;
-      setProducts([]);
-      setServices([]);
+    } else if (formData.analysisType === "eticaret") {
+      const hasInput =
+        (formData.ecommerceMode === "website" && formData.domain) ||
+        (formData.ecommerceMode === "marketplace" && formData.marketplaceUrl) ||
+        (formData.ecommerceMode === "brand" && formData.brandOrProductName);
+      if (!hasInput) return;
+    } else if (formData.analysisType === "yurtdisi") {
+      if (!formData.domain || !formData.targetMarkets) return;
     }
+
+    setProducts([]);
+    setServices([]);
     setStep(1.5);
 
-    // Firma: Gerçek website analizi (background, non-blocking)
-    if (formData.analysisType === "firma" && formData.domain) {
-      setWebsiteAnalyzing(true);
-      let gotApiResponse = false;
-      try {
-        const res = await fetch("/api/analiz/analyze-website", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ domain: formData.domain }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          gotApiResponse = true;
-          // API yanıt verdi — ne dönerse ekrana yansıt (boş olsa bile)
-          if (Array.isArray(data.products)) {
-            setProducts(
-              data.products.map((name: string) => ({
-                name,
-                checked: true,
-                autoDetected: true,
-              }))
-            );
-          }
-          if (Array.isArray(data.services)) {
-            setServices(
-              data.services.map((name: string) => ({
-                name,
-                checked: true,
-                autoDetected: true,
-              }))
-            );
-          }
+    // Yeni unified discovery API
+    setWebsiteAnalyzing(true);
+    let gotApiResponse = false;
+    try {
+      const input = buildDiscoveryInput();
+      const res = await fetch("/api/analiz/run-discovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        gotApiResponse = true;
+        setDiscovery(data);
+        if (Array.isArray(data.products)) {
+          setProducts(
+            data.products.map((name: string) => ({
+              name,
+              checked: true,
+              autoDetected: true,
+            }))
+          );
         }
-      } catch (err) {
-        console.warn("[analiz] Website analysis failed:", err);
-      } finally {
-        setWebsiteAnalyzing(false);
+        if (Array.isArray(data.services)) {
+          setServices(
+            data.services.map((name: string) => ({
+              name,
+              checked: true,
+              autoDetected: true,
+            }))
+          );
+        }
       }
+    } catch (err) {
+      console.warn("[analiz] Discovery failed:", err);
+    } finally {
+      setWebsiteAnalyzing(false);
+    }
 
-      // API hiç yanıt vermediyse (network hatası vb.) demo fallback
-      // Perplexity boş array döndürdüyse kullanıcı manuel ekler
-      if (!gotApiResponse) {
+    // Fallback: API yanıt vermedi veya boş döndü
+    if (!gotApiResponse) {
+      if (formData.analysisType === "firma") {
         setProducts([...DEMO_FIRMA_PRODUCTS]);
         setServices([...DEMO_FIRMA_SERVICES]);
+      } else if (isKisi) {
+        setProducts([...DEMO_PERSONAL_PRODUCTS]);
+        setServices([]);
       }
-    } else if (formData.analysisType === "kisisel") {
-      // Personal için demo şimdilik
-      setProducts([...DEMO_PERSONAL_PRODUCTS]);
-      setServices([]);
     }
   };
 
@@ -765,6 +905,8 @@ function AnalizPageInner() {
           products: selectedProducts,
           services: selectedServices,
           cities: formData.cities,
+          // Discovery varsa targetQueries kullanılır (Haiku atlanır)
+          discovery: discovery,
         }),
       });
       if (res.ok) {
@@ -785,8 +927,21 @@ function AnalizPageInner() {
     setLoading(true);
     setLoadingStepIndex(0);
 
-    // Kick off 43-item audit in background (firma için)
-    if (formData.analysisType === "firma" && formData.domain) {
+    // Kick off 43-item audit in background (URL olan tüm tipler için)
+    const auditUserType: "firma" | "kisi" | "eticaret" | "yurtdisi" =
+      isKisi
+        ? "kisi"
+        : formData.analysisType === "eticaret"
+          ? "eticaret"
+          : formData.analysisType === "yurtdisi"
+            ? "yurtdisi"
+            : "firma";
+    const auditUrl =
+      formData.domain || formData.websiteUrl || formData.marketplaceUrl || "";
+    const auditBrandName =
+      displayName || formData.brandName || formData.fullName;
+
+    if (auditUrl && auditBrandName) {
       setAudit43Loading(true);
       const source = searchParams.get("utm_source") ?? undefined;
       try {
@@ -794,9 +949,9 @@ function AnalizPageInner() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            url: formData.domain,
-            brandName: formData.brandName,
-            userType: "firma", // TODO: eticaret/yurtdisi için genişlet
+            url: auditUrl,
+            brandName: auditBrandName,
+            userType: auditUserType,
             location: formData.cities[0],
             keywords: formData.keywords,
             source,
@@ -860,7 +1015,15 @@ function AnalizPageInner() {
 
   /* ---- derived ---- */
   const isFirma = formData.analysisType === "firma";
-  const displayName = isFirma ? formData.brandName : formData.fullName;
+  const isKisi = isPersonalType(formData.analysisType);
+  const isEticaret = formData.analysisType === "eticaret";
+  const isYurtdisi = formData.analysisType === "yurtdisi";
+  const hasUrl = isFirma || isYurtdisi; // URL zorunlu tipler
+  const displayName = isKisi
+    ? formData.fullName
+    : isEticaret
+      ? formData.brandOrProductName || formData.brandName || formData.heroInput
+      : formData.brandName;
 
   /* ---- render helpers ---- */
 
@@ -902,7 +1065,7 @@ function AnalizPageInner() {
           onClick={() =>
             setFormData((prev) => ({
               ...prev,
-              analysisType: "kisisel",
+              analysisType: "kisi",
               heroInput: "",
               keywords: [...DEMO_PERSONAL_KEYWORDS],
             }))
@@ -1092,16 +1255,186 @@ function AnalizPageInner() {
 
       <div className="border border-gray-200 rounded-xl p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-1">
-          {isFirma ? "Marka Bilgileri" : "Kişisel Bilgiler"}
+          {isFirma
+            ? "Marka Bilgileri"
+            : isKisi
+              ? "Kişisel Bilgiler"
+              : isEticaret
+                ? "E-Ticaret Bilgileri"
+                : isYurtdisi
+                  ? "Yurtdışı İhracat Bilgileri"
+                  : "Bilgileriniz"}
         </h2>
         <p className="text-sm text-gray-500 mb-6">
-          {isFirma
-            ? "AI aramasını kişiselleştirmek için marka bilgilerinizi girin."
-            : "AI aramasını kişiselleştirmek için bilgilerinizi girin."}
+          {isEticaret
+            ? "Marketplace URL, kendi site URL'iniz veya sadece marka/ürün adı girebilirsiniz."
+            : isYurtdisi
+              ? "Hedef pazarlarınıza özel analiz için bilgilerinizi girin."
+              : "AI aramasını kişiselleştirmek için bilgilerinizi girin."}
         </p>
 
         <div className="space-y-4">
-          {isFirma ? (
+          {isEticaret ? (
+            <>
+              {/* E-ticaret: 3 radio mode */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Giriş Tipi
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { key: "website", label: "Kendi e-ticaret sitem var" },
+                    {
+                      key: "marketplace",
+                      label: "Trendyol / Hepsiburada / Amazon sayfam var",
+                    },
+                    { key: "brand", label: "Sadece marka veya ürün adı gireceğim" },
+                  ].map((opt) => (
+                    <label
+                      key={opt.key}
+                      className="flex items-center gap-3 p-2.5 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                    >
+                      <input
+                        type="radio"
+                        name="ecommerceMode"
+                        value={opt.key}
+                        checked={formData.ecommerceMode === opt.key}
+                        onChange={() =>
+                          updateField(
+                            "ecommerceMode",
+                            opt.key as typeof formData.ecommerceMode
+                          )
+                        }
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* E-ticaret: Conditional input */}
+              {formData.ecommerceMode === "website" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Website URL
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ornek.com"
+                    value={formData.domain}
+                    onChange={(e) => updateField("domain", e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  />
+                </div>
+              )}
+              {formData.ecommerceMode === "marketplace" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Marketplace Mağaza/Ürün URL
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="trendyol.com/magaza/marka-adi veya ürün linki"
+                    value={formData.marketplaceUrl}
+                    onChange={(e) => updateField("marketplaceUrl", e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  />
+                </div>
+              )}
+              {formData.ecommerceMode === "brand" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Marka / Ürün Adı
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="marka adı veya ürün adı"
+                    value={formData.brandOrProductName}
+                    onChange={(e) =>
+                      updateField("brandOrProductName", e.target.value)
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  />
+                </div>
+              )}
+
+              {/* E-ticaret: Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kategori{" "}
+                  <span className="text-gray-400 font-normal">(opsiyonel)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="örn: kozmetik, ev tekstili, gıda"
+                  value={formData.category}
+                  onChange={(e) => updateField("category", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+            </>
+          ) : isYurtdisi ? (
+            <>
+              {/* Yurtdışı: Brand Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Firma Adı
+                </label>
+                <input
+                  type="text"
+                  value={formData.brandName}
+                  onChange={(e) => updateField("brandName", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+
+              {/* Yurtdışı: Website */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Website URL
+                </label>
+                <input
+                  type="text"
+                  placeholder="ornek.com"
+                  value={formData.domain}
+                  onChange={(e) => updateField("domain", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+
+              {/* Yurtdışı: Target Markets */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hedef Pazarlar
+                </label>
+                <input
+                  type="text"
+                  placeholder="örn: ABD, Almanya, Suudi Arabistan"
+                  value={formData.targetMarkets}
+                  onChange={(e) => updateField("targetMarkets", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Virgülle ayırarak 1-5 ülke yazın
+                </p>
+              </div>
+
+              {/* Yurtdışı: Site Language */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ana Site Dili{" "}
+                  <span className="text-gray-400 font-normal">(opsiyonel)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="örn: İngilizce, Almanca, Arapça"
+                  value={formData.siteLanguage}
+                  onChange={(e) => updateField("siteLanguage", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+            </>
+          ) : isFirma ? (
             <>
               {/* Brand Name */}
               <div>
@@ -1181,15 +1514,38 @@ function AnalizPageInner() {
             </>
           )}
 
-          {/* Cities - searchable dropdown */}
+          {/* Cities - searchable dropdown (yurtdisi için opsiyonel) */}
+          {!isYurtdisi && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {isFirma
+                  ? "Hizmet Verilen İller"
+                  : isKisi
+                    ? "Faaliyet Gösterilen İller"
+                    : "Konum"}
+              </label>
+              <CityMultiselect
+                selected={formData.cities}
+                onChange={(cities) =>
+                  setFormData((prev) => ({ ...prev, cities }))
+                }
+                max={3}
+              />
+            </div>
+          )}
+
+          {/* Competitor hint (tüm tipler) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {isFirma ? "Hizmet Verilen İller" : "Faaliyet Gösterilen İller"}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Bildiğiniz bir rakip{" "}
+              <span className="text-gray-400 font-normal">(opsiyonel)</span>
             </label>
-            <CityMultiselect
-              selected={formData.cities}
-              onChange={(cities) => setFormData((prev) => ({ ...prev, cities }))}
-              max={3}
+            <input
+              type="text"
+              placeholder="marka adı veya URL"
+              value={formData.competitor}
+              onChange={(e) => updateField("competitor", e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
@@ -1199,9 +1555,19 @@ function AnalizPageInner() {
             disabled={
               isFirma
                 ? !formData.brandName || formData.cities.length === 0
-                : !formData.fullName ||
-                  !formData.profession ||
-                  formData.cities.length === 0
+                : isKisi
+                  ? !formData.fullName ||
+                    !formData.profession ||
+                    formData.cities.length === 0
+                  : isEticaret
+                    ? (formData.ecommerceMode === "website" && !formData.domain) ||
+                      (formData.ecommerceMode === "marketplace" &&
+                        !formData.marketplaceUrl) ||
+                      (formData.ecommerceMode === "brand" &&
+                        !formData.brandOrProductName)
+                    : isYurtdisi
+                      ? !formData.domain || !formData.targetMarkets
+                      : true
             }
             className="w-full bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
