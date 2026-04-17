@@ -9,8 +9,18 @@ import { verifyScanChecklistItems } from "./checklist-verifier";
 import { sendNotification } from "@/lib/notifications/send";
 import { generateQueryVariations } from "@/lib/query-variation";
 import { feedScanToQueryPages } from "@/lib/query-pages/feed";
+import { classifyResponseQuality, isWeakQuality, type ResponseQuality } from "./response-quality";
+import { enhanceQueryForRetry } from "./query-enhancer";
 import type { AIProvider } from "./providers/base";
 import type { AnalysisResult, AIResponse } from "./types";
+
+interface PromptPlatformOutcome {
+  platform: string;
+  analysis: AnalysisResult;
+  aiResponse: AIResponse;
+  responseQuality: ResponseQuality;
+  retryAttempt: number;
+}
 
 // Process prompts in parallel batches for speed
 const PROMPT_BATCH_SIZE = 5;
@@ -33,6 +43,142 @@ async function sendPromptDirect(
   promptText: string,
 ): Promise<AIResponse> {
   return provider.sendPrompt(promptText);
+}
+
+/**
+ * Bir prompt'u tek bir platformda çalıştırır, analiz eder ve quality sınıflandırır.
+ * PromptResult yazmaz — sonucu geriye döndürür ki retry logic kullanabilsin.
+ */
+async function runPromptOnProvider(params: {
+  provider: AIProvider;
+  promptText: string;
+  variationCount: number;
+  brandName: string;
+  globalIdx: number;
+  retryAttempt: number;
+}): Promise<PromptPlatformOutcome> {
+  const { provider, promptText, variationCount, brandName, globalIdx, retryAttempt } = params;
+  const platformTimer = Date.now();
+
+  const variations = generateQueryVariations(promptText).slice(0, variationCount);
+
+  const variationResults = await Promise.allSettled(
+    variations.map((v) => sendPromptDirect(provider, v)),
+  );
+
+  const fulfilledResponses = variationResults
+    .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === "fulfilled")
+    .map((r) => r.value)
+    .filter((r) => !r.error);
+
+  const allResponses = variationResults
+    .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  const aiResponse: AIResponse =
+    fulfilledResponses.length > 0
+      ? fulfilledResponses[0]
+      : allResponses.length > 0
+        ? allResponses[0]
+        : { platform: provider.platform, content: "", error: "Tüm varyasyonlar başarısız oldu" } as AIResponse;
+
+  if (variations.length > 1) {
+    console.log(
+      `[scan-engine] ${provider.platform} prompt ${globalIdx}${retryAttempt > 0 ? ` (retry)` : ""}: ${variations.length} varyasyon, ${fulfilledResponses.length} başarılı`,
+    );
+  }
+
+  if (aiResponse.error) {
+    console.warn(
+      `[scan-engine] ${provider.platform} ERROR for prompt ${globalIdx}${retryAttempt > 0 ? ` (retry)` : ""}: ${aiResponse.error}`,
+    );
+  } else {
+    console.log(
+      `[scan-engine] ${provider.platform} OK for prompt ${globalIdx}${retryAttempt > 0 ? ` (retry)` : ""}: ${aiResponse.content.length} chars in ${Date.now() - platformTimer}ms`,
+    );
+  }
+
+  let analysis: AnalysisResult;
+  if (aiResponse.error) {
+    analysis = {
+      mentioned: false,
+      mentionType: "none",
+      position: null,
+      sentiment: null,
+      excerpt: `[API ERROR] ${aiResponse.error}`.slice(0, 200),
+      citations: [],
+      competitors: [],
+      citationSources: [],
+      mentionContext: null,
+      competitorAdvantage: null,
+    };
+  } else {
+    analysis = await analyzeResponse(aiResponse.content, brandName, promptText);
+
+    if (fulfilledResponses.length > 1) {
+      for (let vi = 1; vi < fulfilledResponses.length; vi++) {
+        try {
+          const varAnalysis = await analyzeResponse(
+            fulfilledResponses[vi].content,
+            brandName,
+            variations[vi] || promptText,
+          );
+          if (!analysis.mentioned && varAnalysis.mentioned) {
+            analysis = varAnalysis;
+          }
+          if (varAnalysis.citations.length > 0) {
+            analysis.citations = [
+              ...new Set([...analysis.citations, ...varAnalysis.citations]),
+            ];
+          }
+        } catch {
+          // continue
+        }
+      }
+    }
+
+    if (provider.platform !== "perplexity" && provider.platform !== "google_aio") {
+      try {
+        const citationFollowUp = await provider.sendPrompt(
+          "Bu cevabi olustururken hangi kaynaklardan yararlandin? Web siteleri, dizinler, profiller — kaynak adlarini ve URL'lerini listele.",
+        );
+        if (!citationFollowUp.error) {
+          const urlRegex = /https?:\/\/[^\s)>"'\]]+/g;
+          const followUpUrls = citationFollowUp.content.match(urlRegex) ?? [];
+          if (followUpUrls.length > 0) {
+            analysis.citations = [...new Set([...analysis.citations, ...followUpUrls])];
+          }
+        }
+      } catch {
+        // continue
+      }
+    }
+
+    if (aiResponse.citations?.length) {
+      analysis.citations = [...new Set([...analysis.citations, ...aiResponse.citations])];
+    }
+
+    for (const resp of fulfilledResponses) {
+      if (resp !== aiResponse && resp.citations?.length) {
+        analysis.citations = [...new Set([...analysis.citations, ...resp.citations])];
+      }
+    }
+  }
+
+  const responseQuality = classifyResponseQuality({
+    content: aiResponse.error ? "" : aiResponse.content,
+    mentioned: analysis.mentioned,
+    competitorCount: Array.isArray(analysis.competitors) ? analysis.competitors.length : 0,
+    hasError: Boolean(aiResponse.error),
+  });
+
+  return {
+    platform: provider.platform,
+    analysis,
+    aiResponse,
+    responseQuality,
+    retryAttempt,
+  };
 }
 
 export async function executeScan(
@@ -81,178 +227,139 @@ export async function executeScan(
       const totalBatches = Math.ceil(prompts.length / PROMPT_BATCH_SIZE);
       const batchTimer = Date.now();
 
+      // Brand context for retry query enhancement
+      const brandCity = brand.city ?? brand.serviceRegions?.[0];
+      const brandUserType = brand.userType as
+        | "firma"
+        | "kisi"
+        | "eticaret"
+        | "yurtdisi"
+        | undefined;
+
       // Run all prompts in this batch concurrently
       const batchResults = await Promise.allSettled(
         batch.map(async (prompt, promptIdx) => {
           const globalIdx = batchStart + promptIdx + 1;
 
-          // For each prompt, run all platforms in parallel
-          const platformResults = await Promise.allSettled(
-            providers.map(async (provider) => {
-              const platformTimer = Date.now();
+          // 1) Initial run — all platforms in parallel
+          const initialSettled = await Promise.allSettled(
+            providers.map((provider) =>
+              runPromptOnProvider({
+                provider,
+                promptText: prompt.text,
+                variationCount,
+                brandName: brand.name,
+                globalIdx,
+                retryAttempt: 0,
+              }),
+            ),
+          );
 
-              // Sorgu varyasyonlari: Pro+ icin 3, Free icin 1
-              const variations = generateQueryVariations(prompt.text).slice(0, variationCount);
+          const outcomes: PromptPlatformOutcome[] = initialSettled
+            .filter((r): r is PromiseFulfilledResult<PromptPlatformOutcome> => r.status === "fulfilled")
+            .map((r) => r.value);
 
-              // Tum varyasyonlari paralel gonder
-              const variationResults = await Promise.allSettled(
-                variations.map((v) => sendPromptDirect(provider, v)),
-              );
+          const failed = initialSettled.filter((r) => r.status === "rejected");
+          totalErrors += failed.length;
+          for (const f of failed) {
+            captureError((f as PromiseRejectedResult).reason, {
+              context: "scan-engine-platform",
+              scanId,
+              promptIndex: globalIdx,
+            });
+          }
 
-              // Basarili sonuclari topla
-              const fulfilledResponses = variationResults
-                .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === "fulfilled")
-                .map((r) => r.value)
-                .filter((r) => !r.error);
+          // 2) Retry logic — 3+ platform weak quality dönerse enhanced query ile weak platformlarda tek retry
+          const weakPlatforms = outcomes
+            .filter((o) => isWeakQuality(o.responseQuality))
+            .map((o) => o.platform);
 
-              // Fallback: hicbir varyasyon basarili olmazsa, hata sonucu kullan
-              const allResponses = variationResults
-                .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === "fulfilled")
-                .map((r) => r.value);
+          if (weakPlatforms.length >= 3) {
+            const enhancedQuery = enhanceQueryForRetry(prompt.text, {
+              name: brand.name,
+              city: brandCity,
+              userType: brandUserType,
+            });
+            console.log(
+              `[scan-engine] Prompt ${globalIdx}: ${weakPlatforms.length} weak platform, retry with enhanced query: "${enhancedQuery.slice(0, 80)}…"`,
+            );
 
-              // Ana yaniti sec: basarili olanlardan ilkini kullan, yoksa ilk hata yanitini
-              const aiResponse = fulfilledResponses.length > 0
-                ? fulfilledResponses[0]
-                : allResponses.length > 0
-                  ? allResponses[0]
-                  : { platform: provider.platform, content: "", error: "Tüm varyasyonlar başarısız oldu" } as AIResponse;
+            const retryProviders = providers.filter((p) => weakPlatforms.includes(p.platform));
+            const retrySettled = await Promise.allSettled(
+              retryProviders.map((provider) =>
+                runPromptOnProvider({
+                  provider,
+                  promptText: enhancedQuery,
+                  variationCount,
+                  brandName: brand.name,
+                  globalIdx,
+                  retryAttempt: 1,
+                }),
+              ),
+            );
 
-              if (variations.length > 1) {
-                console.log(
-                  `[scan-engine] ${provider.platform} prompt ${globalIdx}: ${variations.length} varyasyon, ${fulfilledResponses.length} başarılı`,
-                );
-              }
+            for (const rs of retrySettled) {
+              if (rs.status !== "fulfilled") continue;
+              const retryOutcome = rs.value;
+              const idx = outcomes.findIndex((o) => o.platform === retryOutcome.platform);
+              if (idx < 0) continue;
 
-              if (aiResponse.error) {
-                console.warn(
-                  `[scan-engine] ${provider.platform} ERROR for prompt ${globalIdx}: ${aiResponse.error}`,
-                );
+              // Retry direct_list dönerse orijinalin yerine al; diğer durumda sadece retryAttempt işaretle
+              if (retryOutcome.responseQuality === "direct_list") {
+                outcomes[idx] = retryOutcome;
               } else {
-                console.log(
-                  `[scan-engine] ${provider.platform} OK for prompt ${globalIdx}: ${aiResponse.content.length} chars in ${Date.now() - platformTimer}ms`,
-                );
+                // Retry sonucunu sakla ama orijinal weak sonucu koruyup retryAttempt=1 olarak işaretle
+                outcomes[idx] = { ...outcomes[idx], retryAttempt: 1 };
               }
+            }
+          }
 
-              let analysis: AnalysisResult;
-              if (aiResponse.error) {
-                analysis = {
-                  mentioned: false,
-                  mentionType: "none",
-                  position: null,
-                  sentiment: null,
-                  excerpt: `[API ERROR] ${aiResponse.error}`.slice(0, 200),
-                  citations: [],
-                  competitors: [],
-                  citationSources: [],
-                  mentionContext: null,
-                  competitorAdvantage: null,
-                };
-              } else {
-                // Ana varyasyonun analizini yap
-                analysis = await analyzeResponse(
-                  aiResponse.content,
-                  brand.name,
-                  prompt.text,
-                );
+          // 3) Persist — tüm platform sonuçlarını yaz
+          const now = new Date();
+          const startOfYear = new Date(now.getFullYear(), 0, 1);
+          const scanWeek = Math.ceil(
+            ((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7,
+          );
+          const scanDay = now.getUTCDay() || 7;
 
-                // Ek basarili varyasyonlarin analizini yap ve en iyi sonucu sec
-                // mentioned=true olan varsa onu tercih et (daha guclu sinyal)
-                if (fulfilledResponses.length > 1) {
-                  for (let vi = 1; vi < fulfilledResponses.length; vi++) {
-                    try {
-                      const varAnalysis = await analyzeResponse(
-                        fulfilledResponses[vi].content,
-                        brand.name,
-                        variations[vi] || prompt.text,
-                      );
-                      // Eger ana analiz mentioned=false ama varyasyon mentioned=true ise, varyasyonu kullan
-                      if (!analysis.mentioned && varAnalysis.mentioned) {
-                        analysis = varAnalysis;
-                      }
-                      // Citation'lari her zaman birleştir
-                      if (varAnalysis.citations.length > 0) {
-                        analysis.citations = [
-                          ...new Set([...analysis.citations, ...varAnalysis.citations]),
-                        ];
-                      }
-                    } catch {
-                      // Varyasyon analizi basarisiz olursa devam et
-                    }
-                  }
-                }
-
-                // Perplexity ve Google AIO zaten citation donduruyor, diger platformlara takip sorusu sor
-                // Google AIO SerpAPI üzerinden zaten kaynak veriyor
-                if (provider.platform !== "perplexity" && provider.platform !== "google_aio") {
-                  try {
-                    const citationFollowUp = await provider.sendPrompt(
-                      "Bu cevabi olustururken hangi kaynaklardan yararlandin? Web siteleri, dizinler, profiller — kaynak adlarini ve URL'lerini listele."
-                    );
-                    if (!citationFollowUp.error) {
-                      const urlRegex = /https?:\/\/[^\s)>"'\]]+/g;
-                      const followUpUrls = citationFollowUp.content.match(urlRegex) ?? [];
-                      if (followUpUrls.length > 0) {
-                        analysis.citations = [
-                          ...new Set([...analysis.citations, ...followUpUrls]),
-                        ];
-                      }
-                    }
-                  } catch {
-                    // Citation takip sorusu basarisiz olursa devam et
-                  }
-                }
-
-                if (aiResponse.citations?.length) {
-                  analysis.citations = [
-                    ...new Set([...analysis.citations, ...aiResponse.citations]),
-                  ];
-                }
-
-                // Tum varyasyonlarin citation'larini da ekle
-                for (const resp of fulfilledResponses) {
-                  if (resp !== aiResponse && resp.citations?.length) {
-                    analysis.citations = [
-                      ...new Set([...analysis.citations, ...resp.citations]),
-                    ];
-                  }
-                }
-              }
-
-              // Hafta numarası ve gün hesapla (mention rate takibi için)
-              const now = new Date();
-              const startOfYear = new Date(now.getFullYear(), 0, 1);
-              const scanWeek = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-              const scanDay = now.getUTCDay() || 7; // 1=Pzt ... 7=Paz
-
+          for (const o of outcomes) {
+            try {
               await prisma.promptResult.create({
                 data: {
                   scanId,
                   promptId: prompt.id,
-                  platform: provider.platform,
-                  mentioned: analysis.mentioned,
-                  position: analysis.position,
-                  sentiment: analysis.sentiment,
-                  excerpt: analysis.excerpt,
-                  fullResponse: aiResponse.error ? `[ERROR] ${aiResponse.error}` : aiResponse.content,
-                  citations: analysis.citations,
-                  competitors: JSON.parse(JSON.stringify(analysis.competitors ?? [])),
-                  citationSources: analysis.citationSources.length > 0 ? JSON.parse(JSON.stringify(analysis.citationSources)) : undefined,
-                  mentionType: analysis.mentionType,
-                  mentionContext: analysis.mentionContext,
-                  competitorAdvantage: analysis.competitorAdvantage,
+                  platform: o.platform,
+                  mentioned: o.analysis.mentioned,
+                  position: o.analysis.position,
+                  sentiment: o.analysis.sentiment,
+                  excerpt: o.analysis.excerpt,
+                  fullResponse: o.aiResponse.error
+                    ? `[ERROR] ${o.aiResponse.error}`
+                    : o.aiResponse.content,
+                  citations: o.analysis.citations,
+                  competitors: JSON.parse(JSON.stringify(o.analysis.competitors ?? [])),
+                  citationSources:
+                    o.analysis.citationSources.length > 0
+                      ? JSON.parse(JSON.stringify(o.analysis.citationSources))
+                      : undefined,
+                  mentionType: o.analysis.mentionType,
+                  mentionContext: o.analysis.mentionContext,
+                  competitorAdvantage: o.analysis.competitorAdvantage,
+                  responseQuality: o.responseQuality,
+                  retryAttempt: o.retryAttempt,
                   scanWeek,
                   scanDay,
-                },
+                } as never,
               });
-
               totalResults++;
-            }),
-          );
-
-          const failed = platformResults.filter((r) => r.status === "rejected");
-          totalErrors += failed.length;
-          for (const f of failed) {
-            captureError(f.reason, { context: "scan-engine-platform", scanId, promptIndex: globalIdx });
+            } catch (err) {
+              captureError(err, {
+                context: "scan-engine-persist",
+                scanId,
+                promptIndex: globalIdx,
+                platform: o.platform,
+              });
+            }
           }
         }),
       );
