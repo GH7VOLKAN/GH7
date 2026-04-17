@@ -166,3 +166,103 @@ export function generateSlug(text: string): string {
 export function textContains(haystack: string, needle: string): boolean {
   return normalizeTurkish(haystack).includes(normalizeTurkish(needle));
 }
+
+/**
+ * Rakip adı için cache/unique key normalize.
+ * Türkçe karakterleri ASCII'ye çevirir, lowercase yapar,
+ * alfanumerik olmayan her şeyi siler.
+ *   "Warmhaus Türkiye" → "warmhausturkiye"
+ *   "WARMHAUS" → "warmhaus"
+ *   "warmhaus.com" → "warmhauscom"
+ *   "A.B.C. Şirketi" → "abcsirketi"
+ */
+export function normalizeForMatching(text: string): string {
+  if (!text) return "";
+  return normalizeTurkish(text).replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Domain'in kök adını çıkarır (www + subdomain + TLD yok).
+ *   "https://www.warmhaus.com.tr/about" → "warmhaus"
+ *   "warmhaus.com" → "warmhaus"
+ *   "sub.isitmax.com" → "sub" (⚠️ sub + ana domain ayrımı için özel case gerekir)
+ * Boş input → ""
+ */
+export function extractRootDomain(url: string): string {
+  if (!url) return "";
+  const normalized = normalizeDomain(url);
+  if (!normalized) return "";
+  const parts = normalized.split(".");
+  // İlk parça genelde ana marka adı. Sub-domain edge case'lerini
+  // bu basit heuristic yakalayamaz, ama duplicate detection için yeterli.
+  return (parts[0] ?? "").toLowerCase();
+}
+
+/**
+ * Levenshtein distance — iki metin arasındaki minimum düzenleme mesafesi.
+ *   levenshteinDistance("Warmhaus", "Warmhaüs") → 1
+ *   levenshteinDistance("ABC", "XYZ") → 3
+ *   levenshteinDistance("", "abc") → 3
+ */
+export function levenshteinDistance(a: string, b: string): number {
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+/**
+ * Fuzzy marka eşleştirme — duplicate detection için.
+ * Şu kontroller sırasıyla yapılır:
+ *   1. normalizeForMatching exact eşit → match
+ *   2. İlk kelime eşit ve >= 4 karakter → match (ör: "Warmhaus X" vs "Warmhaus Y")
+ *   3. Levenshtein distance <= threshold ve min 5 karakter → match
+ *
+ * @param threshold - Levenshtein eşiği, default 2
+ *
+ *   brandMatchFuzzy("Warmhaus", "WARMHAUS") → true
+ *   brandMatchFuzzy("Warmhaus Türkiye", "Warmhaus İstanbul") → true
+ *   brandMatchFuzzy("Warmhaus", "Warmhaüs") → true
+ *   brandMatchFuzzy("Apple", "XYZ") → false
+ */
+export function brandMatchFuzzy(
+  a: string,
+  b: string,
+  threshold = 2
+): boolean {
+  const na = normalizeForMatching(a);
+  const nb = normalizeForMatching(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+
+  // İlk kelime match (ilk kelime >= 4 karakter olmalı ki "a b" vs "a c" match etmesin)
+  const firstA = normalizeTurkish(a).split(/\s+/)[0] ?? "";
+  const firstB = normalizeTurkish(b).split(/\s+/)[0] ?? "";
+  if (firstA && firstA === firstB && firstA.length >= 4) return true;
+
+  // Levenshtein distance kontrolü (min 5 karakterli stringler için)
+  const maxLen = Math.max(na.length, nb.length);
+  if (maxLen >= 5) {
+    const dist = levenshteinDistance(na, nb);
+    if (dist <= threshold) return true;
+  }
+
+  return false;
+}

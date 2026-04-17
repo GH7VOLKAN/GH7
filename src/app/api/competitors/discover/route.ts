@@ -39,28 +39,24 @@ export async function POST(request: Request) {
       });
 
       if (result.competitors.length > 0) {
-        // Remove existing competitors
-        await prisma.competitor.deleteMany({ where: { brandId } });
-
-        // Insert discovered competitors
-        await prisma.competitor.createMany({
-          data: result.competitors.map((c) => ({
+        // Upsert — duplicate varsa merge, yoksa insert
+        const { upsertCompetitor } = await import(
+          "@/lib/ai/competitor-matching"
+        );
+        for (const c of result.competitors) {
+          await upsertCompetitor({
             brandId,
             name: c.name,
             domain: c.domain,
-            mentionScore: 0,
-            readinessScore: 0,
-            platforms: { chatgpt: 0, claude: 0, gemini: 0, perplexity: 0, google_aio: 0 },
             reason: c.reason,
             products: c.products,
             relevance: c.relevance,
             source: "ai_discovered",
-            discoveredAt: new Date(),
-          })),
-        });
+          });
+        }
 
         console.log(
-          `[discover-api] Saved ${result.competitors.length} competitors for "${brand.name}"`,
+          `[discover-api] Upserted ${result.competitors.length} competitors for "${brand.name}"`,
         );
       } else {
         console.warn(`[discover-api] No competitors found for "${brand.name}"`);

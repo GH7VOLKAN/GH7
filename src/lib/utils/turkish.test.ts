@@ -10,6 +10,10 @@ import {
   normalizeDomain,
   generateSlug,
   textContains,
+  normalizeForMatching,
+  extractRootDomain,
+  levenshteinDistance,
+  brandMatchFuzzy,
 } from "./turkish";
 
 describe("normalizeTurkish", () => {
@@ -190,5 +194,107 @@ describe("textContains", () => {
 
   it("handles İ/I/ı/i correctly", () => {
     expect(textContains("İdavilla'yı öneririm", "idavilla")).toBe(true);
+  });
+});
+
+describe("normalizeForMatching", () => {
+  it("removes all non-alphanumeric", () => {
+    expect(normalizeForMatching("Warmhaus Türkiye")).toBe("warmhausturkiye");
+  });
+
+  it("normalizes Turkish chars", () => {
+    expect(normalizeForMatching("Isıtmax A.Ş.")).toBe("isitmaxas");
+  });
+
+  it("handles WARMHAUS = warmhaus = Warmhaus", () => {
+    expect(normalizeForMatching("WARMHAUS")).toBe(
+      normalizeForMatching("Warmhaus")
+    );
+    expect(normalizeForMatching("warmhaus")).toBe(
+      normalizeForMatching("WARMHAUS")
+    );
+  });
+
+  it("strips punctuation from domains", () => {
+    expect(normalizeForMatching("warmhaus.com")).toBe("warmhauscom");
+  });
+
+  it("handles empty", () => {
+    expect(normalizeForMatching("")).toBe("");
+  });
+});
+
+describe("extractRootDomain", () => {
+  it("extracts from full URL with path", () => {
+    expect(extractRootDomain("https://www.warmhaus.com.tr/about")).toBe(
+      "warmhaus"
+    );
+  });
+
+  it("extracts from bare domain", () => {
+    expect(extractRootDomain("warmhaus.com")).toBe("warmhaus");
+  });
+
+  it("handles www prefix", () => {
+    expect(extractRootDomain("www.isitmax.com")).toBe("isitmax");
+  });
+
+  it("handles uppercase", () => {
+    expect(extractRootDomain("HTTPS://WARMHAUS.COM")).toBe("warmhaus");
+  });
+
+  it("returns empty for empty", () => {
+    expect(extractRootDomain("")).toBe("");
+  });
+});
+
+describe("levenshteinDistance", () => {
+  it("returns 0 for identical", () => {
+    expect(levenshteinDistance("abc", "abc")).toBe(0);
+  });
+
+  it("returns length for empty comparison", () => {
+    expect(levenshteinDistance("", "abc")).toBe(3);
+    expect(levenshteinDistance("abc", "")).toBe(3);
+  });
+
+  it("handles single character diff", () => {
+    expect(levenshteinDistance("Warmhaus", "Warmhaüs")).toBe(1);
+  });
+
+  it("handles multi-char diff", () => {
+    expect(levenshteinDistance("ABC", "XYZ")).toBe(3);
+  });
+});
+
+describe("brandMatchFuzzy", () => {
+  it("matches WARMHAUS and Warmhaus (case)", () => {
+    expect(brandMatchFuzzy("WARMHAUS", "Warmhaus")).toBe(true);
+  });
+
+  it("matches Warmhaus and Warmhaüs (Turkish char)", () => {
+    expect(brandMatchFuzzy("Warmhaus", "Warmhaüs")).toBe(true);
+  });
+
+  it("matches Warmhaus Türkiye and Warmhaus İstanbul (first word)", () => {
+    expect(brandMatchFuzzy("Warmhaus Türkiye", "Warmhaus İstanbul")).toBe(true);
+  });
+
+  it("matches Warmhaus Türkiye and Warmhaus", () => {
+    expect(brandMatchFuzzy("Warmhaus Türkiye", "Warmhaus")).toBe(true);
+  });
+
+  it("does NOT match different brands", () => {
+    expect(brandMatchFuzzy("Warmhaus", "XYZ")).toBe(false);
+    expect(brandMatchFuzzy("Apple", "Samsung")).toBe(false);
+  });
+
+  it("does NOT match very short different strings", () => {
+    expect(brandMatchFuzzy("abc", "xyz")).toBe(false);
+  });
+
+  it("handles empty", () => {
+    expect(brandMatchFuzzy("", "Warmhaus")).toBe(false);
+    expect(brandMatchFuzzy("Warmhaus", "")).toBe(false);
   });
 });
