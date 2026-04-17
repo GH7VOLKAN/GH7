@@ -1,23 +1,6 @@
 import { prisma } from "@/lib/db";
 import { extractCompetitorNames } from "./types";
-
-// Turkish character normalization — matches analyzer.ts
-function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "I")
-    .replace(/ı/g, "i")
-    .replace(/Ş/g, "S")
-    .replace(/ş/g, "s")
-    .replace(/Ğ/g, "G")
-    .replace(/ğ/g, "g")
-    .replace(/Ü/g, "U")
-    .replace(/ü/g, "u")
-    .replace(/Ö/g, "O")
-    .replace(/ö/g, "o")
-    .replace(/Ç/g, "C")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
 export async function updateCompetitorScores(
   scanId: string,

@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
 /**
  * Upstash Redis client — serverless-friendly, connection-pooled.
@@ -81,11 +82,16 @@ export async function cacheDel(key: string): Promise<void> {
 
 /**
  * Generate a SHA256-based cache key from input components.
- * Uses Node.js crypto for proper SHA256 hashing — cross-user safe.
+ * Türkçe karakter aware: "İstanbul" ve "istanbul" aynı key'e düşer.
+ *
+ * CRITICAL: Bu fonksiyon değişirse eski cache'ler invalid olur.
+ * Admin endpoint /api/admin/cache/clear ile temizlenebilir.
  */
 export function makeCacheKey(prefix: string, ...parts: string[]): string {
+  // Lazy require for crypto (Node.js native)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createHash } = require("crypto");
-  const raw = parts.map((p) => p.toLowerCase().trim()).join(":");
+  const raw = parts.map((p) => normalizeTurkish(p).trim()).join(":");
   const hash = createHash("sha256").update(raw).digest("hex").slice(0, 16);
   return `${prefix}:${hash}`;
 }

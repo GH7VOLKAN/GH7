@@ -2,24 +2,7 @@ import { prisma } from "@/lib/db";
 import { cache } from "react";
 import type { PlatformKey } from "@/lib/types";
 import { extractCompetitorNames } from "@/lib/ai/types";
-
-// Turkish character normalization — consistent with analyzer.ts
-function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "I")
-    .replace(/ı/g, "i")
-    .replace(/Ş/g, "S")
-    .replace(/ş/g, "s")
-    .replace(/Ğ/g, "G")
-    .replace(/ğ/g, "g")
-    .replace(/Ü/g, "U")
-    .replace(/ü/g, "u")
-    .replace(/Ö/g, "O")
-    .replace(/ö/g, "o")
-    .replace(/Ç/g, "C")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
 export interface CompetitorRowData {
   id: string;

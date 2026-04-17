@@ -11,6 +11,7 @@
  */
 
 import { captureError } from "@/lib/monitoring";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
 const PERPLEXITY_API = "https://api.perplexity.ai/chat/completions";
 
@@ -520,9 +521,9 @@ function cleanCompanyName(name: string): string {
 
   if (!cleaned) return name;
 
-  // If the name is all lowercase (like "isitmax"), uppercase it
-  if (cleaned === cleaned.toLowerCase() && cleaned.length <= 20) {
-    cleaned = cleaned.toUpperCase();
+  // If the name is all lowercase (like "isitmax"), uppercase it (Türkçe-safe)
+  if (cleaned === cleaned.toLocaleLowerCase("tr-TR") && cleaned.length <= 20) {
+    cleaned = cleaned.toLocaleUpperCase("tr-TR");
   }
 
   return cleaned;
@@ -829,8 +830,10 @@ export function extractServiceRegions(text: string): string[] {
   }
 
   // Also look for "bölge" section in the text and extract listed regions
-  const bolgeIdx = text.toLowerCase().indexOf("bölge");
-  const hizmetBolgeIdx = text.toLowerCase().indexOf("hizmet ver");
+  // Türkçe-safe: normalizeTurkish kullanılıyor ("BÖLGE" → "bolge")
+  const normalizedText = normalizeTurkish(text);
+  const bolgeIdx = normalizedText.indexOf("bolge");
+  const hizmetBolgeIdx = normalizedText.indexOf("hizmet ver");
   const startIdx = Math.max(bolgeIdx, hizmetBolgeIdx);
   if (startIdx > -1) {
     // Grab a window around the "bölge" or "hizmet ver" keyword
@@ -839,9 +842,9 @@ export function extractServiceRegions(text: string): string[] {
     for (const item of listItems) {
       // Only include if it looks geographic (short, contains a known city/region word)
       if (item.length < 40) {
-        const lower = item.toLowerCase();
+        const lower = normalizeTurkish(item);
         const isGeographic = knownRegions.some((r) => r.pattern.test(lower)) ||
-          /il\b|şehir|bölge|geneli|yakası/i.test(lower);
+          /il\b|sehir|bolge|geneli|yakasi/i.test(lower);
         if (isGeographic) {
           found.add(item);
         }

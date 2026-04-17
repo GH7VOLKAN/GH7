@@ -194,13 +194,15 @@ export async function triggerProActivation(brandId: string): Promise<void> {
       for (const competitor of competitors) {
         try {
           // Find prompt results where this competitor appears
+          // Case-insensitive (Prisma PostgreSQL ILIKE).
+          // NOTE: İ/ı Türkçe farklılıkları için tam doğru değil — app-level filter'lanacak
           const promptResults = await prisma.promptResult.findMany({
             where: {
               scanId,
-              fullResponse: { contains: competitor.name },
+              fullResponse: { contains: competitor.name, mode: "insensitive" },
             },
             include: { prompt: { select: { text: true } } },
-            take: 15,
+            take: 30,
           });
 
           const appearances = promptResults.map((r) => ({

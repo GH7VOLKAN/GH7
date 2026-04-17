@@ -101,7 +101,7 @@ async function generateFirmaPrompts(
       if (areaResults.length > 0) {
         sonarContext = `\n\nPERPLEXITY SONAR ARAŞTIRMASI (${areaResults.length} faaliyet alanı × 2 sorgu):`;
         for (const ar of areaResults) {
-          sonarContext += `\n\n--- ${ar.area.toUpperCase()} ---\n${ar.data.slice(0, 2000)}`;
+          sonarContext += `\n\n--- ${ar.area.toLocaleUpperCase("tr-TR")} ---\n${ar.data.slice(0, 2000)}`;
         }
       }
     } catch {

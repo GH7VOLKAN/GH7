@@ -17,19 +17,9 @@ export const TURKEY_CITIES = [
   "Trabzon", "Tunceli", "Uşak", "Van", "Yalova", "Yozgat", "Zonguldak",
 ];
 
-/**
- * Normalize Turkish characters for case-insensitive search.
- */
-export function normalizeTurkish(text: string): string {
-  return text
-    .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
-    .replace(/Ş/g, "s").replace(/ş/g, "s")
-    .replace(/Ğ/g, "g").replace(/ğ/g, "g")
-    .replace(/Ü/g, "u").replace(/ü/g, "u")
-    .replace(/Ö/g, "o").replace(/ö/g, "o")
-    .replace(/Ç/g, "c").replace(/ç/g, "c")
-    .toLowerCase();
-}
+// Merkezi utility'den re-export (geriye dönük uyum için)
+import { normalizeTurkish } from "@/lib/utils/turkish";
+export { normalizeTurkish };
 
 /**
  * Search cities with Turkish-aware matching.
