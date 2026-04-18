@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normalizePhoneNumber } from "@/lib/sms/netgsm";
+import { isAdmin, logAdminAction } from "@/lib/admin";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,15 @@ export async function POST(req: NextRequest) {
     // Telefonu normalize et
     const normalizedPhone = phone ? normalizePhoneNumber(phone) : undefined;
     const normalizedEmail = email?.toLowerCase().trim();
+
+    // ADMIN BYPASS: admin sınırsız analiz yapabilir
+    if (isAdmin({ phone: normalizedPhone, email: normalizedEmail })) {
+      logAdminAction(
+        normalizedPhone ?? normalizedEmail ?? "unknown",
+        "can_start_admin_bypass",
+      );
+      return NextResponse.json({ canStart: true, adminBypass: true });
+    }
 
     const orConditions: Array<Record<string, unknown>> = [];
     if (normalizedPhone) orConditions.push({ phone: normalizedPhone });

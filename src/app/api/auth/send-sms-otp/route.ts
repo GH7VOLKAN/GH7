@@ -13,6 +13,7 @@ import {
   isValidTurkishPhone,
 } from "@/lib/sms/netgsm";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isAdmin, getAdminMagicCode, logAdminAction } from "@/lib/admin";
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +36,40 @@ export async function POST(request: Request) {
     }
 
     console.log(`[sms-otp] Request for phone: ${normalizedPhone.slice(0, 4)}****`);
+
+    // ADMIN BYPASS: admin telefonu ise SMS gönderme, sabit kod kabul edilir.
+    const isAdminPhone = isAdmin({ phone: normalizedPhone });
+    if (isAdminPhone) {
+      logAdminAction(normalizedPhone, "sms_otp_bypass_requested");
+      // Admin için VerificationCode kaydı oluştur (kod: ADMIN_MAGIC_CODE),
+      // ama SMS GÖNDERİLMEZ. Verify endpoint bu kodu kabul eder.
+      const adminCode = getAdminMagicCode();
+      const codeHash = hashCode(adminCode);
+
+      // Supabase magic link için synthetic email
+      const syntheticEmail = `phone_${normalizedPhone}@gh7.ai`;
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      );
+      const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: syntheticEmail,
+      });
+      const tokenHash = linkData?.properties?.hashed_token ?? "admin-bypass";
+
+      await prisma.verificationCode.deleteMany({ where: { phone: normalizedPhone } });
+      await prisma.verificationCode.create({
+        data: {
+          phone: normalizedPhone,
+          codeHash,
+          tokenHash,
+          expiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+        },
+      });
+
+      return NextResponse.json({ success: true, adminBypass: true });
+    }
 
     // Rate limit: 5 SMS per hour per phone number
     const rl = await checkRateLimit(`sms:${normalizedPhone}`, 5, 60);
