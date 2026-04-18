@@ -92,7 +92,7 @@ export default async function UpgradePage({ searchParams }: UpgradePageProps) {
             <h3 className="text-lg font-bold text-gray-900">Pro</h3>
             <div className="mt-2">
               <span className="text-2xl font-bold text-gray-900">
-                &#8378;4.995#8378;2.450
+                &#8378;699
               </span>
               <span className="text-sm text-gray-500">/ay</span>
             </div>

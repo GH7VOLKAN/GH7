@@ -467,7 +467,7 @@ export default function HomePage() {
               <p className="footer-desc">Türkiye&apos;nin ilk GEO platformu. Bir ISITMAX projesidir.</p>
             </div>
             <div className="footer-cols">
-              <div className="fcol"><h4>Çözümler</h4><ul><li><a href="#">Tespit Et</a></li><li><a href="#">Takip Et</a></li><li><a href="#">Çözüm Üret</a></li><li><a href="#">Uygulat</a></li></ul></div>
+              <div className="fcol"><h4>Ürün</h4><ul><li><Link href="/analiz">Ücretsiz Analiz</Link></li><li><a href="#pricing">Pro Üyelik</a></li><li><Link href="/panel/hizmetler">Hizmet Paketleri</Link></li></ul></div>
               <div className="fcol"><h4>Platform</h4><ul><li><a href="#">Fiyatlar</a></li><li><Link href="/giris">Giriş</Link></li><li><a href="#">API</a></li></ul></div>
               <div className="fcol"><h4>Kaynaklar</h4><ul><li><a href="#">GEO Nedir?</a></li><li><Link href="/blog">Blog</Link></li><li><a href="#faq">SSS</a></li><li><a href="#">İletişim</a></li></ul></div>
             </div>
