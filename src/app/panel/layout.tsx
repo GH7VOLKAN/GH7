@@ -18,6 +18,7 @@ export default async function PanelLayout({
   let brandData: { id: string; name: string; domain: string; sector: string | null; type: string; serviceRegions: string[] } | null = null;
   let profileData: { id: string; email: string; fullName: string | null; avatarUrl: string | null; plan: string; emailWeeklyReport: boolean; emailVerified: boolean } | null = null;
   let plan = "free";
+  let needsOnboard = false;
 
   try {
     const user = await getUserProfile();
@@ -46,13 +47,22 @@ export default async function PanelLayout({
         emailVerified: (activeBrand.profile as Record<string, unknown>).emailVerified as boolean ?? false,
       };
     } else if (user && activeBrand?.profile && !activeBrand.brand) {
-      // User exists but no brand → onboarding
-      redirect("/onboard");
+      // User var ama brand yok → onboarding gerekir.
+      // ÖNEMLİ: redirect() burada throw ederse dıştaki catch yakalar ve
+      // isDemo=true olarak düşer, sonsuz redirect loop'a sebep olur.
+      // Bu yüzden flag set edip try bloğu DIŞINDA redirect ediyoruz.
+      needsOnboard = true;
     }
     // If no user at all → isDemo stays true, show demo data
-  } catch {
+  } catch (err) {
+    console.error("[panel/layout] Auth/DB error:", err);
     // Auth/DB error → fallback to demo mode
     isDemo = true;
+  }
+
+  // redirect() try/catch dışında çağrılmalı (Next.js NEXT_REDIRECT error'u)
+  if (needsOnboard) {
+    redirect("/onboard");
   }
 
   return (

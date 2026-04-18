@@ -23,7 +23,17 @@ const CATEGORY_ORDER: string[] = ["content", "schema", "entity", "tech", "extern
 
 export default async function GenelBakisPage() {
   const activeBrand = await getActiveBrand();
-  if (!activeBrand?.brand) redirect("/panel");
+
+  // Kullanıcı giriş yapmış ama brand yok — /onboard'a gönder.
+  // (Eskiden "/panel"'e redirect ediyordu, /panel de /panel/genel'e redirect
+  // ediyordu — sonsuz loop. Kullanıcıların "Bu sayfada bir hata oluştu"
+  // görmesinin nedeni buydu.)
+  if (!activeBrand) {
+    redirect("/giris");
+  }
+  if (!activeBrand.brand) {
+    redirect("/onboard");
+  }
 
   const brandId = activeBrand.brand.id;
   const userId = activeBrand.profile?.id;
@@ -32,8 +42,16 @@ export default async function GenelBakisPage() {
   const plan = activeBrand.plan ?? "free";
 
   const [overviewData, latestAudit] = await Promise.all([
-    getOverviewData(brandId).catch(() => null),
-    userId ? getLatestAudit(userId, domain, brandName).catch(() => null) : Promise.resolve(null),
+    getOverviewData(brandId).catch((e) => {
+      console.error("[panel/genel] getOverviewData error:", e);
+      return null;
+    }),
+    userId
+      ? getLatestAudit(userId, domain, brandName).catch((e) => {
+          console.error("[panel/genel] getLatestAudit error:", e);
+          return null;
+        })
+      : Promise.resolve(null),
   ]);
 
   const mentionScore = overviewData?.mentionScore ?? latestAudit?.overallScore ?? 0;

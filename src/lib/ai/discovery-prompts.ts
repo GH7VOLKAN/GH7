@@ -31,16 +31,21 @@ ZORLAYICI KURALLAR (TARGET QUERIES için) — AI'ı somut isim vermeye zorla:
    - Karşılaştırma: "A mı B mi daha iyi"
    - Liste: "en iyi 5 [niş] listele"
    - Spesifik soru: "[niş] hizmeti veren yerler nereler"
-   - Marka tanınırlığı: "[marka/kişi adı] hakkında ne biliyorsun"
 
 4. Her sorguda EN AZ BİR somut ürün/hizmet/uzmanlık adı geçmeli,
    genel kategori yerine dar niş kullanılmalı.
 
-5. BONUS — Marka/Kişi tanınırlık sorguları (2-3 adet ZORUNLU):
-   "[marka adı] hakkında ne biliyorsun"
-   "[marka adı] nasıl bir firma, güvenilir mi"
-   "[kişi adı] kimdir" (kişi tipi için)
-   Bu sorgular AI'ın markayı/kişiyi tanıyıp tanımadığını test eder.
+5. Sorgular POTANSİYEL MÜŞTERİ PERSPEKTİFİNDEN olmalı — "müşteri bir
+   ürün/hizmet arıyor" niyeti. Marka adını açıkça SORMA. Müşteri zaten
+   markayı bilmiyor olabilir; yeni bir firma/rakip arıyor. Markayı sorgu
+   içinde anmak yerine, AI'ın cevabında markadan bahsedip bahsetmediğini
+   ölç (bu işi analyzer yapar — sorgu içeriğinde marka adı geçmemeli).
+
+   ❌ YASAK: "[marka] hakkında ne biliyorsun"
+   ❌ YASAK: "[marka] güvenilir mi"
+   ❌ YASAK: "[kişi adı] kimdir"
+   ✅ DOĞRU: "balıkesir'de en iyi diş hekimi kim, isim ver"
+   (AI cevabında [kişi adı] geçerse → bahsedildi olarak sayılır)
 
 6. Minimum 10, maksimum 15 sorgu üret. Tekrara düşme, her sorgu benzersiz olmalı.
 `.trim();
@@ -97,20 +102,20 @@ d) Bilgi + öneri karışık:
    "[hizmet] nasıl yapılır ve bunu yapan güvenilir firmalar hangileri"
    "[il]'de [hizmet] yaptıracağım, nereden teklif almalıyım"
 
-e) Marka tanınırlığı (ZORUNLU 2-3 adet):
-   "[marka adı] hakkında ne biliyorsun"
-   "[marka adı] nasıl bir firma, güvenilir mi"
-   "[marka adı] [ürün/hizmet] konusunda iyi mi"
-
-ÖRNEK — İdavilla (Balıkesir, İstanbul, İzmir):
+ÖRNEK — Firma (Balıkesir/İstanbul/İzmir bölgesi, konaklama sektörü):
   "edremit güre bölgesinde bungalov konaklama tesisleri listele"
   "kazdağları eteklerinde doğayla iç içe konaklama yerleri öner"
   "balıkesir edremit'te termal otel ve bungalov tesisleri hangileri"
   "ailece kazdağlarında hafta sonu tatili için 5 yer öner"
   "istanbul'dan kazdağlarına tatil için bungalov tesis öner"
   "izmir'den edremit körfezine konaklama önerilerin neler"
-  "idavilla hakkında ne biliyorsun"
-  "idavilla bungalov tavsiye eder misin"
+  "güre akçay'da mandalina bahçesinde bungalov hangi tesisler"
+  "adana'dan güre'ye hafta sonu bungalov tatili için tesis öner"
+  "balıkesir edremit'te evcil hayvan kabul eden bungalov tesisleri"
+
+KRİTİK: Sorgularda MARKA ADINI KULLANMA. Müşteri yeni bir firma arıyor,
+marka adını bilmiyor olabilir. Sorgular "potansiyel müşteri bakış açısı"
+ile yazılmalı — sen hizmet arıyormuş gibi.
 
 KESİN KURALLAR (ÜRÜN/HİZMET çıkarımı için):
 - Sadece GERÇEKTEN sattıkları/sundukları şeyleri listele, tahmin yapma
@@ -194,19 +199,18 @@ c) Güven/tavsiye:
    "[il]'de iyi bir [uzmanlık] nasıl bulurum, tavsiye et"
    "[uzmanlık] seçerken nelere bakmalıyım ve [il]'de kimleri önerirsin"
 
-d) Kişi tanınırlığı (ZORUNLU 2-3 adet):
-   "[ad soyad] kimdir"
-   "[ad soyad] [uzmanlık] olarak nasıl"
-   "[ad soyad] hakkında yorumlar"
-
-ÖRNEK — Dr. Ayşe Kaya (Diş Hekimi, Balıkesir):
+ÖRNEK — Kişi (Balıkesir bölgesi, diş hekimliği):
   "balıkesir'de en iyi diş hekimlerini listele"
   "edremit'te implant yapan diş hekimi öner"
   "balıkesir'de zirkonyum diş kaplama yapan doktorlar hangileri"
   "bandırma'da çocuk diş hekimi tavsiye et"
   "balıkesir diş hekimleri arasında hangisini önerirsin, karşılaştır"
-  "dr ayşe kaya diş hekimi hakkında ne biliyorsun"
-  "dr ayşe kaya balıkesir tavsiye eder misin"
+  "gömülü yirmilik diş çekimi için balıkesir'de uzman doktor kim"
+  "balıkesir merkez'de estetik diş hekimliği yapan kliniği öner"
+
+KRİTİK: Sorgularda KİŞİ ADINI KULLANMA. Potansiyel hasta yeni bir
+diş hekimi arıyor, kişinin adını bilmiyor. Sorgular "arayan müşteri
+perspektifi" — uzmanlık + il + spesifik ihtiyaç içermeli.
 
 KESİN KURALLAR:
 - Sadece İNTERNETTE BULDUĞUN gerçek bilgileri yaz, uydurma
@@ -295,21 +299,21 @@ c) Bilgi + öneri karışık:
    "[ürün] alırken nelere dikkat etmeli, hangi markalar güvenilir"
    "trendyol'da / hepsiburada'da en iyi [kategori] markaları hangileri"
 
-d) Marka tanınırlığı (ZORUNLU 2-3 adet):
-   "[marka adı] hakkında ne biliyorsun"
-   "[marka adı] güvenilir mi, yorumları nasıl"
-   "[marka adı] [ürün] konusunda iyi mi"
-
-ÖRNEK — ISITMAX (yerden ısıtma kablosu markası, Türkiye):
+ÖRNEK — E-ticaret (yerden ısıtma kablosu kategorisi, Türkiye):
   "elektrikli yerden ısıtma kablosu satın almak istiyorum, en iyi markaları listele"
   "villa banyosu için yerden ısıtma kablosu hangi marka iyi öner"
   "yerden ısıtma kablosu alırken hangi marka daha güvenilir, karşılaştır"
   "türkiye'de yerden ısıtma kablosu üreten firmalar hangileri"
   "trendyol'da yerden ısıtma kablosu en iyi markalar listele"
-  "isıtmax yerden ısıtma kablosu yorumları nasıl"
-  "isıtmax markası güvenilir mi, hakkında ne biliyorsun"
+  "hepsiburada yerden ısıtma kablosu hangi markaları var"
+  "karbon film ısıtıcı vs rezistans kablo hangisini seçmeli, marka önerin"
 
-Marketplace vurgusu: sorguların bir kısmına "trendyol'da", "hepsiburada'da", "amazon'da" gibi platform adları ekle — alıcı niyetini yansıtsın.
+KRİTİK: Sorgularda MARKA ADINI KULLANMA. Potansiyel alıcı yeni bir marka
+arıyor. Sorgular marka-agnostik olmalı — kategori + ürün + marketplace +
+karşılaştırma içermeli.
+
+Marketplace vurgusu: sorguların bir kısmına "trendyol'da", "hepsiburada'da",
+"amazon'da" gibi platform adları ekle — alıcı niyetini yansıtsın.
 
 KESİN KURALLAR:
 - GERÇEK bilgi yaz, uydurma
@@ -401,22 +405,22 @@ c) Karşılaştırma / Kalite:
    EN: "most reliable [product] brands from turkey"
    TR: "türk [ürün] markaları avrupa pazarında kimler"
 
-d) Marka tanınırlığı (ZORUNLU 2-3 adet, hedef dilde):
-   EN: "what do you know about [brand name]"
-   EN: "is [brand name] a reliable [product] manufacturer"
-   DE: "was wissen sie über [markenname]"
-
-ÖRNEK — ISITMAX (yerden ısıtma kablosu ihracatçısı, hedef: Almanya + Körfez):
+ÖRNEK — Yurtdışı ihracatçı (yerden ısıtma kablosu, hedef: Almanya + Körfez):
   "best heating cable manufacturers in turkey, list them"
   "reliable electric floor heating cable suppliers from turkey"
   "which turkish companies export underfloor heating to germany"
   "beste fußbodenheizung kabel hersteller aus der türkei"
   "turkish heating cable brands for wholesale, compare"
   "ısıtma kablosu ihracatı yapan türk firmaları listele"
-  "what do you know about isitmax heating cables"
-  "is isitmax a reliable heating cable manufacturer"
+  "top floor heating cable exporters from turkey to middle east"
+  "which turkish heating cable manufacturer is best for large projects"
 
-Dil dağılımı: ~60% hedef pazar dili (en/de/ar), ~40% Türkçe. Hedef pazar dili birden fazlaysa karışık kullan.
+KRİTİK: Sorgularda MARKA ADINI KULLANMA (ne İngilizce ne Türkçe). Yabancı
+alıcı yeni bir tedarikçi arıyor — spesifik marka adını bilmiyor. Sorgular
+"manufacturer / supplier / exporter / wholesale" niyeti ile yazılmalı.
+
+Dil dağılımı: ~60% hedef pazar dili (en/de/ar), ~40% Türkçe. Hedef pazar
+dili birden fazlaysa karışık kullan.
 
 KESİN KURALLAR:
 - Sadece siteden tespit ettiğini yaz, tahmin yapma
