@@ -30,9 +30,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_ORDER = ["content", "schema", "entity", "tech", "external", "ai"];
 
 export default async function AuditDetayPage() {
+  // Guard: panel/layout.tsx halleder.
   const activeBrand = await getActiveBrand();
-  if (!activeBrand) redirect("/giris");
-  if (!activeBrand.brand) redirect("/analiz");
+  if (!activeBrand?.brand) return null;
 
   const userId = activeBrand.profile?.id;
   const domain = activeBrand.brand.domain ?? "";

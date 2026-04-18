@@ -433,57 +433,71 @@ function AnalizPageInner() {
     phone: string | null;
   } | null>(null);
 
-  /* ---- Session check on mount ---- */
+  /* ---- /analiz MOUNT GUARD — TEK merkezi kontrol ----
+   *
+   * /api/auth/state'e sorar, 4 duruma göre davranır:
+   *
+   *   no_session → yeni kullanıcı, form göster (hero'dan başla)
+   *   no_profile → orphan session, form göster (yeni kayıt)
+   *   no_brand  → authenticated ama analiz yok → form göster, OTP atla,
+   *               e-posta/telefon prefill
+   *   complete  → kayıtlı kullanıcı → /panel/genel redirect (form YOK)
+   *               EXCEPT: admin → form göster (yeni analiz yapabilir)
+   */
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user || cancelled) return;
+        const res = await fetch("/api/auth/state");
+        if (!res.ok) return;
+        const state = await res.json();
+        if (cancelled) return;
 
-        // Profile'dan phone bilgisini çek
-        let phoneFromProfile: string | null = null;
-        try {
-          const res = await fetch("/api/panel/profile");
-          if (res.ok) {
-            const data = await res.json();
-            phoneFromProfile = data?.profile?.phone ?? null;
-          }
-        } catch {
-          // profile API yoksa phone null kalır
+        // complete + admin değil → dashboard'a zorla git, form gösterme
+        if (state.status === "complete" && !state.isAdmin) {
+          router.replace("/panel/genel");
+          return;
         }
 
-        if (cancelled) return;
+        // complete + admin VE OR no_brand → form göster ama OTP atla + prefill
+        const isAuthenticated =
+          state.status === "complete" || state.status === "no_brand";
+        if (!isAuthenticated) {
+          // no_session / no_profile → normal yeni kullanıcı akışı
+          return;
+        }
+
+        const email: string = state.profile?.email ?? state.email ?? "";
+        const phoneRaw: string | null =
+          state.profile?.phone ?? state.phone ?? null;
+
         setAuthedSession({
-          userId: user.id,
-          email: user.email ?? "",
-          phone: phoneFromProfile,
+          userId: state.userId ?? state.profile?.id ?? "",
+          email,
+          phone: phoneRaw,
         });
 
-        // FormData'yı prefill et — kullanıcı email/phone kutucuklarını
-        // tekrar doldurmak zorunda kalmaz
         setFormData((prev) => ({
           ...prev,
-          email: prev.email || user.email || "",
+          email: prev.email || email,
           phone:
             prev.phone && prev.phone !== "+90"
               ? prev.phone
-              : phoneFromProfile
-                ? phoneFromProfile.startsWith("90")
-                  ? "+" + phoneFromProfile
-                  : phoneFromProfile
+              : phoneRaw
+                ? phoneRaw.startsWith("90")
+                  ? "+" + phoneRaw
+                  : phoneRaw
                 : "+90",
-          kvkkAccepted: true, // Login olmuş kullanıcı zaten KVKK onayladı
+          kvkkAccepted: true, // Authenticated user KVKK'yı zaten onayladı
         }));
       } catch {
-        // Session check fail → normal akış
+        // state endpoint başarısız → normal yeni kullanıcı akışı
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   /* ---- auto-fill from URL params (landing page redirect) ---- */
   useEffect(() => {
@@ -954,7 +968,24 @@ function AnalizPageInner() {
           }),
         });
         if (res.ok) {
-          // Başarılı → dashboard'a redirect
+          // Brand oluşturulduğundan emin ol — /api/auth/state ile doğrula.
+          // Prompt kontrol listesi: "redirect öncesi Brand var mı"
+          try {
+            const stateCheck = await fetch("/api/auth/state");
+            if (stateCheck.ok) {
+              const s = await stateCheck.json();
+              if (s.status === "complete") {
+                router.replace("/panel/genel?newAudit=1");
+                return;
+              }
+            }
+          } catch {
+            // state check başarısız olursa yine redirect dene
+          }
+          // state "complete" değil → Brand yazılamadı, yine redirect
+          // (panel/layout zaten no_brand'ı /analiz'e gönderir; loop önleme
+          // için session kontrol helper'ı zaten mount'ta yapılmıştı)
+          console.warn("[analiz] Audit ok ama state complete değil, yine de redirect");
           router.replace("/panel/genel?newAudit=1");
           return;
         } else {

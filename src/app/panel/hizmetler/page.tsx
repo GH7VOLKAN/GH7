@@ -12,8 +12,8 @@ import { PageHero } from "@/components/panel/page-hero";
 
 export default async function HizmetlerPage() {
   const activeBrand = await getActiveBrand();
-  if (!activeBrand?.profile) redirect("/giris");
-  if (!activeBrand.brand) redirect("/analiz");
+  // Guard: panel/layout.tsx halleder.
+  if (!activeBrand?.brand || !activeBrand.profile) return null;
 
   const brand = activeBrand.brand;
   const userId = activeBrand.profile.id;

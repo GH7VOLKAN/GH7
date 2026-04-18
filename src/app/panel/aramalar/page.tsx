@@ -7,9 +7,9 @@ import type { HeroStat } from "@/components/panel/page-hero";
 import { redirect } from "next/navigation";
 
 export default async function AramalarPage() {
+  // Guard: panel/layout.tsx halleder.
   const activeBrand = await getActiveBrand();
-  if (!activeBrand) redirect("/giris");
-  if (!activeBrand.brand) redirect("/analiz");
+  if (!activeBrand?.brand) return null;
 
   const brandId = activeBrand.brand.id;
   const plan = activeBrand.plan ?? "free";
