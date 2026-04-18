@@ -18,6 +18,8 @@ export default function LoginPage() {
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // NO_ACCOUNT: login denemesinde kayıt yoksa true. UI'da /analiz CTA gösterir.
+  const [noAccount, setNoAccount] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [sessionCleared, setSessionCleared] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
@@ -161,6 +163,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        // Kayıt yok → UI'da /analiz CTA göster
+        if (data.error === "NO_ACCOUNT" || res.status === 404) {
+          setNoAccount(true);
+          setLoading(false);
+          return;
+        }
         setError(data.error || "Kod gönderilemedi");
         setLoading(false);
         return;
@@ -203,6 +211,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        // Kayıt yok → UI'da /analiz CTA göster
+        if (data.error === "NO_ACCOUNT" || res.status === 404) {
+          setNoAccount(true);
+          setLoading(false);
+          return;
+        }
         setError(data.error || "SMS gönderilemedi");
         setLoading(false);
         return;
@@ -441,14 +455,67 @@ export default function LoginPage() {
               <GH7Logo size="default" />
             </Link>
 
-            {step === "input" ? (
+            {noAccount ? (
+              /* Kayıt yok → /analiz CTA */
+              <>
+                <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--black)", letterSpacing: "-.03em", marginBottom: 8, lineHeight: 1.2 }}>
+                  Hesabınız bulunamadı
+                </h1>
+                <p style={{ fontSize: 15, color: "var(--g500)", marginBottom: 32, lineHeight: 1.6 }}>
+                  <span style={{ fontWeight: 600, color: "var(--black)" }}>
+                    {method === "email" ? email : `+90${phone.replace(/\D/g, "")}`}
+                  </span>{" "}
+                  ile kayıtlı bir hesap yok. Ücretsiz analiz ile başlayın — analiz
+                  sonunda hesabınız otomatik oluşur.
+                </p>
+                <Link
+                  href="/analiz"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    background: "var(--black)",
+                    color: "var(--white)",
+                    padding: "14px",
+                    borderRadius: 10,
+                    textAlign: "center",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    marginBottom: 16,
+                  }}
+                >
+                  Ücretsiz Analize Başla →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNoAccount(false);
+                    setError(null);
+                  }}
+                  style={{
+                    width: "100%",
+                    background: "transparent",
+                    color: "var(--g500)",
+                    padding: "10px",
+                    border: "none",
+                    fontSize: 14,
+                    cursor: "pointer",
+                  }}
+                >
+                  ← Farklı bir e-posta/telefon dene
+                </button>
+              </>
+            ) : step === "input" ? (
               <>
                 {/* Heading */}
                 <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--black)", letterSpacing: "-.03em", marginBottom: 8, lineHeight: 1.2 }}>
                   Giriş yapın.
                 </h1>
                 <p style={{ fontSize: 15, color: "var(--g500)", marginBottom: 32 }}>
-                  Hesabınız yok mu? Ücretsiz başlayın.
+                  Hesabınız yok mu?{" "}
+                  <Link href="/analiz" style={{ color: "var(--black)", fontWeight: 600, textDecoration: "underline" }}>
+                    Ücretsiz analize başlayın →
+                  </Link>
                 </p>
               </>
             ) : (
@@ -516,7 +583,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {step === "input" ? (
+            {noAccount ? null : step === "input" ? (
               <>
                 {/* Google OAuth button */}
                 <button

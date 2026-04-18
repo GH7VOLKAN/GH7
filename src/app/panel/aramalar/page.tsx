@@ -1,29 +1,21 @@
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getPromptsData } from "@/lib/dal/prompts";
 import { AramalarContent } from "@/components/panel/aramalar-content";
-import { EmptyState } from "@/components/panel/empty-state";
-import { Search } from "lucide-react";
 import { PageBottomCTA } from "@/components/panel/page-bottom-cta";
 import { PageHero } from "@/components/panel/page-hero";
 import type { HeroStat } from "@/components/panel/page-hero";
+import { redirect } from "next/navigation";
 
 export default async function AramalarPage() {
   const activeBrand = await getActiveBrand();
-  const brandId = activeBrand?.brand?.id;
-  const plan = activeBrand?.plan ?? "free";
-  const serviceRegions =
-    (activeBrand?.brand as { serviceRegions?: string[] } | undefined)
-      ?.serviceRegions ?? [];
+  if (!activeBrand) redirect("/giris");
+  if (!activeBrand.brand) redirect("/analiz");
 
-  if (!brandId) {
-    return (
-      <EmptyState
-        icon={Search}
-        title="Marka bulunamadı"
-        description="Lütfen ayarlardan marka ekleyin."
-      />
-    );
-  }
+  const brandId = activeBrand.brand.id;
+  const plan = activeBrand.plan ?? "free";
+  const serviceRegions =
+    (activeBrand.brand as { serviceRegions?: string[] } | undefined)
+      ?.serviceRegions ?? [];
 
   const data = await getPromptsData(brandId);
 

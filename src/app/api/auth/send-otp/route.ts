@@ -11,7 +11,13 @@ import { sendOtpEmail } from "@/lib/email/resend";
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const { email, mode } = body as {
+      email?: string;
+      // "login" (default) → sadece kayıtlı kullanıcı için kod gönder
+      // "register" → kayıt akışı (/analiz'den)
+      mode?: "login" | "register";
+    };
 
     if (!email || typeof email !== "string") {
       return NextResponse.json(
@@ -23,6 +29,26 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     console.log(`[otp] Send OTP request for: ${normalizedEmail}`);
+
+    // GİRİŞ SADECE KAYITLI KULLANICI İÇİN (mode="login" default)
+    const effectiveMode = mode ?? "login";
+    if (effectiveMode === "login") {
+      const existingProfile = await prisma.profile.findUnique({
+        where: { email: normalizedEmail },
+        select: { id: true },
+      });
+      if (!existingProfile) {
+        return NextResponse.json(
+          {
+            error: "NO_ACCOUNT",
+            message:
+              "Bu e-posta ile kayıtlı hesap bulunamadı. Ücretsiz analiz ile başlayın.",
+            redirectTo: "/analiz",
+          },
+          { status: 404 },
+        );
+      }
+    }
 
     // Check RESEND_API_KEY is configured
     if (!process.env.RESEND_API_KEY) {

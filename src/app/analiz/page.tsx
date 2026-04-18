@@ -554,7 +554,8 @@ function AnalizPageInner() {
       const res = await fetch("/api/auth/send-sms-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullPhone }),
+        // mode: "register" → /analiz kayıt akışı, Profile yoksa oluşturulur
+        body: JSON.stringify({ phone: fullPhone, mode: "register" }),
       });
       const data = await res.json();
       if (!res.ok) {
