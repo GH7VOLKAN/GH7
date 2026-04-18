@@ -453,13 +453,13 @@ function AnalizPageInner() {
         const state = await res.json();
         if (cancelled) return;
 
-        // complete + admin değil → dashboard'a zorla git, form gösterme
+        // complete + admin DEĞİL → dashboard'a zorla git, form gösterme
         if (state.status === "complete" && !state.isAdmin) {
           router.replace("/panel/genel");
           return;
         }
 
-        // complete + admin VE OR no_brand → form göster ama OTP atla + prefill
+        // complete + admin VEYA no_brand → form göster ama OTP atla + prefill
         const isAuthenticated =
           state.status === "complete" || state.status === "no_brand";
         if (!isAuthenticated) {
@@ -946,6 +946,12 @@ function AnalizPageInner() {
             location: formData.cities[0],
             keywords: formData.keywords,
             source,
+            // Session cookie yoksa backend email/phone'dan Profile bulabilsin diye.
+            // Brand oluşturmanın garanti altına alınması için kritik (redirect loop önleme).
+            email: formData.email || undefined,
+            phone: formData.phone
+              ? normalizePhone(formData.phone)
+              : undefined,
             competitorUrl: formData.competitor || undefined,
             discoveredCompetitors: discovery?.competitors?.slice(0, 5) ?? [],
             // Perplexity discovery sonucu — Brand'ı zenginleştirmek ve
