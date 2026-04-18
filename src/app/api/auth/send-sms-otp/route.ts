@@ -16,7 +16,13 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
-    const { phone } = await request.json();
+    const body = await request.json();
+    const { phone, mode } = body as {
+      phone?: string;
+      // "login" (default) → sadece kayıtlı kullanıcı için kod gönder
+      // "register" → kayıt için kod gönder (/analiz akışı kullanır)
+      mode?: "login" | "register";
+    };
 
     if (!phone || typeof phone !== "string") {
       return NextResponse.json(
@@ -34,7 +40,29 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`[sms-otp] Request for phone: ${normalizedPhone.slice(0, 4)}****`);
+    // GİRİŞ SADECE KAYITLI KULLANICI İÇİN
+    // mode="login" (default): Profile yoksa reddet, /analiz'e yönlendir.
+    // mode="register" (/analiz'den): Profile yoksa izin ver (kayıt akışı).
+    const effectiveMode = mode ?? "login";
+    if (effectiveMode === "login") {
+      const existingProfile = await prisma.profile.findFirst({
+        where: { phone: normalizedPhone },
+        select: { id: true },
+      });
+      if (!existingProfile) {
+        return NextResponse.json(
+          {
+            error: "NO_ACCOUNT",
+            message:
+              "Bu telefon ile kayıtlı hesap bulunamadı. Ücretsiz analiz ile başlayın.",
+            redirectTo: "/analiz",
+          },
+          { status: 404 },
+        );
+      }
+    }
+
+    console.log(`[sms-otp] Request for phone: ${normalizedPhone.slice(0, 4)}**** mode=${effectiveMode}`);
 
     // Rate limit: 5 SMS per hour per phone number
     const rl = await checkRateLimit(`sms:${normalizedPhone}`, 5, 60);

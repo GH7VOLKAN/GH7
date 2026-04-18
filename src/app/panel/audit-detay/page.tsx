@@ -32,18 +32,7 @@ const CATEGORY_ORDER = ["content", "schema", "entity", "tech", "external", "ai"]
 export default async function AuditDetayPage() {
   const activeBrand = await getActiveBrand();
   if (!activeBrand) redirect("/giris");
-
-  // Brand yok → empty state (redirect YOK, ikinci analiz akışı yok)
-  if (!activeBrand.brand) {
-    return (
-      <EmptyState
-        icon={ClipboardCheck}
-        title="Henüz analiz yapmadınız"
-        description="43 madde denetimini görmek için önce ücretsiz analizinizi tamamlayın."
-        action={NO_AUDIT_CTA}
-      />
-    );
-  }
+  if (!activeBrand.brand) redirect("/analiz");
 
   const userId = activeBrand.profile?.id;
   const domain = activeBrand.brand.domain ?? "";

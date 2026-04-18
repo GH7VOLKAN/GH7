@@ -13,25 +13,7 @@ import { PageHero } from "@/components/panel/page-hero";
 export default async function HizmetlerPage() {
   const activeBrand = await getActiveBrand();
   if (!activeBrand?.profile) redirect("/giris");
-
-  // Brand yok → empty state (ikinci analiz akışı yok)
-  if (!activeBrand.brand) {
-    return (
-      <EmptyState
-        icon={Wrench}
-        title="Henüz analiz yapmadınız"
-        description="Hizmet paketlerinizi görmek için önce ücretsiz analizinizi tamamlayın. Audit skorunuza göre size özel paketler sunacağız."
-        action={
-          <a
-            href="/analiz"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-800"
-          >
-            Ücretsiz Analize Başla →
-          </a>
-        }
-      />
-    );
-  }
+  if (!activeBrand.brand) redirect("/analiz");
 
   const brand = activeBrand.brand;
   const userId = activeBrand.profile.id;
