@@ -21,7 +21,10 @@ export default function LoginPage() {
   const [cooldown, setCooldown] = useState(0);
   const [sessionCleared, setSessionCleared] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
-  const [isReturning, setIsReturning] = useState(false);
+  // Not: isReturning state kaldırıldı — login ekranı client-side. Login
+  // öncesi kullanıcıya özel veri (skor, aksiyon sayısı) gösterilemez, o
+  // bilgi DB'de ve giriş yaptıktan sonra erişilebilir. Sağ panel artık
+  // herkese aynı: generic marketing content.
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // On page load: check for existing session and handle ?logout=true
@@ -30,17 +33,12 @@ export default function LoginPage() {
     const shouldLogout = params.get("logout") === "true";
     const supabase = createClient();
 
-    // Check if returning user — email'i otomatik doldur
-    const savedEmail = localStorage.getItem("gh7_email");
-    if (savedEmail || params.get("returning")) {
-      setIsReturning(true);
-      if (savedEmail && savedEmail.includes("@")) {
-        setEmail(savedEmail);
-      } else if (savedEmail && savedEmail.startsWith("+90")) {
-        setMethod("phone");
-        setPhone(savedEmail.replace("+90", "").replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4"));
-      }
-    }
+    // Saved email/phone otomatik doldurma KALDIRILDI.
+    // Eski davranış: localStorage'daki email prefill → kullanıcı fark etmeden
+    // "Kod Gönder" tıklanca başkasının e-postasına kod gidiyordu.
+    // Yeni: her giriş fresh başlar, kullanıcı kendi e-postasını yazar.
+    // (gh7_email key korundu ama sadece son başarılı girişin kaydı için —
+    // otomatik doldurma yok.)
 
     async function handleSessionCleanup() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -447,10 +445,10 @@ export default function LoginPage() {
               <>
                 {/* Heading */}
                 <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--black)", letterSpacing: "-.03em", marginBottom: 8, lineHeight: 1.2 }}>
-                  {isReturning ? "Tekrar hoş geldiniz." : "Giriş yapın."}
+                  Giriş yapın.
                 </h1>
                 <p style={{ fontSize: 15, color: "var(--g500)", marginBottom: 32 }}>
-                  {isReturning ? "Hesabınıza giriş yapın." : "Hesabınız yok mu? Ücretsiz başlayın."}
+                  Hesabınız yok mu? Ücretsiz başlayın.
                 </p>
               </>
             ) : (
@@ -736,63 +734,39 @@ export default function LoginPage() {
             color: "var(--white)",
           }}
         >
-          {isReturning ? (
-            /* Version B — Returning user */
-            <>
-              <span style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "rgba(255,255,255,.4)", marginBottom: 20, display: "block" }}>
-                Tekrar hoş geldiniz
-              </span>
-              <h2 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1.15, marginBottom: 40 }}>
-                Bu hafta için<br/>3 aksiyon hazır.
-              </h2>
-              <div style={{ marginBottom: 40 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px", color: "rgba(255,255,255,.4)", marginBottom: 16 }}>Geçen hafta ne oldu</div>
-                {[
-                  { label: "GEO Skoru", val: "74", delta: "\u21913" },
-                  { label: "Ses Payı", val: "%26", delta: "\u21912" },
-                  { label: "Görünür Sorgu", val: "12", delta: "\u21912" },
-                ].map((m, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.1)", fontSize: 14 }}>
-                    <span style={{ color: "rgba(255,255,255,.5)" }}>{m.label}</span>
-                    <span style={{ fontWeight: 700, fontFamily: "monospace" }}>{m.val} <span style={{ color: "#22C55E" }}>{m.delta}</span></span>
-                  </div>
-                ))}
-              </div>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,.9)", marginBottom: 8, lineHeight: 1.4 }}>
-                Rakibiniz bu hafta 2 sorguda sizi geçti.
-              </p>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,.4)" }}>Giriş yapın, görün.</p>
-            </>
-          ) : (
-            /* Version A — New user */
-            <>
-              <div style={{ marginBottom: 40 }}>
-                <GH7Logo size="lg" className="text-white" />
-              </div>
-              <h2 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1.15, marginBottom: 20 }}>
-                Yapay zeka sizi<br/>tanıyor mu?
-              </h2>
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7, marginBottom: 40, maxWidth: 400 }}>
-                ChatGPT, Gemini, Perplexity ve Google AI Overview — müşterileriniz artık bu platformlara soruyor.
-              </p>
-              <div style={{ marginBottom: 40 }}>
-                {[
-                  { name: "Ücretsiz Analiz", price: "₺0" },
-                  { name: "Pro · Aylık", price: "₺699/ay" },
-                  { name: "Pro · Yıllık", price: "₺8.388/yıl" },
-                ].map((tier, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.1)", fontSize: 14 }}>
-                    <span style={{ color: "rgba(255,255,255,.7)", fontWeight: 600 }}>{tier.name}</span>
-                    <span style={{ fontFamily: "monospace", color: "rgba(255,255,255,.5)" }}>{tier.price}</span>
-                  </div>
-                ))}
-              </div>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,.35)", fontStyle: "italic", lineHeight: 1.6 }}>
-                &ldquo;12 haftada AI görünürlüğümüz %340 arttı.&rdquo;<br/>
-                <span style={{ fontStyle: "normal", fontWeight: 600, color: "rgba(255,255,255,.5)" }}>— ISITMAX &middot; 1M+ aylık ziyaretçi</span>
-              </p>
-            </>
-          )}
+          {/* Sağ panel — herkese aynı, login öncesi kişisel veri göstermez */}
+          <>
+            <div style={{ marginBottom: 40 }}>
+              <GH7Logo size="lg" className="text-white" />
+            </div>
+            <h2 style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1.15, marginBottom: 20 }}>
+              Yapay zeka sizi<br/>tanıyor mu?
+            </h2>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7, marginBottom: 40, maxWidth: 400 }}>
+              ChatGPT, Gemini, Perplexity ve Google AI Overview — müşterileriniz artık bu platformlara soruyor.
+              GH7.ai sizi nasıl gördüklerini ölçer ve görünürlüğünüzü artırır.
+            </p>
+            <div style={{ marginBottom: 40 }}>
+              {[
+                { name: "Ücretsiz Analiz", price: "₺0" },
+                { name: "Pro · Aylık", price: "₺699/ay" },
+                { name: "Pro · Yıllık", price: "₺8.388/yıl" },
+              ].map((tier, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.1)", fontSize: 14 }}>
+                  <span style={{ color: "rgba(255,255,255,.7)", fontWeight: 600 }}>{tier.name}</span>
+                  <span style={{ fontFamily: "monospace", color: "rgba(255,255,255,.5)" }}>{tier.price}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,.35)", fontStyle: "italic", lineHeight: 1.6 }}>
+              &ldquo;12 haftada AI görünürlüğümüz %340 arttı.&rdquo;<br/>
+              <span style={{ fontStyle: "normal", fontWeight: 600, color: "rgba(255,255,255,.5)" }}>— ISITMAX &middot; 1M+ aylık ziyaretçi</span>
+            </p>
+          </>
+          {/* Not: Eskiden "isReturning" varsa hardcoded "GEO Skoru 74 ↑3" /
+              "Ses Payı %26 ↑2" gibi mock data gösteriliyordu — kullanıcı henüz
+              giriş yapmadan bu veri olamaz. Tamamen kaldırıldı. Login
+              sonrası dashboard'da gerçek veri görünür. */}
         </div>
       </div>
     </>
