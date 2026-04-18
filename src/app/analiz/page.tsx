@@ -593,6 +593,30 @@ function AnalizPageInner() {
         );
         return;
       }
+
+      // PR B: Bu telefon/e-posta ile daha önce ücretsiz analiz yapıldı mı?
+      // Varsa yeni analiz BAŞLATMA — direkt dashboard'a gönder.
+      try {
+        const canStartRes = await fetch("/api/analiz/can-start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: formData.phone,
+            email: formData.email,
+          }),
+        });
+        const canStartData = await canStartRes.json();
+        if (canStartData?.canStart === false) {
+          // Zaten analiz yaptırmış → dashboard'a yönlendir
+          router.replace(canStartData.redirectTo ?? "/panel/genel");
+          return;
+        }
+      } catch (err) {
+        // can-start kontrolü başarısız olursa mevcut akışa devam
+        // (fail-open: kullanıcı deneyimini bozmama)
+        console.warn("[analiz] can-start check failed:", err);
+      }
+
       setStep(1);
     } catch {
       setOtpError("Doğrulama sırasında bir hata oluştu.");

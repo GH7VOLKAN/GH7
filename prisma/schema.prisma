@@ -18,7 +18,18 @@ model Profile {
   email      String   @unique
   fullName   String?  @map("full_name")
   avatarUrl  String?  @map("avatar_url")
-  phone      String?
+  phone      String?  @unique
+  // Verification (PR B)
+  phoneVerified           Boolean   @default(false) @map("phone_verified")
+  emailVerified           Boolean   @default(false) @map("email_verified")
+  emailVerificationToken  String?   @unique @map("email_verification_token")
+  emailVerificationExpiry DateTime? @map("email_verification_expiry")
+  // Free audit gating (PR B) — 1 telefon/e-posta → 1 ücretsiz analiz
+  freeAuditUsed   Boolean   @default(false) @map("free_audit_used")
+  freeAuditUsedAt DateTime? @map("free_audit_used_at")
+  // Signup tracking (PR B)
+  lastLoginAt DateTime? @map("last_login_at")
+  signupIp    String?   @map("signup_ip")
   smsEnabled       Boolean  @default(false) @map("sms_enabled")
   emailScanComplete Boolean  @default(true)  @map("email_scan_complete")
   emailScoreChange  Boolean  @default(true)  @map("email_score_change")

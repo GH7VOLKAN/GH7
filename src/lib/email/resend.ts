@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { otpTemplate } from "./templates/otp";
+import { emailVerificationTemplate } from "./templates/email-verification";
 import { welcomeTemplate } from "./templates/welcome";
 import { scanCompleteTemplate } from "./templates/scan-complete";
 import { scoreChangeTemplate } from "./templates/score-change";
@@ -41,6 +42,17 @@ export async function sendOtpEmail(email: string, code: string) {
     to: email,
     subject: `GH7 — Giriş Kodunuz: ${code}`,
     html: otpTemplate(code),
+  });
+}
+
+// ─── Email Verification ─────────────────────────────
+
+export async function sendEmailVerificationEmail(email: string, verifyUrl: string) {
+  return getResend().emails.send({
+    from: `GH7 <${FROM}>`,
+    to: email,
+    subject: "GH7 — E-posta Doğrulama",
+    html: emailVerificationTemplate(verifyUrl),
   });
 }
 
