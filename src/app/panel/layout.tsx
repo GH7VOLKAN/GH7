@@ -5,7 +5,6 @@ import { PageLoadingBar } from "@/components/panel/page-loading-bar";
 import { EmailVerificationBanner } from "@/components/panel/email-verification-banner";
 import { PanelDataProvider } from "@/contexts/panel-context";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
-import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +17,6 @@ export default async function PanelLayout({
   let brandData: { id: string; name: string; domain: string; sector: string | null; type: string; serviceRegions: string[] } | null = null;
   let profileData: { id: string; email: string; fullName: string | null; avatarUrl: string | null; plan: string; emailWeeklyReport: boolean; emailVerified: boolean } | null = null;
   let plan = "free";
-  let needsOnboard = false;
-
   try {
     const user = await getUserProfile();
     const activeBrand = await getActiveBrand();
@@ -46,23 +43,16 @@ export default async function PanelLayout({
         emailWeeklyReport: (activeBrand.profile as Record<string, unknown>).emailWeeklyReport as boolean ?? true,
         emailVerified: (activeBrand.profile as Record<string, unknown>).emailVerified as boolean ?? false,
       };
-    } else if (user && activeBrand?.profile && !activeBrand.brand) {
-      // User var ama brand yok → onboarding gerekir.
-      // ÖNEMLİ: redirect() burada throw ederse dıştaki catch yakalar ve
-      // isDemo=true olarak düşer, sonsuz redirect loop'a sebep olur.
-      // Bu yüzden flag set edip try bloğu DIŞINDA redirect ediyoruz.
-      needsOnboard = true;
     }
-    // If no user at all → isDemo stays true, show demo data
+    // User var ama brand yok → panel yine açılır, her sayfa empty state
+    // gösterir (CTA: "Ücretsiz analize başla → /analiz"). Eskiden /onboard'a
+    // redirect ediyordu — ikinci paralel analiz akışı açıp kullanıcıyı
+    // karıştırıyordu. Tek giriş noktası artık /analiz.
+    // Kullanıcı yoksa isDemo=true kalır, demo panel görünür.
   } catch (err) {
     console.error("[panel/layout] Auth/DB error:", err);
     // Auth/DB error → fallback to demo mode
     isDemo = true;
-  }
-
-  // redirect() try/catch dışında çağrılmalı (Next.js NEXT_REDIRECT error'u)
-  if (needsOnboard) {
-    redirect("/onboard");
   }
 
   return (

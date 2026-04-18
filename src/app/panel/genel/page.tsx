@@ -2,6 +2,7 @@ import { getActiveBrand } from "@/lib/dal/brand";
 import { getOverviewData } from "@/lib/dal/overview";
 import { getLatestAudit } from "@/lib/dal/personal-analysis";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { LayoutDashboard } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { GenelContentV2 } from "@/components/panel/genel/genel-content-v2";
@@ -24,15 +25,30 @@ const CATEGORY_ORDER: string[] = ["content", "schema", "entity", "tech", "extern
 export default async function GenelBakisPage() {
   const activeBrand = await getActiveBrand();
 
-  // Kullanıcı giriş yapmış ama brand yok — /onboard'a gönder.
-  // (Eskiden "/panel"'e redirect ediyordu, /panel de /panel/genel'e redirect
-  // ediyordu — sonsuz loop. Kullanıcıların "Bu sayfada bir hata oluştu"
-  // görmesinin nedeni buydu.)
+  // Giriş yapılmamış → login
   if (!activeBrand) {
     redirect("/giris");
   }
+
+  // Giriş yapmış ama brand yok → EMPTY STATE göster + /analiz CTA.
+  // Eskiden /onboard'a redirect ediyordu, ikinci paralel analiz akışı
+  // oluşturuyordu. Artık tek giriş noktası /analiz.
   if (!activeBrand.brand) {
-    redirect("/onboard");
+    return (
+      <EmptyState
+        icon={LayoutDashboard}
+        title="Henüz analiz yapmadınız"
+        description="Ücretsiz analizi tamamladıktan sonra GEO skorunuz, rakip karşılaştırması ve 43 maddelik denetim burada görünecek."
+        action={
+          <Link
+            href="/analiz"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-800"
+          >
+            Ücretsiz Analize Başla →
+          </Link>
+        }
+      />
+    );
   }
 
   const brandId = activeBrand.brand.id;

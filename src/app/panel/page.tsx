@@ -4,26 +4,18 @@ import { getActiveBrand } from "@/lib/dal/brand";
 /**
  * /panel root gateway.
  *
- * Kullanıcı durumuna göre yönlendirir:
+ * Basit yönlendirme:
  * - Giriş yapmamış → /giris
- * - Giriş yaptı, brand yok → /onboard
- * - Giriş yaptı, brand var → /panel/genel
+ * - Giriş yapmış → /panel/genel (brand yoksa empty state gösterilir)
  *
- * Bu davranış sonsuz redirect loop'u engeller. Eskiden `/panel → /panel/genel`
- * sabit redirect yapıyordu; brand yoksa `/panel/genel` tekrar `/panel`'e
- * yönlendirerek loop oluşturuyordu.
+ * Brand yoksa /onboard'a YÖNLENDİRMEZ — /panel/genel kendi empty state'ini
+ * gösterir ve kullanıcıyı /analiz'e yönlendirir. Tek giriş noktası /analiz.
  */
 export default async function PanelRootPage() {
   const activeBrand = await getActiveBrand();
 
   if (!activeBrand) {
-    // Supabase user yok (giriş yapılmamış)
     redirect("/giris");
-  }
-
-  if (!activeBrand.brand) {
-    // Giriş yapmış ama henüz brand/analiz yok
-    redirect("/onboard");
   }
 
   redirect("/panel/genel");
