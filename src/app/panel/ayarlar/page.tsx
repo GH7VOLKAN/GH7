@@ -1,11 +1,33 @@
 import { getActiveBrand } from "@/lib/dal/brand";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Settings } from "lucide-react";
 import { AyarlarContent } from "./ayarlar-content";
 import { PageHero } from "@/components/panel/page-hero";
+import { EmptyState } from "@/components/panel/empty-state";
 
 export default async function AyarlarPage() {
   const activeBrand = await getActiveBrand();
-  if (!activeBrand?.brand) redirect("/panel");
+  if (!activeBrand) redirect("/giris");
+
+  // Brand yok → empty state (ikinci analiz akışı yok)
+  if (!activeBrand.brand) {
+    return (
+      <EmptyState
+        icon={Settings}
+        title="Henüz marka oluşturulmadı"
+        description="Marka ve sektör bilgilerini düzenlemek için önce ücretsiz analizinizi tamamlayın."
+        action={
+          <Link
+            href="/analiz"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-800"
+          >
+            Ücretsiz Analize Başla →
+          </Link>
+        }
+      />
+    );
+  }
 
   const brand = activeBrand.brand;
   const profile = activeBrand.profile;
