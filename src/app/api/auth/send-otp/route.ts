@@ -31,13 +31,44 @@ export async function POST(request: Request) {
     console.log(`[otp] Send OTP request for: ${normalizedEmail}`);
 
     // GİRİŞ SADECE KAYITLI KULLANICI İÇİN (mode="login" default)
+    // HEM Prisma Profile HEM Supabase auth.users kontrol edilir.
+    // Supabase'den silinmiş ama Prisma'da orphan kalan Profile'lar temizlenir.
     const effectiveMode = mode ?? "login";
     if (effectiveMode === "login") {
       const existingProfile = await prisma.profile.findUnique({
         where: { email: normalizedEmail },
         select: { id: true },
       });
-      if (!existingProfile) {
+
+      let supabaseUserExists = false;
+      if (existingProfile) {
+        try {
+          const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          );
+          const { data } = await supabaseAdmin.auth.admin.getUserById(
+            existingProfile.id,
+          );
+          supabaseUserExists = Boolean(data?.user);
+        } catch (err) {
+          console.warn("[otp] Supabase user check failed:", err);
+        }
+
+        if (!supabaseUserExists) {
+          // Orphan Profile (Supabase'den silinmiş ama Prisma'da kalmış) → temizle
+          console.warn(
+            `[otp] Orphan Profile found for ${normalizedEmail} (Supabase user missing). Cleaning up.`,
+          );
+          try {
+            await prisma.profile.delete({ where: { id: existingProfile.id } });
+          } catch (err) {
+            console.error("[otp] Orphan cleanup failed:", err);
+          }
+        }
+      }
+
+      if (!existingProfile || !supabaseUserExists) {
         return NextResponse.json(
           {
             error: "NO_ACCOUNT",

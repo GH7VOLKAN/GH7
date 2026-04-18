@@ -4,6 +4,36 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET /api/panel/profile
+ * Session'daki kullanıcının Profile bilgisini döner (email, phone, plan vb.)
+ * /analiz sayfasının authenticated user için form prefill'i yapabilmesi için.
+ */
+export async function GET() {
+  try {
+    const activeBrand = await getActiveBrand();
+    if (!activeBrand?.profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const p = activeBrand.profile;
+    return NextResponse.json({
+      profile: {
+        id: p.id,
+        email: p.email,
+        phone: p.phone,
+        fullName: p.fullName,
+        plan: p.plan,
+        emailWeeklyReport: p.emailWeeklyReport,
+        emailVerified: (p as Record<string, unknown>).emailVerified ?? false,
+        phoneVerified: (p as Record<string, unknown>).phoneVerified ?? false,
+      },
+    });
+  } catch (error) {
+    console.error("[api/panel/profile GET]", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const activeBrand = await getActiveBrand();

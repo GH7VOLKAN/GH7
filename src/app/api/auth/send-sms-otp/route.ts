@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // GİRİŞ SADECE KAYITLI KULLANICI İÇİN
-    // mode="login" (default): Profile yoksa reddet, /analiz'e yönlendir.
+    // mode="login" (default): Profile + Supabase user kontrol, yoksa reddet.
     // mode="register" (/analiz'den): Profile yoksa izin ver (kayıt akışı).
     const effectiveMode = mode ?? "login";
     if (effectiveMode === "login") {
@@ -49,7 +49,36 @@ export async function POST(request: Request) {
         where: { phone: normalizedPhone },
         select: { id: true },
       });
-      if (!existingProfile) {
+
+      let supabaseUserExists = false;
+      if (existingProfile) {
+        try {
+          const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          );
+          const { data } = await supabaseAdmin.auth.admin.getUserById(
+            existingProfile.id,
+          );
+          supabaseUserExists = Boolean(data?.user);
+        } catch (err) {
+          console.warn("[sms-otp] Supabase user check failed:", err);
+        }
+
+        if (!supabaseUserExists) {
+          // Orphan Profile → temizle
+          console.warn(
+            `[sms-otp] Orphan Profile found for ${normalizedPhone.slice(0, 4)}**** (Supabase user missing). Cleaning up.`,
+          );
+          try {
+            await prisma.profile.delete({ where: { id: existingProfile.id } });
+          } catch (err) {
+            console.error("[sms-otp] Orphan cleanup failed:", err);
+          }
+        }
+      }
+
+      if (!existingProfile || !supabaseUserExists) {
         return NextResponse.json(
           {
             error: "NO_ACCOUNT",

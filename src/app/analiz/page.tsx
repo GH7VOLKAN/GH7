@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   DEMO_PERSONAL_KEYWORDS,
   PERSONAL_PROFESSIONS,
@@ -424,6 +425,66 @@ function AnalizPageInner() {
     import("@/lib/ai/discovery-types").DiscoveryResult | null
   >(null);
 
+  // Authenticated session — /panel'den redirect gelen kullanıcı için.
+  // OTP adımı atlanır; formData email/phone session'dan prefill edilir.
+  const [authedSession, setAuthedSession] = useState<{
+    userId: string;
+    email: string;
+    phone: string | null;
+  } | null>(null);
+
+  /* ---- Session check on mount ---- */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+
+        // Profile'dan phone bilgisini çek
+        let phoneFromProfile: string | null = null;
+        try {
+          const res = await fetch("/api/panel/profile");
+          if (res.ok) {
+            const data = await res.json();
+            phoneFromProfile = data?.profile?.phone ?? null;
+          }
+        } catch {
+          // profile API yoksa phone null kalır
+        }
+
+        if (cancelled) return;
+        setAuthedSession({
+          userId: user.id,
+          email: user.email ?? "",
+          phone: phoneFromProfile,
+        });
+
+        // FormData'yı prefill et — kullanıcı email/phone kutucuklarını
+        // tekrar doldurmak zorunda kalmaz
+        setFormData((prev) => ({
+          ...prev,
+          email: prev.email || user.email || "",
+          phone:
+            prev.phone && prev.phone !== "+90"
+              ? prev.phone
+              : phoneFromProfile
+                ? phoneFromProfile.startsWith("90")
+                  ? "+" + phoneFromProfile
+                  : phoneFromProfile
+                : "+90",
+          kvkkAccepted: true, // Login olmuş kullanıcı zaten KVKK onayladı
+        }));
+      } catch {
+        // Session check fail → normal akış
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   /* ---- auto-fill from URL params (landing page redirect) ---- */
   useEffect(() => {
     const rawType = searchParams.get("type");
@@ -455,7 +516,7 @@ function AnalizPageInner() {
         brandName: brandGuess.charAt(0).toUpperCase() + brandGuess.slice(1),
         websiteUrl: `https://${cleanDomain}`,
       }));
-      setStep(0);
+      setStep(authedSession ? 1 : 0);
     } else if (analyzedType === "kisi" && name) {
       setFormData((prev) => ({
         ...prev,
@@ -464,7 +525,7 @@ function AnalizPageInner() {
         fullName: name,
         keywords: [...DEMO_PERSONAL_KEYWORDS],
       }));
-      setStep(0);
+      setStep(authedSession ? 1 : 0);
     } else if (analyzedType === "eticaret" && (input || domain)) {
       const val = input ?? domain ?? "";
       // URL mı yoksa marka adı mı?
@@ -485,7 +546,7 @@ function AnalizPageInner() {
         marketplaceUrl: isUrl && val.includes("trendyol") ? val : "",
         brandOrProductName: !isUrl ? val : "",
       }));
-      setStep(0);
+      setStep(authedSession ? 1 : 0);
     } else if (analyzedType === "yurtdisi" && domain) {
       const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
       const brandGuess = cleanDomain.split(".")[0];
@@ -497,7 +558,7 @@ function AnalizPageInner() {
         brandName: brandGuess.charAt(0).toUpperCase() + brandGuess.slice(1),
         websiteUrl: `https://${cleanDomain}`,
       }));
-      setStep(0);
+      setStep(authedSession ? 1 : 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -532,7 +593,8 @@ function AnalizPageInner() {
         keywords: [...DEMO_PERSONAL_KEYWORDS],
       }));
     }
-    setStep(0);
+    // Authenticated user → Doğrulama (step 0) atla, direkt form detayına (step 1)
+    setStep(authedSession ? 1 : 0);
   };
 
   // Telefon numarasını normalize et: her formattan 905XXXXXXXXX formatına çevir
@@ -547,6 +609,14 @@ function AnalizPageInner() {
 
   const handleSendOtp = async () => {
     if (!formData.email || formData.phone.length < 6) return;
+
+    // AUTH BYPASS: Kullanıcı /login'den giriş yapmış — SMS OTP gönderme
+    // ve doğrulama adımlarını atla, direkt step 1.5'e geç.
+    if (authedSession) {
+      setOtpSent(true); // UI state — "kod gönderildi" görünümü
+      return;
+    }
+
     setOtpLoading(true);
     setOtpError(null);
     try {
@@ -572,6 +642,13 @@ function AnalizPageInner() {
   };
 
   const handleVerify = async () => {
+    // AUTH BYPASS: Session zaten var — OTP doğrulama yapma, direkt step 1'e
+    // geç. Kullanıcı /login'den gelmiş, email/phone zaten doğrulanmış.
+    if (authedSession && formData.kvkkAccepted) {
+      setStep(1);
+      return;
+    }
+
     if (!formData.otp || formData.otp.length < 6 || !formData.kvkkAccepted)
       return;
     setOtpLoading(true);
