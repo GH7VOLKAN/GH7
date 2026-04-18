@@ -7,9 +7,9 @@ import { PageHero } from "@/components/panel/page-hero";
 import { EmptyState } from "@/components/panel/empty-state";
 
 export default async function AyarlarPage() {
+  // Guard: panel/layout.tsx halleder.
   const activeBrand = await getActiveBrand();
-  if (!activeBrand) redirect("/giris");
-  if (!activeBrand.brand) redirect("/analiz");
+  if (!activeBrand?.brand) return null;
 
   const brand = activeBrand.brand;
   const profile = activeBrand.profile;

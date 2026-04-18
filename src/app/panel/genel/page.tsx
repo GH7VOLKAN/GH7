@@ -22,17 +22,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_ORDER: string[] = ["content", "schema", "entity", "tech", "external", "ai"];
 
 export default async function GenelBakisPage() {
+  // Guard: panel/layout.tsx getAuthState() ile hallediyor.
+  // Buraya gelindiyse session + brand garanti var.
   const activeBrand = await getActiveBrand();
-
-  // Giriş yapılmamış → login
-  if (!activeBrand) {
-    redirect("/giris");
-  }
-
-  // Brand yok → /analiz'e yönlendir (tek giriş noktası, empty state yok)
-  if (!activeBrand.brand) {
-    redirect("/analiz");
-  }
+  if (!activeBrand?.brand) return null; // safety net — layout zaten redirect etti
 
   const brandId = activeBrand.brand.id;
   const userId = activeBrand.profile?.id;
