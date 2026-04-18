@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { runAudit43 } from "@/lib/ai/audit-43";
 import { generatePersonalAnalysis } from "@/lib/ai/personal-analysis";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeDomain, extractRootDomain } from "@/lib/utils/turkish";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { executeScan } from "@/lib/ai/scan-engine";
+import { getAvailablePlatforms } from "@/lib/ai/provider-registry";
 import type { UserType } from "@/lib/ai/user-type-weights";
 import { Prisma } from "@prisma/client";
 
@@ -333,6 +335,7 @@ export async function POST(req: NextRequest) {
         // DISCOVERY SORGULARINI PROMPT TABLOSUNA YAZ
         // Kullanıcı dashboard'a geldiğinde "Senin Yerine Kim?" sayfasında
         // 10+ sorgu görür. Bu sorgular daha sonra weekly scan'de kullanılır.
+        let promptsCreated = false;
         if (discoveryResult?.targetQueries && discoveryResult.targetQueries.length > 0) {
           try {
             // Mevcut prompt'ları silip yenilerini yaz (ilk analiz)
@@ -349,12 +352,60 @@ export async function POST(req: NextRequest) {
                   isActive: true,
                 })),
               });
+              promptsCreated = true;
               console.log(
                 `[api/run-audit-43] Created ${discoveryResult.targetQueries.length} prompts for brand ${brand.id}`,
               );
             }
           } catch (err) {
             console.warn("[api/run-audit-43] Prompt create failed:", err);
+          }
+        }
+
+        // OTO-SCAN TETİKLE: ilk audit sonrası 5 AI platformuna sorgu at
+        // PromptResult tablosu dolsun → /panel/aramalar ve /panel/genel'de
+        // platform yanıtları görünsün.
+        if (promptsCreated) {
+          try {
+            const platforms = getAvailablePlatforms();
+            if (platforms.length === 0) {
+              console.warn(
+                "[api/run-audit-43] Skipping auto-scan: no AI providers configured",
+              );
+            } else {
+              // Zaten running scan var mı?
+              const running = await prisma.scan.findFirst({
+                where: { brandId: brand.id, status: "running" },
+              });
+              if (!running) {
+                const autoScan = await prisma.scan.create({
+                  data: {
+                    brandId: brand.id,
+                    status: "pending",
+                    type: "free_test",
+                  },
+                });
+                console.log(
+                  `[api/run-audit-43] Auto-scan queued scanId=${autoScan.id} brandId=${brand.id}`,
+                );
+                // Background execution — response hemen dönsün
+                after(async () => {
+                  try {
+                    await executeScan(autoScan.id, brand!.id);
+                    console.log(
+                      `[api/run-audit-43] Auto-scan completed scanId=${autoScan.id}`,
+                    );
+                  } catch (e) {
+                    console.error(
+                      `[api/run-audit-43] Auto-scan failed scanId=${autoScan.id}:`,
+                      e,
+                    );
+                  }
+                });
+              }
+            }
+          } catch (err) {
+            console.warn("[api/run-audit-43] Auto-scan trigger failed:", err);
           }
         }
 

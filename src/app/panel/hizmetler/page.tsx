@@ -1,18 +1,15 @@
+import { Wrench } from "lucide-react";
 import { getActiveBrand } from "@/lib/dal/brand";
 import {
   getAvailablePackages,
   getUserServiceOrders,
   getLatestAuditScore,
 } from "@/lib/dal/service-orders";
-import { redirect } from "next/navigation";
-import { Wrench } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
-import { HizmetlerContent } from "./hizmetler-content";
-import { PageHero } from "@/components/panel/page-hero";
+import { HizmetlerContentV3 } from "@/components/panel/hizmetler-v3/hizmetler-content-v3";
 
 export default async function HizmetlerPage() {
   const activeBrand = await getActiveBrand();
-  // Guard: panel/layout.tsx halleder.
   if (!activeBrand?.brand || !activeBrand.profile) return null;
 
   const brand = activeBrand.brand;
@@ -35,33 +32,14 @@ export default async function HizmetlerPage() {
     );
   }
 
-  const activeOrderCount = orders.filter(
-    (o) => !["refunded", "approved_final", "cancelled"].includes(o.status)
-  ).length;
-
   return (
-    <>
-      <PageHero
-        title="Hizmet Paketleri"
-        description="Kırmızıları biz yeşile çevirelim — önce gör, sonra öde"
-        stats={[
-          { label: "Mevcut Skorunuz", value: `${latestAudit?.score ?? 0}/100` },
-          { label: "Aktif Sipariş", value: String(activeOrderCount) },
-          { label: "Toplam Sipariş", value: String(orders.length) },
-          {
-            label: "Paket Sayısı",
-            value: String(packages.length),
-          },
-        ]}
-      />
-      <HizmetlerContent
-        packages={packages}
-        orders={orders}
-        userType={userType}
-        currentScore={latestAudit?.score ?? 0}
-        auditId={latestAudit?.auditId}
-        plan={activeBrand.plan ?? "free"}
-      />
-    </>
+    <HizmetlerContentV3
+      plan={activeBrand.plan ?? "free"}
+      packages={packages}
+      orders={orders}
+      currentScore={latestAudit?.score ?? 0}
+      userType={userType}
+      lastUpdate={orders[0]?.createdAt?.toISOString() ?? null}
+    />
   );
 }
