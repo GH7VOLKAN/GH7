@@ -115,8 +115,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Authenticated user: Brand kaydını upsert et (yeni domain → yeni brand veya domain eşleşen brand'ı güncelle)
+    // Authenticated user: freeAuditUsed işaretle + Brand kaydını upsert et
     if (userId) {
+      // PR B: Ücretsiz analiz kullanıldı olarak işaretle. Aynı telefon/e-posta
+      // ile tekrar /analiz denenirse can-start engel olur.
+      try {
+        await prisma.profile.update({
+          where: { id: userId },
+          data: {
+            freeAuditUsed: true,
+            freeAuditUsedAt: new Date(),
+            lastLoginAt: new Date(),
+          },
+        });
+      } catch (err) {
+        console.warn("[api/run-audit-43] freeAuditUsed update failed:", err);
+      }
+
       try {
         const normalizedDomain = normalizeDomain(url);
 

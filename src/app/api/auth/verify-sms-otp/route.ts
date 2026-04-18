@@ -94,12 +94,23 @@ export async function POST(request: Request) {
             id: supabaseUser.id,
             email: syntheticEmail,
             phone: normalizedPhone,
+            phoneVerified: true, // PR B: SMS OTP başarılı = telefon doğrulandı
+            lastLoginAt: new Date(),
           },
         });
         console.log(
           `[sms-otp] Created profile for phone user: ${normalizedPhone.slice(0, 4)}****`
         );
       }
+    } else {
+      // PR B: Mevcut profile için phoneVerified + lastLoginAt güncelle
+      await prisma.profile.update({
+        where: { id: existingProfile.id },
+        data: {
+          phoneVerified: true,
+          lastLoginAt: new Date(),
+        },
+      });
     }
 
     // Delete the verification code (one-time use)

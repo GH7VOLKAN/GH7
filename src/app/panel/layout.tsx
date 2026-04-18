@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { PanelSidebar } from "@/components/panel/panel-sidebar";
 import { PanelMobileNav } from "@/components/panel/panel-mobile-nav";
 import { PageLoadingBar } from "@/components/panel/page-loading-bar";
+import { EmailVerificationBanner } from "@/components/panel/email-verification-banner";
 import { PanelDataProvider } from "@/contexts/panel-context";
 import { getUserProfile, getActiveBrand } from "@/lib/dal/brand";
 import { redirect } from "next/navigation";
@@ -15,7 +16,7 @@ export default async function PanelLayout({
 }) {
   let isDemo = true;
   let brandData: { id: string; name: string; domain: string; sector: string | null; type: string; serviceRegions: string[] } | null = null;
-  let profileData: { id: string; email: string; fullName: string | null; avatarUrl: string | null; plan: string; emailWeeklyReport: boolean } | null = null;
+  let profileData: { id: string; email: string; fullName: string | null; avatarUrl: string | null; plan: string; emailWeeklyReport: boolean; emailVerified: boolean } | null = null;
   let plan = "free";
 
   try {
@@ -42,6 +43,7 @@ export default async function PanelLayout({
         avatarUrl: user.avatarUrl,
         plan,
         emailWeeklyReport: (activeBrand.profile as Record<string, unknown>).emailWeeklyReport as boolean ?? true,
+        emailVerified: (activeBrand.profile as Record<string, unknown>).emailVerified as boolean ?? false,
       };
     } else if (user && activeBrand?.profile && !activeBrand.brand) {
       // User exists but no brand → onboarding
@@ -70,6 +72,14 @@ export default async function PanelLayout({
           plan={plan}
         />
         <main className="md:pl-64">
+          {profileData && (
+            <Suspense fallback={null}>
+              <EmailVerificationBanner
+                email={profileData.email}
+                emailVerified={profileData.emailVerified}
+              />
+            </Suspense>
+          )}
           <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
             <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" /></div>}>
               {children}
