@@ -672,6 +672,38 @@ function AnalizPageInner() {
         return;
       }
 
+      // KRITIK: Supabase session'u client-side oluştur.
+      // verify-sms-otp backend'te kodu doğruladı + tokenHash döndü.
+      // Şimdi client-side supabase.auth.verifyOtp ile session cookie'si set edilir.
+      // Bu olmadan: audit sonrası /panel/genel'e redirect → session yok → /giris'e düşer.
+      if (data.tokenHash) {
+        try {
+          const supabase = createClient();
+          // Eski sb-* cookie'leri temizle (tutarlılık için)
+          document.cookie.split(";").forEach((c) => {
+            const name = c.split("=")[0].trim();
+            if (name.startsWith("sb-")) {
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            }
+          });
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: data.tokenHash,
+            type: "magiclink",
+          });
+          if (verifyError) {
+            console.error("[analiz] Session create failed:", verifyError);
+            setOtpError(
+              "Oturum oluşturulamadı: " + verifyError.message,
+            );
+            return;
+          }
+        } catch (err) {
+          console.error("[analiz] Supabase session error:", err);
+          setOtpError("Oturum oluşturulamadı. Lütfen tekrar deneyin.");
+          return;
+        }
+      }
+
       // PR B: Bu telefon/e-posta ile daha önce ücretsiz analiz yapıldı mı?
       // Varsa yeni analiz BAŞLATMA — direkt dashboard'a gönder.
       try {
