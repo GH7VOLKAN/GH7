@@ -4,14 +4,49 @@ import { generatePersonalAnalysis } from "@/lib/ai/personal-analysis";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeDomain, extractRootDomain } from "@/lib/utils/turkish";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { UserType } from "@/lib/ai/user-type-weights";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const maxDuration = 120; // 2 min
 
+/**
+ * Request IP adresini header'lardan çıkarır (Vercel/Cloudflare proxy arkasında).
+ */
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "unknown";
+}
+
 export async function POST(req: NextRequest) {
   try {
+    // PR C: IP bazlı audit başlatma rate limit — 24 saatte max 3 deneme
+    const clientIp = getClientIp(req);
+    if (clientIp !== "unknown") {
+      const rl = await checkRateLimit(
+        `audit_start:${clientIp}`,
+        3, // 3 audit
+        24 * 60, // 24 saat
+      );
+      if (!rl.allowed) {
+        const resetIn = Math.ceil(
+          (rl.resetAt.getTime() - Date.now()) / (60 * 60 * 1000),
+        );
+        return NextResponse.json(
+          {
+            error: `IP adresinizden çok fazla analiz denemesi yapıldı. ${resetIn} saat sonra tekrar deneyin.`,
+            rateLimited: true,
+            resetAt: rl.resetAt.toISOString(),
+          },
+          { status: 429 },
+        );
+      }
+    }
+
     const body = await req.json();
     const {
       url,
