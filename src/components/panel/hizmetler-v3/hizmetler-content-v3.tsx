@@ -14,17 +14,18 @@ import {
   KindeFooter,
   useFadeIn,
   KINDE_COLORS,
-  KINDE_FONT,
+  BTN_PRIMARY,
+  BTN_OUTLINE,
 } from "@/components/panel/kinde/primitives";
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "Beklemede",
-  in_progress: "Yapılıyor",
-  delivered: "Teslim edildi",
-  approved_preliminary: "Ön onay",
-  approved_final: "Onaylandı",
-  refunded: "İade edildi",
-  cancelled: "İptal",
+  pending: "beklemede",
+  in_progress: "yapılıyor",
+  delivered: "teslim edildi",
+  approved_preliminary: "ön onay",
+  approved_final: "onaylandı",
+  refunded: "iade edildi",
+  cancelled: "iptal",
 };
 
 export interface HizmetlerV3Props {
@@ -33,10 +34,12 @@ export interface HizmetlerV3Props {
   orders: ServiceOrderData[];
   currentScore: number;
   userType: string;
+  failCount: number;
   lastUpdate: string | null;
 }
 
 export function HizmetlerContentV3(props: HizmetlerV3Props) {
+  const isPro = props.plan !== "free";
   const activeOrders = props.orders.filter(
     (o) => !["refunded", "approved_final", "cancelled"].includes(o.status),
   );
@@ -44,36 +47,111 @@ export function HizmetlerContentV3(props: HizmetlerV3Props) {
   return (
     <KindePage>
       <KindeHero
-        title="Kırmızıları yeşile çevirelim."
-        subtitle={`Audit'te düşük çıkan maddeleri biz düzeltelim. Mevcut skorunuz ${props.currentScore}/100.`}
-        tertiary={
-          activeOrders.length > 0
-            ? `${activeOrders.length} aktif sipariş · ${props.orders.length} toplam`
-            : `${props.packages.length} hazır paket var`
-        }
+        title="Hizmet Paketleri"
+        subtitle="Eksiklerinizi profesyonel ekibimiz çözsün — önce gör, sonra öde."
+      />
+
+      <Divider />
+      <SectionMetrics
+        score={props.currentScore}
+        failCount={props.failCount}
+        orderCount={props.orders.length}
       />
       <Divider />
+
       {activeOrders.length > 0 && (
         <>
           <SectionOrders orders={props.orders} />
           <Divider />
         </>
       )}
-      <SectionPackages {...props} />
+
+      <SectionPackages
+        packages={props.packages}
+        currentScore={props.currentScore}
+        isPro={isPro}
+      />
+      <Divider />
+      <SectionPolicy />
       <Divider />
       <KindeFooter lastUpdate={props.lastUpdate} />
     </KindePage>
   );
 }
 
+/* -------------------------------------------------- */
+/*  Üst metrikler                                       */
+/* -------------------------------------------------- */
+function SectionMetrics({
+  score,
+  failCount,
+  orderCount,
+}: {
+  score: number;
+  failCount: number;
+  orderCount: number;
+}) {
+  const ref = useFadeIn<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      className="gh7-fade-in"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: 16,
+      }}
+    >
+      <MetricCard label="Mevcut Skor" value={`${score}/100`} />
+      <MetricCard label="Eksik Madde" value={String(failCount)} />
+      <MetricCard label="Sipariş" value={String(orderCount)} />
+    </div>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        padding: 20,
+        border: `1px solid ${KINDE_COLORS.divider}`,
+        borderRadius: 12,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          color: KINDE_COLORS.mutedLight,
+          letterSpacing: "0.04em",
+        }}
+      >
+        {label.toUpperCase()}
+      </div>
+      <div
+        style={{
+          marginTop: 6,
+          fontSize: 22,
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------- */
+/*  Aktif siparişler                                    */
+/* -------------------------------------------------- */
 function SectionOrders({ orders }: { orders: ServiceOrderData[] }) {
   const ref = useFadeIn<HTMLDivElement>();
   return (
     <div ref={ref} className="gh7-fade-in">
-      <SectionHeading>Aktif siparişleriniz.</SectionHeading>
+      <SectionHeading>Siparişleriniz.</SectionHeading>
       <SectionLead>Teslim edilenler ve yapılmakta olanlar.</SectionLead>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {orders.map((o) => {
           const boost =
             o.preScore !== null && o.postScore !== null
@@ -98,7 +176,13 @@ function SectionOrders({ orders }: { orders: ServiceOrderData[] }) {
                 <div style={{ fontSize: 15, fontWeight: 600 }}>
                   {o.packageName}
                 </div>
-                <div style={{ fontSize: 12, color: KINDE_COLORS.muted }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: KINDE_COLORS.muted,
+                    fontWeight: 600,
+                  }}
+                >
                   {STATUS_LABELS[o.status] ?? o.status}
                 </div>
               </div>
@@ -122,7 +206,18 @@ function SectionOrders({ orders }: { orders: ServiceOrderData[] }) {
   );
 }
 
-function SectionPackages({ packages, currentScore }: HizmetlerV3Props) {
+/* -------------------------------------------------- */
+/*  Paket listesi                                       */
+/* -------------------------------------------------- */
+function SectionPackages({
+  packages,
+  currentScore,
+  isPro,
+}: {
+  packages: ServicePackageData[];
+  currentScore: number;
+  isPro: boolean;
+}) {
   const ref = useFadeIn<HTMLDivElement>();
   if (packages.length === 0) {
     return (
@@ -138,8 +233,9 @@ function SectionPackages({ packages, currentScore }: HizmetlerV3Props) {
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Hazır paketler.</SectionHeading>
       <SectionLead>
-        Her paket 43 maddeden spesifik eksikleri hedefler. Fiyat önce
-        gösterilmez; detaya tıklayın.
+        {isPro
+          ? "Her paket 43 maddeden spesifik eksikleri hedefler. Fiyatlar aşağıda, seçip satın alabilirsiniz."
+          : "Her paket 43 maddeden spesifik eksikleri hedefler. Detay ve fiyatlar Pro üyelere özeldir."}
       </SectionLead>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -148,6 +244,7 @@ function SectionPackages({ packages, currentScore }: HizmetlerV3Props) {
             key={pkg.id}
             pkg={pkg}
             currentScore={currentScore}
+            isPro={isPro}
           />
         ))}
       </div>
@@ -158,9 +255,11 @@ function SectionPackages({ packages, currentScore }: HizmetlerV3Props) {
 function PackageCard({
   pkg,
   currentScore,
+  isPro,
 }: {
   pkg: ServicePackageData;
   currentScore: number;
+  isPro: boolean;
 }) {
   const targetScore = Math.min(100, currentScore + pkg.estimatedScoreBoost);
   return (
@@ -168,7 +267,8 @@ function PackageCard({
       style={{
         border: `1px solid ${KINDE_COLORS.divider}`,
         borderRadius: 12,
-        padding: 24,
+        padding: 28,
+        background: KINDE_COLORS.white,
       }}
     >
       <div
@@ -180,11 +280,14 @@ function PackageCard({
           marginBottom: 8,
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 700 }}>{pkg.name}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>
+          {pkg.name}
+        </div>
         <div style={{ fontSize: 11, color: KINDE_COLORS.mutedLight }}>
-          {pkg.tier} · {pkg.deliveryDays} gün
+          {pkg.deliveryDays} gün teslim
         </div>
       </div>
+
       <p
         style={{
           fontSize: 14,
@@ -195,47 +298,113 @@ function PackageCard({
       >
         {pkg.description}
       </p>
+
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
           fontSize: 13,
           color: KINDE_COLORS.muted,
-          marginBottom: 16,
+          marginBottom: 20,
         }}
       >
-        <span>Şu an: {currentScore}/100</span>
-        <span>→</span>
-        <span style={{ color: "#2E7D32", fontWeight: 600 }}>
-          Tahmini: {targetScore}/100
-        </span>
-        <span>(+{pkg.estimatedScoreBoost})</span>
+        Mevcut: {currentScore}/100 →{" "}
+        <strong style={{ color: KINDE_COLORS.black }}>
+          Tahmini {targetScore}/100
+        </strong>{" "}
+        (+{pkg.estimatedScoreBoost})
       </div>
-      <div style={{ fontSize: 13, color: "#333", marginBottom: 16 }}>
-        <strong style={{ fontSize: 11, color: "#666" }}>TESLİMATLAR</strong>
-        <ul style={{ marginTop: 6, paddingLeft: 18, lineHeight: 1.7 }}>
-          {pkg.deliverables.slice(0, 5).map((d, i) => (
-            <li key={i}>{d}</li>
+
+      <div style={{ fontSize: 13, color: "#333", marginBottom: 20 }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: KINDE_COLORS.muted,
+            letterSpacing: "0.04em",
+            marginBottom: 6,
+          }}
+        >
+          BU PAKETE DAHİL
+        </div>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: 0,
+            lineHeight: 1.8,
+            listStyle: "none",
+          }}
+        >
+          {pkg.deliverables.slice(0, 6).map((d, i) => (
+            <li key={i} style={{ paddingLeft: 14, position: "relative" }}>
+              <span
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  color: KINDE_COLORS.muted,
+                }}
+              >
+                ·
+              </span>
+              {d}
+            </li>
           ))}
         </ul>
       </div>
-      <Link
-        href={`/panel/hizmetler/${pkg.slug}`}
+
+      {isPro ? (
+        <>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 800,
+              marginBottom: 12,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            ₺{pkg.price.toLocaleString("tr-TR")}
+          </div>
+          <Link href={`/panel/hizmetler/${pkg.slug}`} style={BTN_PRIMARY}>
+            Paketi Al · Önce Gör Sonra Öde
+          </Link>
+        </>
+      ) : (
+        <Link href="/panel/abonelik" style={BTN_OUTLINE}>
+          Pro üyelere özel — Pro'ya Geç
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------- */
+/*  Politika                                             */
+/* -------------------------------------------------- */
+function SectionPolicy() {
+  const ref = useFadeIn<HTMLDivElement>();
+  return (
+    <div ref={ref} className="gh7-fade-in">
+      <SectionHeading>Nasıl çalışıyor.</SectionHeading>
+      <p
         style={{
-          display: "inline-flex",
-          padding: "10px 20px",
-          background: KINDE_COLORS.black,
-          color: KINDE_COLORS.white,
-          borderRadius: 999,
-          fontSize: 13,
-          fontWeight: 600,
-          textDecoration: "none",
-          fontFamily: KINDE_FONT,
+          fontSize: 16,
+          lineHeight: 1.7,
+          color: "#333",
+          marginBottom: 8,
         }}
       >
-        Detay ve fiyat →
-      </Link>
+        Önce iş yapılır, sonuç görüldükten sonra onaylanır. Ödeme yalnızca
+        onayladıktan sonra tahsil edilir.
+      </p>
+      <p
+        style={{
+          fontSize: 14,
+          lineHeight: 1.7,
+          color: KINDE_COLORS.muted,
+        }}
+      >
+        72 saat içinde itiraz hakkınız vardır. İtiraz kabul edilirse ücret iade
+        edilir, paket düzeltmelere devam eder.
+      </p>
     </div>
   );
 }

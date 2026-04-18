@@ -5,8 +5,10 @@ import {
   getUserServiceOrders,
   getLatestAuditScore,
 } from "@/lib/dal/service-orders";
+import { getLatestAudit } from "@/lib/dal/personal-analysis";
 import { EmptyState } from "@/components/panel/empty-state";
 import { HizmetlerContentV3 } from "@/components/panel/hizmetler-v3/hizmetler-content-v3";
+import type { AuditItemResult } from "@/lib/ai/audit-43";
 
 export default async function HizmetlerPage() {
   const activeBrand = await getActiveBrand();
@@ -15,11 +17,13 @@ export default async function HizmetlerPage() {
   const brand = activeBrand.brand;
   const userId = activeBrand.profile.id;
   const userType = brand.userType ?? "firma";
+  const domain = brand.domain ?? "";
 
-  const [packages, orders, latestAudit] = await Promise.all([
+  const [packages, orders, latestAuditScore, latestAudit] = await Promise.all([
     getAvailablePackages(userType),
     getUserServiceOrders(userId),
     getLatestAuditScore(userId),
+    getLatestAudit(userId, domain, brand.name).catch(() => null),
   ]);
 
   if (packages.length === 0) {
@@ -32,13 +36,18 @@ export default async function HizmetlerPage() {
     );
   }
 
+  const auditItems =
+    (latestAudit?.auditItems as unknown as AuditItemResult[] | null) ?? [];
+  const failCount = auditItems.filter((it) => it.status === "fail").length;
+
   return (
     <HizmetlerContentV3
       plan={activeBrand.plan ?? "free"}
       packages={packages}
       orders={orders}
-      currentScore={latestAudit?.score ?? 0}
+      currentScore={latestAuditScore?.score ?? 0}
       userType={userType}
+      failCount={failCount}
       lastUpdate={orders[0]?.createdAt?.toISOString() ?? null}
     />
   );

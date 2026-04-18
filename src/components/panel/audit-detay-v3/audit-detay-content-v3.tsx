@@ -11,9 +11,11 @@ import {
   SourceNote,
   StatusPill,
   ProGate,
+  ProCTA,
   KindeFooter,
   useFadeIn,
   KINDE_COLORS,
+  PRO_CTA_AUDIT,
 } from "@/components/panel/kinde/primitives";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -26,7 +28,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 const CATEGORY_ORDER = ["content", "schema", "entity", "tech", "external", "ai"];
 
-const FREE_ITEM_LIMIT = 10; // İlk 10 madde açık, sonrası blur
+const FREE_ITEM_LIMIT = 10;
 
 export interface AuditDetayV3Props {
   plan: string;
@@ -42,26 +44,33 @@ export interface AuditDetayV3Props {
 
 export function AuditDetayContentV3(props: AuditDetayV3Props) {
   const isPro = props.plan !== "free";
+  const hasCompetitor = props.competitorScore !== null && !!props.competitorName;
 
   return (
     <KindePage>
       <KindeHero
-        score={props.overallScore}
         title="43 madde · detaylı audit."
-        subtitle={`${props.brandName} markanız 6 kategoride ${props.auditItems.length} madde üzerinden test edildi.${props.competitorName ? ` Rakibiniz ${props.competitorName} ile karşılaştırıldı.` : ""}`}
-        tertiary={
-          props.competitorScore !== null && props.competitorName
-            ? `Rakip skoru: ${props.competitorScore}/100 · ${props.competitorName}`
-            : undefined
-        }
+        subtitle={`${props.brandName} markanız 6 kategoride ${props.auditItems.length} madde üzerinden test edildi.`}
       />
 
       <Divider />
-      <SectionOverview {...props} />
+      <SectionMetrics {...props} hasCompetitor={hasCompetitor} />
       <Divider />
-      <SectionCategories {...props} isPro={isPro} />
+      <SectionCategories {...props} />
       <Divider />
-      <SectionPersonal {...props} />
+      <SectionDetailList {...props} isPro={isPro} />
+      {props.personalAnalysis && (
+        <>
+          <Divider />
+          <SectionPersonal {...props} />
+        </>
+      )}
+      {!isPro && (
+        <>
+          <Divider />
+          <ProCTA lead={PRO_CTA_AUDIT} />
+        </>
+      )}
       <Divider />
       <KindeFooter lastUpdate={props.lastUpdate} />
     </KindePage>
@@ -69,60 +78,202 @@ export function AuditDetayContentV3(props: AuditDetayV3Props) {
 }
 
 /* -------------------------------------------------- */
-/*  Kategori skorları                                  */
+/*  Üst metrik kartları + siyah skor barı               */
 /* -------------------------------------------------- */
-function SectionOverview({ categoryScores, auditItems }: AuditDetayV3Props) {
+function SectionMetrics({
+  overallScore,
+  competitorScore,
+  competitorName,
+  auditItems,
+  hasCompetitor,
+}: AuditDetayV3Props & { hasCompetitor: boolean }) {
   const ref = useFadeIn<HTMLDivElement>();
+  return (
+    <div ref={ref} className="gh7-fade-in">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: hasCompetitor ? "1fr 1fr 1fr" : "1fr 1fr",
+          gap: 16,
+          marginBottom: 40,
+        }}
+      >
+        <MetricCard label="Genel Skor" value={`${overallScore}/100`} />
+        {hasCompetitor && (
+          <MetricCard
+            label="Rakip Skoru"
+            value={`${competitorScore}/100`}
+            caption={competitorName ?? undefined}
+          />
+        )}
+        <MetricCard label="Madde Sayısı" value={String(auditItems.length)} />
+      </div>
+
+      <ScoreBar label={`Siz · ${overallScore}/100`} score={overallScore} />
+      {hasCompetitor && (
+        <div style={{ marginTop: 12 }}>
+          <ScoreBar
+            label={`${competitorName} · ${competitorScore}/100`}
+            score={competitorScore ?? 0}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  caption,
+}: {
+  label: string;
+  value: string;
+  caption?: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: 24,
+        border: `1px solid ${KINDE_COLORS.divider}`,
+        borderRadius: 12,
+      }}
+    >
+      <div style={{ fontSize: 11, color: KINDE_COLORS.mutedLight, letterSpacing: "0.04em" }}>
+        {label.toUpperCase()}
+      </div>
+      <div
+        style={{
+          marginTop: 6,
+          fontSize: 28,
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </div>
+      {caption && (
+        <div style={{ marginTop: 4, fontSize: 12, color: KINDE_COLORS.mutedLight }}>
+          {caption}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScoreBar({ label, score }: { label: string; score: number }) {
+  const pct = Math.max(0, Math.min(100, score));
+  return (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: 12,
+          color: KINDE_COLORS.muted,
+          marginBottom: 6,
+        }}
+      >
+        <span>{label}</span>
+        <span>{pct}%</span>
+      </div>
+      <div
+        style={{
+          width: "100%",
+          height: 4,
+          background: KINDE_COLORS.divider,
+          borderRadius: 2,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${pct}%`,
+            height: "100%",
+            background: KINDE_COLORS.black,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------- */
+/*  Kategori özetleri (accordion)                       */
+/* -------------------------------------------------- */
+function SectionCategories({ categoryScores, auditItems }: AuditDetayV3Props) {
+  const ref = useFadeIn<HTMLDivElement>();
+  const [openCat, setOpenCat] = useState<string | null>(null);
+
   return (
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Kategori skorları.</SectionHeading>
       <SectionLead>
-        6 kategori, toplam 43 madde. Her kategori için pass/partial/fail dağılımı.
+        6 kategori, toplam {auditItems.length} madde. Her kategori için pass ·
+        kısmi · eksik dağılımı.
       </SectionLead>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {CATEGORY_ORDER.map((key) => {
           const items = auditItems.filter((it) => it.category === key);
+          if (items.length === 0) return null;
           const pass = items.filter((it) => it.status === "pass").length;
           const partial = items.filter((it) => it.status === "partial").length;
           const fail = items.filter((it) => it.status === "fail").length;
           const score = Math.round(categoryScores[key] ?? 0);
-          if (items.length === 0) return null;
+          const isOpen = openCat === key;
           return (
             <div
               key={key}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px 0",
-                borderBottom: `1px solid ${KINDE_COLORS.divider}`,
-              }}
+              style={{ borderBottom: `1px solid ${KINDE_COLORS.divider}` }}
             >
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600 }}>
-                  {CATEGORY_LABELS[key] ?? key}
+              <button
+                type="button"
+                onClick={() => setOpenCat(isOpen ? null : key)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "20px 0",
+                  background: "transparent",
+                  border: 0,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  textAlign: "left",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>
+                    {CATEGORY_LABELS[key] ?? key}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      fontSize: 12,
+                      color: KINDE_COLORS.mutedLight,
+                    }}
+                  >
+                    {pass} geçti · {partial} kısmen · {fail} eksik
+                  </div>
                 </div>
                 <div
                   style={{
-                    marginTop: 4,
-                    fontSize: 12,
-                    color: KINDE_COLORS.mutedLight,
+                    fontSize: 20,
+                    fontWeight: 700,
+                    letterSpacing: "-0.02em",
+                    color: KINDE_COLORS.black,
+                    marginLeft: 16,
                   }}
                 >
-                  {pass} tamam · {partial} kısmi · {fail} eksik
+                  {score}/100
                 </div>
-              </div>
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 700,
-                  letterSpacing: "-0.02em",
-                  color: score >= 70 ? "#2E7D32" : score >= 40 ? "#B57F00" : "#C62828",
-                }}
-              >
-                {score}
-              </div>
+              </button>
+              {isOpen && (
+                <div style={{ paddingBottom: 12 }}>
+                  <ScoreBar label="Kategori skoru" score={score} />
+                </div>
+              )}
             </div>
           );
         })}
@@ -132,74 +283,56 @@ function SectionOverview({ categoryScores, auditItems }: AuditDetayV3Props) {
 }
 
 /* -------------------------------------------------- */
-/*  Detaylı 43 madde                                   */
+/*  Detaylı 43 madde listesi                            */
 /* -------------------------------------------------- */
-function SectionCategories({
+function SectionDetailList({
   auditItems,
   isPro,
 }: AuditDetayV3Props & { isPro: boolean }) {
   const ref = useFadeIn<HTMLDivElement>();
 
+  // Global sayaç — ilk 10 açık, sonrası locked
+  let counter = 0;
+
   return (
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Her madde tek tek.</SectionHeading>
       <SectionLead>
-        İlk {FREE_ITEM_LIMIT} madde ücretsiz plan'da açık. Gerisi Pro ile.
+        İlk {FREE_ITEM_LIMIT} madde ücretsiz plan'da açık. Madde başlığına
+        tıklayarak detay ve öneriyi görün.
       </SectionLead>
 
       {CATEGORY_ORDER.map((catKey) => {
         const items = auditItems.filter((it) => it.category === catKey);
         if (items.length === 0) return null;
         return (
-          <CategoryBlock
-            key={catKey}
-            title={CATEGORY_LABELS[catKey] ?? catKey}
-            items={items}
-            isPro={isPro}
-            globalOffset={auditItems.findIndex(
-              (x) => x.category === catKey && x.key === items[0].key,
-            )}
-          />
+          <div key={catKey} style={{ marginBottom: 40 }}>
+            <h3
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                marginBottom: 8,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {CATEGORY_LABELS[catKey] ?? catKey}
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {items.map((item) => {
+                const isLocked = !isPro && counter >= FREE_ITEM_LIMIT;
+                counter += 1;
+                return (
+                  <AuditItemRow key={item.key} item={item} isLocked={isLocked} />
+                );
+              })}
+            </div>
+          </div>
         );
       })}
 
       <SourceNote>
-        Kaynak: Site HTML analizi · DataForSEO · Perplexity Sonar · Claude Opus
+        Kaynak: Site HTML · DataForSEO On-Page API · Perplexity Sonar · Claude Opus
       </SourceNote>
-    </div>
-  );
-}
-
-function CategoryBlock({
-  title,
-  items,
-  isPro,
-  globalOffset,
-}: {
-  title: string;
-  items: AuditItemResult[];
-  isPro: boolean;
-  globalOffset: number;
-}) {
-  return (
-    <div style={{ marginBottom: 40 }}>
-      <h3
-        style={{
-          fontSize: 20,
-          fontWeight: 700,
-          marginBottom: 16,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {title}
-      </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        {items.map((item, i) => {
-          const globalIdx = globalOffset + i;
-          const isLocked = !isPro && globalIdx >= FREE_ITEM_LIMIT;
-          return <AuditItemRow key={item.key} item={item} isLocked={isLocked} />;
-        })}
-      </div>
     </div>
   );
 }
@@ -224,8 +357,9 @@ function AuditItemRow({
         onClick={() => !isLocked && setOpen((v) => !v)}
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
+          gap: 16,
           width: "100%",
           background: "transparent",
           border: 0,
@@ -235,7 +369,16 @@ function AuditItemRow({
           textAlign: "left",
         }}
       >
-        <div style={{ flex: 1, paddingRight: 16 }}>
+        <div
+          style={{
+            minWidth: 70,
+            flexShrink: 0,
+            paddingTop: 2,
+          }}
+        >
+          <StatusPill status={isLocked ? "locked" : item.status} />
+        </div>
+        <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</div>
           {item.value !== undefined && (
             <div
@@ -245,15 +388,14 @@ function AuditItemRow({
                 color: KINDE_COLORS.mutedLight,
               }}
             >
-              Sizde: {String(item.value)}
+              Siz: {String(item.value)}
               {item.competitorValue !== undefined &&
                 ` · Rakip: ${String(item.competitorValue)}`}
             </div>
           )}
         </div>
-        <StatusPill status={isLocked ? "locked" : item.status} />
       </button>
-      {open && !isLocked && item.recommendation && (
+      {open && !isLocked && (
         <div
           style={{
             marginTop: 12,
@@ -265,8 +407,30 @@ function AuditItemRow({
             color: "#333",
           }}
         >
-          <strong style={{ fontSize: 12, color: "#666" }}>ÖNERİ</strong>
-          <div style={{ marginTop: 4 }}>{item.recommendation}</div>
+          {item.recommendation && (
+            <>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: KINDE_COLORS.muted,
+                  letterSpacing: "0.04em",
+                  marginBottom: 4,
+                }}
+              >
+                NE YAPILMALI
+              </div>
+              <div style={{ marginBottom: 12 }}>{item.recommendation}</div>
+            </>
+          )}
+          <div
+            style={{
+              fontSize: 11,
+              color: KINDE_COLORS.mutedLight,
+            }}
+          >
+            Kaynak: DataForSEO On-Page API · audit-43 motoru
+          </div>
         </div>
       )}
     </div>
@@ -276,7 +440,7 @@ function AuditItemRow({
 }
 
 /* -------------------------------------------------- */
-/*  Kişisel analiz (Opus metni)                        */
+/*  Kişisel analiz (Opus)                               */
 /* -------------------------------------------------- */
 function SectionPersonal({ personalAnalysis, brandName }: AuditDetayV3Props) {
   const ref = useFadeIn<HTMLDivElement>();
@@ -285,7 +449,7 @@ function SectionPersonal({ personalAnalysis, brandName }: AuditDetayV3Props) {
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Sizin için ne diyoruz.</SectionHeading>
       <SectionLead>
-        Claude Opus modeli, {brandName} markası için kişisel bir analiz yazdı.
+        Claude Opus, {brandName} markası için kişisel bir analiz yazdı.
       </SectionLead>
       <div
         style={{

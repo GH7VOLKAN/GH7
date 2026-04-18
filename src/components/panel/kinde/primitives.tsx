@@ -29,7 +29,10 @@ export const KINDE_COLORS = {
   bgSoft: "#F7F7F7",
 };
 
-export const PRO_PRICE_LABEL = "Pro ile devamını görün · ₺699/ay";
+export const PRO_PRICE_LABEL = "Pro'ya Geç · ₺699/ay";
+export const PRO_CTA_ARAMALAR =
+  "Tüm sorguları, tam AI yanıtlarını ve il bazlı filtreleri açın.";
+export const PRO_CTA_AUDIT = "43 maddenin tamamını detaylı analiz edin.";
 
 /* -------------------------------------------------- */
 /*  useFadeIn — intersection observer                 */
@@ -194,19 +197,7 @@ export function ProGate({ children }: { children: React.ReactNode }) {
           background: "rgba(255,255,255,0.6)",
         }}
       >
-        <Link
-          href="/panel/abonelik"
-          style={{
-            padding: "12px 24px",
-            background: KINDE_COLORS.black,
-            color: KINDE_COLORS.white,
-            borderRadius: 999,
-            fontSize: 13,
-            fontWeight: 600,
-            textDecoration: "none",
-            fontFamily: KINDE_FONT,
-          }}
-        >
+        <Link href="/panel/abonelik" style={BTN_PRIMARY}>
           {PRO_PRICE_LABEL}
         </Link>
       </div>
@@ -215,35 +206,175 @@ export function ProGate({ children }: { children: React.ReactNode }) {
 }
 
 /* -------------------------------------------------- */
-/*  Status pill (pass / partial / fail)                */
+/*  Pro CTA blok — sayfa sonunda sade                   */
+/* -------------------------------------------------- */
+export function ProCTA({
+  lead,
+}: {
+  lead: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: 32,
+        border: `1px solid ${KINDE_COLORS.divider}`,
+        borderRadius: 12,
+        textAlign: "center",
+      }}
+    >
+      <p
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          lineHeight: 1.4,
+          marginBottom: 20,
+          color: KINDE_COLORS.black,
+        }}
+      >
+        {lead}
+      </p>
+      <Link href="/panel/abonelik" style={BTN_PRIMARY}>
+        {PRO_PRICE_LABEL}
+      </Link>
+    </div>
+  );
+}
+
+/* -------------------------------------------------- */
+/*  Status label — düz metin, renksiz                   */
 /* -------------------------------------------------- */
 export function StatusPill({
   status,
 }: {
   status: "pass" | "partial" | "fail" | "locked";
 }) {
-  const map = {
-    pass: { bg: "#F0F9F0", color: "#2E7D32", label: "✓ Tamam" },
-    partial: { bg: "#FFF8E1", color: "#B57F00", label: "≈ Kısmi" },
-    fail: { bg: "#FDEBEB", color: "#C62828", label: "✗ Eksik" },
-    locked: { bg: "#F7F7F7", color: "#666666", label: "Pro" },
-  } as const;
-  const s = map[status];
+  const label =
+    status === "pass"
+      ? "geçti"
+      : status === "partial"
+        ? "kısmen"
+        : status === "fail"
+          ? "eksik"
+          : "kilitli";
   return (
     <span
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "4px 10px",
         fontSize: 12,
-        fontWeight: 600,
-        borderRadius: 999,
-        background: s.bg,
-        color: s.color,
+        fontWeight: 700,
+        color: KINDE_COLORS.black,
+        textTransform: "lowercase",
+        letterSpacing: "0.02em",
       }}
     >
-      {s.label}
+      {label}
     </span>
+  );
+}
+
+/* -------------------------------------------------- */
+/*  Siyah/beyaz buton varyantları                       */
+/* -------------------------------------------------- */
+export const BTN_PRIMARY: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "12px 22px",
+  background: KINDE_COLORS.black,
+  color: KINDE_COLORS.white,
+  border: 0,
+  borderRadius: 999,
+  fontSize: 13,
+  fontWeight: 600,
+  textDecoration: "none",
+  fontFamily: KINDE_FONT,
+  cursor: "pointer",
+};
+
+export const BTN_OUTLINE: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "12px 22px",
+  background: KINDE_COLORS.white,
+  color: KINDE_COLORS.black,
+  border: `1px solid ${KINDE_COLORS.black}`,
+  borderRadius: 999,
+  fontSize: 13,
+  fontWeight: 600,
+  textDecoration: "none",
+  fontFamily: KINDE_FONT,
+  cursor: "pointer",
+};
+
+/* -------------------------------------------------- */
+/*  Toggle switch — siyah/gri                           */
+/* -------------------------------------------------- */
+export function KindeToggle({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "20px 0",
+        borderBottom: `1px solid ${KINDE_COLORS.divider}`,
+        gap: 16,
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 15, fontWeight: 500 }}>{label}</div>
+        {description && (
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 12,
+              color: KINDE_COLORS.mutedLight,
+              lineHeight: 1.5,
+            }}
+          >
+            {description}
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        aria-pressed={checked}
+        style={{
+          position: "relative",
+          width: 44,
+          height: 24,
+          borderRadius: 999,
+          border: 0,
+          background: checked ? "#111111" : "#E0E0E0",
+          cursor: "pointer",
+          transition: "background 0.18s ease",
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            position: "absolute",
+            top: 3,
+            left: checked ? 23 : 3,
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            background: "#FFFFFF",
+            transition: "left 0.18s ease",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        />
+      </button>
+    </div>
   );
 }
 
