@@ -824,6 +824,23 @@ function AnalizPageInner() {
             source,
             competitorUrl: formData.competitor || undefined,
             discoveredCompetitors: discovery?.competitors?.slice(0, 5) ?? [],
+            // Perplexity discovery sonucu — Brand'ı zenginleştirmek ve
+            // Prompt tablosuna targetQueries yazmak için API'ye gönderilir.
+            discoveryResult: discovery
+              ? {
+                  sector: discovery.sector,
+                  description: discovery.description,
+                  products: discovery.products,
+                  services: discovery.services,
+                  expertise: discovery.expertise,
+                  targetQueries: discovery.targetQueries,
+                  location: discovery.location,
+                  targetCountries: discovery.targetCountries,
+                  siteLanguages: discovery.siteLanguages,
+                  priceSegment: discovery.priceSegment,
+                  category: discovery.category,
+                }
+              : undefined,
           }),
         });
         if (res.ok) {

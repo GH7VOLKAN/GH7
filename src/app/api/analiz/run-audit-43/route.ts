@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { normalizeDomain, extractRootDomain } from "@/lib/utils/turkish";
 import { checkRateLimit } from "@/lib/rate-limit";
 import type { UserType } from "@/lib/ai/user-type-weights";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const maxDuration = 120; // 2 min
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       keywords,
       source,
       discoveredCompetitors,
+      discoveryResult,
     } = body as {
       url?: string;
       brandName?: string;
@@ -72,6 +73,21 @@ export async function POST(req: NextRequest) {
         url?: string;
         reason?: string;
       }>;
+      // Perplexity discovery sonucu — Brand'ı zenginleştirmek ve Prompt
+      // tablosuna targetQueries yazmak için kullanılır.
+      discoveryResult?: {
+        sector?: string;
+        description?: string;
+        products?: string[];
+        services?: string[];
+        expertise?: string[];
+        targetQueries?: Array<{ query: string; language?: string }>;
+        location?: { city?: string; district?: string };
+        targetCountries?: string[];
+        siteLanguages?: string[];
+        priceSegment?: string;
+        category?: string;
+      };
     };
 
     if (!url || !brandName || !userType) {
@@ -190,30 +206,58 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // 3) Yeni brand oluştur (girilen URL + brand adı + userType ile)
+          // 3) Yeni brand oluştur — discovery sonucu varsa onunla zenginleştir
+          const discoverySector = discoveryResult?.sector ?? sector ?? null;
+          const discoveryProducts = discoveryResult?.products ?? [];
+          const discoveryServices = discoveryResult?.services ?? [];
+          const discoveryExpertise = discoveryResult?.expertise ?? [];
+          const discoveryCity =
+            discoveryResult?.location?.city ?? location ?? null;
+
+          // Service regions: location + discovery city birleşimi
+          const regions = new Set<string>();
+          if (location) regions.add(location);
+          if (discoveryCity) regions.add(discoveryCity);
+
+          // Competitor names/domains: discoveredCompetitors'tan
+          const compNames = (discoveredCompetitors ?? [])
+            .map((c) => c.name)
+            .filter(Boolean);
+          const compDomains = (discoveredCompetitors ?? [])
+            .map((c) => c.url)
+            .filter((u): u is string => !!u);
+
           brand = await prisma.brand.create({
             data: {
               profileId: userId,
               name: brandName,
               domain: normalizedDomain,
-              sector: sector ?? null,
+              sector: discoverySector,
               userType,
               type: userType === "kisi" ? "kisisel" : "firma",
               isDefault: true,
-              serviceRegions: location ? [location] : [],
-              businessCategories: [],
+              serviceRegions: Array.from(regions),
+              // Ürün + hizmet + uzmanlık — discovery'den
+              businessCategories: [
+                ...discoveryProducts,
+                ...discoveryServices,
+              ].slice(0, 20),
+              specialties: discoveryExpertise.slice(0, 10),
               strengths: [],
               weaknesses: [],
-              competitorNames: [],
-              competitorDomains: [],
-              specialties: [],
+              competitorNames: compNames,
+              competitorDomains: compDomains,
+              // Sonar ham verisi — ayarlar/profil sayfasında kullanmak için
+              sonarAnalysis: discoveryResult
+                ? (discoveryResult as unknown as Prisma.InputJsonValue)
+                : Prisma.JsonNull,
             },
           });
           console.log(
             `[api/run-audit-43] Created new Brand id=${brand.id} name="${brandName}" domain="${normalizedDomain}" for user=${userId}`,
           );
         } else {
-          // Mevcut brand'ı güncelle (default yap + konum/sector)
+          // Mevcut brand'ı güncelle (default yap + konum/sector + discovery)
           const updateData: Record<string, unknown> = { isDefault: true };
           if (location && !brand.serviceRegions?.includes(location)) {
             updateData.serviceRegions = [...(brand.serviceRegions ?? []), location];
@@ -221,8 +265,24 @@ export async function POST(req: NextRequest) {
           if (brandName && brand.name !== brandName) {
             updateData.name = brandName;
           }
-          if (sector && !brand.sector) {
-            updateData.sector = sector;
+          const newSector = discoveryResult?.sector ?? sector;
+          if (newSector && !brand.sector) {
+            updateData.sector = newSector;
+          }
+          if (discoveryResult) {
+            const discoveryProducts = discoveryResult.products ?? [];
+            const discoveryServices = discoveryResult.services ?? [];
+            if (discoveryProducts.length > 0 || discoveryServices.length > 0) {
+              updateData.businessCategories = [
+                ...discoveryProducts,
+                ...discoveryServices,
+              ].slice(0, 20);
+            }
+            if ((discoveryResult.expertise ?? []).length > 0) {
+              updateData.specialties = discoveryResult.expertise!.slice(0, 10);
+            }
+            updateData.sonarAnalysis =
+              discoveryResult as unknown as Prisma.InputJsonValue;
           }
           brand = await prisma.brand.update({
             where: { id: brand.id },
@@ -240,6 +300,34 @@ export async function POST(req: NextRequest) {
           console.log(
             `[api/run-audit-43] Updated Brand id=${brand.id} domain="${normalizedDomain}" for user=${userId}`,
           );
+        }
+
+        // DISCOVERY SORGULARINI PROMPT TABLOSUNA YAZ
+        // Kullanıcı dashboard'a geldiğinde "Senin Yerine Kim?" sayfasında
+        // 10+ sorgu görür. Bu sorgular daha sonra weekly scan'de kullanılır.
+        if (discoveryResult?.targetQueries && discoveryResult.targetQueries.length > 0) {
+          try {
+            // Mevcut prompt'ları silip yenilerini yaz (ilk analiz)
+            const existingPrompts = await prisma.prompt.count({
+              where: { brandId: brand.id },
+            });
+            if (existingPrompts === 0) {
+              await prisma.prompt.createMany({
+                data: discoveryResult.targetQueries.slice(0, 15).map((q) => ({
+                  brandId: brand!.id,
+                  text: q.query,
+                  tags: q.language ? [q.language] : [],
+                  source: "sonar",
+                  isActive: true,
+                })),
+              });
+              console.log(
+                `[api/run-audit-43] Created ${discoveryResult.targetQueries.length} prompts for brand ${brand.id}`,
+              );
+            }
+          } catch (err) {
+            console.warn("[api/run-audit-43] Prompt create failed:", err);
+          }
         }
 
         // Rakipleri Competitor tablosuna kaydet
