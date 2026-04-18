@@ -63,14 +63,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Code is valid — get the tokenHash for Supabase session
-    const tokenHash = verification.tokenHash;
-
-    // Ensure the user profile exists with this phone number
+    // Code is valid
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+
+    const syntheticEmail = `phone_${normalizedPhone}@gh7.ai`;
 
     // Find or create profile for this phone user
     const existingProfile = await prisma.profile.findFirst({
@@ -78,9 +77,6 @@ export async function POST(request: Request) {
     });
 
     if (!existingProfile) {
-      // The Supabase user was created by generateLink in send-sms-otp
-      // We need to find the Supabase user and create a profile
-      const syntheticEmail = `phone_${normalizedPhone}@gh7.ai`;
       const { data: userData } =
         await supabaseAdmin.auth.admin.listUsers();
 
@@ -94,7 +90,7 @@ export async function POST(request: Request) {
             id: supabaseUser.id,
             email: syntheticEmail,
             phone: normalizedPhone,
-            phoneVerified: true, // PR B: SMS OTP başarılı = telefon doğrulandı
+            phoneVerified: true,
             lastLoginAt: new Date(),
           },
         });
@@ -103,7 +99,6 @@ export async function POST(request: Request) {
         );
       }
     } else {
-      // PR B: Mevcut profile için phoneVerified + lastLoginAt güncelle
       await prisma.profile.update({
         where: { id: existingProfile.id },
         data: {
@@ -113,17 +108,45 @@ export async function POST(request: Request) {
       });
     }
 
+    // KRITIK: Client supabase.auth.verifyOtp için TAZE tokenHash oluştur.
+    // Eski tokenHash (send-sms-otp'de oluşan) consume edilmiş veya expire
+    // olmuş olabilir → "Email link is invalid or has expired" hatası.
+    // Her verify çağrısında yeni bir magic link üretilir.
+    let freshTokenHash: string | null = null;
+    try {
+      const { data: linkData, error: linkError } =
+        await supabaseAdmin.auth.admin.generateLink({
+          type: "magiclink",
+          email: syntheticEmail,
+        });
+      if (linkError || !linkData?.properties?.hashed_token) {
+        console.error(
+          "[sms-otp] Fresh magic link generation failed:",
+          linkError,
+        );
+      } else {
+        freshTokenHash = linkData.properties.hashed_token;
+      }
+    } catch (err) {
+      console.error("[sms-otp] Fresh magic link exception:", err);
+    }
+
+    // Fallback: taze üretilemezse stored tokenHash'i kullan (eski davranış)
+    const tokenHash = freshTokenHash ?? verification.tokenHash;
+
     // Delete the verification code (one-time use)
     await prisma.verificationCode.delete({
       where: { id: verification.id },
     });
 
-    console.log(`[sms-otp] Verified for ${normalizedPhone.slice(0, 4)}****`);
+    console.log(
+      `[sms-otp] Verified for ${normalizedPhone.slice(0, 4)}**** (tokenHash=${freshTokenHash ? "fresh" : "stored"})`,
+    );
 
-    // Return tokenHash so client can create Supabase session
     return NextResponse.json({
       success: true,
       tokenHash,
+      email: syntheticEmail,
     });
   } catch (err) {
     console.error("[sms-otp] verify-sms-otp error:", err);

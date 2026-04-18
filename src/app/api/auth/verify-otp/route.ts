@@ -62,8 +62,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Code is valid — create session SERVER-SIDE using admin API
-    const tokenHash = verification.tokenHash;
+    // Code is valid — fresh magic link aşağıda üretiliyor
+    // (stored tokenHash consume edilmiş olabilir)
 
     // Delete the verification code (one-time use)
     await prisma.verificationCode.delete({
