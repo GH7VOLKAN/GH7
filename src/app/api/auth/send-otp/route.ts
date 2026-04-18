@@ -8,6 +8,7 @@ import {
   OTP_COOLDOWN_SECONDS,
 } from "@/lib/auth/otp";
 import { sendOtpEmail } from "@/lib/email/resend";
+import { isAdmin, getAdminMagicCode, logAdminAction } from "@/lib/admin";
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +24,35 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     console.log(`[otp] Send OTP request for: ${normalizedEmail}`);
+
+    // ADMIN BYPASS: Admin e-postası → Resend'e e-posta gönderme, sabit kod kabul
+    if (isAdmin({ email: normalizedEmail })) {
+      logAdminAction(normalizedEmail, "email_otp_bypass_requested");
+      const adminCode = getAdminMagicCode();
+      const codeHash = hashCode(adminCode);
+
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      );
+      const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: normalizedEmail,
+      });
+      const tokenHash = linkData?.properties?.hashed_token ?? "admin-bypass";
+
+      await prisma.verificationCode.deleteMany({ where: { email: normalizedEmail } });
+      await prisma.verificationCode.create({
+        data: {
+          email: normalizedEmail,
+          codeHash,
+          tokenHash,
+          expiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+        },
+      });
+
+      return NextResponse.json({ success: true, adminBypass: true });
+    }
 
     // Check RESEND_API_KEY is configured
     if (!process.env.RESEND_API_KEY) {

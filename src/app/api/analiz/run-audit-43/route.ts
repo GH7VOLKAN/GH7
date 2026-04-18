@@ -4,6 +4,7 @@ import { generatePersonalAnalysis } from "@/lib/ai/personal-analysis";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeDomain, extractRootDomain } from "@/lib/utils/turkish";
+import { isAdmin, logAdminAction } from "@/lib/admin";
 import type { UserType } from "@/lib/ai/user-type-weights";
 import type { Prisma } from "@prisma/client";
 
@@ -117,19 +118,45 @@ export async function POST(req: NextRequest) {
 
     // Authenticated user: freeAuditUsed işaretle + Brand kaydını upsert et
     if (userId) {
-      // PR B: Ücretsiz analiz kullanıldı olarak işaretle. Aynı telefon/e-posta
-      // ile tekrar /analiz denenirse can-start engel olur.
-      try {
-        await prisma.profile.update({
-          where: { id: userId },
-          data: {
-            freeAuditUsed: true,
-            freeAuditUsedAt: new Date(),
-            lastLoginAt: new Date(),
-          },
-        });
-      } catch (err) {
-        console.warn("[api/run-audit-43] freeAuditUsed update failed:", err);
+      // ADMIN BYPASS: admin kullanıcılar için freeAuditUsed işaretlenmez —
+      // sınırsız test yapabilsinler. Sadece lastLoginAt güncellenir.
+      const profile = await prisma.profile.findUnique({
+        where: { id: userId },
+        select: { email: true, phone: true },
+      });
+      const userIsAdmin = profile
+        ? isAdmin({ email: profile.email, phone: profile.phone })
+        : false;
+
+      if (userIsAdmin) {
+        logAdminAction(
+          profile?.email ?? userId,
+          "audit_bypass_free_mark",
+          { url, brandName },
+        );
+        try {
+          await prisma.profile.update({
+            where: { id: userId },
+            data: { lastLoginAt: new Date() },
+          });
+        } catch (err) {
+          console.warn("[api/run-audit-43] admin lastLoginAt failed:", err);
+        }
+      } else {
+        // PR B: Ücretsiz analiz kullanıldı olarak işaretle. Aynı telefon/e-posta
+        // ile tekrar /analiz denenirse can-start engel olur.
+        try {
+          await prisma.profile.update({
+            where: { id: userId },
+            data: {
+              freeAuditUsed: true,
+              freeAuditUsedAt: new Date(),
+              lastLoginAt: new Date(),
+            },
+          });
+        } catch (err) {
+          console.warn("[api/run-audit-43] freeAuditUsed update failed:", err);
+        }
       }
 
       try {
