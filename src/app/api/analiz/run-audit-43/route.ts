@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
       source,
       discoveredCompetitors,
       discoveryResult,
+      email: bodyEmail,
+      phone: bodyPhone,
     } = body as {
       url?: string;
       brandName?: string;
@@ -68,6 +70,8 @@ export async function POST(req: NextRequest) {
       competitorUrl?: string;
       keywords?: string[];
       source?: string;
+      email?: string;
+      phone?: string;
       discoveredCompetitors?: Array<{
         name: string;
         url?: string;
@@ -115,6 +119,30 @@ export async function POST(req: NextRequest) {
       userId = user?.id ?? null;
     } catch (err) {
       console.warn("[api/run-audit-43] Supabase session read failed:", err);
+    }
+
+    // FALLBACK: Session cookie yoksa ama body'de email/phone varsa,
+    // onlardan Profile.id bulup userId olarak kullan. Bu Brand oluşturmanın
+    // garanti altına alınması için kritik — session cookie set etme timing
+    // sorunu yaşarsak bile Brand yazılır, /panel redirect loop'u kırılır.
+    if (!userId && (bodyEmail || bodyPhone)) {
+      try {
+        const orConds: Array<Record<string, unknown>> = [];
+        if (bodyEmail) orConds.push({ email: bodyEmail.toLowerCase().trim() });
+        if (bodyPhone) orConds.push({ phone: bodyPhone });
+        const profile = await prisma.profile.findFirst({
+          where: { OR: orConds },
+          select: { id: true },
+        });
+        if (profile) {
+          userId = profile.id;
+          console.log(
+            `[api/run-audit-43] Session yok, body fallback ile userId=${userId} bulundu`,
+          );
+        }
+      } catch (err) {
+        console.warn("[api/run-audit-43] Body fallback profile lookup failed:", err);
+      }
     }
 
     console.log(
