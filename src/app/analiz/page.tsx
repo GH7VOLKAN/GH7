@@ -919,8 +919,8 @@ function AnalizPageInner() {
         öğrenin
       </p>
 
-      {/* Dual selection cards */}
-      <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full max-w-md">
+      {/* 4 kapı seçimi — firma / kişi / e-ticaret / yurtdışı */}
+      <div className="mt-8 grid grid-cols-2 gap-3 w-full max-w-2xl sm:grid-cols-4">
         <button
           onClick={() =>
             setFormData((prev) => ({
@@ -929,15 +929,16 @@ function AnalizPageInner() {
               heroInput: "",
             }))
           }
-          className={`flex-1 border rounded-xl p-5 text-center transition-colors ${
+          className={`border rounded-xl p-4 text-center transition-colors ${
             formData.analysisType === "firma"
               ? "border-gray-900 bg-gray-50"
               : "border-gray-200 hover:border-gray-300"
           }`}
         >
           <span className="text-2xl block mb-2">&#127970;</span>
-          <span className="text-sm font-medium text-gray-900">
-            Firmamı Test Et
+          <span className="text-sm font-medium text-gray-900 block">Firma</span>
+          <span className="text-[11px] text-gray-500 block mt-0.5">
+            Şirket/kurum
           </span>
         </button>
         <button
@@ -949,15 +950,60 @@ function AnalizPageInner() {
               keywords: [...DEMO_PERSONAL_KEYWORDS],
             }))
           }
-          className={`flex-1 border rounded-xl p-5 text-center transition-colors ${
-            formData.analysisType === "kisisel"
+          className={`border rounded-xl p-4 text-center transition-colors ${
+            formData.analysisType === "kisi" || formData.analysisType === "kisisel"
               ? "border-gray-900 bg-gray-50"
               : "border-gray-200 hover:border-gray-300"
           }`}
         >
           <span className="text-2xl block mb-2">&#128100;</span>
-          <span className="text-sm font-medium text-gray-900">
-            Kendi Adımı Test Et
+          <span className="text-sm font-medium text-gray-900 block">Kişi</span>
+          <span className="text-[11px] text-gray-500 block mt-0.5">
+            Kişisel marka
+          </span>
+        </button>
+        <button
+          onClick={() =>
+            setFormData((prev) => ({
+              ...prev,
+              analysisType: "eticaret",
+              heroInput: "",
+            }))
+          }
+          className={`border rounded-xl p-4 text-center transition-colors ${
+            formData.analysisType === "eticaret"
+              ? "border-gray-900 bg-gray-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <span className="text-2xl block mb-2">&#128722;</span>
+          <span className="text-sm font-medium text-gray-900 block">
+            E-ticaret
+          </span>
+          <span className="text-[11px] text-gray-500 block mt-0.5">
+            Marka/ürün
+          </span>
+        </button>
+        <button
+          onClick={() =>
+            setFormData((prev) => ({
+              ...prev,
+              analysisType: "yurtdisi",
+              heroInput: "",
+            }))
+          }
+          className={`border rounded-xl p-4 text-center transition-colors ${
+            formData.analysisType === "yurtdisi"
+              ? "border-gray-900 bg-gray-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <span className="text-2xl block mb-2">&#127760;</span>
+          <span className="text-sm font-medium text-gray-900 block">
+            Yurtdışı
+          </span>
+          <span className="text-[11px] text-gray-500 block mt-0.5">
+            İhracat/export
           </span>
         </button>
       </div>
@@ -977,7 +1023,16 @@ function AnalizPageInner() {
           )}
           <input
             type="text"
-            placeholder={isFirma ? "firmanız.com" : "Ad Soyad"}
+            placeholder={
+              formData.analysisType === "firma"
+                ? "firmanız.com"
+                : formData.analysisType === "kisi" ||
+                    formData.analysisType === "kisisel"
+                  ? "Ad Soyad"
+                  : formData.analysisType === "eticaret"
+                    ? "marka adı veya ürün URL'si"
+                    : "siteniz.com (hedef: ihracat pazarı)"
+            }
             value={formData.heroInput}
             onChange={(e) => updateField("heroInput", e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleHeroSubmit()}
