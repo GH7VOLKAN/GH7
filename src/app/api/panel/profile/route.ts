@@ -6,8 +6,10 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/panel/profile
- * Session'daki kullanıcının Profile bilgisini döner (email, phone, plan vb.)
- * /analiz sayfasının authenticated user için form prefill'i yapabilmesi için.
+ * Session'daki kullanıcının Profile + Brand bilgisini döner.
+ * /analiz sayfası authenticated user için:
+ *   - Brand varsa → /panel/genel'e redirect (loop'u kırmak için)
+ *   - Brand yoksa → form prefill (email+phone)
  */
 export async function GET() {
   try {
@@ -27,6 +29,13 @@ export async function GET() {
         emailVerified: (p as Record<string, unknown>).emailVerified ?? false,
         phoneVerified: (p as Record<string, unknown>).phoneVerified ?? false,
       },
+      brand: activeBrand.brand
+        ? {
+            id: activeBrand.brand.id,
+            name: activeBrand.brand.name,
+            domain: activeBrand.brand.domain ?? "",
+          }
+        : null,
     });
   } catch (error) {
     console.error("[api/panel/profile GET]", error);

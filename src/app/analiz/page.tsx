@@ -442,19 +442,30 @@ function AnalizPageInner() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || cancelled) return;
 
-        // Profile'dan phone bilgisini çek
+        // Profile + Brand bilgisini çek
         let phoneFromProfile: string | null = null;
+        let hasBrand = false;
         try {
           const res = await fetch("/api/panel/profile");
           if (res.ok) {
             const data = await res.json();
             phoneFromProfile = data?.profile?.phone ?? null;
+            hasBrand = Boolean(data?.brand?.id);
           }
         } catch {
           // profile API yoksa phone null kalır
         }
 
         if (cancelled) return;
+
+        // KRITIK: Kayıtlı + analiz yapmış kullanıcı → /panel/genel'e gönder.
+        // /analiz'e düşme loop'unu kırar: brand yoksa form gösterilir, varsa
+        // direkt dashboard açılır.
+        if (hasBrand) {
+          router.replace("/panel/genel");
+          return;
+        }
+
         setAuthedSession({
           userId: user.id,
           email: user.email ?? "",
@@ -932,6 +943,12 @@ function AnalizPageInner() {
             location: formData.cities[0],
             keywords: formData.keywords,
             source,
+            // Session cookie yoksa backend email/phone'dan Profile bulabilsin diye.
+            // Brand oluşturmanın garanti altına alınması için kritik (redirect loop önleme).
+            email: formData.email || undefined,
+            phone: formData.phone
+              ? normalizePhone(formData.phone)
+              : undefined,
             competitorUrl: formData.competitor || undefined,
             discoveredCompetitors: discovery?.competitors?.slice(0, 5) ?? [],
             // Perplexity discovery sonucu — Brand'ı zenginleştirmek ve
