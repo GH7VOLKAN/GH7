@@ -48,8 +48,8 @@ const getPlans = (yearly: boolean): Plan[] => [
   },
   {
     name: "Pro",
-    price: yearly ? "₺2.075" : "₺2.450",
-    period: "/ay",
+    price: yearly ? "₺699" : "₺699",
+    period: yearly ? "/ay (yıllık ₺8.388)" : "/ay",
     description: "Tam izleme + rekabet yönetimi",
     popular: true,
     features: PRO_FEATURES,

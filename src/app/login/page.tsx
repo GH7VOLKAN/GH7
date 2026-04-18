@@ -777,10 +777,9 @@ export default function LoginPage() {
               </p>
               <div style={{ marginBottom: 40 }}>
                 {[
-                  { name: "Tespit Et", price: "Ücretsiz" },
-                  { name: "Takip Et", price: "\u20BA2.450/ay" },
-                  { name: "Çözüm Üret", price: "\u20BA4.450/ay" },
-                  { name: "Uygulat", price: "\u20BA9.450/ay" },
+                  { name: "Ücretsiz Analiz", price: "₺0" },
+                  { name: "Pro · Aylık", price: "₺699/ay" },
+                  { name: "Pro · Yıllık", price: "₺8.388/yıl" },
                 ].map((tier, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.1)", fontSize: 14 }}>
                     <span style={{ color: "rgba(255,255,255,.7)", fontWeight: 600 }}>{tier.name}</span>
