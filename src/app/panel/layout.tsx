@@ -21,34 +21,39 @@ export default async function PanelLayout({
     const user = await getUserProfile();
     const activeBrand = await getActiveBrand();
 
-    if (user && activeBrand?.brand) {
+    if (user) {
       isDemo = false;
-      plan = activeBrand.plan ?? "free";
+      plan = activeBrand?.plan ?? "free";
 
-      brandData = {
-        id: activeBrand.brand.id,
-        name: activeBrand.brand.name,
-        domain: activeBrand.brand.domain ?? "",
-        sector: activeBrand.brand.sector,
-        type: activeBrand.brand.type ?? "firma",
-        serviceRegions: (activeBrand.brand as Record<string, unknown>).serviceRegions as string[] ?? [],
-      };
-
+      // User HER ZAMAN profileData'ya girsin (sidebar'da email/çıkış görünsün).
+      // Brand varsa brandData da doldurulur; yoksa panel boş state gösterir.
       profileData = {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
         avatarUrl: user.avatarUrl,
         plan,
-        emailWeeklyReport: (activeBrand.profile as Record<string, unknown>).emailWeeklyReport as boolean ?? true,
-        emailVerified: (activeBrand.profile as Record<string, unknown>).emailVerified as boolean ?? false,
+        emailWeeklyReport:
+          (activeBrand?.profile as Record<string, unknown> | undefined)
+            ?.emailWeeklyReport as boolean ?? true,
+        emailVerified:
+          (activeBrand?.profile as Record<string, unknown> | undefined)
+            ?.emailVerified as boolean ?? false,
       };
+
+      if (activeBrand?.brand) {
+        brandData = {
+          id: activeBrand.brand.id,
+          name: activeBrand.brand.name,
+          domain: activeBrand.brand.domain ?? "",
+          sector: activeBrand.brand.sector,
+          type: activeBrand.brand.type ?? "firma",
+          serviceRegions:
+            (activeBrand.brand as Record<string, unknown>).serviceRegions as string[] ?? [],
+        };
+      }
     }
-    // User var ama brand yok → panel yine açılır, her sayfa empty state
-    // gösterir (CTA: "Ücretsiz analize başla → /analiz"). Eskiden /onboard'a
-    // redirect ediyordu — ikinci paralel analiz akışı açıp kullanıcıyı
-    // karıştırıyordu. Tek giriş noktası artık /analiz.
-    // Kullanıcı yoksa isDemo=true kalır, demo panel görünür.
+    // User yoksa isDemo=true kalır. Tek giriş noktası /analiz.
   } catch (err) {
     console.error("[panel/layout] Auth/DB error:", err);
     // Auth/DB error → fallback to demo mode
