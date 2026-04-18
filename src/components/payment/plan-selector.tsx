@@ -15,7 +15,9 @@ interface PlanSelectorProps {
   onSelect: (plan: string, period: string) => void;
 }
 
-const PLANS: Array<Exclude<PlanType, "free">> = ["pro", "business", "agency"];
+// V3 spec: Sadece Pro plan gösterilir (Business/Agency backend'te backward-compat
+// için tanımlı ama UI'de gizli — ileride geri açılabilir).
+const PLANS: Array<Exclude<PlanType, "free">> = ["pro"];
 
 export function PlanSelector({ currentPlan, onSelect }: PlanSelectorProps) {
   const [period, setPeriod] = useState<PlanPeriod>("monthly");
@@ -65,7 +67,7 @@ export function PlanSelector({ currentPlan, onSelect }: PlanSelectorProps) {
       </div>
 
       {/* Plan Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="mx-auto max-w-md">
         {PLANS.map((plan) => {
           const isCurrent = currentPlan === plan;
           const monthlyEq = getMonthlyEquivalent(plan, period);

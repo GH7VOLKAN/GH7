@@ -2,6 +2,10 @@
  * GH7.ai — Plan Fiyatları (İyzico)
  *
  * Tüm fiyatlar TRY cinsinden, KDV dahil.
+ *
+ * V3 spec: Aktif olarak sadece **Pro** planı satılıyor.
+ * Business ve Agency tanımları backward-compatibility için tutulmuştur
+ * (mevcut abonelikler + checkout endpoint'i). UI'de gizlidir.
  */
 
 import type { PlanType } from "@/lib/plans";
@@ -15,7 +19,9 @@ export interface PlanPrice {
 
 export const PLAN_PRICES: Record<Exclude<PlanType, "free">, PlanPrice> = {
   pro: { monthly: 699, yearly: 8388 },
+  /** @deprecated UI'de gösterilmiyor — backend/checkout backward-compat için tutuldu */
   business: { monthly: 4995, yearly: 47950 },
+  /** @deprecated UI'de gösterilmiyor — backend/checkout backward-compat için tutuldu */
   agency: { monthly: 19995, yearly: 191950 },
 };
 
@@ -30,6 +36,7 @@ export const PLAN_FEATURES: Record<Exclude<PlanType, "free">, string[]> = {
     "Bildirimler",
     "3 marka",
   ],
+  /** @deprecated UI'de gösterilmiyor */
   business: [
     "200 takip edilen soru",
     "Tüm Pro özellikleri",
@@ -37,6 +44,7 @@ export const PLAN_FEATURES: Record<Exclude<PlanType, "free">, string[]> = {
     "25 rakip",
     "Öncelikli destek",
   ],
+  /** @deprecated UI'de gösterilmiyor */
   agency: [
     "500 takip edilen soru",
     "Tüm Business özellikleri",

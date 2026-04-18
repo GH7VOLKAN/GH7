@@ -6,6 +6,9 @@
  *   { domain: "idavilla.com.tr" }              → website-analysis + queries
  *   { pattern: "website-analysis:*" }          → tüm website cache
  *   { pattern: "queries-fast:*" }              → tüm queries cache
+ *   { pattern: "discovery-*" }                 → tüm discovery cache
+ *   { action: "clear-all-legacy" }             → website-analysis + queries-fast +
+ *                                                discovery-* pattern'lerini birden temizler
  *
  * Admin auth gerekli.
  */
@@ -16,6 +19,34 @@ import { getRedis, cacheDel, makeCacheKey } from "@/lib/redis";
 
 export const runtime = "nodejs";
 
+const LEGACY_PATTERNS = [
+  "website-analysis:*",
+  "queries-fast:*",
+  "discovery-*",
+  "audit:*",
+];
+
+async function clearPattern(
+  redis: ReturnType<typeof getRedis>,
+  pattern: string,
+): Promise<string[]> {
+  if (!redis) return [];
+  const deleted: string[] = [];
+  let cursor: number | string = 0;
+  do {
+    const result = (await redis.scan(cursor, { match: pattern, count: 100 })) as [
+      string | number,
+      string[],
+    ];
+    cursor = result[0];
+    for (const key of result[1]) {
+      await redis.del(key);
+      deleted.push(key);
+    }
+  } while (String(cursor) !== "0");
+  return deleted;
+}
+
 export async function POST(req: NextRequest) {
   const admin = await getAdminUser();
   if (!admin) {
@@ -23,7 +54,39 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { domain, pattern } = body as { domain?: string; pattern?: string };
+  const { domain, pattern, action } = body as {
+    domain?: string;
+    pattern?: string;
+    action?: string;
+  };
+
+  // Convenience action: tüm eski pattern'leri birden temizle
+  if (action === "clear-all-legacy") {
+    const redis = getRedis();
+    if (!redis) {
+      return NextResponse.json({ error: "Redis not configured" }, { status: 500 });
+    }
+    try {
+      const results: Record<string, number> = {};
+      let total = 0;
+      for (const p of LEGACY_PATTERNS) {
+        const del = await clearPattern(redis, p);
+        results[p] = del.length;
+        total += del.length;
+      }
+      return NextResponse.json({
+        success: true,
+        action: "clear-all-legacy",
+        totalDeleted: total,
+        patterns: results,
+      });
+    } catch (err) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "Clear failed" },
+        { status: 500 },
+      );
+    }
+  }
 
   // Pattern ile toplu silme
   if (pattern) {
