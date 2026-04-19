@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { GenelPageData } from "@/lib/dal/genel-page";
+import { ScanNowButton } from "@/components/panel/scan-now-button";
 
 const CATEGORY_LABELS: Record<string, string> = {
   content: "İçerik otoritesi",
@@ -222,6 +223,11 @@ function Section1Queries({
 
   const FREE_OPEN_LIMIT = 3;
 
+  // Hiç scan çalışmamış mı? (tüm query'ler hasNoResponse)
+  const noScanYet =
+    data.queries.length > 0 &&
+    data.queries.every((q) => q.hasNoResponse);
+
   return (
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Markanızın yapay zeka görünürlüğü.</SectionHeading>
@@ -229,6 +235,8 @@ function Section1Queries({
         5 AI platformuna gerçek sorgular gönderildi. Her platformun tam yanıtı
         aşağıda. Markanızdan bahsedilip bahsedilmediğini kendiniz görün.
       </SectionLead>
+
+      {noScanYet && <ScanNowButton variant="banner" label="Şimdi Tara" />}
 
       {/* Filter pills */}
       <div
