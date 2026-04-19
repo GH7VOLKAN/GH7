@@ -1,34 +1,58 @@
 import { getActiveBrand } from "@/lib/dal/brand";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Settings } from "lucide-react";
-import { AyarlarContent } from "./ayarlar-content";
-import { PageHero } from "@/components/panel/page-hero";
-import { EmptyState } from "@/components/panel/empty-state";
+import { prisma } from "@/lib/db";
+import { AyarlarContentV3 } from "@/components/panel/ayarlar-v3/ayarlar-content-v3";
 
 export default async function AyarlarPage() {
-  // Guard: panel/layout.tsx halleder.
   const activeBrand = await getActiveBrand();
   if (!activeBrand?.brand) return null;
 
   const brand = activeBrand.brand;
   const profile = activeBrand.profile;
   const plan = activeBrand.plan ?? "free";
+  const userType =
+    (brand as { userType?: string }).userType ?? "firma";
+
+  const serviceRegions =
+    ((brand as { serviceRegions?: string[] }).serviceRegions ?? []) as string[];
+
+  // Fresh profile data for notification toggles
+  const freshProfile = await prisma.profile.findUnique({
+    where: { id: profile.id },
+    select: {
+      emailWeeklyReport: true,
+      emailScoreChange: true,
+      emailScanComplete: true,
+    },
+  });
+
+  const competitors = await prisma.competitor.findMany({
+    where: { brandId: brand.id },
+    select: { id: true, name: true, domain: true },
+    orderBy: { createdAt: "asc" },
+    take: 5,
+  });
 
   return (
-    <>
-    <PageHero
-      title="Ayarlar"
-      description="Hesap, marka ve bildirim ayarlarınız"
-    />
-    <AyarlarContent
+    <AyarlarContentV3
+      profileEmail={profile.email}
+      profileFullName={profile.fullName ?? ""}
+      profilePhone={profile.phone ?? null}
       brandName={brand.name}
       brandDomain={brand.domain ?? ""}
       brandSector={brand.sector ?? ""}
-      profileEmail={profile.email}
-      profileFullName={profile.fullName ?? ""}
+      userType={userType}
       plan={plan}
+      serviceRegions={serviceRegions}
+      competitors={competitors.map((c) => ({
+        id: c.id,
+        name: c.name,
+        domain: c.domain ?? null,
+      }))}
+      notifications={{
+        weeklyReport: freshProfile?.emailWeeklyReport ?? true,
+        scoreChange: freshProfile?.emailScoreChange ?? true,
+        scanComplete: freshProfile?.emailScanComplete ?? true,
+      }}
     />
-    </>
   );
 }

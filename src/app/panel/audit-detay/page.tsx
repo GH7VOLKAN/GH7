@@ -1,12 +1,9 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
 import { getActiveBrand } from "@/lib/dal/brand";
 import { getLatestAudit } from "@/lib/dal/personal-analysis";
 import { EmptyState } from "@/components/panel/empty-state";
-import { PageHero } from "@/components/panel/page-hero";
-import type { HeroStat } from "@/components/panel/page-hero";
-import { AuditDetayContent } from "@/components/panel/audit-detay/audit-detay-content";
+import { AuditDetayContentV3 } from "@/components/panel/audit-detay-v3/audit-detay-content-v3";
 import type { AuditItemResult } from "@/lib/ai/audit-43";
 
 const NO_AUDIT_CTA = (
@@ -18,19 +15,7 @@ const NO_AUDIT_CTA = (
   </Link>
 );
 
-const CATEGORY_LABELS: Record<string, string> = {
-  content: "İçerik Otoritesi",
-  schema: "Yapılandırılmış Veri",
-  entity: "Entity & Kimlik",
-  tech: "Teknik Erişilebilirlik",
-  external: "Dış Referanslar",
-  ai: "AI Platform Görünürlüğü",
-};
-
-const CATEGORY_ORDER = ["content", "schema", "entity", "tech", "external", "ai"];
-
 export default async function AuditDetayPage() {
-  // Guard: panel/layout.tsx halleder.
   const activeBrand = await getActiveBrand();
   if (!activeBrand?.brand) return null;
 
@@ -54,48 +39,23 @@ export default async function AuditDetayPage() {
     );
   }
 
-  const auditItems = (latestAudit.auditItems as AuditItemResult[]) ?? [];
-  const categoryScores = latestAudit.categoryScores ?? {};
-  const categorySummaries = latestAudit.categorySummaries ?? [];
-
-  const categories = CATEGORY_ORDER.map((key) => {
-    const items = auditItems.filter((it) => it.category === key);
-    const summary = categorySummaries.find((s) => s.category === key);
-    return {
-      key,
-      label: CATEGORY_LABELS[key] ?? key,
-      score: Math.round(categoryScores[key] ?? 0),
-      items,
-      summary: summary?.summary ?? null,
-      criticalAction: summary?.criticalAction ?? null,
-    };
-  });
-
-  const heroStats: HeroStat[] = [
-    { label: "Genel Skor", value: `${latestAudit.overallScore}/100` },
-    {
-      label: "Rakip Skoru",
-      value: latestAudit.competitorScore
-        ? `${latestAudit.competitorScore}/100`
-        : "—",
-    },
-    { label: "Madde Sayısı", value: `${auditItems.length}` },
-  ];
+  const auditItems =
+    (latestAudit.auditItems as unknown as AuditItemResult[] | null) ?? [];
+  const categoryScores =
+    (latestAudit.categoryScores as unknown as Record<string, number> | null) ??
+    {};
 
   return (
-    <>
-      <PageHero
-        title="Audit Detay"
-        description="43 madde · 6 kategori · her madde için durum ve rakip karşılaştırma"
-        stats={heroStats}
-      />
-      <AuditDetayContent
-        plan={plan}
-        userScore={latestAudit.overallScore}
-        competitorScore={latestAudit.competitorScore}
-        competitorName={latestAudit.competitorName}
-        categories={categories}
-      />
-    </>
+    <AuditDetayContentV3
+      plan={plan}
+      brandName={brandName}
+      overallScore={latestAudit.overallScore ?? 0}
+      competitorScore={latestAudit.competitorScore ?? null}
+      competitorName={latestAudit.competitorName ?? null}
+      auditItems={auditItems}
+      categoryScores={categoryScores}
+      personalAnalysis={latestAudit.personalAnalysis ?? null}
+      lastUpdate={latestAudit.createdAt?.toISOString() ?? null}
+    />
   );
 }

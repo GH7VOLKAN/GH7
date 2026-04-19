@@ -51,12 +51,44 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { emailWeeklyReport } = body;
+    const {
+      fullName,
+      email,
+      emailWeeklyReport,
+      emailScoreChange,
+      emailScanComplete,
+    } = body;
 
     const data: Record<string, unknown> = {};
-    if (typeof emailWeeklyReport === "boolean") {
-      data.emailWeeklyReport = emailWeeklyReport;
+    if (typeof fullName === "string") data.fullName = fullName.trim() || null;
+    if (typeof email === "string" && email.trim()) {
+      const trimmed = email.trim().toLowerCase();
+      // Syntetik phone_*@gh7.ai e-postasını yeni bir mailer ile değiştir
+      if (!/^.+@.+\..+$/.test(trimmed)) {
+        return NextResponse.json(
+          { error: "Geçersiz e-posta formatı" },
+          { status: 400 },
+        );
+      }
+      // Çakışma kontrolü — başka profile bu email'i kullanıyorsa reddet
+      const existing = await prisma.profile.findUnique({
+        where: { email: trimmed },
+      });
+      if (existing && existing.id !== activeBrand.profile.id) {
+        return NextResponse.json(
+          { error: "Bu e-posta başka bir hesap tarafından kullanılıyor" },
+          { status: 409 },
+        );
+      }
+      data.email = trimmed;
+      data.emailVerified = false; // yeni email, doğrulama gerekir
     }
+    if (typeof emailWeeklyReport === "boolean")
+      data.emailWeeklyReport = emailWeeklyReport;
+    if (typeof emailScoreChange === "boolean")
+      data.emailScoreChange = emailScoreChange;
+    if (typeof emailScanComplete === "boolean")
+      data.emailScanComplete = emailScanComplete;
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
@@ -71,7 +103,12 @@ export async function PATCH(req: NextRequest) {
     });
 
     return NextResponse.json({
+      fullName: updated.fullName,
+      email: updated.email,
+      emailVerified: updated.emailVerified,
       emailWeeklyReport: updated.emailWeeklyReport,
+      emailScoreChange: updated.emailScoreChange,
+      emailScanComplete: updated.emailScanComplete,
     });
   } catch (error) {
     console.error("[api/panel/profile]", error);
