@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       keywords,
       source,
       discoveredCompetitors,
+      selectedCompetitors,
       discoveryResult,
       email: bodyEmail,
       phone: bodyPhone,
@@ -78,6 +79,15 @@ export async function POST(req: NextRequest) {
         name: string;
         url?: string;
         reason?: string;
+      }>;
+      /**
+       * Kullanıcının işaretlediği ana 3 rakip. runAudit43 bu rakiplerin
+       * her biri için paralel audit çalıştırır (competitorValues doldurur).
+       * Yoksa discoveredCompetitors'tan ilk 3 otomatik kullanılır.
+       */
+      selectedCompetitors?: Array<{
+        name: string;
+        url: string;
       }>;
       // Perplexity discovery sonucu — Brand'ı zenginleştirmek ve Prompt
       // tablosuna targetQueries yazmak için kullanılır.
@@ -151,7 +161,29 @@ export async function POST(req: NextRequest) {
       `[api/run-audit-43] start url=${url} brand="${brandName}" userType=${userType} userId=${userId ?? "null"}`,
     );
 
-    // Run 43-item audit
+    // Ana 3 rakip kararı: selectedCompetitors varsa onu al, yoksa discovery'den ilk 3'ü
+    const primaryCompetitors: Array<{ name: string; url: string }> = [];
+    if (selectedCompetitors && selectedCompetitors.length > 0) {
+      for (const c of selectedCompetitors.slice(0, 3)) {
+        if (c.name && c.url) {
+          primaryCompetitors.push({ name: c.name.trim(), url: c.url.trim() });
+        }
+      }
+    } else if (discoveredCompetitors && discoveredCompetitors.length > 0) {
+      // Default: discovery'deki ilk 3 rakip (URL'si olanlar)
+      for (const c of discoveredCompetitors) {
+        if (primaryCompetitors.length >= 3) break;
+        if (c.name && c.url) {
+          primaryCompetitors.push({ name: c.name.trim(), url: c.url.trim() });
+        }
+      }
+    }
+
+    console.log(
+      `[api/run-audit-43] Primary competitors: ${primaryCompetitors.length} → ${primaryCompetitors.map((c) => c.name).join(", ")}`,
+    );
+
+    // Run 43-item audit (user + 3 rakip paralel)
     const auditResult = await runAudit43({
       url,
       brandName,
@@ -159,6 +191,7 @@ export async function POST(req: NextRequest) {
       sector,
       location,
       competitorUrl,
+      competitors: primaryCompetitors,
       keywords,
     });
 
@@ -480,6 +513,37 @@ export async function POST(req: NextRequest) {
               source: "discovery",
               reason: c.reason ?? "Perplexity keşfi",
             });
+          }
+        }
+
+        // Ana 3 rakibi isPrimary=true olarak işaretle
+        // (audit motorunun çalıştığı rakipler → dashboard'da karşılaştırma)
+        if (primaryCompetitors.length > 0) {
+          try {
+            // Önce tüm rakiplerin isPrimary'sini false yap (temiz başla)
+            await prisma.competitor.updateMany({
+              where: { brandId: brand.id },
+              data: { isPrimary: false },
+            });
+
+            // Seçilen rakipleri primary yap (name eşleşmesiyle)
+            for (const c of primaryCompetitors) {
+              await prisma.competitor.updateMany({
+                where: {
+                  brandId: brand.id,
+                  name: { equals: c.name, mode: "insensitive" },
+                },
+                data: { isPrimary: true },
+              });
+            }
+            console.log(
+              `[api/run-audit-43] ${primaryCompetitors.length} rakip isPrimary=true olarak işaretlendi`,
+            );
+          } catch (err) {
+            console.warn(
+              "[api/run-audit-43] isPrimary update failed:",
+              err,
+            );
           }
         }
       } catch (err) {

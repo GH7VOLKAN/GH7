@@ -50,7 +50,12 @@ export interface AyarlarV3Props {
   userType: string;
   plan: string;
   serviceRegions: string[];
-  competitors: Array<{ id: string; name: string; domain: string | null }>;
+  competitors: Array<{
+    id: string;
+    name: string;
+    domain: string | null;
+    isPrimary: boolean;
+  }>;
   notifications: {
     weeklyReport: boolean;
     scoreChange: boolean;
@@ -538,7 +543,12 @@ function SectionRegions({ serviceRegions }: { serviceRegions: string[] }) {
 function SectionCompetitors({
   competitors,
 }: {
-  competitors: Array<{ id: string; name: string; domain: string | null }>;
+  competitors: Array<{
+    id: string;
+    name: string;
+    domain: string | null;
+    isPrimary: boolean;
+  }>;
 }) {
   const ref = useFadeIn<HTMLDivElement>();
   const [list, setList] = useState(competitors);
@@ -571,6 +581,7 @@ function SectionCompetitors({
             id: body.competitor.id,
             name: body.competitor.name,
             domain: body.competitor.domain ?? null,
+            isPrimary: false,
           },
         ]);
         setName("");
@@ -604,12 +615,48 @@ function SectionCompetitors({
     }
   };
 
+  const togglePrimary = async (id: string, next: boolean) => {
+    const primaryCount = list.filter((c) => c.isPrimary).length;
+    if (next && primaryCount >= 3) {
+      setMsg("Maksimum 3 ana rakip. Önce birini kaldırın.");
+      return;
+    }
+    setSaving(true);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/panel/competitors/${id}/primary`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ primary: next }),
+      });
+      if (res.ok) {
+        setList(list.map((c) => (c.id === id ? { ...c, isPrimary: next } : c)));
+        if (next) {
+          setMsg(
+            "Ana rakip olarak işaretlendi. Yeni audit'te karşılaştırmaya dahil olur.",
+          );
+        }
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setMsg(body.error ?? "İşaretlenemedi.");
+      }
+    } catch {
+      setMsg("Bağlantı hatası.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const primaryCount = list.filter((c) => c.isPrimary).length;
+
   return (
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Rakip yönetimi.</SectionHeading>
       <SectionLead>
-        Ana rakipleriniz (maksimum 5). Taramalarda bu rakiplerin görünürlüğü
-        sizinle karşılaştırılır.
+        Rakipleriniz (max 5). Bunların {primaryCount}/3'ü ana rakip olarak
+        işaretli — audit'te madde madde karşılaştırma onlarla yapılır. Yeniden
+        audit için ana rakipleri değiştirip "Yeniden Analiz Et" butonuna
+        basabilirsiniz.
       </SectionLead>
 
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -622,10 +669,25 @@ function SectionCompetitors({
               justifyContent: "space-between",
               padding: "14px 0",
               borderBottom: `1px solid ${KINDE_COLORS.divider}`,
+              gap: 12,
             }}
           >
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 500 }}>{c.name}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 500 }}>
+                {c.name}
+                {c.isPrimary && (
+                  <span
+                    style={{
+                      marginLeft: 8,
+                      fontSize: 11,
+                      color: KINDE_COLORS.black,
+                      fontWeight: 700,
+                    }}
+                  >
+                    · ana rakip
+                  </span>
+                )}
+              </div>
               {c.domain && (
                 <div
                   style={{
@@ -638,21 +700,42 @@ function SectionCompetitors({
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => removeCompetitor(c.id)}
-              disabled={saving}
-              style={{
-                background: "transparent",
-                border: 0,
-                cursor: "pointer",
-                fontSize: 13,
-                color: KINDE_COLORS.muted,
-                fontFamily: "inherit",
-              }}
-            >
-              Kaldır
-            </button>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  color: KINDE_COLORS.muted,
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={c.isPrimary}
+                  onChange={(e) => togglePrimary(c.id, e.target.checked)}
+                  disabled={saving || (!c.isPrimary && primaryCount >= 3)}
+                  style={{ accentColor: KINDE_COLORS.black }}
+                />
+                ana rakip
+              </label>
+              <button
+                type="button"
+                onClick={() => removeCompetitor(c.id)}
+                disabled={saving}
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  cursor: "pointer",
+                  fontSize: 13,
+                  color: KINDE_COLORS.muted,
+                  fontFamily: "inherit",
+                }}
+              >
+                Kaldır
+              </button>
+            </div>
           </div>
         ))}
       </div>

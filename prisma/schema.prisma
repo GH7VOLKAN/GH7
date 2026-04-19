@@ -190,6 +190,10 @@ model Competitor {
   source       String  @default("manual") // "manual" | "ai_discovered" | "scan_discovered" | "free_audit" | "discovery"
   discoveredAt DateTime? @map("discovered_at")
 
+  // Primary competitor flag — audit ve karşılaştırmalar için ana 3 rakip
+  // Brand başına max 3 tane isPrimary=true olmalı (endpoint kontrol eder)
+  isPrimary    Boolean @default(false) @map("is_primary")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

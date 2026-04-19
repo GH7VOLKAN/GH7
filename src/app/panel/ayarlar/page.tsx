@@ -27,9 +27,9 @@ export default async function AyarlarPage() {
 
   const competitors = await prisma.competitor.findMany({
     where: { brandId: brand.id },
-    select: { id: true, name: true, domain: true },
-    orderBy: { createdAt: "asc" },
-    take: 5,
+    select: { id: true, name: true, domain: true, isPrimary: true },
+    orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    take: 10,
   });
 
   return (
@@ -47,6 +47,7 @@ export default async function AyarlarPage() {
         id: c.id,
         name: c.name,
         domain: c.domain ?? null,
+        isPrimary: c.isPrimary ?? false,
       }))}
       notifications={{
         weeklyReport: freshProfile?.emailWeeklyReport ?? true,
