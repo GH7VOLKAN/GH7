@@ -19,6 +19,7 @@ import {
   PRO_PRICE_LABEL,
 } from "@/components/panel/kinde/primitives";
 import { ScanNowButton } from "@/components/panel/scan-now-button";
+import { AIResponseBlock } from "@/components/panel/ai-response-block";
 
 const PLATFORM_ORDER = ["chatgpt", "claude", "gemini", "perplexity", "google_aio"];
 const PLATFORM_LABELS: Record<string, string> = {
@@ -513,43 +514,12 @@ function PlatformBlock({
           {statusText}
         </span>
       </div>
-      {hasResponse ? (
-        <div
-          style={{
-            fontSize: 13,
-            lineHeight: 1.7,
-            color: "#333",
-            whiteSpace: "pre-wrap",
-            background: "#FAFAFA",
-            padding: 14,
-            borderRadius: 8,
-          }}
-        >
-          {highlightNames(result.fullResponse!, [brandName, ...competitorNames]).map(
-            (part, i) =>
-              part.bold ? (
-                <strong key={i}>{part.text}</strong>
-              ) : (
-                <span key={i}>{part.text}</span>
-              ),
-          )}
-        </div>
-      ) : (
-        <div
-          style={{
-            fontSize: 13,
-            color: KINDE_COLORS.mutedLight,
-            fontStyle: "italic",
-            padding: 14,
-            background: "#FAFAFA",
-            borderRadius: 8,
-            lineHeight: 1.6,
-          }}
-        >
-          Bu sorgunun detaylı yanıtı henüz mevcut değil. Sonraki taramada
-          güncellenecek.
-        </div>
-      )}
+      <AIResponseBlock
+        text={result?.fullResponse}
+        brandName={brandName}
+        competitorNames={competitorNames}
+        emptyLabel="Bu sorgunun detaylı yanıtı henüz mevcut değil. Sonraki taramada güncellenecek."
+      />
     </div>
   );
 }
@@ -578,26 +548,6 @@ function competitorInText(text: string, names: string[]): boolean {
   if (!text) return false;
   const lower = text.toLowerCase();
   return names.some((n) => n && lower.includes(n.toLowerCase()));
-}
-
-function highlightNames(
-  text: string,
-  names: string[],
-): Array<{ text: string; bold: boolean }> {
-  if (!text) return [];
-  const unique = [...new Set(names.filter((n) => n && n.length > 1))].sort(
-    (a, b) => b.length - a.length,
-  );
-  if (unique.length === 0) return [{ text, bold: false }];
-  const pattern = new RegExp(
-    `(${unique.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
-    "gi",
-  );
-  const parts = text.split(pattern);
-  return parts.map((part) => ({
-    text: part,
-    bold: unique.some((n) => n.toLowerCase() === part.toLowerCase()),
-  }));
 }
 
 function formatRelative(iso: string): string {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { GenelPageData } from "@/lib/dal/genel-page";
 import { ScanNowButton } from "@/components/panel/scan-now-button";
+import { AIResponseBlock } from "@/components/panel/ai-response-block";
 
 const CATEGORY_LABELS: Record<string, string> = {
   content: "İçerik otoritesi",
@@ -483,13 +484,6 @@ function PlatformBlock({
     );
   }
 
-  const isError = platform.fullResponse.startsWith("[ERROR]");
-  const highlighted = highlightNames(platform.fullResponse, [
-    userBrand,
-    ...platform.competitors,
-    ...otherCompetitors,
-  ]);
-
   const statusText = platform.mentioned
     ? platform.position
       ? `${platform.position} sırada önerildi`
@@ -511,11 +505,20 @@ function PlatformBlock({
           gap: 12,
           flexWrap: "wrap",
           marginBottom: 12,
+          paddingBottom: 8,
+          borderBottom: "1px solid #E8E8E8",
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#000" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>
           {PLATFORM_LABELS[platformKey]}{" "}
-          <span style={{ fontWeight: 400, color: "#888" }}>
+          <span
+            style={{
+              fontWeight: 400,
+              color: "#AAA",
+              marginLeft: 4,
+              fontSize: 12,
+            }}
+          >
             {platform.model} · {formatDate(platform.createdAt)}
           </span>
         </div>
@@ -524,43 +527,12 @@ function PlatformBlock({
         </div>
       </div>
 
-      {isError ? (
-        <p
-          style={{
-            padding: "12px 16px",
-            background: "#FAFAFA",
-            borderRadius: 8,
-            fontSize: 13,
-            color: "#888",
-            fontStyle: "italic",
-          }}
-        >
-          {platform.fullResponse}
-        </p>
-      ) : (
-        <div
-          style={{
-            padding: "16px 20px",
-            background: "#FAFAFA",
-            borderRadius: 8,
-            fontSize: 14,
-            lineHeight: 1.7,
-            color: "#333",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}
-        >
-          {highlighted.map((part, i) =>
-            part.bold ? (
-              <strong key={i} style={{ color: "#000", fontWeight: 700 }}>
-                {part.text}
-              </strong>
-            ) : (
-              <span key={i}>{part.text}</span>
-            ),
-          )}
-        </div>
-      )}
+      <AIResponseBlock
+        text={platform.fullResponse}
+        brandName={userBrand}
+        competitorNames={[...platform.competitors, ...otherCompetitors]}
+        emptyLabel="Bu platform yanıt vermedi"
+      />
 
       <p
         style={{
