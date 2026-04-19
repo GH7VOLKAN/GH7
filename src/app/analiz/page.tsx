@@ -547,7 +547,13 @@ function AnalizPageInner() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // mode: "register" → /analiz kayıt akışı, Profile yoksa oluşturulur
-        body: JSON.stringify({ phone: fullPhone, mode: "register" }),
+        // email: kullanıcının formda girdiği GERÇEK e-posta
+        //        (sentetik phone_XXX@gh7.ai yerine Supabase user'da bu kalır)
+        body: JSON.stringify({
+          phone: fullPhone,
+          mode: "register",
+          email: formData.email || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -584,6 +590,7 @@ function AnalizPageInner() {
           phone: fullPhone,
           code: formData.otp,
           token: otpToken,
+          email: formData.email || undefined, // gerçek e-posta
         }),
       });
       const data = await res.json();

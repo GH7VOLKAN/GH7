@@ -53,6 +53,14 @@ interface PanelSidebarProps {
   projectType?: string;
 }
 
+interface BrandListItem {
+  id: string;
+  name: string;
+  domain: string | null;
+  isDefault: boolean;
+  userType?: string | null;
+}
+
 export function PanelSidebar({
   brandName = "Markanız",
   userEmail = "",
@@ -62,12 +70,55 @@ export function PanelSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [brandOpen, setBrandOpen] = React.useState(false);
+  const [brandList, setBrandList] = React.useState<BrandListItem[]>([]);
+  const [switching, setSwitching] = React.useState<string | null>(null);
   const brandInitials = brandName.substring(0, 2).toUpperCase();
+
+  // Brand list'i lazy fetch — dropdown ilk açıldığında
+  React.useEffect(() => {
+    if (!brandOpen || brandList.length > 0) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/panel/brands");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data.brands)) {
+          setBrandList(data.brands as BrandListItem[]);
+        }
+      } catch {
+        // sessiz fail
+      }
+    })();
+  }, [brandOpen, brandList.length]);
 
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/giris");
+  };
+
+  const switchBrand = async (id: string) => {
+    if (switching) return;
+    setSwitching(id);
+    try {
+      const res = await fetch("/api/panel/brands/switch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandId: id }),
+      });
+      if (res.ok) {
+        setBrandOpen(false);
+        // Sayfayı yenile — getActiveBrand yeni brand'i döndürsün
+        router.refresh();
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    } catch {
+      // sessiz fail
+    } finally {
+      setSwitching(null);
+    }
   };
 
   return (
@@ -100,7 +151,8 @@ export function PanelSidebar({
           <ChevronDownIcon className={cn("w-4 h-4 text-gray-400 transition-transform shrink-0", brandOpen && "rotate-180")} />
         </div>
         {brandOpen && (
-          <div className="absolute left-4 right-4 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+          <div className="absolute left-4 right-4 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 max-h-80 overflow-y-auto">
+            {/* Aktif brand — her zaman en üste */}
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 text-sm font-medium text-gray-900">
               <div className="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
                 <span className="text-[8px] font-bold text-white">{brandInitials}</span>
@@ -110,11 +162,50 @@ export function PanelSidebar({
                 {projectType}
               </span>
             </div>
+
+            {/* Diğer brand'ler (aktif olanı zaten üstte) */}
+            {brandList
+              .filter((b) => b.name !== brandName)
+              .map((b) => {
+                const initials = b.name.substring(0, 2).toUpperCase();
+                const isSwitching = switching === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => switchBrand(b.id)}
+                    disabled={isSwitching}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-wait"
+                  >
+                    <div className="w-5 h-5 bg-gray-200 rounded flex items-center justify-center">
+                      <span className="text-[8px] font-bold text-gray-600">
+                        {initials}
+                      </span>
+                    </div>
+                    <span className="truncate flex-1">{b.name}</span>
+                    {b.domain && (
+                      <span className="text-[10px] text-gray-400 truncate max-w-[100px]">
+                        {b.domain}
+                      </span>
+                    )}
+                    {isSwitching && (
+                      <span className="text-[10px] text-gray-400">...</span>
+                    )}
+                  </button>
+                );
+              })}
+
             <div className="h-px bg-gray-100 my-1" />
-            <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
+
+            {/* Yeni marka ekle — her zaman aktif, /analiz'e yönlendirir */}
+            <Link
+              href="/analiz"
+              onClick={() => setBrandOpen(false)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
               <PlusIcon className="w-4 h-4" />
-              Yeni marka ekle (Pro)
-            </div>
+              Yeni marka ekle
+            </Link>
           </div>
         )}
       </div>

@@ -7,7 +7,14 @@ import { isAdmin, getAdminMagicCode } from "@/lib/admin";
 
 export async function POST(request: Request) {
   try {
-    const { phone, code } = await request.json();
+    const body = await request.json();
+    const { phone, code, email } = body as {
+      phone?: string;
+      code?: string;
+      // Kayıt akışında formda girilen GERÇEK email.
+      // Profile yeni oluşturulacaksa email alanı buradan doldurulur.
+      email?: string;
+    };
 
     if (!phone || !code) {
       return NextResponse.json(
@@ -18,6 +25,9 @@ export async function POST(request: Request) {
 
     const normalizedPhone = normalizePhoneNumber(phone);
     const trimmedCode = code.toString().trim();
+    const providedEmail = email?.trim().toLowerCase();
+    const isValidEmail =
+      !!providedEmail && /^.+@.+\..+$/.test(providedEmail);
 
     // ADMIN BYPASS — ADMIN_PHONES listesindeki numara + ADMIN_MAGIC_CODE
     // (default "000000") → OTP'yi atla, direkt doğrula.
@@ -98,36 +108,111 @@ export async function POST(request: Request) {
       where: { phone: normalizedPhone },
     });
 
+    // Bu akışta Supabase user'ın email'i (send-sms-otp'de belirlenmişti):
+    // - Mevcut profile email (sentetik değilse)
+    // - Body'de geçen gerçek email
+    // - Sentetik fallback
+    // Aynı kuralı burada da uygulayalım — profile.create için.
+    const existingIsSynthetic =
+      !!existingProfile?.email &&
+      existingProfile.email.startsWith("phone_") &&
+      existingProfile.email.endsWith("@gh7.ai");
+
+    let profileEmail: string;
+    if (existingProfile?.email && !existingIsSynthetic) {
+      profileEmail = existingProfile.email;
+    } else if (isValidEmail) {
+      profileEmail = providedEmail;
+    } else {
+      profileEmail = syntheticEmail;
+    }
+
+    // Supabase user'ı bulmak için hangi email ile arayacağız?
+    // send-sms-otp'de kullanılan email = profileEmail (yeni kayıtta).
+    const supabaseLookupEmail = profileEmail;
+
     if (!existingProfile) {
       const { data: userData } =
         await supabaseAdmin.auth.admin.listUsers();
 
       const supabaseUser = userData?.users?.find(
-        (u) => u.email === syntheticEmail
+        (u) => u.email === supabaseLookupEmail,
       );
 
       if (supabaseUser) {
-        await prisma.profile.create({
+        try {
+          await prisma.profile.create({
+            data: {
+              id: supabaseUser.id,
+              email: profileEmail,
+              phone: normalizedPhone,
+              phoneVerified: true,
+              emailVerified: !profileEmail.startsWith("phone_"),
+              lastLoginAt: new Date(),
+            },
+          });
+          console.log(
+            `[sms-otp] Created profile for phone user: ${normalizedPhone.slice(0, 4)}**** email=${profileEmail.startsWith("phone_") ? "synthetic" : "real"}`,
+          );
+        } catch (err) {
+          // Email çakışması olabilir (aynı email ile başka Profile).
+          // Bu durumda sentetik email'e fallback.
+          console.warn(
+            `[sms-otp] Profile.create failed with email=${profileEmail}, retrying with synthetic:`,
+            err,
+          );
+          await prisma.profile.create({
+            data: {
+              id: supabaseUser.id,
+              email: syntheticEmail,
+              phone: normalizedPhone,
+              phoneVerified: true,
+              lastLoginAt: new Date(),
+            },
+          });
+          profileEmail = syntheticEmail;
+        }
+      }
+    } else {
+      // Mevcut profile — sentetik email'i gerçek email ile güncelle (eğer verilmişse)
+      const shouldUpgradeEmail =
+        existingIsSynthetic && isValidEmail && profileEmail !== existingProfile.email;
+      if (shouldUpgradeEmail) {
+        try {
+          await prisma.profile.update({
+            where: { id: existingProfile.id },
+            data: {
+              email: profileEmail,
+              emailVerified: false,
+              phoneVerified: true,
+              lastLoginAt: new Date(),
+            },
+          });
+          console.log(
+            `[sms-otp] Upgraded synthetic email → real for ${normalizedPhone.slice(0, 4)}****`,
+          );
+        } catch (err) {
+          // Çakışma — sadece lastLogin update'i yap
+          console.warn("[sms-otp] Email upgrade failed, keeping synthetic:", err);
+          await prisma.profile.update({
+            where: { id: existingProfile.id },
+            data: {
+              phoneVerified: true,
+              lastLoginAt: new Date(),
+            },
+          });
+          profileEmail = existingProfile.email;
+        }
+      } else {
+        await prisma.profile.update({
+          where: { id: existingProfile.id },
           data: {
-            id: supabaseUser.id,
-            email: syntheticEmail,
-            phone: normalizedPhone,
             phoneVerified: true,
             lastLoginAt: new Date(),
           },
         });
-        console.log(
-          `[sms-otp] Created profile for phone user: ${normalizedPhone.slice(0, 4)}****`
-        );
+        profileEmail = existingProfile.email;
       }
-    } else {
-      await prisma.profile.update({
-        where: { id: existingProfile.id },
-        data: {
-          phoneVerified: true,
-          lastLoginAt: new Date(),
-        },
-      });
     }
 
     // KRITIK: Client supabase.auth.verifyOtp için TAZE tokenHash oluştur.
@@ -139,7 +224,7 @@ export async function POST(request: Request) {
       const { data: linkData, error: linkError } =
         await supabaseAdmin.auth.admin.generateLink({
           type: "magiclink",
-          email: syntheticEmail,
+          email: profileEmail, // send-sms-otp ile aynı email kullan
         });
       if (linkError || !linkData?.properties?.hashed_token) {
         console.error(
@@ -180,7 +265,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       tokenHash,
-      email: syntheticEmail,
+      email: profileEmail,
     });
   } catch (err) {
     console.error("[sms-otp] verify-sms-otp error:", err);

@@ -17,11 +17,14 @@ import { checkRateLimit } from "@/lib/rate-limit";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { phone, mode } = body as {
+    const { phone, mode, email } = body as {
       phone?: string;
       // "login" (default) → sadece kayıtlı kullanıcı için kod gönder
       // "register" → kayıt için kod gönder (/analiz akışı kullanır)
       mode?: "login" | "register";
+      // KAYIT akışında kullanıcının formda girdiği GERÇEK email.
+      // Varsa Supabase user'ın email'i bu olur. Yoksa syntheticEmail fallback.
+      email?: string;
     };
 
     if (!phone || typeof phone !== "string") {
@@ -135,13 +138,28 @@ export async function POST(request: Request) {
       where: { phone: normalizedPhone },
     });
 
-    // Determine the email to use for Supabase auth
-    // If user has a profile with an email, use that
-    // Otherwise, create a synthetic email based on phone number
-    const authEmail = existingProfile?.email || `phone_${normalizedPhone}@gh7.ai`;
+    // Supabase auth için kullanılacak email'i belirle:
+    // 1) Mevcut profile'ın email'i varsa (sentetik değilse) onu kullan
+    // 2) Body'de gerçek email geldiyse onu kullan (REGISTER akışı — /analiz)
+    // 3) Hiçbiri yoksa sentetik email fallback (eski davranış, legacy)
+    const providedEmail = email?.trim().toLowerCase();
+    const isValidEmail =
+      !!providedEmail && /^.+@.+\..+$/.test(providedEmail);
+    const existingIsSynthetic =
+      existingProfile?.email?.startsWith("phone_") &&
+      existingProfile.email.endsWith("@gh7.ai");
+
+    let authEmail: string;
+    if (existingProfile?.email && !existingIsSynthetic) {
+      authEmail = existingProfile.email;
+    } else if (isValidEmail) {
+      authEmail = providedEmail;
+    } else {
+      authEmail = `phone_${normalizedPhone}@gh7.ai`;
+    }
 
     console.log(
-      `[sms-otp] User lookup: ${existingProfile ? "found" : "new"}, auth email: ${authEmail}`
+      `[sms-otp] User lookup: ${existingProfile ? "found" : "new"}, authEmail=${authEmail.startsWith("phone_") ? "synthetic" : "real"}`,
     );
 
     // Generate Supabase magic link (admin) for session creation later
