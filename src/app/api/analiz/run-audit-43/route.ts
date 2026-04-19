@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { cookies } from "next/headers";
 import { runAudit43 } from "@/lib/ai/audit-43";
 import { generatePersonalAnalysis } from "@/lib/ai/personal-analysis";
 import { prisma } from "@/lib/db";
@@ -9,6 +10,8 @@ import { executeScan } from "@/lib/ai/scan-engine";
 import { getAvailablePlatforms } from "@/lib/ai/provider-registry";
 import type { UserType } from "@/lib/ai/user-type-weights";
 import { Prisma } from "@prisma/client";
+
+const ACTIVE_BRAND_COOKIE = "gh7_active_brand_id";
 
 export const runtime = "nodejs";
 export const maxDuration = 120; // 2 min
@@ -199,6 +202,10 @@ export async function POST(req: NextRequest) {
     const personalAnalysis = await generatePersonalAnalysis(auditResult, {
       usePremium: false, // Free tier uses Sonnet
     });
+
+    // Brand upsert try bloğundan dışarıya taşınacak değişkenler
+    let createdBrandId: string | null = null;
+    let createdBrandName: string | null = null;
 
     // Persist to GeoAudit
     const savedAudit = await prisma.geoAudit.create({
@@ -546,6 +553,26 @@ export async function POST(req: NextRequest) {
             );
           }
         }
+
+        // KRİTİK: Yeni/güncellenen brand'i aktif yap — cookie'yi yaz.
+        // Aksi halde getActiveBrand() eski brand'i (önceki cookie) döner.
+        try {
+          const cookieStore = await cookies();
+          cookieStore.set(ACTIVE_BRAND_COOKIE, brand.id, {
+            httpOnly: false,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 365,
+          });
+          console.log(
+            `[api/run-audit-43] Active brand cookie set: ${brand.id} (${brand.name})`,
+          );
+          createdBrandId = brand.id;
+          createdBrandName = brand.name;
+        } catch (err) {
+          console.warn("[api/run-audit-43] Cookie set failed:", err);
+        }
       } catch (err) {
         // Non-fatal: audit sonucu yine de dönsün
         console.error(
@@ -558,6 +585,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       auditId: savedAudit.id,
       userId: userId ?? null,
+      brandId: createdBrandId, // frontend switch fallback için
+      brandName: createdBrandName,
       overallScore: auditResult.overallScore,
       categoryScores: auditResult.categoryScores,
       competitorScore: auditResult.competitorScore,
