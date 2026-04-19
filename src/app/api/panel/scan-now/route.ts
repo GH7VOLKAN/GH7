@@ -19,7 +19,10 @@ import { getAvailablePlatforms } from "@/lib/ai/provider-registry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// Scan 13 sorgu × 5 platform = 65 istek. Paralel 2-5 dakika sürer.
+// Vercel Pro plan 300s destekler. Hobby 60s — o zaman paralel azalt.
+// /api/scans/start'da da 300 kullanılıyor, tutarlı tutuyoruz.
+export const maxDuration = 300;
 
 async function cleanupStuckScans(brandId: string) {
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);

@@ -259,102 +259,6 @@ function StepIndicator({ currentStep }: { currentStep: Step }) {
   );
 }
 
-function SiziArayalimPopup({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [phone, setPhone] = useState("+90 ");
-  const [timeSlot, setTimeSlot] = useState("");
-  const [topic, setTopic] = useState("");
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">
-          En kısa sürede sizi arayalım
-        </h3>
-
-        <div className="space-y-4">
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Telefon
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+90 5XX XXX XX XX"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-          </div>
-
-          {/* Time Slot */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Uygun saatiniz
-            </label>
-            <select
-              value={timeSlot}
-              onChange={(e) => setTimeSlot(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-            >
-              <option value="">Saat seçin</option>
-              <option value="09:00-12:00">09:00-12:00</option>
-              <option value="12:00-15:00">12:00-15:00</option>
-              <option value="15:00-18:00">15:00-18:00</option>
-            </select>
-          </div>
-
-          {/* Topic */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hangi konuda?
-            </label>
-            <div className="space-y-2">
-              {["Fiyat bilgisi", "Teknik detay", "Ajans Paketleri"].map((t) => (
-                <label key={t} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="topic"
-                    value={t}
-                    checked={topic === t}
-                    onChange={(e) => setTopic(e.target.value)}
-                    className="h-4 w-4 text-gray-900 focus:ring-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">{t}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="w-full bg-gray-900 text-white rounded-lg px-6 py-3 text-base font-medium hover:bg-gray-800 transition-colors"
-          >
-            Arayın Beni &rarr;
-          </button>
-
-          <p className="text-center text-sm text-gray-400">
-            veya 0850 XXX XX XX
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Main Page Component                                                */
@@ -404,7 +308,6 @@ function AnalizPageInner() {
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
-  const [showCallPopup, setShowCallPopup] = useState(false);
   const [expandedQueries, setExpandedQueries] = useState<Set<number>>(new Set([0]));
   const [websiteAnalyzing, setWebsiteAnalyzing] = useState(false);
   const [queriesGenerating, setQueriesGenerating] = useState(false);
@@ -2109,12 +2012,6 @@ function AnalizPageInner() {
       {step === 2 && renderStep2()}
       {step === 3 && !analysisComplete && loading && renderLoading()}
       {step === 3 && analysisComplete && renderResults()}
-
-      {/* Sizi Arayalim Popup */}
-      <SiziArayalimPopup
-        open={showCallPopup}
-        onClose={() => setShowCallPopup(false)}
-      />
     </div>
   );
 }

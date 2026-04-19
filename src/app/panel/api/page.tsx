@@ -81,7 +81,7 @@ export default function ApiPage() {
 
 # Yanıt:
 {
-  "brand": "ISITMAX",
+  "brand": "Markanız",
   "geoScore": 74,
   "shareOfVoice": 26,
   "coverage": 100,

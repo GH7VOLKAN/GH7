@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/db";
 import { verifyCodeHash, OTP_MAX_ATTEMPTS } from "@/lib/auth/otp";
 import { normalizePhoneNumber } from "@/lib/sms/netgsm";
+import { isAdmin, getAdminMagicCode } from "@/lib/admin";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,19 @@ export async function POST(request: Request) {
     }
 
     const normalizedPhone = normalizePhoneNumber(phone);
+    const trimmedCode = code.toString().trim();
+
+    // ADMIN BYPASS — ADMIN_PHONES listesindeki numara + ADMIN_MAGIC_CODE
+    // (default "000000") → OTP'yi atla, direkt doğrula.
+    // Üretimde: Vercel ADMIN_PHONES + ADMIN_MAGIC_CODE env var'ları set.
+    const isAdminPhone = isAdmin({ phone: normalizedPhone });
+    const magicCode = getAdminMagicCode();
+    const adminBypass = isAdminPhone && trimmedCode === magicCode;
+    if (adminBypass) {
+      console.log(
+        `[verify-sms-otp] Admin bypass aktif: phone=${normalizedPhone.slice(0, 4)}**** code=magic`,
+      );
+    }
 
     // Find the most recent non-expired verification code for this phone
     const verification = await prisma.verificationCode.findFirst({
@@ -26,15 +40,15 @@ export async function POST(request: Request) {
       orderBy: { createdAt: "desc" },
     });
 
-    if (!verification) {
+    if (!verification && !adminBypass) {
       return NextResponse.json(
         { error: "Kodun süresi dolmuş. Lütfen yeni kod isteyin." },
         { status: 400 }
       );
     }
 
-    // Check max attempts
-    if (verification.attempts >= OTP_MAX_ATTEMPTS) {
+    // Check max attempts (admin bypass atlar)
+    if (!adminBypass && verification && verification.attempts >= OTP_MAX_ATTEMPTS) {
       await prisma.verificationCode.delete({
         where: { id: verification.id },
       });
@@ -44,23 +58,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify the code
-    if (!verifyCodeHash(code.toString().trim(), verification.codeHash)) {
-      await prisma.verificationCode.update({
-        where: { id: verification.id },
-        data: { attempts: { increment: 1 } },
-      });
+    // Verify the code (admin bypass verify'yi atlar)
+    if (!adminBypass) {
+      if (!verification) {
+        return NextResponse.json(
+          { error: "Kodun süresi dolmuş. Lütfen yeni kod isteyin." },
+          { status: 400 },
+        );
+      }
+      if (!verifyCodeHash(trimmedCode, verification.codeHash)) {
+        await prisma.verificationCode.update({
+          where: { id: verification.id },
+          data: { attempts: { increment: 1 } },
+        });
 
-      const remaining = OTP_MAX_ATTEMPTS - verification.attempts - 1;
-      return NextResponse.json(
-        {
-          error:
-            remaining > 0
-              ? `Yanlış kod. ${remaining} deneme hakkınız kaldı.`
-              : "Yanlış kod. Lütfen yeni kod isteyin.",
-        },
-        { status: 400 }
-      );
+        const remaining = OTP_MAX_ATTEMPTS - verification.attempts - 1;
+        return NextResponse.json(
+          {
+            error:
+              remaining > 0
+                ? `Yanlış kod. ${remaining} deneme hakkınız kaldı.`
+                : "Yanlış kod. Lütfen yeni kod isteyin.",
+          },
+          { status: 400 },
+        );
+      }
     }
 
     // Code is valid
@@ -132,16 +154,28 @@ export async function POST(request: Request) {
     }
 
     // Fallback: taze üretilemezse stored tokenHash'i kullan (eski davranış)
-    const tokenHash = freshTokenHash ?? verification.tokenHash;
+    const tokenHash = freshTokenHash ?? verification?.tokenHash ?? null;
 
-    // Delete the verification code (one-time use)
-    await prisma.verificationCode.delete({
-      where: { id: verification.id },
-    });
+    // Delete the verification code (one-time use) — admin bypass'ta yoksa sil
+    if (verification) {
+      await prisma.verificationCode.delete({
+        where: { id: verification.id },
+      });
+    }
 
     console.log(
-      `[sms-otp] Verified for ${normalizedPhone.slice(0, 4)}**** (tokenHash=${freshTokenHash ? "fresh" : "stored"})`,
+      `[sms-otp] Verified for ${normalizedPhone.slice(0, 4)}**** (${adminBypass ? "admin-bypass" : freshTokenHash ? "fresh" : "stored"})`,
     );
+
+    if (!tokenHash) {
+      console.error(
+        "[sms-otp] No tokenHash available (admin bypass + magiclink failed)",
+      );
+      return NextResponse.json(
+        { error: "Oturum üretilemedi. Lütfen tekrar deneyin." },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
