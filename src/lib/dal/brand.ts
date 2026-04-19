@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { cache } from "react";
+import { cookies } from "next/headers";
+
+const ACTIVE_BRAND_COOKIE = "gh7_active_brand_id";
 
 /**
  * Get the current authenticated user's active brand.
@@ -84,12 +87,28 @@ export const getActiveBrand = cache(async () => {
       }
     }
 
-    // Get default brand
-    let brand = await prisma.brand.findFirst({
-      where: { profileId: profile.id, isDefault: true },
-    });
+    // 1) Cookie'de aktif brand ID varsa önce onu dene (brand switching)
+    let brand = null;
+    try {
+      const cookieStore = await cookies();
+      const activeBrandId = cookieStore.get(ACTIVE_BRAND_COOKIE)?.value;
+      if (activeBrandId) {
+        brand = await prisma.brand.findFirst({
+          where: { id: activeBrandId, profileId: profile.id },
+        });
+      }
+    } catch {
+      // cookies() bazı bağlamlarda fail olabilir — sessiz geç
+    }
 
-    // Fallback: first brand
+    // 2) Cookie yoksa veya brand bulunamadıysa default brand
+    if (!brand) {
+      brand = await prisma.brand.findFirst({
+        where: { profileId: profile.id, isDefault: true },
+      });
+    }
+
+    // 3) Fallback: first brand
     if (!brand) {
       brand = await prisma.brand.findFirst({
         where: { profileId: profile.id },
