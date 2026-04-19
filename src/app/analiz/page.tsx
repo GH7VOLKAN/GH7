@@ -910,8 +910,25 @@ function AnalizPageInner() {
           }),
         });
         if (res.ok) {
+          // Yeni brand ID'yi response'dan al ve aktif brand cookie'sini
+          // frontend'den de yaz (backend'de zaten yazıldı, bu yedek).
+          try {
+            const auditData = await res.json();
+            if (auditData.brandId) {
+              await fetch("/api/panel/brands/switch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ brandId: auditData.brandId }),
+              });
+              console.log(
+                `[analiz] Active brand switched to: ${auditData.brandId} (${auditData.brandName})`,
+              );
+            }
+          } catch (err) {
+            console.warn("[analiz] Brand switch yedek fail:", err);
+          }
+
           // Brand oluşturulduğundan emin ol — /api/auth/state ile doğrula.
-          // Prompt kontrol listesi: "redirect öncesi Brand var mı"
           try {
             const stateCheck = await fetch("/api/auth/state");
             if (stateCheck.ok) {
@@ -924,9 +941,6 @@ function AnalizPageInner() {
           } catch {
             // state check başarısız olursa yine redirect dene
           }
-          // state "complete" değil → Brand yazılamadı, yine redirect
-          // (panel/layout zaten no_brand'ı /analiz'e gönderir; loop önleme
-          // için session kontrol helper'ı zaten mount'ta yapılmıştı)
           console.warn("[analiz] Audit ok ama state complete değil, yine de redirect");
           router.replace("/panel/genel?newAudit=1");
           return;
