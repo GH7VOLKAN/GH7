@@ -18,6 +18,7 @@ import {
   PRO_CTA_ARAMALAR,
   PRO_PRICE_LABEL,
 } from "@/components/panel/kinde/primitives";
+import { ScanNowButton } from "@/components/panel/scan-now-button";
 
 const PLATFORM_ORDER = ["chatgpt", "claude", "gemini", "perplexity", "google_aio"];
 const PLATFORM_LABELS: Record<string, string> = {
@@ -64,6 +65,11 @@ export function AramalarContentV3(props: AramalarV3Props) {
     return { mentionedYou: you, mentionedCompetitor: comp };
   }, [props.promptItems, props.competitorNames]);
 
+  // Hiç sonuç yoksa scan tetikleyici banner göster
+  const hasAnyResult = props.promptItems.some(
+    (p) => p.platformResults.length > 0,
+  );
+
   return (
     <KindePage>
       <KindeHero
@@ -72,6 +78,11 @@ export function AramalarContentV3(props: AramalarV3Props) {
       />
 
       <Divider />
+
+      {!hasAnyResult && props.promptItems.length > 0 && (
+        <ScanNowButton variant="banner" label="Şimdi Tara" />
+      )}
+
       <SectionMetrics
         totalQueries={props.promptItems.length}
         mentionedYou={mentionedYou}
@@ -79,6 +90,13 @@ export function AramalarContentV3(props: AramalarV3Props) {
       />
       <Divider />
       <SectionQueries {...props} isPro={isPro} />
+
+      {hasAnyResult && (
+        <div style={{ marginTop: 32, textAlign: "center" }}>
+          <ScanNowButton variant="primary" label="Yeniden Tara" />
+        </div>
+      )}
+
       {!isPro && (
         <>
           <Divider />
