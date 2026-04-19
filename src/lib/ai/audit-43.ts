@@ -98,16 +98,49 @@ export interface Audit43Result {
 // HTML Analysis Helpers
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * Rakip siteler çoğunlukla bot-UA'lı request'leri bloklar (Cloudflare, WAF).
+ * Bu yüzden modern Chrome UA + standart browser header'ları ile fetch
+ * ediyoruz. Aksi halde rakiplerden HTML dönmez → competitorValues 0/fail.
+ */
+const BROWSER_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+};
+
 async function fetchHtml(url: string): Promise<string | null> {
   try {
     const cleanUrl = url.startsWith("http") ? url : `https://${url}`;
     const res = await fetch(cleanUrl, {
-      headers: { "User-Agent": "GH7-Audit-Bot/1.0" },
+      headers: BROWSER_HEADERS,
       signal: AbortSignal.timeout(15_000),
+      redirect: "follow",
     });
-    if (!res.ok) return null;
-    return await res.text();
-  } catch {
+    if (!res.ok) {
+      console.warn(
+        `[fetchHtml] ${cleanUrl} returned ${res.status} — content blocked or unreachable`,
+      );
+      return null;
+    }
+    const html = await res.text();
+    if (!html || html.length < 100) {
+      console.warn(
+        `[fetchHtml] ${cleanUrl} returned very short content (${html.length} chars) — likely blocked or empty`,
+      );
+    }
+    return html;
+  } catch (err) {
+    console.warn(
+      `[fetchHtml] ${url} failed:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null;
   }
 }

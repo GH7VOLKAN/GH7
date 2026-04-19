@@ -31,10 +31,39 @@ export interface PromptItemData {
   createdAt: string;
 }
 
+/**
+ * Stuck scan temizliği — DAL içinde tetiklenir.
+ * 10 dakikadır "running" olan scan → status "completed" (sonuç varsa)
+ * veya "failed" (sonuç yoksa) olarak işaretlenir. Vercel runtime kesintisi
+ * sebebiyle takılan scan'lere karşı self-healing.
+ */
+async function autoCompleteStuckScans(brandId: string): Promise<void> {
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+  const stuckScans = await prisma.scan.findMany({
+    where: {
+      brandId,
+      status: "running",
+      startedAt: { lt: tenMinutesAgo },
+    },
+    include: { _count: { select: { results: true } } },
+  });
+  for (const s of stuckScans) {
+    const newStatus = s._count.results > 0 ? "completed" : "failed";
+    await prisma.scan.update({
+      where: { id: s.id },
+      data: { status: newStatus, completedAt: new Date() },
+    });
+    console.log(
+      `[DAL auto-cleanup] Scan ${s.id} stuck 10+ min → ${newStatus} (${s._count.results} results)`,
+    );
+  }
+}
+
 export const getPromptsData = cache(async (brandId: string) => {
+  // Stuck scan'leri auto-heal (runtime timeout'larına karşı)
+  await autoCompleteStuckScans(brandId);
+
   // En son scan'i al — running/failed olsa bile partial sonuçları gösterelim.
-  // (Sadece "completed" filtrelemek, stuck/running scan'lerin 50-60 sonucunu
-  // kullanıcıya gizler. Bkz. scan-diagnostic raporu.)
   const latestScan = await prisma.scan.findFirst({
     where: {
       brandId,
