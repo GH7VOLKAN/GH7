@@ -80,10 +80,14 @@ export const getGenelPageData = cache(
     brandName: string,
   ): Promise<GenelPageData | null> => {
     // 1) En son scan + prompt results
+    // Running/failed scan'leri de kabul et — partial sonuçları göster.
     const latestScan = await prisma.scan.findFirst({
-      where: { brandId, status: "completed" },
-      orderBy: { completedAt: "desc" },
-      select: { id: true, completedAt: true },
+      where: {
+        brandId,
+        status: { in: ["completed", "running", "failed"] },
+      },
+      orderBy: { startedAt: "desc" },
+      select: { id: true, completedAt: true, startedAt: true },
     });
 
     const prompts = await prisma.prompt.findMany({
@@ -223,7 +227,11 @@ export const getGenelPageData = cache(
       auditItems,
       categoryScores,
       topActions,
-      lastUpdate: latestScan?.completedAt?.toISOString() ?? latestAudit?.createdAt?.toISOString() ?? null,
+      lastUpdate:
+        latestScan?.completedAt?.toISOString() ??
+        latestScan?.startedAt?.toISOString() ??
+        latestAudit?.createdAt?.toISOString() ??
+        null,
       plan,
     };
   },
