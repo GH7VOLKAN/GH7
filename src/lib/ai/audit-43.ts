@@ -28,6 +28,17 @@ import {
 import { calculateEstimatedLoss } from "./estimated-loss";
 import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
 
+/**
+ * Bir rakibin tek madde için değeri ve durumu.
+ * Her audit item'ın `competitorValues` array'i max 3 tane bundan içerir.
+ */
+export interface CompetitorValue {
+  name: string;
+  url?: string;
+  value?: string | number;
+  status?: "pass" | "partial" | "fail";
+}
+
 export interface AuditItemResult {
   key: string;
   label: string;
@@ -35,8 +46,20 @@ export interface AuditItemResult {
   status: "pass" | "partial" | "fail";
   score: 0 | 5 | 10;
   value?: string | number;
+  /** @deprecated Geriye dönük uyum için kalır; yeni audit'lerde competitorValues kullanılır. */
   competitorValue?: string | number;
+  /**
+   * 3 rakip için madde başına değer ve durum.
+   * runAudit43 `competitors` parametresi verildiğinde doldurulur.
+   */
+  competitorValues?: CompetitorValue[];
   recommendation?: string;
+}
+
+/** Ana rakip referansı (max 3). Her biri audit motoru tarafından ayrı taranır. */
+export interface CompetitorRef {
+  name: string;
+  url: string;
 }
 
 export interface Audit43Input {
@@ -45,7 +68,10 @@ export interface Audit43Input {
   userType: UserType;
   sector?: string;
   location?: string;
+  /** @deprecated Tek rakip URL'i — yeni akışta competitors kullanılır. */
   competitorUrl?: string;
+  /** Max 3 ana rakip. Her biri için paralel audit çalışır. */
+  competitors?: CompetitorRef[];
   keywords?: string[]; // Arama hacmi için
   brandId?: string; // Mevcut scan verisi varsa
 }
@@ -59,6 +85,8 @@ export interface Audit43Result {
   competitorScore?: number;
   competitorName?: string;
   competitorUrl?: string;
+  /** Ana 3 rakip için skorlar (varsa). */
+  competitors?: Array<{ name: string; url: string; overallScore: number }>;
   items: AuditItemResult[];
   estimatedMonthlyLoss: number;
   estimatedYearlyLoss: number;
@@ -658,23 +686,46 @@ async function auditAiVisibility(brandId?: string): Promise<{
 // Ana Orchestrator
 // ═══════════════════════════════════════════════════════════
 
-export async function runAudit43(input: Audit43Input): Promise<Audit43Result> {
-  const { url, brandName, userType, sector, location, brandId, keywords } = input;
+/**
+ * Bir site için ana audit sonuç toplayıcısı.
+ * User ve her rakip için AYNI fonksiyon çalışır — kod DRY.
+ */
+async function runSiteAudit(
+  siteUrl: string,
+  siteName: string,
+  options: {
+    location?: string;
+    brandId?: string;
+    skipAi?: boolean;
+  } = {},
+): Promise<{
+  results: Partial<Record<string, AuditItemResult>>;
+  externalRaw?: Record<string, unknown>;
+  aiRaw?: Record<string, unknown>;
+  totalMentionRate?: number;
+  overallScore: number;
+}> {
+  const html = (await fetchHtml(siteUrl)) ?? "";
+  const domain = siteUrl.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
 
-  const html = (await fetchHtml(url)) ?? "";
-  const domain = url.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  // 6 audit fonksiyonu paralel
+  const [contentRes, schemaRes, entityRes, techRes, externalData, aiData] =
+    await Promise.all([
+      auditContent(html, siteUrl),
+      Promise.resolve(auditSchema(html)),
+      auditEntity(siteName, domain, options.location),
+      auditTech(siteUrl, html),
+      auditExternal(domain, siteName),
+      options.skipAi
+        ? Promise.resolve({
+            results: {} as Partial<Record<string, AuditItemResult>>,
+            totalMentionRate: 0,
+            rawAi: undefined,
+          })
+        : auditAiVisibility(options.brandId),
+    ]);
 
-  // Paralel çağrılar
-  const [contentRes, schemaRes, entityRes, techRes, externalData, aiData] = await Promise.all([
-    auditContent(html, url),
-    Promise.resolve(auditSchema(html)),
-    auditEntity(brandName, domain, location),
-    auditTech(url, html),
-    auditExternal(domain, brandName),
-    auditAiVisibility(brandId),
-  ]);
-
-  const allResults: Partial<Record<string, AuditItemResult>> = {
+  const results: Partial<Record<string, AuditItemResult>> = {
     ...contentRes,
     ...schemaRes,
     ...entityRes,
@@ -683,23 +734,136 @@ export async function runAudit43(input: Audit43Input): Promise<Audit43Result> {
     ...aiData.results,
   };
 
-  // Tüm maddeleri kontrol et, eksik olanları 0 yap
-  const items: AuditItemResult[] = AUDIT_ITEMS.map((def) => {
-    return (
-      allResults[def.key] ?? {
-        key: def.key,
-        label: def.label,
-        category: def.category,
-        status: "fail" as const,
-        score: 0 as const,
-      }
-    );
+  // overall score hesabı (rakip için de user tipinde ağırlık kullan)
+  const itemScores: Record<string, number> = {};
+  AUDIT_ITEMS.forEach((def) => {
+    itemScores[def.key] = results[def.key]?.score ?? 0;
+  });
+  const { overall } = calculateOverallScore("firma", itemScores);
+
+  return {
+    results,
+    externalRaw: externalData.rawDfs,
+    aiRaw: aiData.rawAi,
+    totalMentionRate: aiData.totalMentionRate,
+    overallScore: overall,
+  };
+}
+
+/**
+ * Tek bir audit item için user ve rakip değerlerini birleştirir.
+ */
+function mergeCompetitorValues(
+  userItem: AuditItemResult | undefined,
+  def: { key: string; label: string; category: AuditCategory },
+  competitorResults: Array<{
+    name: string;
+    url: string;
+    results: Partial<Record<string, AuditItemResult>>;
+  }>,
+): AuditItemResult {
+  const base: AuditItemResult =
+    userItem ?? {
+      key: def.key,
+      label: def.label,
+      category: def.category,
+      status: "fail" as const,
+      score: 0 as const,
+    };
+
+  if (competitorResults.length === 0) return base;
+
+  const competitorValues: CompetitorValue[] = competitorResults.map((c) => {
+    const compItem = c.results[def.key];
+    return {
+      name: c.name,
+      url: c.url,
+      value: compItem?.value,
+      status: compItem?.status,
+    };
   });
 
-  // Skor hesabı
+  // Backward compat: en iyi (pass tercih, sonra partial) rakip değerini
+  // tek string olarak competitorValue alanına da koy
+  const bestComp =
+    competitorValues.find((c) => c.status === "pass") ??
+    competitorValues.find((c) => c.status === "partial") ??
+    competitorValues[0];
+
+  return {
+    ...base,
+    competitorValue: bestComp?.value,
+    competitorValues,
+  };
+}
+
+export async function runAudit43(input: Audit43Input): Promise<Audit43Result> {
+  const { url, brandName, userType, sector, location, brandId, keywords } =
+    input;
+
+  // Rakip listesi: competitors parametre önce, yoksa legacy competitorUrl (tek)
+  const competitorList: CompetitorRef[] = (input.competitors ?? []).slice(0, 3);
+  if (
+    competitorList.length === 0 &&
+    input.competitorUrl &&
+    input.competitorUrl.trim()
+  ) {
+    const compDomain = input.competitorUrl
+      .replace(/^https?:\/\//, "")
+      .replace(/\/.*$/, "");
+    competitorList.push({ name: compDomain, url: input.competitorUrl });
+  }
+
+  console.log(
+    `[audit-43] Starting audit: user=${brandName} (${url}), competitors=${competitorList.length} (${competitorList.map((c) => c.name).join(", ")})`,
+  );
+
+  // User audit + 3 rakip audit hepsi PARALEL
+  const [userAudit, ...competitorAudits] = await Promise.all([
+    runSiteAudit(url, brandName, { location, brandId, skipAi: false }),
+    ...competitorList.map((c) =>
+      runSiteAudit(c.url, c.name, {
+        location,
+        // skipAi: true — rakip için AI görünürlük scan'i çalıştırma (maliyet + gereksiz)
+        skipAi: true,
+      }).catch((err) => {
+        console.error(`[audit-43] Competitor audit failed for ${c.name}:`, err);
+        return {
+          results: {} as Partial<Record<string, AuditItemResult>>,
+          overallScore: 0,
+          externalRaw: undefined,
+          aiRaw: undefined,
+          totalMentionRate: 0,
+        };
+      }),
+    ),
+  ]);
+
+  const competitorResultsWithMeta = competitorList.map((c, i) => ({
+    name: c.name,
+    url: c.url,
+    results: competitorAudits[i]?.results ?? {},
+    overallScore: competitorAudits[i]?.overallScore ?? 0,
+  }));
+
+  // Tüm 43 maddeyi build et, her birine competitorValues ekle
+  const items: AuditItemResult[] = AUDIT_ITEMS.map((def) =>
+    mergeCompetitorValues(userAudit.results[def.key], def, competitorResultsWithMeta),
+  );
+
+  // Skor hesabı (user için)
   const itemScores: Record<string, number> = {};
   items.forEach((i) => (itemScores[i.key] = i.score));
   const { overall, byCategory } = calculateOverallScore(userType, itemScores);
+
+  // aiData ve externalData referansı korunmalı (estimatedLoss + return için)
+  const aiData = {
+    totalMentionRate: userAudit.totalMentionRate ?? 0,
+    rawAi: userAudit.aiRaw,
+  };
+  const externalData = {
+    rawDfs: userAudit.externalRaw,
+  };
 
   // Tahmini kayıp
   let estimatedMonthlyLoss = 0;
@@ -734,16 +898,18 @@ export async function runAudit43(input: Audit43Input): Promise<Audit43Result> {
     estimatedYearlyLoss = loss.yearlyLoss;
   }
 
-  // Rakip skor (opsiyonel — gerçek rakip url verilirse)
-  let competitorScore: number | undefined;
-  if (input.competitorUrl) {
-    // Rakip için özet — tam audit çalıştırmayız (maliyet), DataForSEO'dan backlink çek ve tahmin et
-    const compBacklinks = await getBacklinksOverview(input.competitorUrl);
-    if (compBacklinks) {
-      // Basit tahmin: backlink domain rank'i + AI görünürlük tahmini
-      competitorScore = Math.min(100, Math.round(compBacklinks.domainRank + 30));
-    }
-  }
+  // Rakip skorları — her rakibin kendi 43 madde tabanlı overallScore'u
+  const competitorsOut = competitorResultsWithMeta.map((c) => ({
+    name: c.name,
+    url: c.url,
+    overallScore: c.overallScore,
+  }));
+
+  // Legacy tek rakip alanları: ilk rakip (en yüksek puanlı değil, listede ilk)
+  const firstComp = competitorsOut[0];
+  const competitorScore = firstComp?.overallScore;
+  const competitorName = firstComp?.name;
+  const competitorUrl = firstComp?.url ?? input.competitorUrl;
 
   return {
     url,
@@ -752,8 +918,9 @@ export async function runAudit43(input: Audit43Input): Promise<Audit43Result> {
     overallScore: overall,
     categoryScores: byCategory,
     competitorScore,
-    competitorName: input.competitorUrl?.replace(/^https?:\/\//, "").replace(/\/.*$/, ""),
-    competitorUrl: input.competitorUrl,
+    competitorName,
+    competitorUrl,
+    competitors: competitorsOut.length > 0 ? competitorsOut : undefined,
     items,
     estimatedMonthlyLoss,
     estimatedYearlyLoss,

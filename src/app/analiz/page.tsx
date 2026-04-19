@@ -424,6 +424,11 @@ function AnalizPageInner() {
   const [discovery, setDiscovery] = useState<
     import("@/lib/ai/discovery-types").DiscoveryResult | null
   >(null);
+  // Ana 3 rakip seçimi — discovery sonrası kullanıcı max 3 işaretler.
+  // Default: ilk 3 rakip (URL'si olan).
+  const [selectedCompetitorNames, setSelectedCompetitorNames] = useState<
+    string[]
+  >([]);
 
   // Authenticated session — /panel'den redirect gelen kullanıcı için.
   // OTP adımı atlanır; formData email/phone session'dan prefill edilir.
@@ -841,6 +846,19 @@ function AnalizPageInner() {
         const data = await res.json();
         gotApiResponse = true;
         setDiscovery(data);
+
+        // Default: URL'si olan ilk 3 rakibi primary olarak işaretle
+        if (Array.isArray(data.competitors)) {
+          const defaultPrimary = data.competitors
+            .filter(
+              (c: { name?: string; url?: string }) =>
+                c.name && c.url && c.url.trim().length > 0,
+            )
+            .slice(0, 3)
+            .map((c: { name: string }) => c.name);
+          setSelectedCompetitorNames(defaultPrimary);
+        }
+
         if (Array.isArray(data.products)) {
           setProducts(
             data.products.map((name: string) => ({
@@ -954,6 +972,14 @@ function AnalizPageInner() {
               : undefined,
             competitorUrl: formData.competitor || undefined,
             discoveredCompetitors: discovery?.competitors?.slice(0, 5) ?? [],
+            // Ana 3 rakip — audit motor her biri için paralel tam audit yapar
+            selectedCompetitors: (discovery?.competitors ?? [])
+              .filter(
+                (c) =>
+                  selectedCompetitorNames.includes(c.name) && c.url && c.name,
+              )
+              .slice(0, 3)
+              .map((c) => ({ name: c.name, url: c.url as string })),
             // Perplexity discovery sonucu — Brand'ı zenginleştirmek ve
             // Prompt tablosuna targetQueries yazmak için API'ye gönderilir.
             discoveryResult: discovery
@@ -1894,6 +1920,77 @@ function AnalizPageInner() {
               ))}
             </div>
           </div>
+
+          {/* Rakip seçimi — AI'ın keşfettiği rakiplerden max 3'ü */}
+          {discovery?.competitors && discovery.competitors.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Karşılaştırılacak rakipler (max 3)
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Audit'te bu rakiplere karşı madde madde karşılaştırılacaksınız.
+                Default: ilk 3 seçili, istediğinizi değiştirin.
+              </p>
+              <div className="space-y-2">
+                {discovery.competitors
+                  .filter((c) => c.name && c.url)
+                  .slice(0, 10)
+                  .map((comp) => {
+                    const isSelected = selectedCompetitorNames.includes(
+                      comp.name,
+                    );
+                    const disabled =
+                      !isSelected && selectedCompetitorNames.length >= 3;
+                    return (
+                      <label
+                        key={comp.name}
+                        className={`flex items-start gap-3 p-3 rounded-lg border ${
+                          isSelected
+                            ? "border-gray-900 bg-gray-50"
+                            : disabled
+                              ? "border-gray-100 bg-gray-50 opacity-50"
+                              : "border-gray-200"
+                        } cursor-pointer hover:border-gray-400`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={disabled}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              if (selectedCompetitorNames.length < 3) {
+                                setSelectedCompetitorNames([
+                                  ...selectedCompetitorNames,
+                                  comp.name,
+                                ]);
+                              }
+                            } else {
+                              setSelectedCompetitorNames(
+                                selectedCompetitorNames.filter(
+                                  (n) => n !== comp.name,
+                                ),
+                              );
+                            }
+                          }}
+                          className="mt-0.5 h-4 w-4 accent-gray-900"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">
+                            {comp.name}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5 truncate">
+                            {comp.url}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+              </div>
+              <div className="mt-2 text-xs text-gray-500">
+                {selectedCompetitorNames.length}/3 seçili
+              </div>
+            </div>
+          )}
 
           <button
             onClick={handleStartAnalysis}

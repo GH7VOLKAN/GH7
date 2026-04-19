@@ -380,19 +380,7 @@ function AuditItemRow({
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</div>
-          {item.value !== undefined && (
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 12,
-                color: KINDE_COLORS.mutedLight,
-              }}
-            >
-              Siz: {String(item.value)}
-              {item.competitorValue !== undefined &&
-                ` · Rakip: ${String(item.competitorValue)}`}
-            </div>
-          )}
+          <CompetitorComparison item={item} />
         </div>
       </button>
       {open && !isLocked && (
@@ -437,6 +425,105 @@ function AuditItemRow({
   );
   if (isLocked) return <ProGate>{body}</ProGate>;
   return body;
+}
+
+/* -------------------------------------------------- */
+/*  Rakip karşılaştırma — Siz + 3 Rakip grid           */
+/* -------------------------------------------------- */
+function CompetitorComparison({ item }: { item: AuditItemResult }) {
+  const hasNewFormat =
+    Array.isArray(item.competitorValues) && item.competitorValues.length > 0;
+  const hasAnyValue =
+    item.value !== undefined ||
+    item.competitorValue !== undefined ||
+    hasNewFormat;
+
+  if (!hasAnyValue) return null;
+
+  // Yeni format: siz + 3 rakip grid
+  if (hasNewFormat) {
+    const cells: Array<{
+      label: string;
+      value: string | number | undefined;
+      status?: "pass" | "partial" | "fail";
+      isSelf: boolean;
+    }> = [
+      {
+        label: "Siz",
+        value: item.value,
+        status: item.status,
+        isSelf: true,
+      },
+      ...(item.competitorValues ?? []).map((c) => ({
+        label: c.name,
+        value: c.value,
+        status: c.status,
+        isSelf: false,
+      })),
+    ];
+
+    return (
+      <div
+        style={{
+          marginTop: 8,
+          display: "grid",
+          gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))`,
+          gap: 8,
+          fontSize: 12,
+        }}
+      >
+        {cells.map((c, i) => (
+          <div
+            key={i}
+            style={{
+              padding: "8px 10px",
+              background: c.isSelf ? "#F7F7F7" : "#FFFFFF",
+              border: `1px solid ${KINDE_COLORS.divider}`,
+              borderRadius: 6,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                color: KINDE_COLORS.mutedLight,
+                letterSpacing: "0.04em",
+                marginBottom: 2,
+                fontWeight: c.isSelf ? 700 : 500,
+                textTransform: c.isSelf ? "uppercase" : "none",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={c.label}
+            >
+              {c.label}
+            </div>
+            <div style={{ fontWeight: 600, color: KINDE_COLORS.black }}>
+              {c.value !== undefined && c.value !== null
+                ? String(c.value)
+                : "—"}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Eski format (backward compat): tek satır "Siz: X · Rakip: Y"
+  return (
+    <div
+      style={{
+        marginTop: 4,
+        fontSize: 12,
+        color: KINDE_COLORS.mutedLight,
+      }}
+    >
+      {item.value !== undefined && <>Siz: {String(item.value)}</>}
+      {item.competitorValue !== undefined && (
+        <> · Rakip: {String(item.competitorValue)}</>
+      )}
+    </div>
+  );
 }
 
 /* -------------------------------------------------- */
