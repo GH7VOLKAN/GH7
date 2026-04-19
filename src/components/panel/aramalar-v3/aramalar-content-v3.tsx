@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import type { PromptItemData } from "@/lib/dal/prompts";
 import {
   KindePage,
@@ -37,7 +36,8 @@ const PLATFORM_MODELS: Record<string, string> = {
   google_aio: "SerpAPI",
 };
 
-const FREE_OPEN_LIMIT = 3;
+// Kısıtlama kaldırıldı — tüm sorgular her kullanıcıda açılabilir.
+// Free kullanıcıya teşvik sayfa sonundaki tek ProCTA ile verilir.
 
 type FilterType = "all" | "mentioned" | "not_mentioned";
 
@@ -290,16 +290,15 @@ function SectionQueries({
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {filtered.map((item, idx) => {
-          const isLocked = !isPro && idx >= FREE_OPEN_LIMIT;
-          const isOpen = openId === item.id && !isLocked;
+        {filtered.map((item) => {
+          const isOpen = openId === item.id;
           return (
             <QueryCard
               key={item.id}
               item={item}
               isOpen={isOpen}
-              onToggle={() => !isLocked && setOpenId(isOpen ? null : item.id)}
-              isLocked={isLocked}
+              onToggle={() => setOpenId(isOpen ? null : item.id)}
+              isLocked={false}
               brandName={brandName}
               competitorNames={competitorNames}
             />
@@ -322,14 +321,13 @@ function QueryCard({
   item,
   isOpen,
   onToggle,
-  isLocked,
   brandName,
   competitorNames,
 }: {
   item: PromptItemData;
   isOpen: boolean;
   onToggle: () => void;
-  isLocked: boolean;
+  isLocked?: boolean; // legacy prop, artık kullanılmıyor
   brandName: string;
   competitorNames: string[];
 }) {
@@ -351,7 +349,7 @@ function QueryCard({
           background: "transparent",
           border: 0,
           textAlign: "left",
-          cursor: isLocked ? "default" : "pointer",
+          cursor: "pointer",
           fontFamily: "inherit",
         }}
       >
@@ -399,18 +397,13 @@ function QueryCard({
           }}
         >
           <span>{formatRelative(item.createdAt)}</span>
-          {!isLocked && (
-            <span style={{ color: KINDE_COLORS.muted }}>
-              {isOpen ? "▲" : "▼"}
-            </span>
-          )}
-          {isLocked && (
-            <span style={{ color: KINDE_COLORS.muted }}>kilitli</span>
-          )}
+          <span style={{ color: KINDE_COLORS.muted }}>
+            {isOpen ? "▲" : "▼"}
+          </span>
         </div>
       </button>
 
-      {isOpen && !isLocked && (
+      {isOpen && (
         <div
           style={{
             padding: "8px 20px 20px",
@@ -432,26 +425,6 @@ function QueryCard({
         </div>
       )}
 
-      {isLocked && (
-        <div
-          style={{
-            padding: "16px 20px",
-            borderTop: `1px solid ${KINDE_COLORS.divider}`,
-            background: KINDE_COLORS.bgSoft,
-            fontSize: 13,
-            color: KINDE_COLORS.muted,
-            textAlign: "center",
-          }}
-        >
-          Tüm sorgu detaylarını{" "}
-          <Link
-            href="/panel/abonelik"
-            style={{ color: KINDE_COLORS.black, fontWeight: 600 }}
-          >
-            Pro ile görün · ₺699/ay
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
