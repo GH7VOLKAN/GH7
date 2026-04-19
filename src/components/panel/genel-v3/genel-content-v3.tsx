@@ -76,7 +76,12 @@ function highlightNames(
 /*  Main Component                                     */
 /* -------------------------------------------------- */
 export function GenelContentV3({ data }: { data: GenelPageData }) {
-  const isPro = data.plan !== "free";
+  // Genel Bakış FREE plan'da tam açık — kısıtlama diğer sayfalarda.
+  // isPro = true → içeriği kilitleyen tüm gate'ler bypass edilir.
+  // isRealPro gerçek plan durumunu tutar, Section6Pro (upsell) sadece
+  // FREE kullanıcıya gösterilir.
+  const isPro = true;
+  const isRealPro = data.plan !== "free";
 
   return (
     <>
@@ -120,8 +125,12 @@ export function GenelContentV3({ data }: { data: GenelPageData }) {
           <Section4Aksiyon data={data} isPro={isPro} />
           <Divider />
           <Section5GH7 />
-          <Divider />
-          <Section6Pro />
+          {!isRealPro && (
+            <>
+              <Divider />
+              <Section6Pro />
+            </>
+          )}
           <Divider />
           <Footer lastUpdate={data.lastUpdate} />
         </div>

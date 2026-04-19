@@ -366,18 +366,27 @@ export async function POST(req: NextRequest) {
         // PromptResult tablosu dolsun → /panel/aramalar ve /panel/genel'de
         // platform yanıtları görünsün.
         if (promptsCreated) {
+          console.log(
+            `[api/run-audit-43] Auto-scan trigger: prompts yazıldı, scan başlatılıyor brandId=${brand.id}`,
+          );
           try {
             const platforms = getAvailablePlatforms();
+            console.log(
+              `[api/run-audit-43] Available AI platforms: ${platforms.length} → ${platforms.join(", ")}`,
+            );
             if (platforms.length === 0) {
-              console.warn(
-                "[api/run-audit-43] Skipping auto-scan: no AI providers configured",
+              console.error(
+                "[api/run-audit-43] ⚠️ KRİTİK: Hiçbir AI provider aktif değil — env var'ları (OPENAI_API_KEY, GH7_ANTHROPIC_API_KEY, GOOGLE_AI_API_KEY, PERPLEXITY_API_KEY, SERPAPI_KEY) kontrol edin. Scan atlandı.",
               );
             } else {
-              // Zaten running scan var mı?
               const running = await prisma.scan.findFirst({
                 where: { brandId: brand.id, status: "running" },
               });
-              if (!running) {
+              if (running) {
+                console.log(
+                  `[api/run-audit-43] Running scan var (${running.id}) — yenisi eklenmedi.`,
+                );
+              } else {
                 const autoScan = await prisma.scan.create({
                   data: {
                     brandId: brand.id,
@@ -386,27 +395,60 @@ export async function POST(req: NextRequest) {
                   },
                 });
                 console.log(
-                  `[api/run-audit-43] Auto-scan queued scanId=${autoScan.id} brandId=${brand.id}`,
+                  `[api/run-audit-43] Auto-scan queued scanId=${autoScan.id} brandId=${brand.id} platforms=${platforms.length}`,
                 );
                 // Background execution — response hemen dönsün
                 after(async () => {
+                  const scanStart = Date.now();
                   try {
-                    await executeScan(autoScan.id, brand!.id);
                     console.log(
-                      `[api/run-audit-43] Auto-scan completed scanId=${autoScan.id}`,
+                      `[api/run-audit-43] executeScan() başlıyor scanId=${autoScan.id}`,
+                    );
+                    await executeScan(autoScan.id, brand!.id);
+                    const elapsed = Date.now() - scanStart;
+                    // Sonucu kontrol et
+                    const finalScan = await prisma.scan.findUnique({
+                      where: { id: autoScan.id },
+                      include: { _count: { select: { results: true } } },
+                    });
+                    console.log(
+                      `[api/run-audit-43] ✅ Auto-scan completed scanId=${autoScan.id} status=${finalScan?.status} results=${finalScan?._count.results} elapsed=${elapsed}ms`,
                     );
                   } catch (e) {
+                    const elapsed = Date.now() - scanStart;
                     console.error(
-                      `[api/run-audit-43] Auto-scan failed scanId=${autoScan.id}:`,
-                      e,
+                      `[api/run-audit-43] ❌ Auto-scan FAILED scanId=${autoScan.id} elapsed=${elapsed}ms error:`,
+                      e instanceof Error ? `${e.name}: ${e.message}` : String(e),
                     );
+                    if (e instanceof Error && e.stack) {
+                      console.error(
+                        `[api/run-audit-43] Stack:`,
+                        e.stack.slice(0, 500),
+                      );
+                    }
+                    // Scan'i failed olarak işaretle
+                    try {
+                      await prisma.scan.update({
+                        where: { id: autoScan.id },
+                        data: { status: "failed", completedAt: new Date() },
+                      });
+                    } catch (updateErr) {
+                      console.error(
+                        `[api/run-audit-43] Scan failed mark edilemedi:`,
+                        updateErr,
+                      );
+                    }
                   }
                 });
               }
             }
           } catch (err) {
-            console.warn("[api/run-audit-43] Auto-scan trigger failed:", err);
+            console.error("[api/run-audit-43] Auto-scan trigger exception:", err);
           }
+        } else {
+          console.log(
+            `[api/run-audit-43] promptsCreated=false — zaten prompt vardı veya targetQueries boş. Scan atlandı.`,
+          );
         }
 
         // Rakipleri Competitor tablosuna kaydet
