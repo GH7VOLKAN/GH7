@@ -9,8 +9,6 @@ import {
   SectionHeading,
   SectionLead,
   SourceNote,
-  StatusPill,
-  ProGate,
   ProCTA,
   KindeFooter,
   useFadeIn,
@@ -27,8 +25,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   ai: "AI platform görünürlüğü",
 };
 const CATEGORY_ORDER = ["content", "schema", "entity", "tech", "external", "ai"];
-
-const FREE_ITEM_LIMIT = 10;
 
 export interface AuditDetayV3Props {
   plan: string;
@@ -57,8 +53,6 @@ export function AuditDetayContentV3(props: AuditDetayV3Props) {
       <SectionMetrics {...props} hasCompetitor={hasCompetitor} />
       <Divider />
       <SectionCategories {...props} />
-      <Divider />
-      <SectionDetailList {...props} isPro={isPro} />
       {props.personalAnalysis && (
         <>
           <Divider />
@@ -199,18 +193,35 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 }
 
 /* -------------------------------------------------- */
-/*  Kategori özetleri (accordion)                       */
+/*  Kategori accordion — tıklanınca tüm maddeleri       */
+/*  tablo formatında (Siz + Rakip1-3) gösterir          */
 /* -------------------------------------------------- */
 function SectionCategories({ categoryScores, auditItems }: AuditDetayV3Props) {
   const ref = useFadeIn<HTMLDivElement>();
-  const [openCat, setOpenCat] = useState<string | null>(null);
+  const [openCat, setOpenCat] = useState<string | null>(
+    CATEGORY_ORDER[0] ?? null, // Varsayılan ilk kategori açık
+  );
+
+  // Rakip adlarını ilk maddeden derle (hepsi aynı 3 rakip)
+  const competitorNames: string[] = [];
+  for (const item of auditItems) {
+    if (item.competitorValues && item.competitorValues.length > 0) {
+      for (const cv of item.competitorValues) {
+        if (cv.name && !competitorNames.includes(cv.name)) {
+          competitorNames.push(cv.name);
+        }
+      }
+      if (competitorNames.length > 0) break;
+    }
+  }
 
   return (
     <div ref={ref} className="gh7-fade-in">
       <SectionHeading>Kategori skorları.</SectionHeading>
       <SectionLead>
-        6 kategori, toplam {auditItems.length} madde. Her kategori için pass ·
-        kısmi · eksik dağılımı.
+        6 kategori, toplam {auditItems.length} madde. Her kategoriye tıklayarak
+        madde madde sizin ve {competitorNames.length > 0 ? competitorNames.length : 3}{" "}
+        rakibinizin detaylı karşılaştırmasını görün.
       </SectionLead>
 
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -268,263 +279,260 @@ function SectionCategories({ categoryScores, auditItems }: AuditDetayV3Props) {
                 >
                   {score}/100
                 </div>
+                <span
+                  style={{
+                    marginLeft: 12,
+                    fontSize: 13,
+                    color: KINDE_COLORS.muted,
+                  }}
+                >
+                  {isOpen ? "▲" : "▼"}
+                </span>
               </button>
               {isOpen && (
-                <div style={{ paddingBottom: 12 }}>
+                <div style={{ paddingBottom: 24 }}>
                   <ScoreBar label="Kategori skoru" score={score} />
+                  <CategoryComparisonTable
+                    items={items}
+                    competitorNames={competitorNames}
+                  />
                 </div>
               )}
             </div>
           );
         })}
       </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------- */
-/*  Detaylı 43 madde listesi                            */
-/* -------------------------------------------------- */
-function SectionDetailList({
-  auditItems,
-  isPro,
-}: AuditDetayV3Props & { isPro: boolean }) {
-  const ref = useFadeIn<HTMLDivElement>();
-
-  // Global sayaç — ilk 10 açık, sonrası locked
-  let counter = 0;
-
-  return (
-    <div ref={ref} className="gh7-fade-in">
-      <SectionHeading>Her madde tek tek.</SectionHeading>
-      <SectionLead>
-        İlk {FREE_ITEM_LIMIT} madde ücretsiz plan'da açık. Madde başlığına
-        tıklayarak detay ve öneriyi görün.
-      </SectionLead>
-
-      {CATEGORY_ORDER.map((catKey) => {
-        const items = auditItems.filter((it) => it.category === catKey);
-        if (items.length === 0) return null;
-        return (
-          <div key={catKey} style={{ marginBottom: 40 }}>
-            <h3
-              style={{
-                fontSize: 18,
-                fontWeight: 700,
-                marginBottom: 8,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {CATEGORY_LABELS[catKey] ?? catKey}
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {items.map((item) => {
-                const isLocked = !isPro && counter >= FREE_ITEM_LIMIT;
-                counter += 1;
-                return (
-                  <AuditItemRow key={item.key} item={item} isLocked={isLocked} />
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
 
       <SourceNote>
-        Kaynak: Site HTML · DataForSEO On-Page API · Perplexity Sonar · Claude Opus
+        Kaynak: Site HTML · DataForSEO On-Page API · Perplexity Sonar · Claude
+        Opus. Rakipler seçilen 3 ana rakiple paralel olarak tarandı.
       </SourceNote>
     </div>
   );
 }
 
-function AuditItemRow({
+/* -------------------------------------------------- */
+/*  Kategori karşılaştırma tablosu                      */
+/*  Satır = madde, Kolon = Siz + 3 rakip                */
+/* -------------------------------------------------- */
+function CategoryComparisonTable({
+  items,
+  competitorNames,
+}: {
+  items: AuditItemResult[];
+  competitorNames: string[];
+}) {
+  // Rakip kolon sayısı — max 3 ama gerçekte kaç rakip varsa
+  const compCount = competitorNames.length;
+  const hasCompetitors = compCount > 0;
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* Header satırı */}
+        {hasCompetitors && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `2fr repeat(${1 + compCount}, 1fr)`,
+              gap: 12,
+              padding: "10px 0",
+              borderBottom: `1px solid ${KINDE_COLORS.divider}`,
+              fontSize: 10,
+              fontWeight: 700,
+              color: KINDE_COLORS.mutedLight,
+              letterSpacing: "0.04em",
+            }}
+          >
+            <div>GEREKLILIK</div>
+            <div style={{ fontWeight: 800, color: KINDE_COLORS.black }}>
+              SİZ
+            </div>
+            {competitorNames.map((name) => (
+              <div
+                key={name}
+                title={name}
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {name.toUpperCase()}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Her madde bir satır */}
+        {items.map((item) => (
+          <ComparisonRow
+            key={item.key}
+            item={item}
+            competitorNames={competitorNames}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ComparisonRow({
   item,
-  isLocked,
+  competitorNames,
 }: {
   item: AuditItemResult;
-  isLocked: boolean;
+  competitorNames: string[];
 }) {
-  const [open, setOpen] = useState(false);
-  const body = (
+  const [showRec, setShowRec] = useState(false);
+  const compCount = competitorNames.length;
+  const hasCompetitors = compCount > 0;
+
+  return (
     <div
       style={{
-        padding: "16px 0",
+        padding: "14px 0",
         borderBottom: `1px solid ${KINDE_COLORS.divider}`,
       }}
     >
-      <button
-        type="button"
-        onClick={() => !isLocked && setOpen((v) => !v)}
+      <div
         style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 16,
-          width: "100%",
-          background: "transparent",
-          border: 0,
-          padding: 0,
-          cursor: isLocked ? "default" : "pointer",
-          fontFamily: "inherit",
-          textAlign: "left",
+          display: "grid",
+          gridTemplateColumns: hasCompetitors
+            ? `2fr repeat(${1 + compCount}, 1fr)`
+            : "2fr 1fr",
+          gap: 12,
+          alignItems: "start",
         }}
       >
-        <div
+        {/* Madde adı + status */}
+        <button
+          type="button"
+          onClick={() => item.recommendation && setShowRec((v) => !v)}
           style={{
-            minWidth: 70,
-            flexShrink: 0,
-            paddingTop: 2,
+            background: "transparent",
+            border: 0,
+            padding: 0,
+            textAlign: "left",
+            cursor: item.recommendation ? "pointer" : "default",
+            fontFamily: "inherit",
           }}
         >
-          <StatusPill status={isLocked ? "locked" : item.status} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</div>
-          <CompetitorComparison item={item} />
-        </div>
-      </button>
-      {open && !isLocked && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 16,
-            background: KINDE_COLORS.bgSoft,
-            borderRadius: 8,
-            fontSize: 13,
-            lineHeight: 1.6,
-            color: "#333",
-          }}
-        >
-          {item.recommendation && (
-            <>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: KINDE_COLORS.muted,
-                  letterSpacing: "0.04em",
-                  marginBottom: 4,
-                }}
-              >
-                NE YAPILMALI
-              </div>
-              <div style={{ marginBottom: 12 }}>{item.recommendation}</div>
-            </>
-          )}
+          <div style={{ fontSize: 13, fontWeight: 500, color: "#111" }}>
+            {item.label}
+          </div>
           <div
             style={{
+              marginTop: 2,
               fontSize: 11,
               color: KINDE_COLORS.mutedLight,
             }}
           >
-            Kaynak: DataForSEO On-Page API · audit-43 motoru
+            {statusLabel(item.status)}
+            {item.recommendation && (
+              <span style={{ marginLeft: 6, color: KINDE_COLORS.muted }}>
+                {showRec ? "▲" : "▼"}
+              </span>
+            )}
           </div>
+        </button>
+
+        {/* Siz kolonu */}
+        <ValueCell value={item.value} status={item.status} emphasize />
+
+        {/* Rakip kolonları */}
+        {competitorNames.map((name) => {
+          const compItem = item.competitorValues?.find((c) => c.name === name);
+          return (
+            <ValueCell
+              key={name}
+              value={compItem?.value}
+              status={compItem?.status}
+            />
+          );
+        })}
+      </div>
+
+      {/* Tıklanınca öneri + kaynak */}
+      {showRec && item.recommendation && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 14,
+            background: KINDE_COLORS.bgSoft,
+            borderRadius: 8,
+            fontSize: 12,
+            lineHeight: 1.6,
+            color: "#333",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: KINDE_COLORS.muted,
+              letterSpacing: "0.04em",
+              marginBottom: 4,
+            }}
+          >
+            NE YAPILMALI
+          </div>
+          <div>{item.recommendation}</div>
         </div>
       )}
     </div>
   );
-  if (isLocked) return <ProGate>{body}</ProGate>;
-  return body;
 }
 
-/* -------------------------------------------------- */
-/*  Rakip karşılaştırma — Siz + 3 Rakip grid           */
-/* -------------------------------------------------- */
-function CompetitorComparison({ item }: { item: AuditItemResult }) {
-  const hasNewFormat =
-    Array.isArray(item.competitorValues) && item.competitorValues.length > 0;
-  const hasAnyValue =
-    item.value !== undefined ||
-    item.competitorValue !== undefined ||
-    hasNewFormat;
-
-  if (!hasAnyValue) return null;
-
-  // Yeni format: siz + 3 rakip grid
-  if (hasNewFormat) {
-    const cells: Array<{
-      label: string;
-      value: string | number | undefined;
-      status?: "pass" | "partial" | "fail";
-      isSelf: boolean;
-    }> = [
-      {
-        label: "Siz",
-        value: item.value,
-        status: item.status,
-        isSelf: true,
-      },
-      ...(item.competitorValues ?? []).map((c) => ({
-        label: c.name,
-        value: c.value,
-        status: c.status,
-        isSelf: false,
-      })),
-    ];
-
-    return (
-      <div
-        style={{
-          marginTop: 8,
-          display: "grid",
-          gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))`,
-          gap: 8,
-          fontSize: 12,
-        }}
-      >
-        {cells.map((c, i) => (
-          <div
-            key={i}
-            style={{
-              padding: "8px 10px",
-              background: c.isSelf ? "#F7F7F7" : "#FFFFFF",
-              border: `1px solid ${KINDE_COLORS.divider}`,
-              borderRadius: 6,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 10,
-                color: KINDE_COLORS.mutedLight,
-                letterSpacing: "0.04em",
-                marginBottom: 2,
-                fontWeight: c.isSelf ? 700 : 500,
-                textTransform: c.isSelf ? "uppercase" : "none",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={c.label}
-            >
-              {c.label}
-            </div>
-            <div style={{ fontWeight: 600, color: KINDE_COLORS.black }}>
-              {c.value !== undefined && c.value !== null
-                ? String(c.value)
-                : "—"}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Eski format (backward compat): tek satır "Siz: X · Rakip: Y"
+function ValueCell({
+  value,
+  status,
+  emphasize = false,
+}: {
+  value: string | number | undefined;
+  status?: "pass" | "partial" | "fail";
+  emphasize?: boolean;
+}) {
   return (
     <div
       style={{
-        marginTop: 4,
         fontSize: 12,
-        color: KINDE_COLORS.mutedLight,
+        fontWeight: emphasize ? 700 : 500,
+        color: emphasize ? "#000" : "#333",
       }}
     >
-      {item.value !== undefined && <>Siz: {String(item.value)}</>}
-      {item.competitorValue !== undefined && (
-        <> · Rakip: {String(item.competitorValue)}</>
+      <div
+        style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+        title={value !== undefined ? String(value) : undefined}
+      >
+        {value !== undefined && value !== null ? String(value) : "—"}
+      </div>
+      {status && (
+        <div
+          style={{
+            marginTop: 2,
+            fontSize: 10,
+            fontWeight: 600,
+            color: KINDE_COLORS.mutedLight,
+          }}
+        >
+          {statusLabel(status)}
+        </div>
       )}
     </div>
   );
 }
+
+function statusLabel(status: "pass" | "partial" | "fail"): string {
+  if (status === "pass") return "geçti";
+  if (status === "partial") return "kısmen";
+  return "eksik";
+}
+
 
 /* -------------------------------------------------- */
 /*  Kişisel analiz (Opus)                               */
