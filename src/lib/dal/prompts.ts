@@ -32,10 +32,15 @@ export interface PromptItemData {
 }
 
 export const getPromptsData = cache(async (brandId: string) => {
-  // Get latest completed scan for this brand
+  // En son scan'i al — running/failed olsa bile partial sonuçları gösterelim.
+  // (Sadece "completed" filtrelemek, stuck/running scan'lerin 50-60 sonucunu
+  // kullanıcıya gizler. Bkz. scan-diagnostic raporu.)
   const latestScan = await prisma.scan.findFirst({
-    where: { brandId, status: "completed" },
-    orderBy: { completedAt: "desc" },
+    where: {
+      brandId,
+      status: { in: ["completed", "running", "failed"] },
+    },
+    orderBy: { startedAt: "desc" },
     select: { id: true },
   });
 
