@@ -47,21 +47,29 @@ async function researchCompetitors(brand: BrandContext): Promise<string> {
     .filter(Boolean)
     .join(" ");
 
-  // 2 parallel Sonar queries for breadth
+  // 3 parallel Sonar queries — Türkiye öncelikli, 3 farklı açıdan araştırma
+  const sectorOrSpec = specialtiesStr || brand.sector || brandDesc;
   const queries = [
-    // Query 1: Direct competitor search — who competes with THIS brand?
-    `"${brand.name}" ${brand.domain} firmasının Türkiye'deki doğrudan rakipleri kimler? ` +
-    `Bu firma ${specialtiesStr || brand.sector || ""} alanında faaliyet gösteriyor. ` +
-    `Aynı ürün/hizmet kategorisinde olan firmalar, web siteleri ve ana ürünleri neler? ` +
-    `Önemli: Sadece AYNI alt kategorideki firmalar (örneğin elektrikli ısıtma ile sulu ısıtma farklı kategoriler).`,
+    // Query 1: YERLİ TÜRK FIRMALAR (.com.tr odaklı)
+    `"${brand.name}" ${brand.domain} gibi Türkiye merkezli, TÜRK SERMAYELİ firmalar hangileridir? ` +
+    `Bu firma ${sectorOrSpec} alanında faaliyet gösteriyor. ` +
+    `Türkiye'de üretim/ofis sahibi, web sitesi .com.tr uzantılı olan YERLİ firmalar. ` +
+    `KAC firma bulabildiysen listele, her firmanın web sitesini ve ana ürünlerini yaz. ` +
+    `Küçük ve orta boy yerel markalar dahil — sadece büyük markaları listeleme.`,
 
-    // Query 2: Market research — who are the players in this specific niche?
-    `${specialtiesStr || brand.sector || brandDesc} sektöründe Türkiye ve dünyada faaliyet gösteren firmalar hangileri? ` +
-    `Her birinin web sitesi, ana ürünleri ve hangi alt kategoride olduğu nedir? ` +
-    `Detaylı liste ver. Türkiye pazarındaki firmalara öncelik ver.`,
+    // Query 2: TÜRKİYE OFISLI GLOBAL MARKALAR
+    `${sectorOrSpec} sektöründe Türkiye'de ofisi, distribütörü veya yetkili satıcısı olan ULUSLARARASI markalar hangileri? ` +
+    `Türkiye'de aktif şekilde satış yapan, Türkçe web sitesi olan veya Türk distribütör üzerinden ürün sunan global firmalar. ` +
+    `Her birinin Türkiye ofis/distribütör bilgisi, web sitesi ve ana ürünleri.`,
+
+    // Query 3: Genel sektör oyuncuları (backup)
+    `${sectorOrSpec} sektöründeki tüm rakip firmalar kimler? ` +
+    `Önce Türkiye'de aktif olanlar, sonra Avrupa ve dünyadan olanlar. ` +
+    `Her firma için: yerli mi global mi, web sitesi, ana ürünler. ` +
+    `En az 8-10 firma listele.`,
   ];
 
-  console.log("[competitor-discoverer] Running 2 Sonar queries...");
+  console.log("[competitor-discoverer] Running 3 Sonar queries (Türkiye öncelikli)...");
 
   const results = await Promise.allSettled(
     queries.map((q) => querySonar(q)),
@@ -139,11 +147,22 @@ SADECE JSON döndür — başka hiçbir şey yazma:
 KURALLAR:
 - EN AZ 6, EN FAZLA 10 rakip döndür — kullanıcı bu listeden 3 tane seçecek.
 - KALİTE > SAYI: Emin olmadığın firmayı EKLEME. 10'a ulaşmak için uydurma.
+
+🇹🇷 ÖNCELİK SIRASI — TÜRKİYE AĞIRLIKLI (ÇOK ÖNEMLİ):
+  1. YERLİ TÜRK FİRMALARI (önce bunları listele — en az 3-4 tane)
+     Türk sermayeli, Türkiye merkezli, .com.tr uzantılı firmalar. Küçük/orta
+     boy yerel markalar dahil. Sonar araştırmasında geçiyorlarsa öncelikle ekle.
+  2. TÜRKİYE'DE OFİSİ/DISTRIBÜTÖRÜ OLAN GLOBAL MARKALAR (2-3 tane)
+     Türkiye'de aktif satış yapan, yerel distribütör üzerinden ürün sunan
+     uluslararası firmalar. Türkçe web sitesi varsa büyük avantaj.
+  3. GLOBAL MARKALAR (en fazla 2-3 tane, son çare)
+     Sadece Türkiye'de temsilci/bayi YOK ise ama müşteri bilgi amaçlı
+     rakip gibi görebilir. Sonuncu kategoriyle doldur.
+
 - "direct": Aynı ürün/hizmet kategorisinde doğrudan rakip (öncelik)
 - "indirect": Yakın/komşu kategoride, kısmen rekabet ediyor
 - Domain bulunamadıysa boş string ("") koy
 - Her rakibin GERÇEKTEN aynı ürünü/hizmeti sunduğundan EMİN OL
-- Türkiye pazarındaki firmalara ağırlık ver ama global markalar da dahil
 - KRİTİK: ${brand.name} firmaSININ KENDİSİNİ rakip listesine KOYMA! Domain "${brand.domain}" olan firmayı ASLA listeye ekleme.
 - DOĞRULAMA: Rakip firmanın web sitesinin GERÇEKTEN var olduğundan ve açılabildiğinden emin ol. Sonar araştırmasında bahsedilmeyen, uydurma veya artık mevcut olmayan firmaları EKLEME.
 - KATEGORİ DOĞRULAMA: Sadece genel sektör adı (ısıtma, soğutma, yazılım) değil, SPESİFİK ürün/hizmet alt kategorisi eşleşmesi ara. Örnek: "yerden ısıtma" ile "kombi" FARKLI kategorilerdir.
