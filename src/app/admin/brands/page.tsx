@@ -112,7 +112,7 @@ export default function AdminBrandsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Brands</h1>
+      <h1 className="mb-6 text-2xl font-bold">Markalar</h1>
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -164,14 +164,14 @@ export default function AdminBrandsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Brand</TableHead>
+                <TableHead>Marka</TableHead>
                 <TableHead>Domain</TableHead>
-                <TableHead>Owner</TableHead>
+                <TableHead>Sahip</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Prompts</TableHead>
-                <TableHead>Last Scan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Sorgu</TableHead>
+                <TableHead>Son Tarama</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

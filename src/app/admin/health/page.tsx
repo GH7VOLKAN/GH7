@@ -89,7 +89,7 @@ export default function AdminHealthPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">API Health</h1>
+      <h1 className="mb-6 text-2xl font-bold">API Sağlığı</h1>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Health Status */}

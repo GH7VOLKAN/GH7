@@ -148,10 +148,10 @@ export default function AdminCostsPage() {
               <TableRow>
                 <TableHead>Platform</TableHead>
                 <TableHead>Birim Fiyat</TableHead>
-                <TableHead className="text-right">Bugun</TableHead>
+                <TableHead className="text-right">Bugün</TableHead>
                 <TableHead className="text-right">Bu Hafta</TableHead>
                 <TableHead className="text-right">Bu Ay</TableHead>
-                <TableHead className="text-right">Aylik Maliyet</TableHead>
+                <TableHead className="text-right">Aylık Maliyet</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -206,7 +206,7 @@ export default function AdminCostsPage() {
         <CardContent className="pt-6">
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <p className="text-sm text-muted-foreground">Bugun</p>
+              <p className="text-sm text-muted-foreground">Bugün</p>
               <p className="text-xl font-bold">{fmt(data.totals.today.cost)}</p>
               <p className="text-xs text-muted-foreground">
                 {data.totals.today.calls} cagri

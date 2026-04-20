@@ -252,7 +252,7 @@ export default function AdminRevenuePage() {
                   <TableRow>
                     <TableHead>Email</TableHead>
                     <TableHead>Plan</TableHead>
-                    <TableHead>Grace Period Bitis</TableHead>
+                    <TableHead>Grace Period Bitişi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

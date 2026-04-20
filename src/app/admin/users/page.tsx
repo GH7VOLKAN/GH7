@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Users</h1>
+      <h1 className="mb-6 text-2xl font-bold">Kullanıcılar</h1>
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -132,12 +132,12 @@ export default function AdminUsersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead>Ad</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Brands</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Markalar</TableHead>
+                <TableHead>Kayıt</TableHead>
+                <TableHead>Son Güncelleme</TableHead>
+                <TableHead>İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
