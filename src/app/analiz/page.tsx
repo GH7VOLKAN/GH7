@@ -332,6 +332,14 @@ function AnalizPageInner() {
   const [selectedCompetitorNames, setSelectedCompetitorNames] = useState<
     string[]
   >([]);
+  // Manuel eklenen rakipler — Perplexity yeterli bulamazsa kullanıcı elle ekler.
+  // Bunlar discovery.competitors ile birleştirilip tam listeye dahil olur.
+  const [manualCompetitors, setManualCompetitors] = useState<
+    Array<{ name: string; url: string }>
+  >([]);
+  const [newManualName, setNewManualName] = useState("");
+  const [newManualUrl, setNewManualUrl] = useState("");
+  const [addingManual, setAddingManual] = useState(false);
 
   // Authenticated session — /panel'den redirect gelen kullanıcı için.
   // OTP adımı atlanır; formData email/phone session'dan prefill edilir.
@@ -881,12 +889,28 @@ function AnalizPageInner() {
               ? normalizePhone(formData.phone)
               : undefined,
             competitorUrl: formData.competitor || undefined,
-            discoveredCompetitors: discovery?.competitors?.slice(0, 5) ?? [],
-            // Ana 3 rakip — audit motor her biri için paralel tam audit yapar
-            selectedCompetitors: (discovery?.competitors ?? [])
+            discoveredCompetitors: [
+              ...(discovery?.competitors?.slice(0, 5) ?? []),
+              // Manuel eklenenler de discovery competitorların yanında Competitor
+              // tablosuna yazılsın (source=manual)
+              ...manualCompetitors.map((m) => ({
+                name: m.name,
+                url: m.url,
+                reason: "Manuel eklenen",
+              })),
+            ],
+            // Ana 3 rakip — audit motor her biri için paralel tam audit yapar.
+            // Discovery + manual birleşik havuzdan seçilmiş 3'ü filtrele.
+            selectedCompetitors: [
+              ...(discovery?.competitors ?? []).map((c) => ({
+                name: c.name,
+                url: c.url,
+              })),
+              ...manualCompetitors,
+            ]
               .filter(
                 (c) =>
-                  selectedCompetitorNames.includes(c.name) && c.url && c.name,
+                  selectedCompetitorNames.includes(c.name) && !!c.name && !!c.url,
               )
               .slice(0, 3)
               .map((c) => ({ name: c.name, url: c.url as string })),
@@ -1854,13 +1878,24 @@ function AnalizPageInner() {
               <p className="text-xs text-gray-500 mb-3">
                 AI {discovery.competitors.filter((c) => c.name && c.url).length}{" "}
                 rakip buldu — bu listeden 3 tanesini seçin. Audit'te madde madde
-                karşılaştırılacaksınız. İlk 3 default işaretli.
+                karşılaştırılacaksınız. İlk 3 default işaretli. <br />
+                <strong>Yanlış veya eksik mi?</strong> Aşağıda "+ Rakip Ekle"
+                ile kendi bildiğin rakipleri manuel ekleyebilirsin.
               </p>
               <div className="space-y-2">
-                {discovery.competitors
-                  .filter((c) => c.name && c.url)
-                  .slice(0, 10)
-                  .map((comp) => {
+                {[
+                  // Discovery + manuel birleşik liste
+                  ...discovery.competitors
+                    .filter((c) => c.name && c.url)
+                    .slice(0, 10),
+                  ...manualCompetitors.map((m) => ({
+                    name: m.name,
+                    url: m.url,
+                    reason: "Manuel eklenen",
+                    products: [] as string[],
+                    relevance: "direct" as const,
+                  })),
+                ].map((comp) => {
                     const isSelected = selectedCompetitorNames.includes(
                       comp.name,
                     );
@@ -1911,8 +1946,89 @@ function AnalizPageInner() {
                     );
                   })}
               </div>
+
+              {/* Manuel rakip ekleme */}
+              <div className="mt-3">
+                {addingManual ? (
+                  <div className="rounded-lg border border-gray-200 p-3 space-y-2">
+                    <input
+                      type="text"
+                      value={newManualName}
+                      onChange={(e) => setNewManualName(e.target.value)}
+                      placeholder="Rakip adı (örn: Güre Mandalina Bungalov)"
+                      className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <input
+                      type="text"
+                      value={newManualUrl}
+                      onChange={(e) => setNewManualUrl(e.target.value)}
+                      placeholder="URL (ör: gurebungalov.com, opsiyonel)"
+                      className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const name = newManualName.trim();
+                          const url = newManualUrl.trim();
+                          if (!name) return;
+                          // Duplicate kontrol
+                          const exists = [
+                            ...(discovery?.competitors ?? []).map((c) => c.name),
+                            ...manualCompetitors.map((c) => c.name),
+                          ].some((n) => n.toLowerCase() === name.toLowerCase());
+                          if (exists) {
+                            alert("Bu rakip zaten listede.");
+                            return;
+                          }
+                          setManualCompetitors([
+                            ...manualCompetitors,
+                            { name, url },
+                          ]);
+                          // Yeni eklenen rakibi default seçili yap (3'ü dolmamışsa)
+                          if (selectedCompetitorNames.length < 3) {
+                            setSelectedCompetitorNames([
+                              ...selectedCompetitorNames,
+                              name,
+                            ]);
+                          }
+                          setNewManualName("");
+                          setNewManualUrl("");
+                          setAddingManual(false);
+                        }}
+                        className="flex-1 bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-800"
+                      >
+                        Ekle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAddingManual(false);
+                          setNewManualName("");
+                          setNewManualUrl("");
+                        }}
+                        className="rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        İptal
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAddingManual(true)}
+                    className="w-full rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-700 hover:border-gray-900 hover:text-gray-900"
+                  >
+                    + Rakip Ekle (Manuel)
+                  </button>
+                )}
+              </div>
+
               <div className="mt-2 text-xs text-gray-500">
                 {selectedCompetitorNames.length}/3 seçili
+                {manualCompetitors.length > 0 && (
+                  <> · {manualCompetitors.length} manuel ekleme</>
+                )}
               </div>
             </div>
           )}

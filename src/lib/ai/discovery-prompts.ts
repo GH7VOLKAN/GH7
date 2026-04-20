@@ -77,6 +77,19 @@ GÖREV 2 — ÜRÜN/HİZMET BAZLI RAKİP ANALİZİ (ÇOK ÖNEMLİ):
 
 ⚠️ ÖNEMLİ: "Aynı sektör" YETMEZ. Aynı SPESİFİK ürün/hizmeti sunan firmalar bul.
 
+🔤 TÜRKÇE KARAKTER KURALI:
+- Marka isimlerini kullanıcının yazdığı ŞEKİLDE koru: "İdavilla" (büyük noktalı İ),
+  "Işıkhan" gibi. "Idavilla" (noktasız I) farklı bir marka olarak ele alınabilir.
+- Arama yaparken hem "İ" hem "I" versiyonunu dene ama ÇIKTIDA orijinal yazımı koru.
+- ş/s, ğ/g, ı/i, ö/o, ü/u, ç/c farklarını karıştırma.
+
+⛔ UYDURMA DOMAIN YASAĞI (kritik):
+- Her "url" alanı GERÇEK, Google'da bulunabilen bir domain olmalı.
+- EMİN DEĞİLSEN url'yi BOŞ ("") bırak, uydurmaktansa boş ver.
+- Yazım emin değilsen firma adını listele ama url alanını "" yap.
+- Domain yazımından şüphe duyduğun hallerde: açmayan hayali site yazmak
+  sistemi bozuyor — boş bırak, kullanıcı elle ekler.
+
 AŞAMALI YAKLAŞIM:
 1. Önce Görev 1'de tespit ettiğin ÜRÜNLERİ/HİZMETLERİ listele
 2. Her ürün/hizmet için Türkiye pazarında bu ürünü üreten/satan firmalara ara

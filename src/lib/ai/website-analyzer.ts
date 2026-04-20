@@ -44,10 +44,97 @@ export async function runDiscovery(
     const prompt = buildPromptByType(input);
     const response = await querySonar(prompt);
     const parsed = parseDiscoveryResponse(response, input.companyType);
-    return parsed;
+
+    // A) URL doğrulama — uydurma/bozuk domain'leri filtrele
+    const validated = await filterValidCompetitors(parsed);
+    return validated;
   } catch (err) {
     console.error(`[discovery] Error for ${input.companyType}:`, err);
     return { ...DEFAULT_DISCOVERY, companyType: input.companyType };
+  }
+}
+
+/**
+ * Sonar/Claude bazen uydurma/hatalı domain üretir
+ * (örn: kazdaglaridonaevleri.com — "Doğa" yerine "Dona" ile bozulmuş).
+ * Her rakibin URL'sini HEAD request ile doğrula, 404/DNS fail → listeden çıkar.
+ *
+ * Timeout 5s, paralel. URL yoksa atla (sadece URL'li olanlar kontrol edilir).
+ */
+async function filterValidCompetitors(
+  result: DiscoveryResult,
+): Promise<DiscoveryResult> {
+  if (!result.competitors || result.competitors.length === 0) {
+    return result;
+  }
+
+  const validations = await Promise.all(
+    result.competitors.map(async (c) => {
+      if (!c.url || c.url.trim() === "") {
+        // URL yoksa yine de listeye bırak (kullanıcı manuel düzeltebilir)
+        return { comp: c, valid: true };
+      }
+      const valid = await isUrlReachable(c.url);
+      return { comp: c, valid };
+    }),
+  );
+
+  const validCompetitors = validations
+    .filter((v) => v.valid)
+    .map((v) => v.comp);
+  const invalidCount = validations.length - validCompetitors.length;
+
+  if (invalidCount > 0) {
+    const invalidList = validations
+      .filter((v) => !v.valid)
+      .map((v) => `${v.comp.name} (${v.comp.url})`)
+      .join(", ");
+    console.warn(
+      `[discovery] ${invalidCount} competitor URL'si doğrulanamadı, filtrelendi: ${invalidList}`,
+    );
+  }
+
+  return {
+    ...result,
+    competitors: validCompetitors,
+  };
+}
+
+async function isUrlReachable(url: string): Promise<boolean> {
+  try {
+    const cleanUrl = url.startsWith("http") ? url : `https://${url}`;
+    // İlk HEAD dene (hızlı), reddederse GET dene (bazı siteler HEAD kabul etmez)
+    let res: Response;
+    try {
+      res = await fetch(cleanUrl, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(5000),
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      });
+    } catch {
+      res = await fetch(cleanUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(8000),
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      });
+    }
+    // 2xx ve 3xx geçerli say (Cloudflare bazen 403 ama site var — ekstra tolerans)
+    if (res.ok) return true;
+    if (res.status >= 300 && res.status < 400) return true;
+    if (res.status === 403 || res.status === 401) return true; // site var ama bot block
+    return false;
+  } catch {
+    return false;
   }
 }
 
