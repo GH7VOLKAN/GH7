@@ -16,6 +16,7 @@ import {
   LogOutIcon,
   ChevronDownIcon,
   PlusIcon,
+  ShieldIcon,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -51,6 +52,8 @@ interface PanelSidebarProps {
   userEmail?: string;
   plan?: string;
   projectType?: string;
+  /** Admin ise nav listesine /admin linki eklenir. */
+  isAdmin?: boolean;
 }
 
 interface BrandListItem {
@@ -66,7 +69,15 @@ export function PanelSidebar({
   userEmail = "",
   plan = "free",
   projectType = "Firma",
+  isAdmin = false,
 }: PanelSidebarProps) {
+  // Admin ise nav'a "Admin Panel" linki eklenir (sadece admin görür)
+  const navItems = isAdmin
+    ? [
+        ...NAV_ITEMS,
+        { title: "Admin Panel", href: "/admin", icon: ShieldIcon },
+      ]
+    : NAV_ITEMS;
   const pathname = usePathname();
   const router = useRouter();
   const [brandOpen, setBrandOpen] = React.useState(false);
@@ -212,7 +223,7 @@ export function PanelSidebar({
 
       {/* Main Navigation — 5 item */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
