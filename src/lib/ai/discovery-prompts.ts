@@ -73,9 +73,33 @@ GÖREV 1 — ŞİRKET KİMLİĞİ:
 4. Şirket hakkında 1 cümlelik açıklama
 5. Şirketin KONUMU (il, ilçe)
 
-GÖREV 2 — RAKİP ANALİZİ:
-Bu şirketin aynı sektörde, aynı bölgede faaliyet gösteren EN YAKIN 3 RAKİBİNİ bul.
-Her rakip için: firma adı, URL, neden rakip (1 cümle).
+GÖREV 2 — ÜRÜN/HİZMET BAZLI RAKİP ANALİZİ (ÇOK ÖNEMLİ):
+
+⚠️ ÖNEMLİ: "Aynı sektör" YETMEZ. Aynı SPESİFİK ürün/hizmeti sunan firmalar bul.
+
+AŞAMALI YAKLAŞIM:
+1. Önce Görev 1'de tespit ettiğin ÜRÜNLERİ/HİZMETLERİ listele
+2. Her ürün/hizmet için Türkiye pazarında bu ürünü üreten/satan firmalara ara
+3. En sık tekrar eden, ürün kategorisi bire bir eşleşen firmalar → rakip
+
+🇹🇷 ÖNCELİK SIRASI (Türkiye ağırlıklı):
+  1. YERLİ TÜRK FİRMALARI (en az 3-4 tane)
+     Türk sermayeli, .com.tr uzantılı, Türkiye'de üretim yapan.
+     KOBİ veya orta boy markalar da dahil — sadece büyük markaları listeleme.
+  2. TÜRKİYE OFİSLİ/DISTRIBÜTÖRLÜ GLOBAL MARKALAR (2-3 tane)
+     Türkiye'de aktif satış yapan, Türkçe web sitesi veya distribütörü olan.
+  3. SADECE GLOBAL MARKALAR (en fazla 1-2 tane, son çare)
+     Türkiye'de temsilcisi yok ama müşteri bilgi amaçlı rakip sayabilir.
+
+KURAL: Rakibin TESPİT ETTİĞİN ürün/hizmetleriyle bire bir örtüşmeli.
+- Örn: "heat tracing kablo" yapıyorsan rakip: Nexans TR, Elektro Dizayn, Thermopads
+- YANLIŞ rakip: "yerden ısıtma" firması (heat tracing ile farklı kategori)
+- YANLIŞ rakip: sadece ısıtma sistemi dediği için Vaillant, Bosch
+
+EN AZ 6, EN FAZLA 10 RAKİP bul. Kullanıcı bu listeden 3 tane seçecek.
+Kalite > sayı: Uydurma firma ekleme, emin olmadığını atla.
+
+Her rakip için: firma adı, URL (domain.com), neden rakip (1 cümle — HANGİ ürün eşleşiyor söyle).
 
 GÖREV 3 — HEDEF SORGULAR (SPESİFİK ve İSİM ZORLAYICI):
 Potansiyel müşterilerin AI asistanlarında (ChatGPT, Claude, Perplexity) arayacağı 10-15 adet SORGU üret.
@@ -174,10 +198,30 @@ GÖREV 1 — KİŞİ KİMLİĞİ:
 5. Kişi hakkında 1 cümlelik açıklama
 6. KONUMU (il, ilçe)
 
-GÖREV 2 — RAKİP ANALİZİ:
-Bu kişinin aynı alanda çalışan EN YAKIN 3 RAKİBİNİ bul.
-Aynı uzmanlıkta, aynı bölgede veya aynı dijital platformlarda aktif kişiler.
-Her rakip için: ad soyad, platform/URL, neden rakip (1 cümle).
+GÖREV 2 — UZMANLIK/HİZMET BAZLI RAKİP ANALİZİ:
+
+⚠️ "Aynı meslek" YETMEZ. Aynı SPESİFİK uzmanlık alt-alanını paylaşan kişiler.
+
+AŞAMALI YAKLAŞIM:
+1. Önce kişinin SPESİFİK uzmanlık alanlarını/hizmet konularını tespit et
+2. Her uzmanlık için "bu alanda çalışan Türkiye'deki kişiler" ara
+3. Aynı il/bölgede → aynı alanda → aktif dijital varlığa sahip olanlar rakip
+
+🇹🇷 ÖNCELİK SIRASI:
+  1. AYNI İL/BÖLGE + AYNI UZMANLIK (en az 3 kişi)
+  2. DİĞER İLLERDE aynı uzmanlık (2-3 kişi)
+  3. BENZER/KOMŞU uzmanlık (son çare, en fazla 1-2)
+
+KURAL: Rakibin TESPİT ETTİĞİN uzmanlıkla bire bir örtüşmeli.
+- Örn: Ortodonti uzmanı diş hekimi → rakip: Ortodonti uzmanı hekimler
+- YANLIŞ rakip: Genel diş hekimi (alt uzmanlık yok)
+- YANLIŞ rakip: Muhasebeci, Avukat (başka meslek)
+- Örn: Aile hukuku avukatı → rakip: Aile hukuku avukatları
+- YANLIŞ rakip: Ceza hukuku avukatı (farklı alt-alan)
+
+EN AZ 6, EN FAZLA 10 kişi bul. Kullanıcı bu listeden 3 tane seçecek.
+Her rakip için: ad soyad, platform/URL (LinkedIn/kişisel site), pazar (il),
+neden rakip (HANGİ uzmanlık eşleşiyor, 1 cümle).
 
 GÖREV 3 — HEDEF SORGULAR (SPESİFİK ve İSİM ZORLAYICI):
 Potansiyel müşterilerin/takipçilerin AI asistanlarında arayacağı 10-15 adet SORGU üret.
@@ -272,10 +316,34 @@ GÖREV 1 — MARKA KİMLİĞİ:
 5. Marka hakkında 1 cümlelik açıklama
 6. KONUMU (tespit edilebiliyorsa)
 
-GÖREV 2 — RAKİP ANALİZİ:
-Bu markanın/ürünün EN YAKIN 3 RAKİBİNİ bul.
-Aynı kategoride, benzer fiyat segmentinde, aynı platformlarda satan markalar.
-Her rakip için: marka adı, URL, neden rakip (1 cümle).
+GÖREV 2 — ÜRÜN KATEGORİSİ BAZLI RAKİP ANALİZİ:
+
+⚠️ "Aynı sektör" YETMEZ (kozmetik, giyim). Aynı SPESİFİK ürün alt-kategorisi.
+
+AŞAMALI YAKLAŞIM:
+1. Önce markanın SPESİFİK ürünlerini tespit et (alt kategori, fiyat segmenti)
+2. Her ürün için "bu ürünü satan Türk e-ticaret markaları" ara
+3. Marketplace'te (Trendyol, Hepsiburada) aynı kategori altında satan markalar → rakip
+
+🇹🇷 ÖNCELİK SIRASI:
+  1. TÜRK E-TİCARET MARKALARI (en az 3-4 tane)
+     Kendi sitesi olan + Trendyol/Hepsiburada'da mağaza açmış Türk markalar
+  2. TÜRKİYE'DE SATIŞI OLAN GLOBAL MARKALAR (2-3 tane)
+     Turkcell/Amazon.com.tr'de satılan, Türkçe sitesi olan global markalar
+  3. SADECE GLOBAL MARKALAR (en fazla 1-2 tane, son çare)
+     Türkiye'de olmayan ama kullanıcı karşılaştırma yapabilir
+
+KURAL: Rakibin TESPİT ETTİĞİN ürün kategorisiyle bire bir örtüşmeli.
+- Örn: Organik bebek maması → rakip: Hipp Organik, Bebelac Organik, Milupa Bio
+- YANLIŞ rakip: Konvansiyonel bebek maması (organik değil)
+- YANLIŞ rakip: Yetişkin vitamin (bebek değil)
+- Örn: El dokuması halı → rakip: Hereke, İpek Kilim, Sümerhalı (Türk markalar)
+- YANLIŞ rakip: Makine halısı (el dokuması değil)
+
+Fiyat segmenti de yakın olmalı — premium el dokuması ile ucuz makine halısı karışmaz.
+
+EN AZ 6, EN FAZLA 10 rakip bul. Kullanıcı bu listeden 3 tane seçecek.
+Her rakip için: marka adı, URL, neden rakip (HANGİ ürün kategorisi + fiyat segmenti eşleşiyor).
 
 GÖREV 3 — HEDEF SORGULAR (SPESİFİK ve İSİM ZORLAYICI):
 Potansiyel alıcıların AI asistanlarında arayacağı 10-15 adet SORGU üret.
@@ -377,10 +445,35 @@ GÖREV 1 — ŞİRKET KİMLİĞİ:
 6. Hangi ÜLKELERİ hedefliyor? (siteden tespit et: dil seçenekleri, para birimi, shipping hedefleri)
 7. Site DİLLERİ (hangi dillerde içerik var — "tr", "en", "de", "ar" vb.)
 
-GÖREV 2 — RAKİP ANALİZİ:
-Bu şirketin HEM TÜRKİYE'DEKİ hem de HEDEF PAZARDAKİ rakiplerini bul.
-Türkiye'den 2 rakip + hedef pazardan 2 rakip = toplam 3-4 rakip.
-Her rakip için: firma adı, URL, pazar ("Türkiye"/"ABD"/...), neden rakip.
+GÖREV 2 — ÜRÜN/HİZMET BAZLI ÇİFT PAZAR RAKİP ANALİZİ:
+
+⚠️ Yurtdışı firma iki pazarda rekabet eder: TR (menşei) + Hedef pazar (müşteri).
+Her ikisinde de rakip olmalı. Tek pazarda değil.
+
+AŞAMALI YAKLAŞIM:
+1. Önce firmanın SPESİFİK ürün/hizmetlerini tespit et
+2. Türkiye'deki aynı ürünü ihraç eden firmaları ara (en az 4)
+3. Hedef pazarda aynı ürünü satan yerel firmaları ara (en az 2)
+4. Müşterinin karar aşamasında karşılaştıracağı markalar → rakip
+
+PAZAR DAĞILIMI (ÇIFT ODAKLı):
+  🇹🇷 TÜRKİYE'DEN 4-6 firma:
+     Aynı ürünü ihraç eden Türk firmaları.
+     Kapasite, kalite, fiyat benzer olmalı.
+  🌐 HEDEF PAZARDAN 2-4 firma:
+     Hedef pazarda yerel üretici/dağıtıcı firmalar.
+     Müşteri kolaylıkla karşılaştırabileceği yerel alternatifler.
+
+KURAL: Rakibin TESPİT ETTİĞİN ürün/hizmetlerle bire bir örtüşmeli.
+- Örn: Türkiye'den ABD'ye organik kuruyemiş ihracatı yapıyorsan:
+  - TR rakipler: Aksu Kuruyemiş, Tadım, Peyman (ABD'ye satan Türk markalar)
+  - ABD rakipler: Sun-Maid, Sunsweet (yerel ABD kuruyemiş markaları)
+- YANLIŞ rakip: Yerel Türkiye pazarında satan Türk markalar (ihracat yok)
+- YANLIŞ rakip: ABD'deki start-up'lar (segment uymaz)
+
+EN AZ 6, EN FAZLA 10 rakip bul. Kullanıcı bu listeden 3 tane seçecek.
+Her rakip için: firma adı, URL, pazar ("Türkiye"/"ABD"/"Almanya"/vb.),
+neden rakip (HANGİ ürün + HANGİ pazar eşleşiyor).
 
 GÖREV 3 — HEDEF SORGULAR (SPESİFİK ve İSİM ZORLAYICI):
 10-15 sorgu üret — HEM TÜRKÇE HEM HEDEF PAZAR DİLİNDE (İngilizce, Almanca, Arapça vb.)
