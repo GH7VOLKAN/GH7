@@ -16,7 +16,10 @@ import { Prisma } from "@prisma/client";
 const ACTIVE_BRAND_COOKIE = "gh7_active_brand_id";
 
 export const runtime = "nodejs";
-export const maxDuration = 120; // 2 min
+// 300s (5 dk): user audit + 3 rakip paralel audit + DataForSEO çağrıları
+// + personalAnalysis (Claude) + Brand write = 2-4 dk sürüyor.
+// 120s yetmiyordu → client timeout → Brand yazılamadan redirect.
+export const maxDuration = 300;
 
 /**
  * Request IP adresini header'lardan çıkarır (Vercel/Cloudflare proxy arkasında).
