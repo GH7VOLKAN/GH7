@@ -222,6 +222,13 @@ export default function LoginPage() {
         return;
       }
 
+      // Admin bypass: SMS gelmez, magic code ("000000") kabul edilir.
+      if (data.adminBypass) {
+        setError(
+          "ADMIN bypass: SMS gönderilmedi. Doğrulama kodu kutusuna \"000000\" yazın.",
+        );
+      }
+
       setStep("otp");
       setCooldown(60);
     } catch {
