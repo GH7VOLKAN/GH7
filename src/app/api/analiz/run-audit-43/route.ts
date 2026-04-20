@@ -8,6 +8,8 @@ import { normalizeDomain, extractRootDomain } from "@/lib/utils/turkish";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { executeScan } from "@/lib/ai/scan-engine";
 import { getAvailablePlatforms } from "@/lib/ai/provider-registry";
+import { isAdmin } from "@/lib/admin";
+import { normalizePhoneNumber } from "@/lib/sms/netgsm";
 import type { UserType } from "@/lib/ai/user-type-weights";
 import { Prisma } from "@prisma/client";
 
@@ -29,30 +31,45 @@ function getClientIp(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   try {
-    // PR C: IP bazlı audit başlatma rate limit — 24 saatte max 3 deneme
-    const clientIp = getClientIp(req);
-    if (clientIp !== "unknown") {
-      const rl = await checkRateLimit(
-        `audit_start:${clientIp}`,
-        3, // 3 audit
-        24 * 60, // 24 saat
+    // Body'yi önce oku (phone bilgisi admin bypass için gerek)
+    const body = await req.json();
+    const bodyPhoneNormalized = body?.phone
+      ? normalizePhoneNumber(String(body.phone))
+      : null;
+    const isAdminRequest = bodyPhoneNormalized
+      ? isAdmin({ phone: bodyPhoneNormalized })
+      : false;
+
+    if (isAdminRequest) {
+      console.log(
+        `[api/run-audit-43] ADMIN BYPASS — phone=${bodyPhoneNormalized?.slice(0, 4)}**** (rate limit + freeAuditUsed atlandı)`,
       );
-      if (!rl.allowed) {
-        const resetIn = Math.ceil(
-          (rl.resetAt.getTime() - Date.now()) / (60 * 60 * 1000),
-        );
-        return NextResponse.json(
-          {
-            error: `IP adresinizden çok fazla analiz denemesi yapıldı. ${resetIn} saat sonra tekrar deneyin.`,
-            rateLimited: true,
-            resetAt: rl.resetAt.toISOString(),
-          },
-          { status: 429 },
-        );
-      }
     }
 
-    const body = await req.json();
+    // IP bazlı audit başlatma rate limit — admin atlar
+    if (!isAdminRequest) {
+      const clientIp = getClientIp(req);
+      if (clientIp !== "unknown") {
+        const rl = await checkRateLimit(
+          `audit_start:${clientIp}`,
+          3, // 3 audit
+          24 * 60, // 24 saat
+        );
+        if (!rl.allowed) {
+          const resetIn = Math.ceil(
+            (rl.resetAt.getTime() - Date.now()) / (60 * 60 * 1000),
+          );
+          return NextResponse.json(
+            {
+              error: `IP adresinizden çok fazla analiz denemesi yapıldı. ${resetIn} saat sonra tekrar deneyin.`,
+              rateLimited: true,
+              resetAt: rl.resetAt.toISOString(),
+            },
+            { status: 429 },
+          );
+        }
+      }
+    }
     const {
       url,
       brandName,
@@ -238,19 +255,29 @@ export async function POST(req: NextRequest) {
 
     // Authenticated user: freeAuditUsed işaretle + Brand kaydını upsert et
     if (userId) {
-      // PR B: Ücretsiz analiz kullanıldı olarak işaretle. Aynı telefon/e-posta
-      // ile tekrar /analiz denenirse can-start engel olur.
-      try {
-        await prisma.profile.update({
-          where: { id: userId },
-          data: {
-            freeAuditUsed: true,
-            freeAuditUsedAt: new Date(),
-            lastLoginAt: new Date(),
-          },
-        });
-      } catch (err) {
-        console.warn("[api/run-audit-43] freeAuditUsed update failed:", err);
+      // Admin: freeAuditUsed'ı işaretleme (sınırsız analiz).
+      // Normal kullanıcı: aynı telefon/e-posta ile tekrar /analiz denenirse
+      // can-start engel olur.
+      if (!isAdminRequest) {
+        try {
+          await prisma.profile.update({
+            where: { id: userId },
+            data: {
+              freeAuditUsed: true,
+              freeAuditUsedAt: new Date(),
+              lastLoginAt: new Date(),
+            },
+          });
+        } catch (err) {
+          console.warn("[api/run-audit-43] freeAuditUsed update failed:", err);
+        }
+      } else {
+        try {
+          await prisma.profile.update({
+            where: { id: userId },
+            data: { lastLoginAt: new Date() },
+          });
+        } catch {}
       }
 
       try {

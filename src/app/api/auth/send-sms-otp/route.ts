@@ -13,6 +13,7 @@ import {
   isValidTurkishPhone,
 } from "@/lib/sms/netgsm";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isAdmin, getAdminMagicCode } from "@/lib/admin";
 
 export async function POST(request: Request) {
   try {
@@ -41,6 +42,48 @@ export async function POST(request: Request) {
         { error: "Geçerli bir Türkiye cep telefonu numarası girin" },
         { status: 400 }
       );
+    }
+
+    // ADMIN BYPASS — ADMIN_PHONES env'deki telefonlar için:
+    // SMS gönderilmez, rate limit atlanır, login kontrolü atlanır,
+    // tek bir verification code kaydedilir (magic code hash'i).
+    // Verify tarafında zaten adminBypass code=="000000" kabul ediyor.
+    if (isAdmin({ phone: normalizedPhone })) {
+      console.log(
+        `[sms-otp] ADMIN BYPASS: phone=${normalizedPhone.slice(0, 4)}**** — SMS atlandı, magic code hazır`,
+      );
+      const magicCode = getAdminMagicCode();
+      const codeHash = hashCode(magicCode);
+      // Profile yoksa bile (ilk giriş) magic link üretmek için email lazım
+      const existingProfile = await prisma.profile.findFirst({
+        where: { phone: normalizedPhone },
+      });
+      const authEmail = existingProfile?.email || `phone_${normalizedPhone}@gh7.ai`;
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        );
+        const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+          type: "magiclink",
+          email: authEmail,
+        });
+        const tokenHash = linkData?.properties?.hashed_token ?? "admin-bypass";
+        await prisma.verificationCode.deleteMany({
+          where: { phone: normalizedPhone },
+        });
+        await prisma.verificationCode.create({
+          data: {
+            phone: normalizedPhone,
+            codeHash,
+            tokenHash,
+            expiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+          },
+        });
+      } catch (err) {
+        console.warn("[sms-otp] Admin bypass verification code setup:", err);
+      }
+      return NextResponse.json({ success: true, adminBypass: true });
     }
 
     // GİRİŞ SADECE KAYITLI KULLANICI İÇİN
