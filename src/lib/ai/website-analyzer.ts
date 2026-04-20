@@ -23,6 +23,16 @@ import {
 
 const CACHE_TTL = 7 * 24 * 60 * 60;
 
+/**
+ * Prompt versiyonu — discovery prompt'u her değiştiğinde bump et.
+ * Redis cache key'ine suffix olarak eklenir → eski cache'ler otomatik
+ * atılır, yeni prompt sonuçları yeni key'lere yazılır.
+ *
+ * v1 → initial
+ * v2 → 2026-04-20: 10 rakip + TR öncelik + ürün-odaklı 4 kapı (PR #114)
+ */
+const DISCOVERY_PROMPT_VERSION = "v2";
+
 // ═══════════════════════════════════════════════════════════
 // Public API
 // ═══════════════════════════════════════════════════════════
@@ -101,7 +111,11 @@ function buildDiscoveryCacheKey(input: DiscoveryInput): string {
   if (input.location) parts.push(input.location);
   if (input.targetMarkets) parts.push(input.targetMarkets);
   if (parts.length === 0) parts.push("empty");
-  return makeCacheKey(`discovery-${input.companyType}`, ...parts);
+  // Prompt versiyonu → eski cache'ler otomatik invalidate (PR #114 sonrası)
+  return makeCacheKey(
+    `discovery-${input.companyType}-${DISCOVERY_PROMPT_VERSION}`,
+    ...parts,
+  );
 }
 
 function cleanDomain(url: string): string {
