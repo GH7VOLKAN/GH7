@@ -137,7 +137,8 @@ SADECE JSON döndür — başka hiçbir şey yazma:
 }
 
 KURALLAR:
-- EN FAZLA 5 rakip döndür — KALİTE > SAYI! Emin olmadığın firmayı EKLEME.
+- EN AZ 6, EN FAZLA 10 rakip döndür — kullanıcı bu listeden 3 tane seçecek.
+- KALİTE > SAYI: Emin olmadığın firmayı EKLEME. 10'a ulaşmak için uydurma.
 - "direct": Aynı ürün/hizmet kategorisinde doğrudan rakip (öncelik)
 - "indirect": Yakın/komşu kategoride, kısmen rekabet ediyor
 - Domain bulunamadıysa boş string ("") koy

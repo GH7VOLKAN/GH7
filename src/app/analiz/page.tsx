@@ -1852,8 +1852,9 @@ function AnalizPageInner() {
                 Karşılaştırılacak rakipler (max 3)
               </label>
               <p className="text-xs text-gray-500 mb-3">
-                Audit'te bu rakiplere karşı madde madde karşılaştırılacaksınız.
-                Default: ilk 3 seçili, istediğinizi değiştirin.
+                AI {discovery.competitors.filter((c) => c.name && c.url).length}{" "}
+                rakip buldu — bu listeden 3 tanesini seçin. Audit'te madde madde
+                karşılaştırılacaksınız. İlk 3 default işaretli.
               </p>
               <div className="space-y-2">
                 {discovery.competitors
