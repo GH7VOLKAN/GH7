@@ -79,6 +79,28 @@ export const getGenelPageData = cache(
     brandDomain: string,
     brandName: string,
   ): Promise<GenelPageData | null> => {
+    // Stuck scan temizliği — Vercel runtime kesintisi sonrası takılan
+    // "running" scan'leri sonuç varsa completed, yoksa failed işaretler.
+    try {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const stuck = await prisma.scan.findMany({
+        where: { brandId, status: "running", startedAt: { lt: tenMinutesAgo } },
+        include: { _count: { select: { results: true } } },
+      });
+      for (const s of stuck) {
+        const newStatus = s._count.results > 0 ? "completed" : "failed";
+        await prisma.scan.update({
+          where: { id: s.id },
+          data: { status: newStatus, completedAt: new Date() },
+        });
+        console.log(
+          `[genel-page auto-cleanup] Scan ${s.id} → ${newStatus} (${s._count.results} results)`,
+        );
+      }
+    } catch (err) {
+      console.warn("[genel-page auto-cleanup] failed:", err);
+    }
+
     // 1) En son scan + prompt results
     // Running/failed scan'leri de kabul et — partial sonuçları göster.
     const latestScan = await prisma.scan.findFirst({
