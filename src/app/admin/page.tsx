@@ -1,154 +1,84 @@
-"use client";
+import { prisma } from "@/lib/db";
+import { isAdmin } from "@/lib/admin";
+import { AdminPanelContent } from "./admin-panel-content";
 
-import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Globe, Scan, FileText, TrendingUp, Building2 } from "lucide-react";
+export const dynamic = "force-dynamic";
 
-interface Stats {
-  totalUsers: number;
-  plans: Record<string, number>;
-  scansToday: number;
-  scansThisWeek: number;
-  totalPrompts: number;
-  totalBrands: number;
-  revenueEstimate: number;
-}
+export default async function AdminRootPage() {
+  // layout.tsx zaten guard yapıyor — buraya admin geliyor.
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  description,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  description?: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+  const [
+    profiles,
+    totalBrands,
+    totalAudits,
+    totalScans,
+    proProfiles,
+    recentScans,
+  ] = await Promise.all([
+    prisma.profile.findMany({
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        fullName: true,
+        plan: true,
+        freeAuditUsed: true,
+        createdAt: true,
+        brands: {
+          select: { id: true, name: true, domain: true, isDefault: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.brand.count(),
+    prisma.geoAudit.count(),
+    prisma.scan.count(),
+    prisma.profile.count({ where: { plan: { not: "free" } } }),
+    prisma.scan.findMany({
+      orderBy: { startedAt: "desc" },
+      take: 20,
+      include: {
+        brand: { select: { name: true, domain: true } },
+        _count: { select: { results: true } },
+      },
+    }),
+  ]);
 
-const PLAN_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  free: "secondary",
-  pro: "default",
-  business: "outline",
-  agency: "destructive",
-};
+  const users = profiles.map((p) => ({
+    id: p.id,
+    email: p.email,
+    phone: p.phone,
+    fullName: p.fullName,
+    plan: p.plan ?? "free",
+    freeAuditUsed: p.freeAuditUsed,
+    createdAt: p.createdAt.toISOString(),
+    isAdmin: isAdmin({ email: p.email, phone: p.phone }),
+    brands: p.brands,
+  }));
 
-export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((r) => r.json())
-      .then(setStats)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div>
-        <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return <p className="text-destructive">Failed to load stats.</p>;
-  }
-
-  const revenueFormatted = new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    minimumFractionDigits: 2,
-  }).format(stats.revenueEstimate / 100);
+  const scans = recentScans.map((s) => ({
+    id: s.id,
+    status: s.status,
+    type: s.type,
+    startedAt: s.startedAt.toISOString(),
+    completedAt: s.completedAt?.toISOString() ?? null,
+    resultCount: s._count.results,
+    brandName: s.brand?.name ?? "?",
+    brandDomain: s.brand?.domain ?? "",
+  }));
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
-
-      {/* Top-level KPIs */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Total Users"
-          value={stats.totalUsers}
-          icon={Users}
-        />
-        <StatCard
-          title="Active Brands"
-          value={stats.totalBrands}
-          icon={Globe}
-        />
-        <StatCard
-          title="Total Prompts"
-          value={stats.totalPrompts}
-          icon={FileText}
-        />
-        <StatCard
-          title="Scans Today"
-          value={stats.scansToday}
-          icon={Scan}
-          description={`${stats.scansThisWeek} this week`}
-        />
-        <StatCard
-          title="Revenue Estimate (MRR)"
-          value={revenueFormatted}
-          icon={TrendingUp}
-          description="Based on current paid users"
-        />
-        <StatCard
-          title="Paid Users"
-          value={stats.plans.pro + stats.plans.business + stats.plans.agency}
-          icon={Building2}
-          description={`${stats.plans.free} free users`}
-        />
-      </div>
-
-      {/* Plan distribution */}
-      <h2 className="mb-3 mt-8 text-lg font-semibold">Plan Distribution</h2>
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(stats.plans).map(([plan, count]) => (
-          <Card key={plan} className="min-w-[140px]">
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between gap-4">
-                <Badge variant={PLAN_COLORS[plan] ?? "secondary"}>
-                  {plan.toUpperCase()}
-                </Badge>
-                <span className="text-xl font-bold">{count}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+    <AdminPanelContent
+      stats={{
+        totalUsers: profiles.length,
+        totalBrands,
+        totalAudits,
+        totalScans,
+        proUsers: proProfiles,
+      }}
+      users={users}
+      recentScans={scans}
+    />
   );
 }

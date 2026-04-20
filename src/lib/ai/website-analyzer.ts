@@ -7,11 +7,11 @@
  * Backward compat: analyzeWebsite(domain) fn imzası korunur (firma shortcut).
  * Yeni kod: runDiscovery(input: DiscoveryInput)
  *
- * Redis ile 7 gün cache.
+ * NOT: Cache kaldırıldı — her analiz Perplexity'yi taze çağırır.
+ * 1000+ kullanıcı ölçeğine ulaştığında cache tekrar eklenebilir.
  */
 
 import { querySonar } from "@/lib/ai/sonar-research";
-import { cacheGet, cacheSet, makeCacheKey } from "@/lib/redis";
 import { buildPromptByType } from "./discovery-prompts";
 import {
   DEFAULT_DISCOVERY,
@@ -20,8 +20,6 @@ import {
   type CompanyType,
   type DiscoveredQuery,
 } from "./discovery-types";
-
-const CACHE_TTL = 7 * 24 * 60 * 60;
 
 // ═══════════════════════════════════════════════════════════
 // Public API
@@ -38,23 +36,14 @@ const CACHE_TTL = 7 * 24 * 60 * 60;
 export async function runDiscovery(
   input: DiscoveryInput
 ): Promise<DiscoveryResult> {
-  const cacheKey = buildDiscoveryCacheKey(input);
-  const cached = await cacheGet<DiscoveryResult>(cacheKey);
-  if (cached) {
-    console.log(`[discovery] Cache hit for ${input.companyType}`);
-    return cached;
-  }
-
-  console.log(`[discovery] Cache miss, querying Perplexity for ${input.companyType}`);
+  console.log(
+    `[discovery] Fresh Perplexity query for ${input.companyType} (no cache)`,
+  );
 
   try {
     const prompt = buildPromptByType(input);
     const response = await querySonar(prompt);
     const parsed = parseDiscoveryResponse(response, input.companyType);
-
-    if (hasValidData(parsed)) {
-      await cacheSet(cacheKey, parsed, CACHE_TTL);
-    }
     return parsed;
   } catch (err) {
     console.error(`[discovery] Error for ${input.companyType}:`, err);
@@ -89,28 +78,6 @@ export async function analyzeWebsite(domain: string): Promise<WebsiteAnalysis> {
 // ═══════════════════════════════════════════════════════════
 // Helpers
 // ═══════════════════════════════════════════════════════════
-
-function buildDiscoveryCacheKey(input: DiscoveryInput): string {
-  const parts: string[] = [];
-  if (input.url) parts.push(cleanDomain(input.url));
-  if (input.brandName) parts.push(input.brandName);
-  if (input.fullName) parts.push(input.fullName);
-  if (input.expertise) parts.push(input.expertise);
-  if (input.marketplaceUrl) parts.push(input.marketplaceUrl);
-  if (input.brandOrProductName) parts.push(input.brandOrProductName);
-  if (input.location) parts.push(input.location);
-  if (input.targetMarkets) parts.push(input.targetMarkets);
-  if (parts.length === 0) parts.push("empty");
-  return makeCacheKey(`discovery-${input.companyType}`, ...parts);
-}
-
-function cleanDomain(url: string): string {
-  return url
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "")
-    .trim();
-}
 
 function parseDiscoveryResponse(
   response: string,
@@ -148,7 +115,7 @@ function parseDiscoveryResponse(
             (c): c is DiscoveryResult["competitors"][number] =>
               !!c && typeof c === "object" && "name" in c
           )
-          .slice(0, 5)
+          .slice(0, 10)
       : [],
     targetQueries: normalizeTargetQueries(parsed.targetQueries),
     products: Array.isArray(parsed.products)
@@ -222,15 +189,4 @@ function normalizeTargetQueries(raw: unknown): DiscoveredQuery[] {
     })
     .filter((q): q is DiscoveredQuery => q !== null)
     .slice(0, 15);
-}
-
-function hasValidData(result: DiscoveryResult): boolean {
-  return (
-    result.products.length > 0 ||
-    result.services.length > 0 ||
-    result.competitors.length > 0 ||
-    result.targetQueries.length > 0 ||
-    !!result.sector ||
-    !!result.description
-  );
 }
