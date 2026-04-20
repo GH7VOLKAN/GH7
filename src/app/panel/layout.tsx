@@ -93,6 +93,7 @@ export default async function PanelLayout({
           brandName={brandData?.name ?? "Markanız"}
           userEmail={profileData.email}
           plan={plan}
+          isAdmin={isAdminFlag}
         />
         <main className="md:pl-64">
           <Suspense fallback={null}>
