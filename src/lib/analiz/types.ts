@@ -1,5 +1,10 @@
 /**
  * /analiz akışı için tip tanımları.
+ *
+ * v2 eklemeleri:
+ * - RunResult (yeni ana shape)
+ * - CandidateCompetitor (Opus'un çıkardığı adaylar)
+ * - UserBrandMention (kendi marka skorlama)
  */
 
 export type Door = "firma" | "kisi" | "eticaret" | "export";
@@ -27,6 +32,10 @@ export const AI_PROVIDER_LABELS: Record<AIProvider, string> = {
   google_aio: "Google AIO",
 };
 
+// ═══════════════════════════════════════════════════════════
+// Detect (Aşama 2)
+// ═══════════════════════════════════════════════════════════
+
 export type Product = {
   id: string;
   name: string;
@@ -47,6 +56,52 @@ export type DetectResult = {
   products: Product[];
   competitorsByProductId: Record<string, Competitor[]>;
 };
+
+// ═══════════════════════════════════════════════════════════
+// Run (Aşama 5 — yeni)
+// ═══════════════════════════════════════════════════════════
+
+export interface QueryAnswer {
+  provider: AIProvider;
+  text: string;
+  error?: string;
+  latencyMs: number;
+  mentionedYou: boolean;
+  mentionedCompetitors: string[]; // hangi rakipler bu cevapta geçti
+}
+
+export interface QueryResult {
+  id: string;          // q1, q2, ...
+  text: string;
+  answers: QueryAnswer[];
+}
+
+export interface CandidateCompetitor {
+  name: string;
+  mentionCount: number;
+  queryIds: string[];
+  providers: AIProvider[];
+  isNew?: boolean; // kullanıcı manuel eklediyse true — "bu hafta istatistik yok" badge
+}
+
+export interface UserBrandMention {
+  totalMentions: number;
+  byQuery: Record<string, AIProvider[]>;
+}
+
+export interface RunResult {
+  yourDomain: string;
+  yourBrandName: string;
+  queries: QueryResult[];
+  userMentions: UserBrandMention;
+  candidateCompetitors: CandidateCompetitor[]; // frekans sıralı, 20 max
+  generatedAt: string;
+  cached: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Eski tipler (scoreboard mock için kullanılıyordu, backward compat)
+// ═══════════════════════════════════════════════════════════
 
 export type Answer = {
   provider: AIProvider;
@@ -86,10 +141,16 @@ export type AnalysisResult = {
   generatedAt: string;
 };
 
+// ═══════════════════════════════════════════════════════════
+// Flow state
+// ═══════════════════════════════════════════════════════════
+
 export type FlowPhase =
   | "detecting"
-  | "picking"
-  | "analyzing"
+  | "product-pick"
+  | "cities-pick"
+  | "running"
+  | "competitor-pick"
   | "done"
   | "error";
 
