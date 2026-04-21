@@ -92,9 +92,14 @@ async function generateFirmaPrompts(
       });
 
       const results = await Promise.allSettled(areaPromises);
-      for (const r of results) {
+      for (const [i, r] of results.entries()) {
         if (r.status === "fulfilled" && r.value.data) {
           areaResults.push(r.value);
+        } else if (r.status === "rejected") {
+          console.warn(
+            `[prompt-generator] Sonar area "${businessAreas[i]}" rejected:`,
+            r.reason,
+          );
         }
       }
 
@@ -191,6 +196,8 @@ async function generateKisiselPrompts(
     // First result is footprint
     if (results[0].status === "fulfilled") {
       footprint = results[0].value as DigitalFootprint | null;
+    } else if (results[0].status === "rejected") {
+      console.warn("[prompt-generator] Sonar footprint rejected:", results[0].reason);
     }
 
     // Rest are area results
@@ -201,6 +208,11 @@ async function generateKisiselPrompts(
         if (areaResult?.raw) {
           areaResults.push({ area: businessAreas[i - 1], data: areaResult.raw });
         }
+      } else if (settled.status === "rejected") {
+        console.warn(
+          `[prompt-generator] Sonar area "${businessAreas[i - 1]}" rejected:`,
+          settled.reason,
+        );
       }
     }
 
@@ -247,11 +259,12 @@ HIGH potansiyelli (recommendation) promptlar listenin basinda olsun.
 JSON formatinda dondur — baska hicbir sey yazma:
 [{"text": "prompt metni", "category": "oneri|karsilastirma|lokasyon|uzmanlik", "businessArea": "uzmanlik alani", "searchIntent": "recommendation|comparison|indirect", "salesPotential": "HIGH|MEDIUM|LOW"}]`;
 
+  const hasSonarContext = Boolean(footprint?.raw) || areaResults.length > 0;
   return callClaude(
     systemPrompt,
     brand.name,
     count,
-    footprint?.raw || areaResults.length > 0 ? "sonar" : "ai_generated",
+    hasSonarContext ? "sonar" : "ai_generated",
     "sonnet",
     brand.domain,
   );
@@ -342,14 +355,21 @@ async function callClaude(
     });
 
     // Validation: HICBIR promptta marka/kisi adi veya domain olmamali
+    // Word boundary match (≥3 chars) — substring match kısa brand adlarında (BP, IX) false positive veriyordu.
     const brandLower = brandName.toLowerCase();
-    const domainLower = brandDomain?.toLowerCase().replace(/\.(com|net|org|io|ai|tr|com\.tr)$/, "") || "";
+    const domainLower = brandDomain?.toLowerCase().replace(/\.(com\.tr|com|net|org|io|ai|tr)$/, "") || "";
+
+    const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const makeBoundaryRegex = (term: string) =>
+      term.length >= 3 ? new RegExp(`\\b${escapeRegex(term)}\\b`, "i") : null;
+    const brandRegex = makeBoundaryRegex(brandLower);
+    const domainRegex = makeBoundaryRegex(domainLower);
 
     const cleanedPrompts = filteredPrompts.filter((p) => {
       const lower = p.text.toLowerCase();
-      if (lower.includes(brandLower)) return false;
-      if (domainLower && domainLower.length > 3 && lower.includes(domainLower)) return false;
-      // Also filter ".com", "domain.com" patterns
+      if (brandRegex?.test(lower)) return false;
+      if (domainRegex?.test(lower)) return false;
+      // Full domain like "isitmax.com.tr" — substring match is safe (TLD makes unique)
       if (brandDomain && lower.includes(brandDomain.toLowerCase())) return false;
       return true;
     });
