@@ -14,6 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { QueryWithAnswers, AIProvider } from "./multi-ai-fanout";
+import { normalizeTurkish } from "@/lib/utils/turkish";
 
 const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 
@@ -67,19 +68,20 @@ function detectUserBrandMentions(
 ): UserBrandMention {
   const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  const brandLower = brandName.toLowerCase();
-  const domainBase = domain
-    .toLowerCase()
+  // Türkçe-aware lowercase (İ → i, ı → i, vb.)
+  const brandNorm = normalizeTurkish(brandName);
+  const domainNorm = normalizeTurkish(domain)
     .replace(/\.(com\.tr|com|net|org|io|ai|tr)$/, "");
 
   const patterns: RegExp[] = [];
-  if (brandLower.length >= 3) {
-    patterns.push(new RegExp(`\\b${escapeRegex(brandLower)}\\b`, "i"));
+  if (brandNorm.length >= 3) {
+    patterns.push(new RegExp(`\\b${escapeRegex(brandNorm)}\\b`, "i"));
   }
-  if (domainBase.length >= 3) {
-    patterns.push(new RegExp(`\\b${escapeRegex(domainBase)}\\b`, "i"));
+  if (domainNorm.length >= 3) {
+    patterns.push(new RegExp(`\\b${escapeRegex(domainNorm)}\\b`, "i"));
   }
-  patterns.push(new RegExp(escapeRegex(domain), "i")); // tam domain
+  // Tam domain (nokta dahil) — normalize edilmiş halde
+  patterns.push(new RegExp(escapeRegex(normalizeTurkish(domain)), "i"));
 
   const byQuery: Record<string, AIProvider[]> = {};
   let totalMentions = 0;
@@ -88,7 +90,9 @@ function detectUserBrandMentions(
     const provs: AIProvider[] = [];
     for (const a of q.answers) {
       if (!a.text) continue;
-      const isMatch = patterns.some((p) => p.test(a.text));
+      // CEVAP METNİNİ DE TÜRKÇE-NORMALIZE ET
+      const textNorm = normalizeTurkish(a.text);
+      const isMatch = patterns.some((p) => p.test(textNorm));
       if (isMatch) {
         provs.push(a.provider);
         totalMentions++;
@@ -134,6 +138,8 @@ async function extractWithOpus(
 GÖREV: Bu cevaplarda geçen FİRMA/MARKA isimlerini çıkar.
 
 FİLTRELER:
+- Türkçe karakter duyarsız karşılaştır (İdavilla = idavilla = IDAVILLA, hepsi aynı)
+- Marka ismi cevap metninde herhangi bir yazımla geçiyorsa rakip sayma
 - "${userBrandName}" VE "${userDomain}" ASLA listede olmasın (bunlar ölçtüğümüz kullanıcının kendi markası)
 - Aynı firmanın farklı yazımları tek kayda birleşsin (Danfoss = DANFOSS = danfoss.com.tr)
 - Jenerik ifadeler HARİÇ: "yerli üretici", "global marka", "büyük firmalar", "deneyimli uzman" vb.
