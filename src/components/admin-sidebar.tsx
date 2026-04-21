@@ -20,8 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Kullan\u0131c\u0131lar", icon: Users },
+  { href: "/admin", label: "Özet", icon: LayoutDashboard },
+  { href: "/admin/users", label: "Kullanıcılar", icon: Users },
   { href: "/admin/brands", label: "Markalar", icon: Building2 },
   { href: "/admin/scans", label: "Taramalar", icon: Search },
   { href: "/admin/orders", label: "Siparişler", icon: ShoppingCart },
@@ -30,7 +30,7 @@ const NAV_ITEMS = [
   { href: "/admin/costs", label: "Maliyetler", icon: BarChart3 },
   { href: "/admin/notifications", label: "Bildirimler", icon: Bell },
   { href: "/admin/agency", label: "Ajans", icon: Handshake },
-  { href: "/admin/health", label: "Sa\u011fl\u0131k", icon: Heart },
+  { href: "/admin/health", label: "Sağlık", icon: Heart },
   { href: "/admin/settings", label: "Ayarlar", icon: Settings },
 ];
 
@@ -72,11 +72,11 @@ export function AdminSidebar({ email }: { email: string }) {
       <div className="border-t border-border/50 px-4 py-3">
         <p className="truncate text-xs text-muted-foreground">{email}</p>
         <Link
-          href="/dashboard"
+          href="/panel/genel"
           className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3 w-3" />
-          Dashboard&apos;a D\u00f6n
+          Panele Dön
         </Link>
       </div>
     </aside>

@@ -185,7 +185,7 @@ export default function AdminAgencyPage() {
               <TableRow>
                 <TableHead>Marka</TableHead>
                 <TableHead>Telefon</TableHead>
-                <TableHead>Istenen Zaman</TableHead>
+                <TableHead>İstenen Zaman</TableHead>
                 <TableHead>Durum</TableHead>
                 <TableHead>Tarih</TableHead>
               </TableRow>

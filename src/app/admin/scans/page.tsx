@@ -80,7 +80,7 @@ export default function AdminScansPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Scans</h1>
+      <h1 className="mb-6 text-2xl font-bold">Taramalar</h1>
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -124,12 +124,12 @@ export default function AdminScansPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Scan ID</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Started</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Results</TableHead>
+                <TableHead>Marka</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Tür</TableHead>
+                <TableHead>Başlangıç</TableHead>
+                <TableHead>Süre</TableHead>
+                <TableHead>Sonuç</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
