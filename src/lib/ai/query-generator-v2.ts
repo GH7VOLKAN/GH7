@@ -94,6 +94,9 @@ KURALLAR:
 - Her sorguda aksiyon kelimesi: "öner", "listele", "hangileri", "karşılaştır", "en iyi", "tavsiye et"
 - Her sorgu spesifik olsun (dar niş, genel kategori değil)
 - 5 sorgu ${input.products.length} ürüne dağılsın (tek ürüne yığılma)
+- Sorgunun ilk harfi BÜYÜK olsun, Türkçe dilbilgisine uy
+- Ürün isimlerini ham şekilde kopyalama — anlamlı cümle kur ("cafe & restoran kurulumu" YANLIŞ, "cafe & restoran hizmeti veren" DOĞRU)
+- Ürün adı zaten hizmeti ifade ediyorsa "kurulum/kurulumu" kelimesini EKLEME (örn. "bungalov konaklama kurulumu" anlamsız)
 
 SADECE JSON array dön, başka hiçbir şey yazma:
 ["sorgu 1", "sorgu 2", "sorgu 3", "sorgu 4", "sorgu 5"]
@@ -219,10 +222,10 @@ function fallbackQueries(input: QueryGenInput): string[] {
 
   if (input.door === "firma") {
     return [
-      `${city}'de ${p[0]} yaptırabileceğim firmaları öner`,
+      `${city}'de ${p[0]} için hangi firmaları öneriyorsun`,
       `${city}'de ${p[0]} sektöründe en iyi firmalar hangileri, listele`,
       `${p[1] || p[0]} için güvenilir firma tavsiye et ${city} bölgesinde`,
-      `${city}'de ${p[2] || p[0]} kurulumu yapan firmalar hangileri`,
+      `${city}'de ${p[2] || p[0]} hizmeti veren firmalar hangileri`,
       `${p[0]} için ${city}'de hangi firmayı tercih etmeliyim, karşılaştır`,
     ];
   }
