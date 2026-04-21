@@ -654,3 +654,145 @@
   font-weight: 600;
   margin: 16px 0 8px;
 }
+
+/* ═══════════════════════════════════════════════════════ */
+/* Analyzing stage — Shazam ruhu                           */
+/* ═══════════════════════════════════════════════════════ */
+
+.analyzing {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.analyzingHero {
+  text-align: center;
+  animation: fadeInUp 0.8s ease;
+}
+
+.analyzingLogo {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--black);
+  line-height: 1;
+}
+
+.analyzingSlogan {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--g500);
+  letter-spacing: 0.02em;
+}
+
+.pulseContainer {
+  display: flex;
+  gap: 10px;
+  height: 12px;
+  align-items: center;
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--black);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.analyzingStatus {
+  text-align: center;
+  animation: fadeIn 1.2s ease;
+}
+
+.analyzingDomain {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  color: var(--g400);
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.analyzingCurrent {
+  font-size: 15px;
+  color: var(--black);
+  font-weight: 500;
+}
+
+.stageList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stageItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: background 0.2s ease;
+}
+
+.stageLabel {
+  letter-spacing: 0;
+}
+
+.stageStatus {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage_pending {
+  color: var(--g300);
+}
+
+.stage_running {
+  background: var(--g50);
+  color: var(--black);
+  font-weight: 500;
+}
+
+.stage_done {
+  color: var(--g500);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .analyzing {
+    padding: 48px 20px;
+    gap: 36px;
+  }
+  .analyzingLogo {
+    font-size: 44px;
+  }
+  .analyzingSlogan {
+    font-size: 13px;
+  }
+  .stageList {
+    max-width: 100%;
+  }
+}

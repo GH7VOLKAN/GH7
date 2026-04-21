@@ -14,11 +14,12 @@ const STAGES = [
 
 export function AnalyzingStage({ firmDomain }: { firmDomain?: string }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [pulseIdx, setPulseIdx] = useState(0);
 
+  // Stage progress
   useEffect(() => {
     let cancelled = false;
     let idx = 0;
-
     const tick = () => {
       if (cancelled) return;
       if (idx >= STAGES.length) return;
@@ -28,45 +29,65 @@ export function AnalyzingStage({ firmDomain }: { firmDomain?: string }) {
         tick();
       }, STAGES[idx].duration);
     };
-
     tick();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return (
-    <section className={s.screen}>
-      <div className={s.screenLabel}>Ekran 2 · Analiz Ediliyor</div>
-      <h2 className={s.h2}>Taranıyor.</h2>
-      {firmDomain && (
-        <p className={s.sub} style={{ fontFamily: "monospace", fontSize: 13 }}>
-          {firmDomain}
-        </p>
-      )}
+  // Pulse animation — dokuz nokta, bir dalga gibi
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulseIdx((p) => (p + 1) % 9);
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
-      <ul style={{ listStyle: "none", padding: 0, margin: "32px 0 0", maxWidth: 400 }}>
+  return (
+    <section className={s.analyzing}>
+      {/* Hero — GH7 + slogan */}
+      <div className={s.analyzingHero}>
+        <div className={s.analyzingLogo}>GH7</div>
+        <div className={s.analyzingSlogan}>GEO is the new SEO.</div>
+      </div>
+
+      {/* Pulse animasyonu — 9 nokta, dalga gibi */}
+      <div className={s.pulseContainer}>
+        {Array.from({ length: 9 }).map((_, i) => {
+          const distance = Math.abs(i - pulseIdx);
+          const opacity = Math.max(0.15, 1 - distance * 0.2);
+          const scale = distance === 0 ? 1.4 : 1;
+          return (
+            <div
+              key={i}
+              className={s.pulseDot}
+              style={{
+                opacity,
+                transform: `scale(${scale})`,
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Status */}
+      <div className={s.analyzingStatus}>
+        {firmDomain && (
+          <div className={s.analyzingDomain}>{firmDomain}</div>
+        )}
+        <div className={s.analyzingCurrent}>
+          {STAGES[currentIdx]?.label ?? "Tamamlandı"}
+        </div>
+      </div>
+
+      {/* Stage timeline */}
+      <ul className={s.stageList}>
         {STAGES.map((stage, i) => {
           const status = i < currentIdx ? "done" : i === currentIdx ? "running" : "pending";
           return (
-            <li
-              key={stage.label}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "10px 0",
-                borderBottom: "1px solid var(--g100)",
-                color:
-                  status === "pending"
-                    ? "var(--g300)"
-                    : status === "running"
-                      ? "var(--black)"
-                      : "var(--g500)",
-                fontSize: 14,
-              }}
-            >
-              <span>{stage.label}</span>
-              <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            <li key={stage.label} className={`${s.stageItem} ${s[`stage_${status}`]}`}>
+              <span className={s.stageLabel}>{stage.label}</span>
+              <span className={s.stageStatus}>
                 {status === "done" ? "tamam" : status === "running" ? "çalışıyor" : "bekliyor"}
               </span>
             </li>
