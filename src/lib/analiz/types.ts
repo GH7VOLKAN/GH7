@@ -1,13 +1,8 @@
 /**
- * /analiz akışı için tip tanımları.
- *
- * v2 eklemeleri:
- * - RunResult (yeni ana shape)
- * - CandidateCompetitor (Opus'un çıkardığı adaylar)
- * - UserBrandMention (kendi marka skorlama)
+ * /analiz akışı için tip tanımları (Shazam refactor).
  */
 
-export type Door = "firma" | "kisi" | "eticaret" | "export";
+export type Door = "firma" | "kisi" | "eticaret" | "yurtdisi";
 
 export type AIProvider =
   | "chatgpt"
@@ -33,55 +28,74 @@ export const AI_PROVIDER_LABELS: Record<AIProvider, string> = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// Detect (Aşama 2)
+// Analyze input
 // ═══════════════════════════════════════════════════════════
 
-export type Product = {
-  id: string;
-  name: string;
-  subcatCount: number;
-};
+export interface AnalyzeInput {
+  door: Door;
 
-export type CompetitorMentions = Partial<Record<AIProvider, number>>;
+  // firma, eticaret, yurtdisi için
+  domain?: string;
 
-export type Competitor = {
-  id: string;
-  domain: string;
-  mentions: CompetitorMentions;
-};
+  // kişi için
+  fullName?: string;
+  city?: string;
 
-export type DetectResult = {
-  domain: string;
-  sector: string;
-  products: Product[];
-  competitorsByProductId: Record<string, Competitor[]>;
-};
+  // yurtdışı için
+  targetMarket?: string;
+  targetLanguage?: string;
+
+  forceRefresh?: boolean;
+}
 
 // ═══════════════════════════════════════════════════════════
-// Run (Aşama 5 — yeni)
+// Firm profile (Perplexity deep context'ten çıkar)
 // ═══════════════════════════════════════════════════════════
 
-export interface QueryAnswer {
+export interface FirmProfile {
+  name: string;                 // "İda Villa Bungalov"
+  sector: string;               // "Turizm ve Konaklama"
+  location: {
+    city?: string;
+    district?: string;
+    country?: string;
+  };
+  products: string[];           // 3-5, ham ürün/hizmet isimleri
+  distinctives: string[];       // 3-5, ayırt edici nişler (pet-friendly, mandalina bahçesi)
+  rawContext: string;           // Perplexity'nin tam ham analizi — Opus'a veriliyor
+  contextQuality: "rich" | "thin" | "empty";
+}
+
+// ═══════════════════════════════════════════════════════════
+// Query + Answer
+// ═══════════════════════════════════════════════════════════
+
+export interface AIAnswer {
   provider: AIProvider;
-  text: string;
+  text: string;                 // full markdown, truncate yok
   error?: string;
   latencyMs: number;
   mentionedYou: boolean;
-  mentionedCompetitors: string[]; // hangi rakipler bu cevapta geçti
+  mentionedCompetitors: string[];
 }
 
-export interface QueryResult {
-  id: string;          // q1, q2, ...
+export interface AnalysisQuery {
+  id: string;                   // q1, q2, ...
   text: string;
-  answers: QueryAnswer[];
+  generation: 1 | 2;            // ilk geçiş mi self-heal mi
+  answers: AIAnswer[];
 }
+
+// ═══════════════════════════════════════════════════════════
+// Extraction output
+// ═══════════════════════════════════════════════════════════
 
 export interface CandidateCompetitor {
   name: string;
+  url: string | null;
   mentionCount: number;
   queryIds: string[];
   providers: AIProvider[];
-  isNew?: boolean; // kullanıcı manuel eklediyse true — "bu hafta istatistik yok" badge
 }
 
 export interface UserBrandMention {
@@ -89,74 +103,35 @@ export interface UserBrandMention {
   byQuery: Record<string, AIProvider[]>;
 }
 
-export interface RunResult {
-  yourDomain: string;
-  yourBrandName: string;
-  queries: QueryResult[];
+// ═══════════════════════════════════════════════════════════
+// Full analyze response
+// ═══════════════════════════════════════════════════════════
+
+export interface AnalyzeResult {
+  firmProfile: FirmProfile;
+  queries: AnalysisQuery[];
   userMentions: UserBrandMention;
-  candidateCompetitors: CandidateCompetitor[]; // frekans sıralı, 20 max
+  candidateCompetitors: CandidateCompetitor[];
+  healingAttempted: boolean;
   generatedAt: string;
   cached: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════
-// Eski tipler (scoreboard mock için kullanılıyordu, backward compat)
-// ═══════════════════════════════════════════════════════════
-
-export type Answer = {
-  provider: AIProvider;
-  mentionedYou: boolean;
-  mentionedThem: boolean;
-  yourRank: number | null;
-  text: string;
-};
-
-export type Query = {
-  id: string;
-  text: string;
-  answers: Answer[];
-};
-
-export type AuditImpact = "high" | "medium" | "low";
-export type AuditStatus = "yes" | "partial" | "no";
-
-export type AuditItem = {
-  id: string;
-  title: string;
-  group: string;
-  impact: AuditImpact;
-  you: AuditStatus;
-  them: AuditStatus;
-};
-
-export type AnalysisResult = {
-  yourDomain: string;
-  yourBrandName: string;
-  productName: string;
-  competitorDomain: string;
-  competitorBrandName: string;
-  queries: Query[];
-  audit: AuditItem[];
-  cached: boolean;
-  generatedAt: string;
-};
-
-// ═══════════════════════════════════════════════════════════
 // Flow state
 // ═══════════════════════════════════════════════════════════
 
-export type FlowPhase =
-  | "detecting"
-  | "product-pick"
-  | "cities-pick"
-  | "running"
-  | "competitor-pick"
-  | "done"
-  | "error";
+export type FlowPhase = "input" | "analyzing" | "result" | "error";
 
-export type ProgressStep = {
+export type SelectedCompetitor = {
+  name: string;
+  url: string | null;
+  isNew: boolean;               // kullanıcı manuel eklediyse true
+};
+
+export interface ProgressStep {
   key: string;
   label: string;
-  status: "pending" | "running" | "done";
+  status: "pending" | "running" | "done" | "failed";
   detail?: string;
-};
+}
