@@ -62,9 +62,9 @@ BU BİR YENİDEN DENEMEDİR.
       : "";
 
   if (input.door === "firma" || input.door === "eticaret") {
-    return `Sen GH7.ai sorgu stratejistisin. ${modeHint}
+    return `Sen bir Türk tüketicisin. AI asistanlarından firma önerisi ararken GERÇEKÇİ, SAMİMİ, doğal Türkçeyle soru soruyorsun.${modeHint}
 
-FİRMA PROFİLİ:
+FİRMA HAKKINDA (Perplexity analizi):
 - İsim: ${profile.name}
 - Sektör: ${profile.sector}
 - Konum: ${[profile.location.district, profile.location.city].filter(Boolean).join(", ") || "belirtilmedi"}
@@ -74,48 +74,68 @@ FİRMA PROFİLİ:
 PERPLEXITY HAM ANALİZİ:
 ${profile.rawContext.slice(0, 4000)}
 
-GÖREV: Potansiyel müşterilerin ChatGPT, Claude, Gemini, Perplexity gibi AI'lara bu tarz bir firma arayışında soracağı 5 GERÇEKÇİ sorgu üret.
+GÖREV: Yukarıdaki firmanın ürün/hizmetlerinden birini arayan bir müşterinin AI'a soracağı 5 GERÇEKÇİ sorgu üret.
+
+SORU KALIBIMIZ:
+  İHTİYAÇ (ürün/hizmet adı, sorunun kendisi) + (opsiyonel LOKASYON) + AKSIYON (öner, tavsiye et, listele, hangisi, karşılaştır)
+
+İYİ ÖRNEKLER (bu tarzda düşün):
+  "Elektrikli yerden ısıtma yaptıracağım, İstanbul'da en iyi firma hangisi"
+  "Spa ve hamam mermer altı ısıtmada hangi firma ile çalışmamı önerirsin"
+  "Türkiye'de öne çıkan yerden ısıtma firmalarını listeler misin"
+  "Sera ısıtma sistemleri için hangi firmaya güvenebilirim"
+  "Evcil hayvan dostu bungalov tatil köyü arıyorum, Ege'de nereleri önerirsin"
+  "Endüstriyel ısıtma için Türkiye'den güvenilir firmalar hangileri, karşılaştır"
+
+KÖTÜ ÖRNEKLER (yapmaktan KAÇIN):
+  "30 yıldan fazla deneyimi olan X firmasını öner" — müşteri bunu sormaz
+  "Güney Kore malzemesi kullanan yerli firmalar" — teknik detay, müşteri kafası değil
+  "180'den fazla proje yapan firmalar" — pazarlama cümlesi, soru değil
+  "ATEX sertifikalı endüstriyel firmalar" — çok spesifik teknik filter
 
 KURALLAR:
 - Firma adı ASLA geçmesin
-- Her sorgu spesifik olsun — ayırt edici özelliklerden yararlan
-- Aksiyon kelimesi olsun: "öner", "tavsiye et", "hangileri", "listele", "karşılaştır"
-- Türkçe dilbilgisine uy — cümle büyük harfle başlasın, "kurulumu yapan" gibi anlamsız ekler yapma
-- Ürün isimlerini ham kopyalama — anlamlı cümle kur
-- 5 sorgu 2-3 farklı açıdan dağılsın (ürün bazlı, konum bazlı, niş bazlı)
-
-ÖRNEK ÇIKTI (idavilla.com.tr bungalov örneği):
-["Edremit Güre'de pet-friendly bungalov tesisleri öner",
- "Balıkesir kıyılarında mandalina bahçesinde konaklama yapan yerler hangileri",
- "Kuzey Ege'de ailecek 12 ay açık butik bungalov tatil köyleri tavsiye et",
- "Edremit Akçay Güre bölgesinde ahşap bungalov konaklama listele",
- "Kazdağları yakınında evcil hayvan dostu konaklama için hangi bungalov tesislerini öneriyorsun"]
+- İnsan gibi konuş — "ihtiyacım var", "yaptıracağım", "bakmak istiyorum", "arıyorum"
+- Ürün ismini müşteri ağzıyla kısalt — "Elektrikli yerden ısıtma kablosu ve aksesuarları" değil "elektrikli yerden ısıtma"
+- Ayırt edici özellikleri DOLAYLI kullan — firma Balıkesir'deyse sorularda Ege/İstanbul/Balıkesir geçebilir, ama "30 yıl deneyim" geçmesin
+- Büyük harfle başla, Türkçe dilbilgisi
+- 5 sorgu farklı açılardan: bazısı ürün odaklı, bazısı niş, bazısı lokasyon
+- 2-3 sorguda lokasyon geçsin, 2-3'ünde Türkiye geneli olsun
 
 SADECE JSON array dön, başka hiçbir şey yazma:
 ["sorgu 1", "sorgu 2", "sorgu 3", "sorgu 4", "sorgu 5"]`;
   }
 
   if (input.door === "kisi") {
-    return `Sen GH7.ai sorgu stratejistisin. ${modeHint}
+    return `Sen bir Türk hasta/müşterisin. AI asistanlarından uzman önerisi ararken doğal Türkçeyle soruyorsun.${modeHint}
 
-KİŞİ PROFİLİ:
+UZMAN HAKKINDA:
 - İsim: ${profile.name}
 - Uzmanlık alanı: ${profile.sector}
 - Şehir: ${input.city ?? profile.location.city ?? "belirtilmedi"}
 - Ayırt edici özellikler: ${profile.distinctives.join(", ") || "belirtilmedi"}
-- Ürün/hizmetler: ${profile.products.join(", ") || "belirtilmedi"}
 
 PERPLEXITY HAM ANALİZİ:
 ${profile.rawContext.slice(0, 4000)}
 
-GÖREV: Potansiyel hasta/müşterilerin AI'lara bu uzman arayışında soracağı 5 gerçekçi sorgu üret.
+GÖREV: Bu uzmanın alanında hizmet arayan bir hasta/müşterinin AI'a soracağı 5 gerçekçi sorgu üret.
+
+SORU KALIBIMIZ:
+  PROBLEM/İHTİYAÇ + ŞEHİR + AKSIYON
+
+İYİ ÖRNEKLER:
+  "İzmir'de implant yaptırmak istiyorum, hangi diş hekimini önerirsin"
+  "Ankara'da çocuk kardiyoloğu lazım, iyi bir uzman tavsiye eder misin"
+  "Estetik diş hekimliği için İstanbul'da en iyi isimler hangileri"
+  "Ortodonti tedavisi için Bursa'da hangi uzmanla çalışabilirim"
+  "Ağız ve çene cerrahisi için İzmir'de kimi öneriyorsun"
 
 KURALLAR:
 - Kişi adı ASLA geçmesin
-- Her sorgu şehir + uzmanlık alt-alanı bazlı spesifik olsun
-- Aksiyon kelimesi (öner, listele, tavsiye et, karşılaştır)
-- Türkçe dilbilgisi — büyük harfle başla
-- Hasta/müşteri perspektifinde olsun
+- Hasta/müşteri perspektifi — "ihtiyacım var", "yaptırmak istiyorum", "tedavi arıyorum"
+- Şehir her sorguda geçsin (kişi için lokasyon kritik)
+- Büyük harfle başla, Türkçe dilbilgisi
+- Alt-uzmanlık varyasyonu — farklı prosedürler/ihtiyaçlar üzerinden sor
 
 SADECE JSON array dön:
 ["sorgu 1", ..., "sorgu 5"]`;
@@ -126,27 +146,40 @@ SADECE JSON array dön:
   const lang = input.targetLanguage ?? "en";
   const langName = lang === "en" ? "İngilizce" : lang === "de" ? "Almanca" : lang === "ar" ? "Arapça" : lang === "fr" ? "Fransızca" : lang;
 
-  return `Sen GH7.ai sorgu stratejistisin. ${modeHint}
+  return `Sen ${target}'de ${profile.sector} ürünleri arayan bir alıcı/toptancısın. AI asistanlarından Türk tedarikçi önerisi ararken doğal ${langName} veya Türkçe ile soruyorsun.${modeHint}
 
-FİRMA PROFİLİ (Türkiye'den ihracat):
+TÜRK FİRMA HAKKINDA:
 - İsim: ${profile.name}
 - Sektör: ${profile.sector}
 - Ürünler: ${profile.products.join(", ")}
-- Ayırt edici: ${profile.distinctives.join(", ")}
-- Hedef pazar: ${target}
-- Sorgu dili: ${langName}
+- Ayırt edici özellikleri: ${profile.distinctives.join(", ")}
 
 PERPLEXITY HAM ANALİZİ:
 ${profile.rawContext.slice(0, 4000)}
 
-GÖREV: ${target} pazarındaki potansiyel alıcıların AI'lara Türk tedarikçi/üretici arayışında soracağı 5 gerçekçi sorgu üret.
+GÖREV: ${target} pazarındaki bir alıcının, Türkiye'den tedarikçi/üretici bulmak için AI'a soracağı 5 gerçekçi sorgu üret.
+
+SORU KALIBIMIZ (${langName}):
+  PRODUCT/NEED + "from Turkey" / "Turkish" / ingilizce ise "from Turkey", Almanca ise "aus der Türkei" + ACTION
+
+İYİ ÖRNEKLER (İngilizce):
+  "Best underfloor heating cable manufacturers from Turkey, recommend"
+  "I need reliable Turkish suppliers for industrial heating systems"
+  "Which Turkish companies export greenhouse heating solutions to Germany"
+  "Top heating cable brands from Turkey for wholesale, compare"
+  "Looking for Turkish manufacturers of heat trace cables"
+
+İYİ ÖRNEKLER (Almanca):
+  "Welche türkischen Hersteller für Fußbodenheizung empfiehlst du"
+  "Ich suche zuverlässige Lieferanten aus der Türkei für Industrieheizung"
+  "Beste Heizkabel-Marken aus der Türkei für den Großhandel, vergleichen"
 
 KURALLAR:
 - Marka adı ASLA geçmesin
 - 5 sorgunun en az 3'ü ${langName}, kalan 2'si Türkçe olabilir
-- "Türkiye'den" / "from turkey" / "aus der türkei" gibi ihracat vurgusu
-- Ayırt edici özelliklere göre niş
-- Aksiyon kelimesi
+- "from turkey" / "aus der türkei" / "türkiye'den" ihracat vurgusu ZORUNLU
+- Alıcı perspektifi — "looking for", "need", "recommend me", "arıyorum", "tedarikçi"
+- Büyük harfle başla, gerçek alıcı dili
 
 SADECE JSON array dön.`;
 }
