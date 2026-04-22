@@ -92,6 +92,44 @@ ${coreProducts.map((p, i) => `  ${i + 1}. ${p}`).join("\n")}
 
 Ayırt edici özellikler (distinctives) SADECE çekirdek ürünü ZENGİNLEŞTİRMEK için. Tek başına sorgu konusu olamaz.
 
+═══════════════════════════════════════════════════════
+İKİNCİ MUTLAK KURAL — DISTINCTIVE KULLANDIĞINDA LOKASYON ZORUNLU
+═══════════════════════════════════════════════════════
+
+Bir distinctive (ayırt edici özellik) kullanıyorsan, sorguda MUTLAKA lokasyon geçmeli. Aksi takdirde arama Türkiye geneline yayılır ve firma bulunmaz.
+
+─── YANLIŞ (lokasyon yok) ───
+
+✗ "Termal tesislere yakın bungalov konaklama yerleri"
+  (Ankara/Afyon/Bolu'daki termal bölgeler çıkar — ilgisiz)
+
+✗ "Mandalina bahçesi içinde konaklama imkanı olan yerler"
+  (Türkiye'nin her yerinde mandalina var — ilgisiz sonuçlar)
+
+✗ "Pet-friendly bungalov otelleri"
+  (bölge belirsiz — Antalya'dan Trabzon'a kadar her yer çıkar)
+
+─── DOĞRU (lokasyon + distinctive) ───
+
+✓ "Balıkesir'de termal bölgelere yakın bungalov tesisleri hangisi"
+  (Güre, Edremit çıkar — doğru bölge)
+
+✓ "Edremit körfezinde mandalina bahçeli bungalov tatil yerleri"
+  (Edremit bölgesine odaklı arama)
+
+✓ "Kazdağları çevresinde pet-friendly bungalov otelleri"
+  (coğrafi çerçeve net)
+
+─── KURAL ───
+
+Aşağıdakilerden EN AZ BİRİ her sorguda geçmeli:
+- Şehir: ${profile.location.city || "Türkiye"}
+- İlçe: ${profile.location.district || ""}
+- Bölge: Kazdağları, Ege, Marmara, İç Anadolu vb.
+- Coğrafi nokta: Körfez, sahil, dağ, göl adı
+
+Lokasyonsuz sorgular YASAKTIR. "Türkiye'de" bile geçmelidir en asgari.
+
 ─── DOĞRU ÖRNEKLER (idavilla / bungalov konaklama) ───
 
 ✓ "Balıkesir'de doğa içinde bungalov konaklama yapabileceğim yerleri önerir misin"
