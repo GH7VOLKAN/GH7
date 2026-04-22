@@ -115,7 +115,15 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
         return;
       }
 
-      // can-start kontrolü — profileId buradan gelir
+      // profileId artık direkt verify response'undan geliyor
+      const profileId = verifyData.profileId || "";
+      if (!profileId) {
+        setError("Profil oluşturulamadı. Destek ekibine yazın.");
+        setLoading(false);
+        return;
+      }
+
+      // can-start kontrolü — Pro/already_used filtreleri
       setStage("checking");
       const canStartRes = await fetch("/api/analiz/can-start", {
         method: "POST",
@@ -143,8 +151,6 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
         setLoading(false);
         return;
       }
-
-      const profileId = canStartData.profileId || "";
 
       // Newsletter opt-in varsa Profile'a işle (email verildiyse)
       if (email.trim() && newsletterOptIn && profileId) {
