@@ -57,6 +57,15 @@ export function ResultStage({ result, onFinalize }: Props) {
 
   return (
     <div className={s.resultWrapper}>
+      {/* ─── GH7 INSIGHT banner ─── */}
+      <div className={s.insightBanner}>
+        <div className={s.insightBannerBrand}>
+          <span className={s.insightBannerLogo}>GH7</span>
+          <span className={s.insightBannerProduct}>INSIGHT</span>
+        </div>
+        <div className={s.insightBannerSub}>Canlı AI görünürlük analizi</div>
+      </div>
+
       {/* ─── Firm profile hero ─── */}
       <section className={s.firmHero}>
         <div className={s.screenLabel}>SENİN PROFİLİN</div>
@@ -123,7 +132,10 @@ export function ResultStage({ result, onFinalize }: Props) {
       {/* ─── Opus Özet Analizi ─── */}
       {result.commentary && result.commentary.length > 100 && (
         <section className={s.commentarySection}>
-          <div className={s.screenLabel}>CLAUDE&apos;UN ANALİZİ</div>
+          <div className={s.commentaryBrand}>
+            <span className={s.commentaryBrandLogo}>GH7</span>
+            <span className={s.commentaryBrandProduct}>ADVISOR</span>
+          </div>
           <h2 className={s.commentaryHeadline}>Durum raporu.</h2>
           <div className={s.commentaryBody}>
             <MarkdownView text={result.commentary} />
@@ -488,21 +500,21 @@ function ProGate({
           <div className={s.proStat}>
             <div className={s.proStatNum}>%25</div>
             <div className={s.proStatLabel}>
-              Geleneksel arama trafiği 2026&apos;ya kadar düşecek
+              Müşterilerin dörtte biri artık Google&apos;a değil, yapay zekaya soru soruyor. Bu oran her ay artıyor.
             </div>
             <div className={s.proStatSource}>Gartner, 2025</div>
           </div>
           <div className={s.proStat}>
             <div className={s.proStatNum}>%40</div>
             <div className={s.proStatLabel}>
-              GEO optimize içerik AI&apos;da daha görünür
+              AI sistemine uygun hazırlanmış içerik, olmayana göre iki kat daha fazla öneriliyor. Senin yok.
             </div>
             <div className={s.proStatSource}>Princeton / ACM KDD, 2024</div>
           </div>
           <div className={s.proStat}>
             <div className={s.proStatNum}>%60</div>
             <div className={s.proStatLabel}>
-              Google aramalarının %60&apos;ı tıklama olmadan bitiyor
+              Google&apos;da ilk sıraya çıksan bile müşteri sayfana tıklamıyor — AI zaten cevap vermiş oluyor.
             </div>
             <div className={s.proStatSource}>Bain &amp; Company, 2025</div>
           </div>
@@ -512,9 +524,12 @@ function ProGate({
       {/* ─── 43 madde FULL GÖRÜNÜR ─── */}
       <div className={s.auditWrap}>
         <div className={s.auditHeaderSection}>
-          <div className={s.screenLabel}>43 MADDELİK GELİŞİM PLANI</div>
+          <div className={s.auditBrand}>
+            <span className={s.auditBrandLogo}>GH7</span>
+            <span className={s.auditBrandProduct}>AUDIT</span>
+          </div>
           <h2 className={s.auditSectionHeadline}>
-            Her madde {firmName} için hazır.
+            43 madde. Her biri {firmName} için hazır.
           </h2>
           <p className={s.auditSectionSub}>
             Başlıkların hepsi burada — neyin yapılacağını şimdi görüyorsun.
@@ -533,7 +548,7 @@ function ProGate({
               </div>
               <span className={s.auditLock}>
                 <span className={s.auditLockIcon}>◐</span>
-                <span className={s.auditLockLabel}>Talimat Pro&apos;da</span>
+                <span className={s.auditLockLabel}>GH7 Audit · Pro</span>
               </span>
             </li>
           ))}
@@ -542,36 +557,98 @@ function ProGate({
 
       {/* ─── Main CTA ─── */}
       <div className={s.proCTA}>
+        {/* Dinamik hero */}
         <div className={s.proCTAHero}>
           <div className={s.proCTALabel}>ŞİMDİ NE OLACAK</div>
           <h2 className={s.proCTAHeadline}>{ctaHeadline}</h2>
           <p className={s.proCTASubMsg}>{ctaSub}</p>
         </div>
 
-        <div className={s.proCTADetails}>
+        {/* Fiyat */}
+        <div className={s.proCTAPriceBlock}>
+          <div className={s.proCTAProductLabel}>GH7 PRO</div>
           <div className={s.proCTAPrice}>
             <span className={s.proCTAAmount}>₺699</span>
             <span className={s.proCTAPeriod}>/ay</span>
           </div>
-          <p className={s.proCTAPriceSub}>Yıllık ₺8,388 · İlk ay koşulsuz iade</p>
+          <div className={s.proCTAPriceSub}>₺8,388 yıllık tek ödeme</div>
 
-          <ul className={s.proCTAFeatures}>
-            <li>43 madde için {firmName}&apos;e özel uygulama talimatları</li>
-            <li>Haftalık otomatik tarama + trend grafiği</li>
-            <li>Rakibin seni geçtiğinde e-posta + push uyarı</li>
-            <li>Haftalık 1 somut görev (&ldquo;bu hafta şunu düzelt&rdquo;)</li>
-            <li>Ayarlar&apos;dan ürün/hizmet/rakip/il listesi düzenleme</li>
-            <li>GH7 servis pazarı — &ldquo;bunu benim yerime yapsın&rdquo; erişimi</li>
-          </ul>
-
-          <button
-            onClick={onFinalize}
-            disabled={!canFinalize}
-            className={`${s.proCTABtn} ${!canFinalize ? s.proCTABtnDisabled : ""}`}
-          >
-            {canFinalize ? "Pro'ya Geç ve Takibi Başlat →" : "Önce 1-3 rakip seç"}
-          </button>
+          <div className={s.proCTAQuickFacts}>
+            <div className={s.proCTAFact}>1 site · Sınırsız analiz</div>
+            <div className={s.proCTAFact}>5 AI platform · 3 rakip karşılaştırması</div>
+            <div className={s.proCTAFact}>30 gün koşulsuz iade</div>
+          </div>
         </div>
+
+        {/* 6 marka */}
+        <div className={s.proCTAProducts}>
+          <div className={s.proCTAProductsHeader}>
+            <div className={s.proCTAProductsLabel}>PRO KAPSAMI</div>
+            <p className={s.proCTAProductsHero}>
+              Altı araç, tek kontrol paneli.<br />
+              AI çağında görünür kalmanın sistemi.
+            </p>
+          </div>
+
+          <div className={s.proCTAProductList}>
+            <div className={s.proCTAProduct}>
+              <div className={s.proCTAProductName}>GH7 INSIGHT</div>
+              <div className={s.proCTAProductSub}>Canlı AI görünürlük analizi</div>
+              <p className={s.proCTAProductDesc}>
+                5 platformdaki skorun, rakiplerin ve anılma detayların. İstediğin zaman yeniden çalıştır.
+              </p>
+            </div>
+
+            <div className={s.proCTAProduct}>
+              <div className={s.proCTAProductName}>GH7 AUDIT</div>
+              <div className={s.proCTAProductSub}>43 maddelik optimizasyon planı</div>
+              <p className={s.proCTAProductDesc}>
+                Her madde {firmName}&apos;in sitesine, içeriğine ve yapısına özel hazırlanmış uygulanabilir talimatlar.
+              </p>
+            </div>
+
+            <div className={s.proCTAProduct}>
+              <div className={s.proCTAProductName}>GH7 TRACKER</div>
+              <div className={s.proCTAProductSub}>Sürekli görünürlük takibi</div>
+              <p className={s.proCTAProductDesc}>
+                Site yayındayken Tracker arka planda dinliyor. Anlamlı değişimde anında haber, her Pazartesi haftalık özet raporu e-postanda.
+              </p>
+            </div>
+
+            <div className={s.proCTAProduct}>
+              <div className={s.proCTAProductName}>GH7 RADAR</div>
+              <div className={s.proCTAProductSub}>Rakip izleme ve bildirim sistemi</div>
+              <p className={s.proCTAProductDesc}>
+                Seçtiğin 3 rakibin skoru sürekli izlenir. Seni yakaladıklarında veya geçtiklerinde anında e-posta ve uygulama bildirimi.
+              </p>
+            </div>
+
+            <div className={s.proCTAProduct}>
+              <div className={s.proCTAProductName}>GH7 ADVISOR</div>
+              <div className={s.proCTAProductSub}>Haftalık trendler ve geliştirme uyarıları</div>
+              <p className={s.proCTAProductDesc}>
+                AI arama davranışı her hafta değişiyor. Advisor sana sektöründeki fırsatları ve öncelikli adımları iletir.
+              </p>
+            </div>
+
+            <div className={s.proCTAProduct}>
+              <div className={s.proCTAProductName}>GH7 STUDIO</div>
+              <div className={s.proCTAProductSub}>Ayarlar ve kontrol paneli</div>
+              <p className={s.proCTAProductDesc}>
+                Ürün, hizmet, rakip, il listesini düzenle. Sorgularını yeniden üret, stratejini güncelle.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA buton */}
+        <button
+          onClick={onFinalize}
+          disabled={!canFinalize}
+          className={`${s.proCTABtn} ${!canFinalize ? s.proCTABtnDisabled : ""}`}
+        >
+          {canFinalize ? "Pro'ya Geç ve Takibi Başlat →" : "Önce 1-3 rakip seç"}
+        </button>
       </div>
     </section>
   );
