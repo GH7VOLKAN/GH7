@@ -55,8 +55,20 @@ export async function POST(req: NextRequest) {
         freeAuditUsedAt: true,
         phone: true,
         email: true,
+        plan: true,
       },
     });
+
+    // ─── Pro user bypass — dashboard'a yönlendir ─────
+    if (existing?.plan && existing.plan !== "free") {
+      return NextResponse.json({
+        canStart: false,
+        reason: "pro_user",
+        redirectTo: "/dashboard/genel",
+        message:
+          "Pro üyesiniz. Dashboard'dan yeni analiz başlatabilirsiniz.",
+      });
+    }
 
     if (existing?.freeAuditUsed) {
       return NextResponse.json({
