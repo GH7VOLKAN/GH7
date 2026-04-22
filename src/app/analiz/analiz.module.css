@@ -1996,3 +1996,324 @@
     font-size: 30px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════ */
+/* GH7 INSIGHT banner (sonuç sayfası üstü)                 */
+/* ═══════════════════════════════════════════════════════ */
+
+.insightBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--black);
+  color: var(--white);
+  border-radius: 8px;
+  margin-bottom: 40px;
+}
+
+.insightBannerBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.insightBannerLogo {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.insightBannerProduct {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.insightBannerSub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.02em;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Commentary brand header (GH7 ADVISOR)                    */
+/* ═══════════════════════════════════════════════════════ */
+
+.commentaryBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.commentaryBrandLogo {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--white);
+}
+
+.commentaryBrandProduct {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Siyah kart okunabilirlik fix (override earlier 0.88 rules) */
+.commentaryBody {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.commentaryBody p {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.commentaryBody strong {
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* GH7 AUDIT brand header (43 madde)                       */
+/* ═══════════════════════════════════════════════════════ */
+
+.auditBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.auditBrandLogo {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--black);
+}
+
+.auditBrandProduct {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--g500);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Fiyat kartı — kurumsal versiyon                         */
+/* ═══════════════════════════════════════════════════════ */
+
+.proCTA {
+  padding: 0;
+  background: var(--black);
+  color: var(--white);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.proCTAHero {
+  padding: 48px 48px 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.proCTAPriceBlock {
+  padding: 40px 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.proCTAProductLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+.proCTAAmount {
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--white);
+}
+
+.proCTAPeriod {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.proCTAPriceSub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 24px;
+  letter-spacing: 0.02em;
+}
+
+.proCTAQuickFacts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.proCTAFact {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 6px 0;
+}
+
+.proCTAFact::before {
+  content: "·";
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* 6 marka listesi */
+.proCTAProducts {
+  padding: 48px;
+}
+
+.proCTAProductsHeader {
+  margin-bottom: 40px;
+}
+
+.proCTAProductsLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 16px;
+}
+
+.proCTAProductsHero {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--white);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.proCTAProductList {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.proCTAProduct {
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.proCTAProduct:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.proCTAProductName {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+
+.proCTAProductSub {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 8px;
+}
+
+.proCTAProductDesc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* CTA buton — yeni konumlandırma (fiyat kartı içinde margin'li) */
+.proCTABtn {
+  display: block;
+  margin: 0 48px 48px;
+  width: calc(100% - 96px);
+  padding: 20px 32px;
+  background: var(--white);
+  color: var(--black);
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: -0.005em;
+  transition: background 0.15s;
+}
+
+.proCTABtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.proCTABtnDisabled {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Mobile — banner + fiyat kartı                           */
+/* ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .insightBanner {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .insightBannerSub {
+    width: 100%;
+    padding: 8px 0 0;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin-top: 8px;
+  }
+
+  .commentaryBody {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .proCTAHero,
+  .proCTAPriceBlock,
+  .proCTAProducts {
+    padding: 32px 24px;
+  }
+
+  .proCTAAmount {
+    font-size: 48px;
+  }
+
+  .proCTAProductsHero {
+    font-size: 18px;
+  }
+
+  .proCTAProductName {
+    font-size: 14px;
+  }
+
+  .proCTAProductSub {
+    font-size: 14px;
+  }
+
+  .proCTAProductDesc {
+    font-size: 13px;
+  }
+
+  .proCTABtn {
+    margin: 0 24px 32px;
+    width: calc(100% - 48px);
+    padding: 18px 24px;
+  }
+}
