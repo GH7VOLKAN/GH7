@@ -6,6 +6,7 @@ import { fetchDeepContext } from "./deep-context";
 import { generateQueries } from "./context-query-gen";
 import { fanoutQueries } from "./ai-fanout";
 import { extractMentions } from "./mention-extractor";
+import { generateResultCommentary } from "./result-commentator";
 import type {
   AIAnswer,
   AnalysisQuery,
@@ -96,6 +97,17 @@ export async function runAnalyzePipeline(
     }
   }
 
+  // ─── Aşama 6: Opus özet analizi ─────────────────────
+  console.log("[pipeline] Stage 6/6: commentary generation");
+  const commentary = await generateResultCommentary(
+    profile,
+    userMentions.totalMentions,
+    allQueries.length * 5,
+    candidates,
+    healingAttempted,
+  );
+  console.log(`[pipeline] Commentary: ${commentary.length} chars`);
+
   console.log(`[pipeline] Total: ${Date.now() - t0}ms`);
 
   return {
@@ -104,6 +116,7 @@ export async function runAnalyzePipeline(
     userMentions,
     candidateCompetitors: candidates,
     healingAttempted,
+    commentary,
     generatedAt: new Date().toISOString(),
     cached: false,
   };
