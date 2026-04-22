@@ -130,13 +130,20 @@ model SuggestedPrompt {
 // ─── Scans & Results ─────────────────────────────────
 
 model Scan {
-  id          String    @id @default(cuid())
-  brandId     String    @map("brand_id")
-  brand       Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  type        String    @default("manual") // free_test, manual, scheduled
-  status      String    @default("pending") // pending, running, completed, failed
-  startedAt   DateTime  @default(now()) @map("started_at")
-  completedAt DateTime? @map("completed_at")
+  id               String    @id @default(cuid())
+  brandId          String    @map("brand_id")
+  brand            Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  type             String    @default("manual") // free_test, manual, scheduled
+  status           String    @default("pending") // pending, running, completed, failed
+  // Shazam analiz özeti (Brief C2)
+  score            Int?      @map("score")
+  scoreTotal       Int?      @map("score_total")
+  totalMentions    Int?      @map("total_mentions")
+  totalQueries     Int?      @map("total_queries")
+  commentary       String?   @map("commentary")
+  healingAttempted Boolean   @default(false) @map("healing_attempted")
+  startedAt        DateTime  @default(now()) @map("started_at")
+  completedAt      DateTime? @map("completed_at")
 
   results PromptResult[]
 
