@@ -14,34 +14,37 @@ datasource db {
 // ─── User & Brand ────────────────────────────────────
 
 model Profile {
-  id         String   @id // matches Supabase auth.users.id
-  email      String   @unique
-  fullName   String?  @map("full_name")
-  avatarUrl  String?  @map("avatar_url")
-  phone      String?  @unique
+  id                      String    @id // matches Supabase auth.users.id
+  email                   String    @unique
+  fullName                String?   @map("full_name")
+  avatarUrl               String?   @map("avatar_url")
+  phone                   String?   @unique
   // Verification (PR B)
   phoneVerified           Boolean   @default(false) @map("phone_verified")
   emailVerified           Boolean   @default(false) @map("email_verified")
   emailVerificationToken  String?   @unique @map("email_verification_token")
   emailVerificationExpiry DateTime? @map("email_verification_expiry")
   // Free audit gating (PR B) — 1 telefon/e-posta → 1 ücretsiz analiz
-  freeAuditUsed   Boolean   @default(false) @map("free_audit_used")
-  freeAuditUsedAt DateTime? @map("free_audit_used_at")
+  freeAuditUsed           Boolean   @default(false) @map("free_audit_used")
+  freeAuditUsedAt         DateTime? @map("free_audit_used_at")
+  // Newsletter (GH7 Advisor Haftalık) — KVKK uyumlu consent
+  newsletterOptIn         Boolean   @default(false) @map("newsletter_opt_in")
+  newsletterOptInAt       DateTime? @map("newsletter_opt_in_at")
   // Signup tracking (PR B)
-  lastLoginAt DateTime? @map("last_login_at")
-  signupIp    String?   @map("signup_ip")
-  smsEnabled       Boolean  @default(false) @map("sms_enabled")
-  emailScanComplete Boolean  @default(true)  @map("email_scan_complete")
-  emailScoreChange  Boolean  @default(true)  @map("email_score_change")
-  emailWeeklyReport Boolean  @default(true)  @map("email_weekly_report")
-  plan          String   @default("free") // free, pro, business, agency
-  planStartDate DateTime? @map("plan_start_date")
-  planEndDate   DateTime? @map("plan_end_date")
-  iyzicoCustomerRef    String?  @map("iyzico_customer_ref")
-  iyzicoSubscriptionRef String? @map("iyzico_subscription_ref")
-  gracePeriodEnd       DateTime? @map("grace_period_end")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  lastLoginAt             DateTime? @map("last_login_at")
+  signupIp                String?   @map("signup_ip")
+  smsEnabled              Boolean   @default(false) @map("sms_enabled")
+  emailScanComplete       Boolean   @default(true) @map("email_scan_complete")
+  emailScoreChange        Boolean   @default(true) @map("email_score_change")
+  emailWeeklyReport       Boolean   @default(true) @map("email_weekly_report")
+  plan                    String    @default("free") // free, pro, business, agency
+  planStartDate           DateTime? @map("plan_start_date")
+  planEndDate             DateTime? @map("plan_end_date")
+  iyzicoCustomerRef       String?   @map("iyzico_customer_ref")
+  iyzicoSubscriptionRef   String?   @map("iyzico_subscription_ref")
+  gracePeriodEnd          DateTime? @map("grace_period_end")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
 
   brands   Brand[]
   payments Payment[]
@@ -50,33 +53,33 @@ model Profile {
 }
 
 model Brand {
-  id        String   @id @default(cuid())
-  profileId String   @map("profile_id")
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  name      String
-  domain    String
-  sector    String?
-  city      String?
-  profession  String?  // kisisel markalar icin meslek
-  specialties String[] // uzmanlik alanlari
-  competitorNames   String[] @map("competitor_names")   // onboarding'de girilen rakip adlari
-  competitorDomains String[] @map("competitor_domains") // rakip web siteleri
-  type         String   @default("firma") @map("brand_type") // firma, kisisel
-  userType     String   @default("firma") @map("user_type")  // firma, kisi, eticaret, yurtdisi
+  id                 String   @id @default(cuid())
+  profileId          String   @map("profile_id")
+  profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name               String
+  domain             String
+  sector             String?
+  city               String?
+  profession         String? // kisisel markalar icin meslek
+  specialties        String[] // uzmanlik alanlari
+  competitorNames    String[] @map("competitor_names") // onboarding'de girilen rakip adlari
+  competitorDomains  String[] @map("competitor_domains") // rakip web siteleri
+  type               String   @default("firma") @map("brand_type") // firma, kisisel
+  userType           String   @default("firma") @map("user_type") // firma, kisi, eticaret, yurtdisi
   // V3 spec — Profile-centric fields
   businessCategories String[] @map("business_categories") // faaliyet alanlari (Sonar'dan)
-  serviceRegions     String[] @map("service_regions")     // hizmet bolgeleri
+  serviceRegions     String[] @map("service_regions") // hizmet bolgeleri
   strengths          String[] // guclu yonler (Sonar analiz)
   weaknesses         String[] // zayif yonler (Sonar analiz)
-  sonarAnalysis      Json?    @map("sonar_analysis")      // onboarding Sonar ham verisi
-  linkedinUrl        String?  @map("linkedin_url")        // kisisel marka LinkedIn URL
-  isDefault    Boolean  @default(false) @map("is_default")
-  autoScan     Boolean  @default(true)  @map("auto_scan")
-  scanInterval String   @default("thrice_weekly") @map("scan_interval") // daily, thrice_weekly, manual
-  apiKey       String?  @map("api_key")
-  webhookUrl   String?  @map("webhook_url")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  sonarAnalysis      Json?    @map("sonar_analysis") // onboarding Sonar ham verisi
+  linkedinUrl        String?  @map("linkedin_url") // kisisel marka LinkedIn URL
+  isDefault          Boolean  @default(false) @map("is_default")
+  autoScan           Boolean  @default(true) @map("auto_scan")
+  scanInterval       String   @default("thrice_weekly") @map("scan_interval") // daily, thrice_weekly, manual
+  apiKey             String?  @map("api_key")
+  webhookUrl         String?  @map("webhook_url")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   prompts         Prompt[]
   competitors     Competitor[]
@@ -94,20 +97,20 @@ model Brand {
 // ─── Prompts ─────────────────────────────────────────
 
 model Prompt {
-  id        String   @id @default(cuid())
-  brandId   String   @map("brand_id")
-  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  text      String
-  tags      String[]
-  source    String   @default("ai_generated") // ai_generated, sonar, user_added
-  category  String?  // lokasyon, urun, karsilastirma, oneri, fiyat, yorum, genel, uzmanlik, itibar
-  isActive  Boolean  @default(true) @map("is_active")
-  salesPotential String? @map("sales_potential") // HIGH, MEDIUM, LOW
+  id             String    @id @default(cuid())
+  brandId        String    @map("brand_id")
+  brand          Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  text           String
+  tags           String[]
+  source         String    @default("ai_generated") // ai_generated, sonar, user_added
+  category       String? // lokasyon, urun, karsilastirma, oneri, fiyat, yorum, genel, uzmanlik, itibar
+  isActive       Boolean   @default(true) @map("is_active")
+  salesPotential String?   @map("sales_potential") // HIGH, MEDIUM, LOW
   lastScanAt     DateTime? @map("last_scan_at")
   // V3 spec — per-business-area tagging
-  businessArea  String?  @map("business_area")  // faaliyet alani etiketi
-  searchIntent  String?  @map("search_intent")  // recommendation, comparison, indirect
-  createdAt DateTime @default(now()) @map("created_at")
+  businessArea   String?   @map("business_area") // faaliyet alani etiketi
+  searchIntent   String?   @map("search_intent") // recommendation, comparison, indirect
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   results PromptResult[]
 
@@ -141,28 +144,28 @@ model Scan {
 }
 
 model PromptResult {
-  id         String   @id @default(cuid())
-  scanId     String   @map("scan_id")
-  scan       Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
-  promptId   String   @map("prompt_id")
-  prompt     Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
-  platform   String   // chatgpt, claude, gemini, perplexity
-  mentioned  Boolean  @default(false)
-  position   String?  // "1. sıra", "2. sıra", "bahsediliyor", null
-  sentiment  String?  // pozitif, nötr, negatif
-  excerpt         String?
-  fullResponse    String?  @map("full_response")
-  citations       Json?    // string[] of cited URLs
-  competitors     Json?    // CompetitorDetail[] — [{name, position, sentiment}]
-  citationSources Json?    @map("citation_sources") // [{name, url, type}]
-  mentionType          String?  @map("mention_type")          // direct, indirect, none
-  mentionContext       String?  @map("mention_context")       // kısa alıntı — nerede bahsedildiği
-  competitorAdvantage  String?  @map("competitor_advantage")  // rakip neden önde analizi
-  createdAt       DateTime @default(now()) @map("created_at")
-  scanWeek        Int?     @map("scan_week")
-  scanDay         Int?     @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
-  responseQuality String?  @map("response_quality") // direct_list | general_info | refused | clarification_asked | error
-  retryAttempt    Int      @default(0) @map("retry_attempt") // 0=ilk deneme, 1=retry sonrası
+  id                  String   @id @default(cuid())
+  scanId              String   @map("scan_id")
+  scan                Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  promptId            String   @map("prompt_id")
+  prompt              Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  platform            String // chatgpt, claude, gemini, perplexity
+  mentioned           Boolean  @default(false)
+  position            String? // "1. sıra", "2. sıra", "bahsediliyor", null
+  sentiment           String? // pozitif, nötr, negatif
+  excerpt             String?
+  fullResponse        String?  @map("full_response")
+  citations           Json? // string[] of cited URLs
+  competitors         Json? // CompetitorDetail[] — [{name, position, sentiment}]
+  citationSources     Json?    @map("citation_sources") // [{name, url, type}]
+  mentionType         String?  @map("mention_type") // direct, indirect, none
+  mentionContext      String?  @map("mention_context") // kısa alıntı — nerede bahsedildiği
+  competitorAdvantage String?  @map("competitor_advantage") // rakip neden önde analizi
+  createdAt           DateTime @default(now()) @map("created_at")
+  scanWeek            Int?     @map("scan_week")
+  scanDay             Int?     @map("scan_day") // 1=Pzt, 3=Car, 5=Cum
+  responseQuality     String?  @map("response_quality") // direct_list | general_info | refused | clarification_asked | error
+  retryAttempt        Int      @default(0) @map("retry_attempt") // 0=ilk deneme, 1=retry sonrası
 
   @@index([scanId, responseQuality])
   @@map("prompt_results")
@@ -171,28 +174,28 @@ model PromptResult {
 // ─── Competitors ─────────────────────────────────────
 
 model Competitor {
-  id             String  @id @default(cuid())
-  brandId        String  @map("brand_id")
-  brand          Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  name           String
-  normalizedName String? @map("normalized_name") // turkishToAscii + lowercase + alphanumeric only
-  domain         String
+  id               String  @id @default(cuid())
+  brandId          String  @map("brand_id")
+  brand            Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name             String
+  normalizedName   String? @map("normalized_name") // turkishToAscii + lowercase + alphanumeric only
+  domain           String
   normalizedDomain String? @map("normalized_domain") // root domain (www + TLD suffix yok)
-  mentionScore   Int     @default(0) @map("mention_score")
-  readinessScore Int     @default(0) @map("readiness_score")
+  mentionScore     Int     @default(0) @map("mention_score")
+  readinessScore   Int     @default(0) @map("readiness_score")
   // per-platform scores stored as JSON
-  platforms      Json?   // { chatgpt: 65, claude: 52, gemini: 58, perplexity: 61 }
+  platforms        Json? // { chatgpt: 65, claude: 52, gemini: 58, perplexity: 61 }
 
   // AI discovery metadata
-  reason       String?            // Why this is a competitor (AI explanation)
-  products     String[]           // Their product/service lines
-  relevance    String  @default("direct") // "direct" | "indirect"
-  source       String  @default("manual") // "manual" | "ai_discovered" | "scan_discovered" | "free_audit" | "discovery"
+  reason       String? // Why this is a competitor (AI explanation)
+  products     String[] // Their product/service lines
+  relevance    String    @default("direct") // "direct" | "indirect"
+  source       String    @default("manual") // "manual" | "ai_discovered" | "scan_discovered" | "free_audit" | "discovery"
   discoveredAt DateTime? @map("discovered_at")
 
   // Primary competitor flag — audit ve karşılaştırmalar için ana 3 rakip
   // Brand başına max 3 tane isPrimary=true olmalı (endpoint kontrol eder)
-  isPrimary    Boolean @default(false) @map("is_primary")
+  isPrimary Boolean @default(false) @map("is_primary")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -209,7 +212,7 @@ model SourceDomain {
   brandId      String   @map("brand_id")
   brand        Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
   domain       String
-  type         String   // kurumsal, dizin, ugc, referans, medya
+  type         String // kurumsal, dizin, ugc, referans, medya
   usagePercent Float    @default(0) @map("usage_percent")
   avgCitations Float    @default(0) @map("avg_citations")
   urls         String[]
@@ -243,7 +246,7 @@ model AuditCheck {
   categoryId     String        @map("category_id")
   category       AuditCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   label          String
-  status         String        // pass, fail, partial
+  status         String // pass, fail, partial
   score          Int           @default(0)
   detail         String?
   recommendation String?
@@ -261,24 +264,24 @@ model ActionTask {
   id           String  @id @default(cuid())
   brandId      String  @map("brand_id")
   brand        Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  priority     String  // high, medium, low
+  priority     String // high, medium, low
   title        String
   impact       String
-  source       String  // site_audit, ai_action_plan
+  source       String // site_audit, ai_action_plan
   detail       String?
   completed    Boolean @default(false)
   raasEligible Boolean @default(false) @map("raas_eligible")
 
   // AI-generated action plan fields (Claude Opus)
   description      String?
-  difficulty       String?  // EASY, MEDIUM, HARD
-  estimatedTime    String?  @map("estimated_time")
-  canWeDoIt        Boolean  @default(false) @map("can_we_do_it")
-  selfServiceSteps Json?    @map("self_service_steps") // string[]
+  difficulty       String? // EASY, MEDIUM, HARD
+  estimatedTime    String? @map("estimated_time")
+  canWeDoIt        Boolean @default(false) @map("can_we_do_it")
+  selfServiceSteps Json?   @map("self_service_steps") // string[]
 
   // Before/After impact tracking
   impactSnapshot Json? @map("impact_snapshot") // { mentionScore, scanIdBefore, completedAt }
-  impactResult   Json? @map("impact_result")   // { mentionScoreAfter, delta, scanIdAfter, measuredAt }
+  impactResult   Json? @map("impact_result") // { mentionScoreAfter, delta, scanIdAfter, measuredAt }
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -292,11 +295,11 @@ model Notification {
   id        String   @id @default(cuid())
   brandId   String   @map("brand_id")
   brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  type      String   // scan_completed, scan_failed, score_up, score_down
+  type      String // scan_completed, scan_failed, score_up, score_down
   title     String
   message   String
   read      Boolean  @default(false)
-  data      Json?    // { scanId, oldScore, newScore }
+  data      Json? // { scanId, oldScore, newScore }
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("notifications")
@@ -323,10 +326,10 @@ model Payment {
   id              String   @id @default(cuid())
   profileId       String   @map("profile_id")
   profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  plan            String   // pro, business, agency
+  plan            String // pro, business, agency
   amount          Float
   currency        String   @default("TRY")
-  status          String   // pending, success, failed, refunded
+  status          String // pending, success, failed, refunded
   iyzicoPaymentId String?  @map("iyzico_payment_id")
   iyzicoToken     String?  @map("iyzico_token")
   period          String   @default("monthly") // monthly, yearly
@@ -339,25 +342,25 @@ model Payment {
 // ─── Checklist (Gelişim Planı) ───────────────────────
 
 model ChecklistItem {
-  id                String   @id @default(cuid())
-  brandId           String   @map("brand_id")
-  brand             Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  layer             Int      // 1, 2, 3
-  itemNumber        String   @map("item_number") // "1.1", "2.3"
-  simpleTitle       String   @map("simple_title")
-  simpleDescription String   @map("simple_description")
-  competitorNote    String?  @map("competitor_note")
-  status            String   @default("missing") // complete, warning, missing, locked
-  userMarkedDone    Boolean  @default(false) @map("user_marked_done")
-  verifiedByAI      Boolean  @default(false) @map("verified_by_ai")
-  difficulty        String   @default("MEDIUM") // EASY, MEDIUM, HARD
-  impact            String   @default("MEDIUM") // LOW, MEDIUM, HIGH
-  feasibilityScore  Int      @default(3) @map("feasibility_score") // 1-5
-  estimatedTime     String?  @map("estimated_time")
-  technicalDetail   Json?    @map("technical_detail")
-  selfServiceSteps  Json?    @map("self_service_steps") // string[]
-  canAgencyDo       Boolean  @default(false) @map("can_agency_do")
-  agencyPrice       String?  @map("agency_price")
+  id                String    @id @default(cuid())
+  brandId           String    @map("brand_id")
+  brand             Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  layer             Int // 1, 2, 3
+  itemNumber        String    @map("item_number") // "1.1", "2.3"
+  simpleTitle       String    @map("simple_title")
+  simpleDescription String    @map("simple_description")
+  competitorNote    String?   @map("competitor_note")
+  status            String    @default("missing") // complete, warning, missing, locked
+  userMarkedDone    Boolean   @default(false) @map("user_marked_done")
+  verifiedByAI      Boolean   @default(false) @map("verified_by_ai")
+  difficulty        String    @default("MEDIUM") // EASY, MEDIUM, HARD
+  impact            String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  feasibilityScore  Int       @default(3) @map("feasibility_score") // 1-5
+  estimatedTime     String?   @map("estimated_time")
+  technicalDetail   Json?     @map("technical_detail")
+  selfServiceSteps  Json?     @map("self_service_steps") // string[]
+  canAgencyDo       Boolean   @default(false) @map("can_agency_do")
+  agencyPrice       String?   @map("agency_price")
   completedAt       DateTime? @map("completed_at")
   reminderDate      DateTime? @map("reminder_date")
   lastCheckedAt     DateTime? @map("last_checked_at")
@@ -367,8 +370,8 @@ model ChecklistItem {
   impactSnapshot Json? @map("impact_snapshot")
   impactResult   Json? @map("impact_result")
 
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([brandId, itemNumber])
   @@map("checklist_items")
@@ -408,7 +411,7 @@ model Lead {
   phone     String
   timeSlot  String?  @map("time_slot")
   subject   String?
-  source    String?  // "sizi-arayalim", "analiz-sonuc", "panel-cta"
+  source    String? // "sizi-arayalim", "analiz-sonuc", "panel-cta"
   profileId String?  @map("profile_id")
   brandId   String?  @map("brand_id")
   status    String   @default("new") // new, contacted, converted, lost
@@ -422,33 +425,33 @@ model Lead {
 // ─── Query-Based Analysis Pages ─────────────────────
 
 model QueryPage {
-  id                    String   @id @default(uuid())
-  slug                  String   @unique
-  originalQuery         String   @map("original_query")
-  normalizedQuery       String   @map("normalized_query")
-  pageTitle             String   @map("page_title")
-  metaDescription       String?  @map("meta_description")
-  queryType             String   @map("query_type") // siralama, karsilastirma, bilgi, fiyat, tavsiye
-  sector                String?
-  location              String?
-  totalPlatformsResponded Int    @default(0) @map("total_platforms_responded")
-  totalFirmsMentioned   Int      @default(0) @map("total_firms_mentioned")
-  totalSourcesCited     Int      @default(0) @map("total_sources_cited")
-  timesQueried          Int      @default(1) @map("times_queried")
-  summaryText           String?  @map("summary_text")
-  platformResponses     Json?    @map("platform_responses")
-  firmRanking           Json?    @map("firm_ranking")
-  sourceAnalysis        Json?    @map("source_analysis")
-  crossPlatformNotes    String?  @map("cross_platform_notes")
-  visibilityTips        String?  @map("visibility_tips")
-  published             Boolean  @default(true)
-  lastQueriedAt         DateTime @default(now()) @map("last_queried_at")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  id                      String   @id @default(uuid())
+  slug                    String   @unique
+  originalQuery           String   @map("original_query")
+  normalizedQuery         String   @map("normalized_query")
+  pageTitle               String   @map("page_title")
+  metaDescription         String?  @map("meta_description")
+  queryType               String   @map("query_type") // siralama, karsilastirma, bilgi, fiyat, tavsiye
+  sector                  String?
+  location                String?
+  totalPlatformsResponded Int      @default(0) @map("total_platforms_responded")
+  totalFirmsMentioned     Int      @default(0) @map("total_firms_mentioned")
+  totalSourcesCited       Int      @default(0) @map("total_sources_cited")
+  timesQueried            Int      @default(1) @map("times_queried")
+  summaryText             String?  @map("summary_text")
+  platformResponses       Json?    @map("platform_responses")
+  firmRanking             Json?    @map("firm_ranking")
+  sourceAnalysis          Json?    @map("source_analysis")
+  crossPlatformNotes      String?  @map("cross_platform_notes")
+  visibilityTips          String?  @map("visibility_tips")
+  published               Boolean  @default(true)
+  lastQueriedAt           DateTime @default(now()) @map("last_queried_at")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
 
-  mentions              QueryPageMention[]
-  history               QueryPageHistory[]
-  blogPost              BlogPost?
+  mentions QueryPageMention[]
+  history  QueryPageHistory[]
+  blogPost BlogPost?
 
   @@map("query_pages")
 }
@@ -476,14 +479,14 @@ model QueryPageMention {
 }
 
 model QueryPageHistory {
-  id                       String    @id @default(uuid())
-  queryPageId              String    @map("query_page_id")
-  queryPage                QueryPage @relation(fields: [queryPageId], references: [id], onDelete: Cascade)
-  recordedAt               DateTime  @default(now()) @map("recorded_at")
-  firmRankingSnapshot      Json?     @map("firm_ranking_snapshot")
-  platformResponsesSnapshot Json?    @map("platform_responses_snapshot")
-  triggeredByProfileId     String?   @map("triggered_by_profile_id")
-  createdAt                DateTime  @default(now()) @map("created_at")
+  id                        String    @id @default(uuid())
+  queryPageId               String    @map("query_page_id")
+  queryPage                 QueryPage @relation(fields: [queryPageId], references: [id], onDelete: Cascade)
+  recordedAt                DateTime  @default(now()) @map("recorded_at")
+  firmRankingSnapshot       Json?     @map("firm_ranking_snapshot")
+  platformResponsesSnapshot Json?     @map("platform_responses_snapshot")
+  triggeredByProfileId      String?   @map("triggered_by_profile_id")
+  createdAt                 DateTime  @default(now()) @map("created_at")
 
   @@map("query_page_history")
 }
@@ -491,27 +494,27 @@ model QueryPageHistory {
 // ─── Blog Posts (auto-generated from analysis) ──────
 
 model BlogPost {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   title           String
-  slug            String    @unique
-  content         String    @db.Text
-  metaDescription String?   @map("meta_description")
-  sectorTag       String?   @map("sector_tag")
-  analysisType    String    @default("firma") @map("analysis_type")
-  queryLanguage   String    @default("tr") @map("query_language")
+  slug            String     @unique
+  content         String     @db.Text
+  metaDescription String?    @map("meta_description")
+  sectorTag       String?    @map("sector_tag")
+  analysisType    String     @default("firma") @map("analysis_type")
+  queryLanguage   String     @default("tr") @map("query_language")
   rankings        Json?
   platforms       Json?
-  runCount        Int       @default(1) @map("run_count")
-  runDate         DateTime? @map("run_date")
-  ogImageUrl      String?   @map("og_image_url")
-  status          String    @default("queued")
-  generatedAt     DateTime? @map("generated_at")
-  publishedAt     DateTime? @map("published_at")
-  queryPageId     String?   @unique @map("query_page_id")
+  runCount        Int        @default(1) @map("run_count")
+  runDate         DateTime?  @map("run_date")
+  ogImageUrl      String?    @map("og_image_url")
+  status          String     @default("queued")
+  generatedAt     DateTime?  @map("generated_at")
+  publishedAt     DateTime?  @map("published_at")
+  queryPageId     String?    @unique @map("query_page_id")
   queryPage       QueryPage? @relation(fields: [queryPageId], references: [id], onDelete: SetNull)
-  isLegacy        Boolean   @default(false) @map("is_legacy")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  isLegacy        Boolean    @default(false) @map("is_legacy")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
 
   @@map("blog_posts")
 }
@@ -539,28 +542,28 @@ model FailedResult {
 // ─── GEO Audit (43-item structured audit) ──────────────
 
 model GeoAudit {
-  id                    String   @id @default(cuid())
-  url                   String
-  brandName             String   @map("brand_name")
-  location              String?
-  sector                String?
-  userType              String   @map("user_type") // firma | kisi | eticaret | yurtdisi
-  overallScore          Int      @map("overall_score")
-  competitorScore       Int?     @map("competitor_score")
-  competitorName        String?  @map("competitor_name")
-  competitorUrl         String?  @map("competitor_url")
-  auditItems            Json     @map("audit_items")     // 43 madde detayı
-  categoryScores        Json     @map("category_scores") // 6 kategori skoru
-  estimatedMonthlyLoss  Int?     @map("estimated_monthly_loss")
-  estimatedYearlyLoss   Int?     @map("estimated_yearly_loss")
-  personalAnalysis      String?  @map("personal_analysis") @db.Text
-  categorySummaries     Json?    @map("category_summaries")
-  rawDataforseo         Json?    @map("raw_dataforseo")
-  rawAiVisibility       Json?    @map("raw_ai_visibility")
-  isFree                Boolean  @default(true) @map("is_free")
-  userId                String?  @map("user_id")
-  source                String?  // utm_source (isitmax, direct, vb.)
-  createdAt             DateTime @default(now()) @map("created_at")
+  id                   String   @id @default(cuid())
+  url                  String
+  brandName            String   @map("brand_name")
+  location             String?
+  sector               String?
+  userType             String   @map("user_type") // firma | kisi | eticaret | yurtdisi
+  overallScore         Int      @map("overall_score")
+  competitorScore      Int?     @map("competitor_score")
+  competitorName       String?  @map("competitor_name")
+  competitorUrl        String?  @map("competitor_url")
+  auditItems           Json     @map("audit_items") // 43 madde detayı
+  categoryScores       Json     @map("category_scores") // 6 kategori skoru
+  estimatedMonthlyLoss Int?     @map("estimated_monthly_loss")
+  estimatedYearlyLoss  Int?     @map("estimated_yearly_loss")
+  personalAnalysis     String?  @map("personal_analysis") @db.Text
+  categorySummaries    Json?    @map("category_summaries")
+  rawDataforseo        Json?    @map("raw_dataforseo")
+  rawAiVisibility      Json?    @map("raw_ai_visibility")
+  isFree               Boolean  @default(true) @map("is_free")
+  userId               String?  @map("user_id")
+  source               String? // utm_source (isitmax, direct, vb.)
+  createdAt            DateTime @default(now()) @map("created_at")
 
   @@index([userId])
   @@index([createdAt])
@@ -574,10 +577,10 @@ model ServicePackage {
   name                String
   slug                String   @unique
   userType            String   @map("user_type") // firma | kisi | eticaret | yurtdisi
-  tier                String   // temel | buyume | hakimiyet
-  price               Int      // TRY
+  tier                String // temel | buyume | hakimiyet
+  price               Int // TRY
   description         String   @db.Text
-  deliverables        Json     // string[]
+  deliverables        Json // string[]
   auditItemsFixed     Json     @map("audit_items_fixed") // string[]
   estimatedScoreBoost Int      @map("estimated_score_boost")
   deliveryDays        Int      @default(7) @map("delivery_days")
@@ -585,7 +588,7 @@ model ServicePackage {
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
-  orders              ServiceOrder[]
+  orders ServiceOrder[]
 
   @@unique([userType, tier])
   @@map("service_packages")
@@ -594,26 +597,26 @@ model ServicePackage {
 // ─── Service Orders (Escrow) ───────────────────────────
 
 model ServiceOrder {
-  id                String   @id @default(cuid())
-  userId            String   @map("user_id")
-  packageId         String   @map("package_id")
-  package           ServicePackage @relation(fields: [packageId], references: [id])
-  auditId           String?  @map("audit_id")
-  postAuditId       String?  @map("post_audit_id")
-  status            String   @default("pending") // pending | in_progress | delivered | approved | paid | cancelled
-  iyzicoPaymentRef  String?  @map("iyzico_payment_ref")
-  iyzicoTokenRef    String?  @map("iyzico_token_ref")
-  amount            Int
-  deliveredAt       DateTime? @map("delivered_at")
-  approvedAt        DateTime? @map("approved_at")
-  paidAt            DateTime? @map("paid_at")
-  autoApproveAt     DateTime? @map("auto_approve_at")
-  preScore          Int?     @map("pre_score")
-  postScore         Int?     @map("post_score")
-  itemsFixed        Json?    @map("items_fixed")
-  adminNotes        String?  @map("admin_notes") @db.Text
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id               String         @id @default(cuid())
+  userId           String         @map("user_id")
+  packageId        String         @map("package_id")
+  package          ServicePackage @relation(fields: [packageId], references: [id])
+  auditId          String?        @map("audit_id")
+  postAuditId      String?        @map("post_audit_id")
+  status           String         @default("pending") // pending | in_progress | delivered | approved | paid | cancelled
+  iyzicoPaymentRef String?        @map("iyzico_payment_ref")
+  iyzicoTokenRef   String?        @map("iyzico_token_ref")
+  amount           Int
+  deliveredAt      DateTime?      @map("delivered_at")
+  approvedAt       DateTime?      @map("approved_at")
+  paidAt           DateTime?      @map("paid_at")
+  autoApproveAt    DateTime?      @map("auto_approve_at")
+  preScore         Int?           @map("pre_score")
+  postScore        Int?           @map("post_score")
+  itemsFixed       Json?          @map("items_fixed")
+  adminNotes       String?        @map("admin_notes") @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([status])
