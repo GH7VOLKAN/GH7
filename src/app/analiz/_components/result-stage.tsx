@@ -9,16 +9,22 @@ import type {
   SelectedCompetitor,
 } from "@/lib/analiz/types";
 import { MarkdownView } from "./markdown-view";
+import { AILogo } from "./ai-logo";
 
 type Props = {
   result: AnalyzeResult;
   onFinalize: (selected: SelectedCompetitor[]) => void;
 };
 
+type Tab = "score" | "queries" | "answers";
+
 export function ResultStage({ result, onFinalize }: Props) {
+  const [tab, setTab] = useState<Tab>("score");
   const [selected, setSelected] = useState<SelectedCompetitor[]>([]);
   const [manualInput, setManualInput] = useState("");
-  const [openQuery, setOpenQuery] = useState<string | null>(null);
+  const [openQuery, setOpenQuery] = useState<string | null>(
+    result.queries[0]?.id ?? null,
+  );
 
   const profile = result.firmProfile;
 
@@ -41,372 +47,505 @@ export function ResultStage({ result, onFinalize }: Props) {
   };
 
   const canFinalize = selected.length >= 1 && selected.length <= 3;
+  const mentionCountByQuery = new Map(
+    result.queries.map((q) => [
+      q.id,
+      q.answers.filter((a) => a.mentionedYou).length,
+    ]),
+  );
 
   return (
-    <>
-      {/* Firm Profile */}
-      <section className={s.screen}>
-        <div className={s.screenLabel}>Ekran 3 · Senin Profilin</div>
-        <h2 className={s.h2}>{profile.name}</h2>
-        <p className={s.sub}>{profile.sector}</p>
-        {(profile.location.district || profile.location.city) && (
-          <p style={{ color: "var(--g500)", marginTop: 4, fontSize: 14 }}>
-            {[profile.location.district, profile.location.city].filter(Boolean).join(", ")}
-          </p>
-        )}
-
-        {profile.distinctives.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <div style={{ fontSize: 11, color: "var(--g500)", letterSpacing: "0.08em", marginBottom: 12 }}>
-              AYIRT EDİCİ ÖZELLİKLER
-            </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {profile.distinctives.map((d) => (
-                <li
-                  key={d}
-                  style={{
-                    padding: "6px 12px",
-                    background: "var(--g50)",
-                    borderRadius: 4,
-                    fontSize: 13,
-                  }}
-                >
-                  {d}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {profile.products.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <div style={{ fontSize: 11, color: "var(--g500)", letterSpacing: "0.08em", marginBottom: 12 }}>
-              ANA ÜRÜN/HİZMETLER
-            </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {profile.products.map((p) => (
-                <li key={p} style={{ padding: "4px 0", fontSize: 14 }}>
-                  {p}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
-
-      {/* Scoreboard */}
-      <section className={s.screen}>
-        <div className={s.screenLabel}>Ekran 4 · Skor</div>
-        <h2 className={s.h2}>
-          {result.userMentions.totalMentions} / {result.queries.length * 5}
-        </h2>
-        <p className={s.sub}>
-          5 AI × {result.queries.length} sorguda {result.userMentions.totalMentions} kez anıldın.
-          {result.healingAttempted && " İlk deneme yetersiz, ikinci geçiş yapıldı."}
+    <div className={s.resultWrapper}>
+      {/* Firm profile hero */}
+      <section className={s.firmHero}>
+        <div className={s.screenLabel}>SENİN PROFİLİN</div>
+        <h1 className={s.firmName}>{profile.name}</h1>
+        <p className={s.firmMeta}>
+          {profile.sector}
+          {(profile.location.district || profile.location.city) &&
+            ` · ${[profile.location.district, profile.location.city].filter(Boolean).join(", ")}`}
         </p>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 24, fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--g200)" }}>
-              <th style={{ textAlign: "left", padding: "8px 4px", fontSize: 11, color: "var(--g500)", letterSpacing: "0.08em" }}>
-                SORGU
-              </th>
-              {Object.keys(AI_PROVIDER_LABELS).map((p) => (
-                <th
-                  key={p}
-                  style={{
-                    padding: "8px 4px",
-                    fontSize: 11,
-                    color: "var(--g500)",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {AI_PROVIDER_LABELS[p as keyof typeof AI_PROVIDER_LABELS]}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {result.queries.map((q) => (
-              <tr key={q.id} style={{ borderBottom: "1px solid var(--g100)" }}>
-                <td style={{ padding: "10px 4px", maxWidth: 300 }}>
-                  {q.text}
-                  {q.generation === 2 && (
-                    <span
-                      style={{
-                        marginLeft: 6,
-                        padding: "1px 4px",
-                        background: "var(--g100)",
-                        borderRadius: 2,
-                        fontSize: 9,
-                        letterSpacing: "0.08em",
-                      }}
-                    >
-                      2.GEÇİŞ
-                    </span>
-                  )}
-                </td>
-                {Object.keys(AI_PROVIDER_LABELS).map((p) => {
-                  const ans = q.answers.find((a) => a.provider === p);
-                  const mark = ans?.mentionedYou
-                    ? "●"
-                    : ans?.text
-                      ? "○"
-                      : "—";
-                  return (
-                    <td
-                      key={p}
-                      style={{
-                        padding: "10px 4px",
-                        textAlign: "center",
-                        color: ans?.mentionedYou ? "var(--black)" : "var(--g400)",
-                        fontWeight: ans?.mentionedYou ? 700 : 400,
-                      }}
-                    >
-                      {mark}
-                    </td>
-                  );
-                })}
-              </tr>
+        {profile.distinctives.length > 0 && (
+          <ul className={s.distinctivesList}>
+            {profile.distinctives.map((d) => (
+              <li key={d} className={s.distinctiveChip}>
+                {d}
+              </li>
             ))}
-          </tbody>
-        </table>
+          </ul>
+        )}
       </section>
 
-      {/* Query + Answer Details (accordion) */}
-      <section className={s.screen}>
-        <div className={s.screenLabel}>Ekran 5 · AI Cevapları</div>
-        <h2 className={s.h2}>Detaylar.</h2>
+      {/* Score + Tab navigation */}
+      <section className={s.scoreHero}>
+        <div className={s.scoreBig}>
+          <span className={s.scoreNum}>{result.userMentions.totalMentions}</span>
+          <span className={s.scoreDiv}>/</span>
+          <span className={s.scoreTotal}>{result.queries.length * 5}</span>
+        </div>
+        <p className={s.scoreSub}>
+          5 AI × {result.queries.length} sorguda {result.userMentions.totalMentions} kez anıldın.
+          {result.healingAttempted && " İlk denemede bulunamadı, farklı açıdan yeniden sorduk."}
+        </p>
 
-        {result.queries.map((q) => {
-          const open = openQuery === q.id;
-          const mentionCount = q.answers.filter((a) => a.mentionedYou).length;
-          return (
-            <div key={q.id} style={{ borderBottom: "1px solid var(--g200)" }}>
-              <button
-                onClick={() => setOpenQuery(open ? null : q.id)}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "100%",
-                  padding: "16px 0",
-                  background: "none",
-                  border: "none",
-                  fontFamily: "inherit",
-                  fontSize: 15,
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                <span>&ldquo;{q.text}&rdquo;</span>
-                <span style={{ fontSize: 13, color: "var(--g500)", whiteSpace: "nowrap", marginLeft: 12 }}>
-                  {mentionCount}/5 {open ? "−" : "+"}
-                </span>
-              </button>
-              {open && (
-                <div style={{ paddingBottom: 24 }}>
-                  {q.answers.map((a) => (
-                    <div key={a.provider} style={{ padding: "16px 0", borderTop: "1px solid var(--g100)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                        <strong style={{ fontSize: 13, letterSpacing: "0.04em" }}>
-                          {AI_PROVIDER_LABELS[a.provider]}
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            color: a.mentionedYou ? "var(--black)" : "var(--g400)",
-                            letterSpacing: "0.08em",
-                            fontWeight: a.mentionedYou ? 700 : 400,
-                          }}
-                        >
-                          {a.mentionedYou ? `${profile.name.toUpperCase()} ANILDI` : a.error ? "CEVAP YOK" : "ANILMADI"}
-                        </span>
-                      </div>
-                      {a.error ? (
-                        <p style={{ color: "var(--g400)", fontSize: 13, fontStyle: "italic" }}>
-                          Bu AI cevap dönemedi ({a.error.slice(0, 80)})
-                        </p>
-                      ) : a.text ? (
-                        <MarkdownView text={a.text} />
-                      ) : (
-                        <p style={{ color: "var(--g400)", fontSize: 13 }}>Boş cevap.</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {/* Tabs */}
+        <div className={s.tabs} role="tablist">
+          <button
+            role="tab"
+            aria-selected={tab === "score"}
+            onClick={() => setTab("score")}
+            className={`${s.tab} ${tab === "score" ? s.tabActive : ""}`}
+          >
+            Skor
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === "queries"}
+            onClick={() => setTab("queries")}
+            className={`${s.tab} ${tab === "queries" ? s.tabActive : ""}`}
+          >
+            Sorgular
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === "answers"}
+            onClick={() => setTab("answers")}
+            className={`${s.tab} ${tab === "answers" ? s.tabActive : ""}`}
+          >
+            Cevaplar
+          </button>
+        </div>
       </section>
 
-      {/* Competitor Selection */}
-      <section className={s.screen}>
-        <div className={s.screenLabel}>Ekran 6 · Rakip Seç</div>
+      {/* Tab content */}
+      <section className={s.tabContent}>
+        {tab === "score" && (
+          <ScoreTab result={result} mentionCountByQuery={mentionCountByQuery} />
+        )}
+        {tab === "queries" && <QueriesTab result={result} />}
+        {tab === "answers" && (
+          <AnswersTab
+            result={result}
+            openQuery={openQuery}
+            setOpenQuery={setOpenQuery}
+            firmName={profile.name}
+          />
+        )}
+      </section>
+
+      {/* Competitor selection */}
+      <section className={s.competitorSection}>
+        <div className={s.screenLabel}>RAKİP SEÇ</div>
         <h2 className={s.h2}>3 rakibini seç.</h2>
         <p className={s.sub}>AI cevaplarında en çok geçen firmalar. Frekans sıralı.</p>
 
-        <ul style={{ listStyle: "none", padding: 0, margin: "24px 0 16px" }}>
+        <ul className={s.candidateList}>
           {result.candidateCompetitors.slice(0, 15).map((c) => {
             const isSel = selected.some((x) => x.name === c.name);
             return (
               <li
                 key={c.name}
                 onClick={() => toggle(c)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "auto 1fr auto auto",
-                  gap: 12,
-                  alignItems: "center",
-                  padding: "12px 0",
-                  borderBottom: "1px solid var(--g200)",
-                  cursor: "pointer",
-                }}
+                className={`${s.candidateItem} ${isSel ? s.candidateSelected : ""}`}
               >
-                <span
-                  style={{
-                    width: 18,
-                    height: 18,
-                    border: "1px solid var(--g400)",
-                    borderRadius: 3,
-                    background: isSel ? "var(--black)" : "transparent",
-                    color: "var(--white)",
-                    fontSize: 12,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <span className={`${s.checkbox} ${isSel ? s.checkboxChecked : ""}`}>
                   {isSel ? "✓" : ""}
                 </span>
-                <span style={{ fontSize: 15, fontWeight: 500 }}>{c.name}</span>
-                <span style={{ fontSize: 13, color: "var(--g500)", whiteSpace: "nowrap" }}>
-                  {c.mentionCount} anıldı
-                </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: "var(--g400)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {c.providers.slice(0, 3).map((p) => AI_PROVIDER_LABELS[p].slice(0, 3)).join(", ")}
-                </span>
+                <span className={s.candidateName}>{c.name}</span>
+                <span className={s.candidateFreq}>{c.mentionCount} anıldı</span>
+                <div className={s.candidateProviders}>
+                  {c.providers.slice(0, 5).map((p) => (
+                    <AILogo key={p} provider={p} size={14} />
+                  ))}
+                </div>
               </li>
             );
           })}
-          {selected.filter((x) => x.isNew).map((c) => (
-            <li
-              key={c.name}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "auto 1fr auto",
-                gap: 12,
-                alignItems: "center",
-                padding: "12px 0",
-                borderBottom: "1px solid var(--g200)",
-              }}
-            >
-              <span
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 3,
-                  background: "var(--black)",
-                  color: "var(--white)",
-                  fontSize: 12,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                ✓
-              </span>
-              <span style={{ fontSize: 15, fontWeight: 500 }}>{c.name}</span>
-              <span
-                style={{
-                  fontSize: 10,
-                  padding: "2px 6px",
-                  background: "var(--black)",
-                  color: "var(--white)",
-                  borderRadius: 2,
-                  letterSpacing: "0.08em",
-                }}
-              >
-                YENİ · SONRAKİ TARAMADA
-              </span>
-            </li>
-          ))}
+          {selected
+            .filter((x) => x.isNew)
+            .map((c) => (
+              <li key={c.name} className={`${s.candidateItem} ${s.candidateSelected}`}>
+                <span className={`${s.checkbox} ${s.checkboxChecked}`}>✓</span>
+                <span className={s.candidateName}>{c.name}</span>
+                <span className={s.candidateNewBadge}>YENİ · sonraki taramada</span>
+              </li>
+            ))}
         </ul>
 
         {selected.length < 3 && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+          <div className={s.manualRow}>
             <input
               type="text"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              placeholder="Başka bir firma ekle (manuel)"
+              placeholder="Başka bir firma ekle"
               onKeyDown={(e) => e.key === "Enter" && addManual()}
-              style={{
-                flex: 1,
-                padding: "10px 14px",
-                border: "1px dashed var(--g300)",
-                borderRadius: 6,
-                fontFamily: "inherit",
-                fontSize: 14,
-                outline: "none",
-              }}
+              className={s.manualInput}
             />
-            <button
-              onClick={addManual}
-              style={{
-                padding: "10px 16px",
-                background: "var(--g100)",
-                color: "var(--black)",
-                border: "none",
-                borderRadius: 6,
-                fontFamily: "inherit",
-                fontSize: 14,
-                cursor: "pointer",
-              }}
-            >
+            <button onClick={addManual} className={s.manualBtn}>
               Ekle
             </button>
           </div>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingTop: 16,
-            borderTop: "1px solid var(--g200)",
-          }}
-        >
-          <span style={{ fontSize: 13, color: "var(--g500)" }}>Seçilen: {selected.length}/3</span>
-          <button
-            onClick={() => canFinalize && onFinalize(selected)}
-            disabled={!canFinalize}
-            style={{
-              padding: "14px 28px",
-              background: canFinalize ? "var(--black)" : "var(--g200)",
-              color: canFinalize ? "var(--white)" : "var(--g400)",
-              border: "none",
-              borderRadius: 6,
-              fontFamily: "inherit",
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: canFinalize ? "pointer" : "not-allowed",
-            }}
-          >
-            Dashboard&apos;a Git →
-          </button>
+        <div className={s.competitorFooter}>
+          <span className={s.footerCount}>Seçilen: {selected.length}/3</span>
         </div>
       </section>
-    </>
+
+      {/* Pro CTA — 43 madde */}
+      <ProGate
+        canFinalize={canFinalize}
+        onFinalize={() => onFinalize(selected)}
+        firmName={profile.name}
+        mentionScore={result.userMentions.totalMentions}
+        totalPossible={result.queries.length * 5}
+      />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Score Tab — matrix + legend
+// ═══════════════════════════════════════════════════════════
+
+function ScoreTab({
+  result,
+  mentionCountByQuery,
+}: {
+  result: AnalyzeResult;
+  mentionCountByQuery: Map<string, number>;
+}) {
+  return (
+    <div>
+      <div className={s.matrixWrap}>
+        <table className={s.matrix}>
+          <thead>
+            <tr>
+              <th className={s.matrixHeaderSorgu}>SORGU</th>
+              {Object.keys(AI_PROVIDER_LABELS).map((p) => (
+                <th key={p} className={s.matrixHeaderAI}>
+                  <AILogo provider={p as keyof typeof AI_PROVIDER_LABELS} size={18} />
+                  <span className={s.matrixHeaderLabel}>
+                    {AI_PROVIDER_LABELS[p as keyof typeof AI_PROVIDER_LABELS]}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {result.queries.map((q) => {
+              const count = mentionCountByQuery.get(q.id) ?? 0;
+              return (
+                <tr key={q.id} className={s.matrixRow}>
+                  <td className={s.matrixSorgu}>
+                    <span className={s.matrixSorguText}>{q.text}</span>
+                    {q.generation === 2 && (
+                      <span className={s.gen2Badge}>2.GEÇİŞ</span>
+                    )}
+                    <span className={s.matrixRowScore}>{count}/5</span>
+                  </td>
+                  {Object.keys(AI_PROVIDER_LABELS).map((p) => {
+                    const ans = q.answers.find((a) => a.provider === p);
+                    return (
+                      <td
+                        key={p}
+                        className={`${s.matrixCell} ${
+                          ans?.mentionedYou
+                            ? s.cellMentioned
+                            : ans?.text
+                              ? s.cellNotMentioned
+                              : s.cellEmpty
+                        }`}
+                      >
+                        {ans?.mentionedYou ? "●" : ans?.text ? "○" : "—"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className={s.legend}>
+        <span>
+          <span className={s.legendDotFilled}>●</span> AI seni andı
+        </span>
+        <span>
+          <span className={s.legendDotEmpty}>○</span> Andı ama sen yoktun
+        </span>
+        <span>
+          <span className={s.legendDotMissing}>—</span> Cevap yok
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Queries Tab — sadece sorguları göster
+// ═══════════════════════════════════════════════════════════
+
+function QueriesTab({ result }: { result: AnalyzeResult }) {
+  return (
+    <ol className={s.queryList}>
+      {result.queries.map((q, i) => {
+        const mentionCount = q.answers.filter((a) => a.mentionedYou).length;
+        return (
+          <li key={q.id} className={s.queryItem}>
+            <div className={s.queryNumber}>Q{i + 1}</div>
+            <div className={s.queryBody}>
+              <p className={s.queryText}>{q.text}</p>
+              <div className={s.queryMeta}>
+                <span className={s.queryMetaScore}>{mentionCount}/5 AI anıldın</span>
+                {q.generation === 2 && (
+                  <span className={s.gen2Badge}>2.GEÇİŞ</span>
+                )}
+                <div className={s.queryMetaProviders}>
+                  {q.answers
+                    .filter((a) => a.mentionedYou)
+                    .map((a) => (
+                      <AILogo key={a.provider} provider={a.provider} size={14} />
+                    ))}
+                </div>
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Answers Tab — accordion, full markdown
+// ═══════════════════════════════════════════════════════════
+
+function AnswersTab({
+  result,
+  openQuery,
+  setOpenQuery,
+  firmName,
+}: {
+  result: AnalyzeResult;
+  openQuery: string | null;
+  setOpenQuery: (id: string | null) => void;
+  firmName: string;
+}) {
+  return (
+    <ul className={s.answerAccordion}>
+      {result.queries.map((q) => {
+        const open = openQuery === q.id;
+        const mentionCount = q.answers.filter((a) => a.mentionedYou).length;
+        return (
+          <li key={q.id} className={s.answerItem}>
+            <button
+              onClick={() => setOpenQuery(open ? null : q.id)}
+              className={s.answerToggle}
+              aria-expanded={open}
+            >
+              <span className={s.answerQuery}>&ldquo;{q.text}&rdquo;</span>
+              <span className={s.answerMeta}>
+                <span className={s.answerMetaCount}>{mentionCount}/5</span>
+                <span className={s.answerMetaChevron}>{open ? "−" : "+"}</span>
+              </span>
+            </button>
+            {open && (
+              <div className={s.answerBody}>
+                {q.answers.map((a) => (
+                  <div key={a.provider} className={s.answerPanel}>
+                    <div className={s.answerHeader}>
+                      <div className={s.answerProvider}>
+                        <AILogo provider={a.provider} size={16} />
+                        <strong>{AI_PROVIDER_LABELS[a.provider]}</strong>
+                      </div>
+                      <span
+                        className={`${s.answerBadge} ${
+                          a.mentionedYou
+                            ? s.answerBadgeMentioned
+                            : a.error
+                              ? s.answerBadgeError
+                              : s.answerBadgeMissed
+                        }`}
+                      >
+                        {a.mentionedYou
+                          ? `${firmName.toUpperCase()} ANILDI`
+                          : a.error
+                            ? "CEVAP YOK"
+                            : "ANILMADI"}
+                      </span>
+                    </div>
+                    {a.error ? (
+                      <p className={s.answerError}>
+                        Bu AI cevap dönemedi ({a.error.slice(0, 100)})
+                      </p>
+                    ) : a.text ? (
+                      <MarkdownView text={a.text} />
+                    ) : (
+                      <p className={s.answerError}>Boş cevap.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Pro Gate — 43 madde tanıtımı, blurred liste, güçlü CTA
+// ═══════════════════════════════════════════════════════════
+
+const AUDIT_43_PREVIEW = [
+  "Schema.org structured data düzeni",
+  "FAQ page implementasyonu",
+  "About sayfası otorite sinyalleri",
+  "Hakkımızda genişletilmiş anlatım",
+  "Teknik altyapı açılımı",
+  "Ürün/hizmet sayfalarında soru-cevap",
+  "Müşteri referansı ve case study sayfaları",
+  "Medya/basın mentions koleksiyonu",
+  "E-E-A-T sinyal güçlendirme",
+  "Backlink profili AI crawler optimizasyonu",
+  "Site hiyerarşisi AI için okunabilirlik",
+  "Meta description AI-first yazım",
+  "Alt text AI indexing optimizasyonu",
+  "URL slug yapısı düzenleme",
+  "Internal link AI crawler flow",
+  "Author bio sayfaları",
+  "Contact page trust signal",
+  "Pricing page transparency",
+  "Process/methodology anlatım",
+  "Industry certifications display",
+  "Case study structured markup",
+  "Review & testimonial schema",
+  "Video content structured data",
+  "Image captions AI context",
+  "Table data structured format",
+  "List markup doğru kullanım",
+  "Heading hierarchy AI okunabilir",
+  "Content freshness signals",
+  "Topical authority cluster",
+  "Expert author attribution",
+  "Published/updated date visibility",
+  "Industry glossary sayfası",
+  "Comparison pages",
+  "Alternative/versus sayfaları",
+  "How-to içerik yapısı",
+  "Definition box optimizasyonu",
+  "Key facts featured prominently",
+  "Data citations (research, stats)",
+  "External authority references",
+  "Social proof visibility",
+  "Press mention aggregation",
+  "Award/recognition display",
+  "Team expertise signals",
+];
+
+function ProGate({
+  canFinalize,
+  onFinalize,
+  firmName,
+  mentionScore,
+  totalPossible,
+}: {
+  canFinalize: boolean;
+  onFinalize: () => void;
+  firmName: string;
+  mentionScore: number;
+  totalPossible: number;
+}) {
+  const missedCount = totalPossible - mentionScore;
+  return (
+    <section className={s.proGate}>
+      <div className={s.proLabel}>ŞİMDİ NE OLACAK</div>
+      <h2 className={s.proHeadline}>GEO is the new SEO.</h2>
+      <p className={s.proSub}>
+        {missedCount} AI cevabında görünmedin. Bu tesadüf değil — yapısal.
+        <br />
+        43 maddelik gelişim planın hazır. Sadece Pro&apos;da açılır.
+      </p>
+
+      {/* Stat strip — landing'deki istatistikler */}
+      <div className={s.proStats}>
+        <div className={s.proStat}>
+          <div className={s.proStatNum}>%25</div>
+          <div className={s.proStatLabel}>
+            Geleneksel arama trafiği 2026&apos;ya kadar düşecek
+          </div>
+          <div className={s.proStatSource}>Gartner, 2025</div>
+        </div>
+        <div className={s.proStat}>
+          <div className={s.proStatNum}>%40</div>
+          <div className={s.proStatLabel}>
+            GEO optimize içerik AI&apos;da daha görünür
+          </div>
+          <div className={s.proStatSource}>Princeton / ACM KDD, 2024</div>
+        </div>
+        <div className={s.proStat}>
+          <div className={s.proStatNum}>%60</div>
+          <div className={s.proStatLabel}>
+            Google aramalarının %60&apos;ı tıklama olmadan bitiyor
+          </div>
+          <div className={s.proStatSource}>Bain &amp; Company, 2025</div>
+        </div>
+      </div>
+
+      {/* 43 madde listesi — blurred */}
+      <div className={s.auditPreviewWrap}>
+        <div className={s.auditPreviewHeader}>
+          <span className={s.screenLabel}>
+            43 MADDE · {firmName.toUpperCase()} İÇİN ÖZEL HAZIRLANDI
+          </span>
+        </div>
+        <ol className={s.auditPreviewList}>
+          {AUDIT_43_PREVIEW.slice(0, 43).map((item, i) => (
+            <li key={i} className={s.auditPreviewItem}>
+              <span className={s.auditPreviewNum}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={s.auditPreviewText}>{item}</span>
+              <span className={s.auditPreviewLock}>Pro</span>
+            </li>
+          ))}
+        </ol>
+        <div className={s.auditBlurOverlay}>
+          <div className={s.auditBlurContent}>
+            <div className={s.auditBlurTitle}>43 madde · kilitli</div>
+            <p className={s.auditBlurSub}>
+              Her madde {firmName} için uygulanabilir halde. Tamamı Pro&apos;da açılır.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main CTA */}
+      <div className={s.proCTA}>
+        <div className={s.proCTAPrice}>
+          <span className={s.proCTAAmount}>₺699</span>
+          <span className={s.proCTAPeriod}>/ay</span>
+        </div>
+        <p className={s.proCTASub}>
+          Yıllık ₺8,388 · İlk ay koşulsuz iade
+        </p>
+        <ul className={s.proCTAFeatures}>
+          <li>43 madde için rakibine özel çözüm talimatları</li>
+          <li>Haftalık otomatik tarama, trend grafiği</li>
+          <li>Rakibin seni geçtiğinde e-posta + push uyarı</li>
+          <li>Haftalık 1 somut görev (&ldquo;bu hafta şunu düzelt&rdquo;)</li>
+          <li>GH7 servis pazarı — &ldquo;bunu benim yerime yapsın&rdquo; erişimi</li>
+        </ul>
+        <button
+          onClick={onFinalize}
+          disabled={!canFinalize}
+          className={`${s.proCTABtn} ${!canFinalize ? s.proCTABtnDisabled : ""}`}
+        >
+          {canFinalize ? "Pro'ya Geç ve Takibi Başlat →" : "Önce 1-3 rakip seç"}
+        </button>
+      </div>
+    </section>
   );
 }
