@@ -262,8 +262,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Profile.id'yi response'a ekle — modal/finalize bunu kullanır
+    const finalProfile = await prisma.profile.findFirst({
+      where: { phone: normalizedPhone },
+      select: { id: true },
+    });
+
     return NextResponse.json({
       success: true,
+      profileId: finalProfile?.id ?? null,
       tokenHash,
       email: profileEmail,
     });
