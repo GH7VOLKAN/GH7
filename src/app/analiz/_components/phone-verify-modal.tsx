@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import s from "../analiz.module.css";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   domain: string;
@@ -121,6 +122,36 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
         setError("Profil oluşturulamadı. Destek ekibine yazın.");
         setLoading(false);
         return;
+      }
+
+      // ═══ KRİTİK: Supabase session cookie oluştur ═══
+      // verify-sms-otp tokenHash döndürür — client-side verifyOtp bu
+      // tokenHash'i consume edip Supabase auth session cookie set eder.
+      // Bu adım atlanırsa /dashboard server-side getUser() null döner.
+      if (verifyData.tokenHash) {
+        const supabase = createClient();
+
+        // Eski 'sb-*' cookie'leri temizle (stale session varsa)
+        document.cookie.split(";").forEach((c) => {
+          const name = c.split("=")[0].trim();
+          if (name.startsWith("sb-")) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          }
+        });
+
+        const { error: verifyOtpError } = await supabase.auth.verifyOtp({
+          token_hash: verifyData.tokenHash,
+          type: "magiclink",
+        });
+
+        if (verifyOtpError) {
+          console.error("[modal] verifyOtp error:", verifyOtpError);
+          setError(
+            "Oturum oluşturulamadı: " + verifyOtpError.message,
+          );
+          setLoading(false);
+          return;
+        }
       }
 
       // can-start kontrolü — Pro/already_used filtreleri
