@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { Redis } from "@upstash/redis";
 import { runAnalyzePipeline } from "@/lib/ai/analyze-pipeline";
+import { prisma } from "@/lib/db";
 import type { AnalyzeInput, AnalyzeResult, Door } from "@/lib/analiz/types";
 
 export const runtime = "nodejs";
@@ -15,14 +16,14 @@ const TTL_SECONDS = 60 * 60 * 24 * 7;
 const VALID_DOORS: Door[] = ["firma", "kisi", "eticaret", "yurtdisi"];
 
 export async function POST(req: Request) {
-  let body: Partial<AnalyzeInput>;
+  let body: Partial<AnalyzeInput> & { profileId?: string };
   try {
-    body = (await req.json()) as Partial<AnalyzeInput>;
+    body = (await req.json()) as Partial<AnalyzeInput> & { profileId?: string };
   } catch {
     return NextResponse.json({ error: "Geçersiz JSON" }, { status: 400 });
   }
 
-  const { door, domain, fullName, city, targetMarket, targetLanguage, forceRefresh } = body;
+  const { door, domain, fullName, city, targetMarket, targetLanguage, forceRefresh, profileId } = body;
 
   if (!door || !VALID_DOORS.includes(door)) {
     return NextResponse.json({ error: "Geçersiz door" }, { status: 400 });
@@ -67,6 +68,24 @@ export async function POST(req: Request) {
 
   try {
     const result = await runAnalyzePipeline(input);
+
+    // Profile'ı güncelle: ücretsiz analiz kullanıldı işareti
+    if (profileId) {
+      try {
+        await prisma.profile.update({
+          where: { id: profileId },
+          data: {
+            freeAuditUsed: true,
+            freeAuditUsedAt: new Date(),
+          },
+        });
+        console.log(`[analyze] Profile ${profileId} freeAuditUsed=true`);
+      } catch (err) {
+        console.error("[analyze] Profile update failed:", err);
+        // Analiz sonucu etkilenmesin, sadece log
+      }
+    }
+
     await writeCache(cacheKey, result);
     return NextResponse.json(result);
   } catch (err) {
