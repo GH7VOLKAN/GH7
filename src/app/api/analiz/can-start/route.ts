@@ -80,7 +80,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ canStart: true });
+    return NextResponse.json({
+      canStart: true,
+      profileId: existing?.id ?? null,
+    });
   } catch (err) {
     console.error("[api/can-start] Error:", err);
     return NextResponse.json(

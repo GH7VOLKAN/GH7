@@ -77,7 +77,7 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) {
+      if (!res.ok || !data.success) {
         setError(data.error || "SMS gönderilemedi. Numaranı kontrol et.");
         setLoading(false);
         return;
@@ -109,28 +109,13 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
         body: JSON.stringify(verifyBody),
       });
       const verifyData = await verifyRes.json();
-      if (!verifyRes.ok || !verifyData.ok) {
+      if (!verifyRes.ok || !verifyData.success) {
         setError(verifyData.error || "Kod yanlış veya süresi dolmuş.");
         setLoading(false);
         return;
       }
 
-      const profileId = verifyData.profileId || verifyData.userId || "";
-
-      // Newsletter opt-in varsa Profile'a işle (email verildiyse)
-      if (email.trim() && newsletterOptIn && profileId) {
-        try {
-          await fetch("/api/analiz/newsletter-optin", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ profileId, optIn: true }),
-          });
-        } catch (err) {
-          console.warn("Newsletter opt-in failed (non-blocking):", err);
-        }
-      }
-
-      // can-start kontrolü
+      // can-start kontrolü — profileId buradan gelir
       setStage("checking");
       const canStartRes = await fetch("/api/analiz/can-start", {
         method: "POST",
@@ -157,6 +142,21 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
         setStage("enter_otp");
         setLoading(false);
         return;
+      }
+
+      const profileId = canStartData.profileId || "";
+
+      // Newsletter opt-in varsa Profile'a işle (email verildiyse)
+      if (email.trim() && newsletterOptIn && profileId) {
+        try {
+          await fetch("/api/analiz/newsletter-optin", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ profileId, optIn: true }),
+          });
+        } catch (err) {
+          console.warn("Newsletter opt-in failed (non-blocking):", err);
+        }
       }
 
       onVerified(profileId);
