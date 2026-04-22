@@ -227,6 +227,11 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
                 className={s.modalEmailInput}
                 autoComplete="email"
               />
+              <p className={s.modalEmailHint}>
+                → <strong>GH7 Advisor Haftalık</strong> — AI görünürlük
+                trendleri ve sektöründeki fırsatlar her Pazartesi sabah
+                e-postanda.
+              </p>
             </div>
 
             {email.trim() && (
