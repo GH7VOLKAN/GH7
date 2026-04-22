@@ -27,6 +27,13 @@ export function ResultStage({ result, onFinalize }: Props) {
   );
 
   const profile = result.firmProfile;
+  const totalPossible = result.queries.length * 5;
+  const mentionCountByQuery = new Map(
+    result.queries.map((q) => [
+      q.id,
+      q.answers.filter((a) => a.mentionedYou).length,
+    ]),
+  );
 
   const toggle = (cand: CandidateCompetitor) => {
     setSelected((prev) => {
@@ -47,16 +54,10 @@ export function ResultStage({ result, onFinalize }: Props) {
   };
 
   const canFinalize = selected.length >= 1 && selected.length <= 3;
-  const mentionCountByQuery = new Map(
-    result.queries.map((q) => [
-      q.id,
-      q.answers.filter((a) => a.mentionedYou).length,
-    ]),
-  );
 
   return (
     <div className={s.resultWrapper}>
-      {/* Firm profile hero */}
+      {/* ─── Firm profile hero ─── */}
       <section className={s.firmHero}>
         <div className={s.screenLabel}>SENİN PROFİLİN</div>
         <h1 className={s.firmName}>{profile.name}</h1>
@@ -77,48 +78,33 @@ export function ResultStage({ result, onFinalize }: Props) {
         )}
       </section>
 
-      {/* Score + Tab navigation */}
+      {/* ─── Score hero + tabs ─── */}
       <section className={s.scoreHero}>
         <div className={s.scoreBig}>
           <span className={s.scoreNum}>{result.userMentions.totalMentions}</span>
           <span className={s.scoreDiv}>/</span>
-          <span className={s.scoreTotal}>{result.queries.length * 5}</span>
+          <span className={s.scoreTotal}>{totalPossible}</span>
         </div>
         <p className={s.scoreSub}>
           5 AI × {result.queries.length} sorguda {result.userMentions.totalMentions} kez anıldın.
           {result.healingAttempted && " İlk denemede bulunamadı, farklı açıdan yeniden sorduk."}
         </p>
 
-        {/* Tabs */}
         <div className={s.tabs} role="tablist">
-          <button
-            role="tab"
-            aria-selected={tab === "score"}
-            onClick={() => setTab("score")}
-            className={`${s.tab} ${tab === "score" ? s.tabActive : ""}`}
-          >
-            Skor
-          </button>
-          <button
-            role="tab"
-            aria-selected={tab === "queries"}
-            onClick={() => setTab("queries")}
-            className={`${s.tab} ${tab === "queries" ? s.tabActive : ""}`}
-          >
-            Sorgular
-          </button>
-          <button
-            role="tab"
-            aria-selected={tab === "answers"}
-            onClick={() => setTab("answers")}
-            className={`${s.tab} ${tab === "answers" ? s.tabActive : ""}`}
-          >
-            Cevaplar
-          </button>
+          {(["score", "queries", "answers"] as const).map((t) => (
+            <button
+              key={t}
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => setTab(t)}
+              className={`${s.tab} ${tab === t ? s.tabActive : ""}`}
+            >
+              {t === "score" ? "Skor" : t === "queries" ? "Sorgular" : "Cevaplar"}
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* Tab content */}
       <section className={s.tabContent}>
         {tab === "score" && (
           <ScoreTab result={result} mentionCountByQuery={mentionCountByQuery} />
@@ -134,11 +120,25 @@ export function ResultStage({ result, onFinalize }: Props) {
         )}
       </section>
 
-      {/* Competitor selection */}
+      {/* ─── Opus Özet Analizi ─── */}
+      {result.commentary && result.commentary.length > 100 && (
+        <section className={s.commentarySection}>
+          <div className={s.screenLabel}>CLAUDE&apos;UN ANALİZİ</div>
+          <h2 className={s.commentaryHeadline}>Durum raporu.</h2>
+          <div className={s.commentaryBody}>
+            <MarkdownView text={result.commentary} />
+          </div>
+        </section>
+      )}
+
+      {/* ─── Rakip seç ─── */}
       <section className={s.competitorSection}>
         <div className={s.screenLabel}>RAKİP SEÇ</div>
         <h2 className={s.h2}>3 rakibini seç.</h2>
-        <p className={s.sub}>AI cevaplarında en çok geçen firmalar. Frekans sıralı.</p>
+        <p className={s.sub}>
+          AI cevaplarında en çok geçen firmalar. Frekans sırasına göre listelendi.
+          Sen seçtiklerin üzerinden haftalık takip yapılacak.
+        </p>
 
         <ul className={s.candidateList}>
           {result.candidateCompetitors.slice(0, 15).map((c) => {
@@ -163,7 +163,7 @@ export function ResultStage({ result, onFinalize }: Props) {
             );
           })}
           {selected
-            .filter((x) => x.isNew)
+            .filter((sc) => sc.isNew)
             .map((c) => (
               <li key={c.name} className={`${s.candidateItem} ${s.candidateSelected}`}>
                 <span className={`${s.checkbox} ${s.checkboxChecked}`}>✓</span>
@@ -194,20 +194,20 @@ export function ResultStage({ result, onFinalize }: Props) {
         </div>
       </section>
 
-      {/* Pro CTA — 43 madde */}
+      {/* ─── Pro Gate: fear-stats + 43 madde full + CTA ─── */}
       <ProGate
-        canFinalize={canFinalize}
-        onFinalize={() => onFinalize(selected)}
         firmName={profile.name}
         mentionScore={result.userMentions.totalMentions}
-        totalPossible={result.queries.length * 5}
+        totalPossible={totalPossible}
+        canFinalize={canFinalize}
+        onFinalize={() => onFinalize(selected)}
       />
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════
-// Score Tab — matrix + legend
+// Score Tab
 // ═══════════════════════════════════════════════════════════
 
 function ScoreTab({
@@ -241,9 +241,7 @@ function ScoreTab({
                 <tr key={q.id} className={s.matrixRow}>
                   <td className={s.matrixSorgu}>
                     <span className={s.matrixSorguText}>{q.text}</span>
-                    {q.generation === 2 && (
-                      <span className={s.gen2Badge}>2.GEÇİŞ</span>
-                    )}
+                    {q.generation === 2 && <span className={s.gen2Badge}>2.GEÇİŞ</span>}
                     <span className={s.matrixRowScore}>{count}/5</span>
                   </td>
                   {Object.keys(AI_PROVIDER_LABELS).map((p) => {
@@ -270,22 +268,16 @@ function ScoreTab({
         </table>
       </div>
       <div className={s.legend}>
-        <span>
-          <span className={s.legendDotFilled}>●</span> AI seni andı
-        </span>
-        <span>
-          <span className={s.legendDotEmpty}>○</span> Andı ama sen yoktun
-        </span>
-        <span>
-          <span className={s.legendDotMissing}>—</span> Cevap yok
-        </span>
+        <span><span className={s.legendDotFilled}>●</span> AI seni andı</span>
+        <span><span className={s.legendDotEmpty}>○</span> Andı ama sen yoktun</span>
+        <span><span className={s.legendDotMissing}>—</span> Cevap yok</span>
       </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════
-// Queries Tab — sadece sorguları göster
+// Queries Tab
 // ═══════════════════════════════════════════════════════════
 
 function QueriesTab({ result }: { result: AnalyzeResult }) {
@@ -300,15 +292,11 @@ function QueriesTab({ result }: { result: AnalyzeResult }) {
               <p className={s.queryText}>{q.text}</p>
               <div className={s.queryMeta}>
                 <span className={s.queryMetaScore}>{mentionCount}/5 AI anıldın</span>
-                {q.generation === 2 && (
-                  <span className={s.gen2Badge}>2.GEÇİŞ</span>
-                )}
+                {q.generation === 2 && <span className={s.gen2Badge}>2.GEÇİŞ</span>}
                 <div className={s.queryMetaProviders}>
-                  {q.answers
-                    .filter((a) => a.mentionedYou)
-                    .map((a) => (
-                      <AILogo key={a.provider} provider={a.provider} size={14} />
-                    ))}
+                  {q.answers.filter((a) => a.mentionedYou).map((a) => (
+                    <AILogo key={a.provider} provider={a.provider} size={14} />
+                  ))}
                 </div>
               </div>
             </div>
@@ -320,7 +308,7 @@ function QueriesTab({ result }: { result: AnalyzeResult }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// Answers Tab — accordion, full markdown
+// Answers Tab
 // ═══════════════════════════════════════════════════════════
 
 function AnswersTab({
@@ -398,153 +386,192 @@ function AnswersTab({
 }
 
 // ═══════════════════════════════════════════════════════════
-// Pro Gate — 43 madde tanıtımı, blurred liste, güçlü CTA
+// Pro Gate — full 43 madde görünür + dinamik CTA + korku mesajı
 // ═══════════════════════════════════════════════════════════
 
-const AUDIT_43_PREVIEW = [
-  "Schema.org structured data düzeni",
-  "FAQ page implementasyonu",
-  "About sayfası otorite sinyalleri",
-  "Hakkımızda genişletilmiş anlatım",
-  "Teknik altyapı açılımı",
-  "Ürün/hizmet sayfalarında soru-cevap",
-  "Müşteri referansı ve case study sayfaları",
-  "Medya/basın mentions koleksiyonu",
-  "E-E-A-T sinyal güçlendirme",
-  "Backlink profili AI crawler optimizasyonu",
-  "Site hiyerarşisi AI için okunabilirlik",
-  "Meta description AI-first yazım",
-  "Alt text AI indexing optimizasyonu",
-  "URL slug yapısı düzenleme",
-  "Internal link AI crawler flow",
-  "Author bio sayfaları",
-  "Contact page trust signal",
-  "Pricing page transparency",
-  "Process/methodology anlatım",
-  "Industry certifications display",
-  "Case study structured markup",
-  "Review & testimonial schema",
-  "Video content structured data",
-  "Image captions AI context",
-  "Table data structured format",
-  "List markup doğru kullanım",
-  "Heading hierarchy AI okunabilir",
-  "Content freshness signals",
-  "Topical authority cluster",
-  "Expert author attribution",
-  "Published/updated date visibility",
-  "Industry glossary sayfası",
-  "Comparison pages",
-  "Alternative/versus sayfaları",
-  "How-to içerik yapısı",
-  "Definition box optimizasyonu",
-  "Key facts featured prominently",
-  "Data citations (research, stats)",
-  "External authority references",
-  "Social proof visibility",
-  "Press mention aggregation",
-  "Award/recognition display",
-  "Team expertise signals",
+const AUDIT_43 = [
+  { title: "Schema.org structured data düzeni", hint: "AI crawler için yapılandırılmış veri" },
+  { title: "FAQ sayfası implementasyonu", hint: "Sorular AI tarafından okunur hale getirilir" },
+  { title: "About / Hakkımızda genişletilmiş anlatım", hint: "Otorite sinyali, kuruluş hikayesi" },
+  { title: "E-E-A-T otorite sinyalleri (Expert, Experience, Authoritativeness, Trust)", hint: "Google'ın AI'ya verdiği güvenilirlik sinyali" },
+  { title: "Ürün/hizmet sayfalarında yapılandırılmış Q&A", hint: "Her ürün için 'soru-cevap' bloğu" },
+  { title: "Müşteri referansları ve case study sayfaları", hint: "AI 'kim için iş yaptınız' sorusuna cevap verebilir" },
+  { title: "Medya/basın mentions koleksiyonu", hint: "3. taraf onayı, link profili" },
+  { title: "Backlink profili AI crawler optimizasyonu", hint: "Hangi siteler sana link veriyor, AI'lar takip ediyor" },
+  { title: "Site hiyerarşisi AI için okunabilirlik", hint: "URL yapısı, sitemap, internal linking" },
+  { title: "Meta description AI-first yazım", hint: "İlk 150 karakter AI snippet olarak gider" },
+  { title: "Alt text AI indexing optimizasyonu", hint: "Görselleri AI'a açıklayan metin" },
+  { title: "URL slug yapısı düzenleme", hint: "Anlamlı, kısa, anahtar kelime içeren URL'ler" },
+  { title: "Internal link AI crawler flow", hint: "Her sayfa 2-3 önemli sayfaya link verir" },
+  { title: "Author / uzman bio sayfaları", hint: "İçerik kim yazdı — AI bunu kişi otoritesiyle eşler" },
+  { title: "Contact page trust signal", hint: "Telefon, adres, vergi no — legitimacy için" },
+  { title: "Pricing page transparency", hint: "Fiyat görünür olursa AI 'bu firma' der" },
+  { title: "Process / methodology anlatım", hint: "İşi nasıl yapıyorsun — adım adım" },
+  { title: "Sektör sertifikaları display", hint: "TSE, ISO, CE vs. — AI bunları 'güvenilir' olarak işaretler" },
+  { title: "Case study structured markup", hint: "Her proje için schema.org Project markup" },
+  { title: "Review & testimonial schema", hint: "AI yorumları 'ortalama puan' olarak okur" },
+  { title: "Video content structured data", hint: "YouTube, Vimeo videoları schema ile eşle" },
+  { title: "Image captions AI context", hint: "Her önemli görselin altına açıklama" },
+  { title: "Table data structured format", hint: "Tablo verileri — fiyat listesi, ürün özellikleri" },
+  { title: "List markup doğru kullanım", hint: "<ul>, <ol> AI tarafından 'liste' olarak okunur" },
+  { title: "Heading hierarchy AI okunabilir", hint: "H1 → H2 → H3 mantıksal sıra" },
+  { title: "Content freshness signals", hint: "Son güncelleme tarihi, 'bu yıl' ifadeleri" },
+  { title: "Topical authority cluster", hint: "Bir konuda 10+ makale yazarak 'uzman' sinyali" },
+  { title: "Expert author attribution", hint: "Her makale kimin yazdı — doğrulanabilir" },
+  { title: "Published / updated date visibility", hint: "AI 'güncel mi' sorusuna bakar" },
+  { title: "Sektör terimleri sözlüğü sayfası", hint: "AI terminoloji için kaynak olarak kullanır" },
+  { title: "Karşılaştırma sayfaları (versus)", hint: "'X vs Y' sayfaları AI sorgularında çıkar" },
+  { title: "Alternative / alternatif sayfalar", hint: "'X alternatifi' arayan müşteriyi yakala" },
+  { title: "How-to içerik yapısı", hint: "'Nasıl yapılır' soruları AI'ya yapısal olarak sunulur" },
+  { title: "Definition box optimizasyonu", hint: "'X nedir' sorusuna tek paragraf net cevap" },
+  { title: "Key facts featured prominently", hint: "Rakam, istatistik, yıl — AI çıkarır" },
+  { title: "Data citations (research, stats)", hint: "Araştırma, çalışma alıntıları — 3. taraf onay" },
+  { title: "External authority references", hint: "Gazete, dergi, kurum linkleri" },
+  { title: "Social proof visibility", hint: "Sosyal medya takipçi, müşteri sayısı — görünür" },
+  { title: "Press mention aggregation", hint: "Basında yer aldın mı, liste et" },
+  { title: "Award / recognition display", hint: "Ödüller, sertifikalar — görsel ve metin olarak" },
+  { title: "Team expertise signals", hint: "Ekip üyeleri, uzmanlıkları" },
+  { title: "Industry association memberships", hint: "Hangi derneklere üyesin — güvenilirlik" },
+  { title: "Local SEO + GEO lokasyon eşleşmesi", hint: "Coğrafi sinyallerin AI'a doğru gitmesi" },
 ];
 
 function ProGate({
-  canFinalize,
-  onFinalize,
   firmName,
   mentionScore,
   totalPossible,
+  canFinalize,
+  onFinalize,
 }: {
-  canFinalize: boolean;
-  onFinalize: () => void;
   firmName: string;
   mentionScore: number;
   totalPossible: number;
+  canFinalize: boolean;
+  onFinalize: () => void;
 }) {
+  const scoreRatio = totalPossible > 0 ? mentionScore / totalPossible : 0;
   const missedCount = totalPossible - mentionScore;
+
+  let toneCategory: "strong" | "medium" | "weak";
+  if (scoreRatio >= 0.6) toneCategory = "strong";
+  else if (scoreRatio >= 0.25) toneCategory = "medium";
+  else toneCategory = "weak";
+
+  const ctaHeadline =
+    toneCategory === "strong"
+      ? "Zirvedesin. Rakibin hamlesini ilk fark eden sen ol."
+      : toneCategory === "medium"
+        ? "Ortadasın. 43 madde seni zirveye çıkartır."
+        : "Görünmezsin. 43 madde bu durumu değiştirir.";
+
+  const ctaSub =
+    toneCategory === "strong"
+      ? `${firmName} şu anki konumu güçlü. Ama AI'da görünürlük bir kez kazanılan değil, her hafta savunulan bir şey. Pro ile rakibinin hamlesini ilk fark eden sen olursun.`
+      : toneCategory === "medium"
+        ? `${firmName} ${mentionScore}/${totalPossible} anıldı. Potansiyel var ama tamamlanmamış. 43 madde sistemli bir şekilde uygulandığında 3-6 hafta içinde skorunun çıkma hedefi gerçekçi.`
+        : `${missedCount} AI cevabında görünmedin. Bu tesadüf değil — yapısal. Rakiplerin var, seni yerine onlar öneriliyor. 43 madde bu durumu yapısal olarak çözer.`;
+
   return (
     <section className={s.proGate}>
-      <div className={s.proLabel}>ŞİMDİ NE OLACAK</div>
-      <h2 className={s.proHeadline}>GEO is the new SEO.</h2>
-      <p className={s.proSub}>
-        {missedCount} AI cevabında görünmedin. Bu tesadüf değil — yapısal.
-        <br />
-        43 maddelik gelişim planın hazır. Sadece Pro&apos;da açılır.
-      </p>
+      {/* ─── Korku / GEO bölümü ─── */}
+      <div className={s.proFearSection}>
+        <div className={s.screenLabel}>NEDEN ŞİMDİ</div>
+        <h2 className={s.proFearHeadline}>GEO is the new SEO.</h2>
+        <p className={s.proFearSub}>
+          Artık sadece Google&apos;da çıkmak yeterli değil. Her gün daha fazla kullanıcı
+          arama motorunu bırakıp AI asistanına soruyor. ChatGPT&apos;ye, Claude&apos;a, Gemini&apos;ye.
+          <br /><br />
+          Google&apos;da ilk sırada olsan bile, AI&apos;lar sana hiç değinmeden müşterinin sorusuna
+          başka bir firmayı öneriyorsa — müşteri seni hiç görmez.
+        </p>
 
-      {/* Stat strip — landing'deki istatistikler */}
-      <div className={s.proStats}>
-        <div className={s.proStat}>
-          <div className={s.proStatNum}>%25</div>
-          <div className={s.proStatLabel}>
-            Geleneksel arama trafiği 2026&apos;ya kadar düşecek
+        <div className={s.proStats}>
+          <div className={s.proStat}>
+            <div className={s.proStatNum}>%25</div>
+            <div className={s.proStatLabel}>
+              Geleneksel arama trafiği 2026&apos;ya kadar düşecek
+            </div>
+            <div className={s.proStatSource}>Gartner, 2025</div>
           </div>
-          <div className={s.proStatSource}>Gartner, 2025</div>
-        </div>
-        <div className={s.proStat}>
-          <div className={s.proStatNum}>%40</div>
-          <div className={s.proStatLabel}>
-            GEO optimize içerik AI&apos;da daha görünür
+          <div className={s.proStat}>
+            <div className={s.proStatNum}>%40</div>
+            <div className={s.proStatLabel}>
+              GEO optimize içerik AI&apos;da daha görünür
+            </div>
+            <div className={s.proStatSource}>Princeton / ACM KDD, 2024</div>
           </div>
-          <div className={s.proStatSource}>Princeton / ACM KDD, 2024</div>
-        </div>
-        <div className={s.proStat}>
-          <div className={s.proStatNum}>%60</div>
-          <div className={s.proStatLabel}>
-            Google aramalarının %60&apos;ı tıklama olmadan bitiyor
+          <div className={s.proStat}>
+            <div className={s.proStatNum}>%60</div>
+            <div className={s.proStatLabel}>
+              Google aramalarının %60&apos;ı tıklama olmadan bitiyor
+            </div>
+            <div className={s.proStatSource}>Bain &amp; Company, 2025</div>
           </div>
-          <div className={s.proStatSource}>Bain &amp; Company, 2025</div>
         </div>
       </div>
 
-      {/* 43 madde listesi — blurred */}
-      <div className={s.auditPreviewWrap}>
-        <div className={s.auditPreviewHeader}>
-          <span className={s.screenLabel}>
-            43 MADDE · {firmName.toUpperCase()} İÇİN ÖZEL HAZIRLANDI
-          </span>
+      {/* ─── 43 madde FULL GÖRÜNÜR ─── */}
+      <div className={s.auditWrap}>
+        <div className={s.auditHeaderSection}>
+          <div className={s.screenLabel}>43 MADDELİK GELİŞİM PLANI</div>
+          <h2 className={s.auditSectionHeadline}>
+            Her madde {firmName} için hazır.
+          </h2>
+          <p className={s.auditSectionSub}>
+            Başlıkların hepsi burada — neyin yapılacağını şimdi görüyorsun.
+            Her maddenin {firmName} için özel uygulama talimatı ve &ldquo;hangi rakip
+            bunu yapıyor&rdquo; karşılaştırması Pro&apos;da açılır.
+          </p>
         </div>
-        <ol className={s.auditPreviewList}>
-          {AUDIT_43_PREVIEW.slice(0, 43).map((item, i) => (
-            <li key={i} className={s.auditPreviewItem}>
-              <span className={s.auditPreviewNum}>{String(i + 1).padStart(2, "0")}</span>
-              <span className={s.auditPreviewText}>{item}</span>
-              <span className={s.auditPreviewLock}>Pro</span>
+
+        <ol className={s.auditList}>
+          {AUDIT_43.map((item, i) => (
+            <li key={i} className={s.auditItem}>
+              <span className={s.auditNum}>{String(i + 1).padStart(2, "0")}</span>
+              <div className={s.auditBody}>
+                <div className={s.auditTitle}>{item.title}</div>
+                <div className={s.auditHint}>{item.hint}</div>
+              </div>
+              <span className={s.auditLock}>
+                <span className={s.auditLockIcon}>◐</span>
+                <span className={s.auditLockLabel}>Talimat Pro&apos;da</span>
+              </span>
             </li>
           ))}
         </ol>
-        <div className={s.auditBlurOverlay}>
-          <div className={s.auditBlurContent}>
-            <div className={s.auditBlurTitle}>43 madde · kilitli</div>
-            <p className={s.auditBlurSub}>
-              Her madde {firmName} için uygulanabilir halde. Tamamı Pro&apos;da açılır.
-            </p>
-          </div>
-        </div>
       </div>
 
-      {/* Main CTA */}
+      {/* ─── Main CTA ─── */}
       <div className={s.proCTA}>
-        <div className={s.proCTAPrice}>
-          <span className={s.proCTAAmount}>₺699</span>
-          <span className={s.proCTAPeriod}>/ay</span>
+        <div className={s.proCTAHero}>
+          <div className={s.proCTALabel}>ŞİMDİ NE OLACAK</div>
+          <h2 className={s.proCTAHeadline}>{ctaHeadline}</h2>
+          <p className={s.proCTASubMsg}>{ctaSub}</p>
         </div>
-        <p className={s.proCTASub}>
-          Yıllık ₺8,388 · İlk ay koşulsuz iade
-        </p>
-        <ul className={s.proCTAFeatures}>
-          <li>43 madde için rakibine özel çözüm talimatları</li>
-          <li>Haftalık otomatik tarama, trend grafiği</li>
-          <li>Rakibin seni geçtiğinde e-posta + push uyarı</li>
-          <li>Haftalık 1 somut görev (&ldquo;bu hafta şunu düzelt&rdquo;)</li>
-          <li>GH7 servis pazarı — &ldquo;bunu benim yerime yapsın&rdquo; erişimi</li>
-        </ul>
-        <button
-          onClick={onFinalize}
-          disabled={!canFinalize}
-          className={`${s.proCTABtn} ${!canFinalize ? s.proCTABtnDisabled : ""}`}
-        >
-          {canFinalize ? "Pro'ya Geç ve Takibi Başlat →" : "Önce 1-3 rakip seç"}
-        </button>
+
+        <div className={s.proCTADetails}>
+          <div className={s.proCTAPrice}>
+            <span className={s.proCTAAmount}>₺699</span>
+            <span className={s.proCTAPeriod}>/ay</span>
+          </div>
+          <p className={s.proCTAPriceSub}>Yıllık ₺8,388 · İlk ay koşulsuz iade</p>
+
+          <ul className={s.proCTAFeatures}>
+            <li>43 madde için {firmName}&apos;e özel uygulama talimatları</li>
+            <li>Haftalık otomatik tarama + trend grafiği</li>
+            <li>Rakibin seni geçtiğinde e-posta + push uyarı</li>
+            <li>Haftalık 1 somut görev (&ldquo;bu hafta şunu düzelt&rdquo;)</li>
+            <li>Ayarlar&apos;dan ürün/hizmet/rakip/il listesi düzenleme</li>
+            <li>GH7 servis pazarı — &ldquo;bunu benim yerime yapsın&rdquo; erişimi</li>
+          </ul>
+
+          <button
+            onClick={onFinalize}
+            disabled={!canFinalize}
+            className={`${s.proCTABtn} ${!canFinalize ? s.proCTABtnDisabled : ""}`}
+          >
+            {canFinalize ? "Pro'ya Geç ve Takibi Başlat →" : "Önce 1-3 rakip seç"}
+          </button>
+        </div>
       </div>
     </section>
   );
