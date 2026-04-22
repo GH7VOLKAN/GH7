@@ -112,176 +112,179 @@ export async function POST(req: Request) {
   const brandName = fp.name || analyzeInput?.fullName || brandDomain;
 
   try {
-    // ═══ 1. Brand findFirst + update/create ═══
-    const existingBrand = await prisma.brand.findFirst({
-      where: { profileId, domain: brandDomain },
-    });
-
-    const brandData = {
-      name: brandName,
-      sector: fp.sector || null,
-      city: fp.location?.city || analyzeInput?.city || null,
-      type: door === "kisi" ? "kisisel" : "firma",
-      userType: door,
-      strengths: fp.distinctives || [],
-      sonarAnalysis: {
-        rawContext: fp.rawContext || "",
-        products: fp.products || [],
-        distinctives: fp.distinctives || [],
-        location: fp.location || {},
-        generatedAt: analyzeResult.generatedAt,
-      } as object,
-      isDefault: true,
-      autoScan: false,
-      scanInterval: "manual",
-    };
-
-    const brand = existingBrand
-      ? await prisma.brand.update({
-          where: { id: existingBrand.id },
-          data: brandData,
-        })
-      : await prisma.brand.create({
-          data: {
-            ...brandData,
-            profileId,
-            domain: brandDomain,
-          },
+    // ═══ Atomic transaction — hata olursa hepsi rollback ═══
+    const txResult = await prisma.$transaction(
+      async (tx) => {
+        // ─── 1. Brand findFirst + update/create ───
+        const existingBrand = await tx.brand.findFirst({
+          where: { profileId, domain: brandDomain },
         });
 
-    console.log(
-      `[finalize] Brand ${existingBrand ? "updated" : "created"}: ${brand.id}`,
-    );
+        const brandData = {
+          name: brandName,
+          sector: fp.sector || null,
+          city: fp.location?.city || analyzeInput?.city || null,
+          type: door === "kisi" ? "kisisel" : "firma",
+          userType: door,
+          strengths: fp.distinctives || [],
+          sonarAnalysis: {
+            rawContext: fp.rawContext || "",
+            products: fp.products || [],
+            distinctives: fp.distinctives || [],
+            location: fp.location || {},
+            generatedAt: analyzeResult.generatedAt,
+          } as object,
+          isDefault: true,
+          autoScan: false,
+          scanInterval: "manual",
+        };
 
-    // ═══ 2. Scan create (running) ═══
-    const totalQueries = analyzeResult.queries.length;
-    const scoreTotal = totalQueries * 5;
-    const score = analyzeResult.userMentions.totalMentions;
+        const brand = existingBrand
+          ? await tx.brand.update({
+              where: { id: existingBrand.id },
+              data: brandData,
+            })
+          : await tx.brand.create({
+              data: {
+                ...brandData,
+                profileId,
+                domain: brandDomain,
+              },
+            });
 
-    const scan = await prisma.scan.create({
-      data: {
-        brandId: brand.id,
-        type: "free_test",
-        status: "running",
-        score,
-        scoreTotal,
-        totalMentions: score,
-        totalQueries,
-        commentary: analyzeResult.commentary || null,
-        healingAttempted: analyzeResult.healingAttempted || false,
-        startedAt: new Date(analyzeResult.generatedAt),
-      },
-    });
+        // ─── 2. Scan create (running) ───
+        const totalQueries = analyzeResult.queries.length;
+        const scoreTotal = totalQueries * 5;
+        const score = analyzeResult.userMentions.totalMentions;
 
-    console.log(`[finalize] Scan created: ${scan.id}`);
-
-    // ═══ 3. Prompts + 4. PromptResults ═══
-    let promptCount = 0;
-    let resultCount = 0;
-    for (const query of analyzeResult.queries) {
-      const prompt = await prisma.prompt.create({
-        data: {
-          brandId: brand.id,
-          text: query.text,
-          tags: query.generation === 2 ? ["second_pass"] : [],
-          source: "ai_generated",
-          isActive: true,
-          lastScanAt: new Date(),
-        },
-      });
-      promptCount++;
-
-      for (const answer of query.answers) {
-        await prisma.promptResult.create({
-          data: {
-            scanId: scan.id,
-            promptId: prompt.id,
-            platform: answer.provider,
-            mentioned: answer.mentionedYou,
-            fullResponse: answer.text || "",
-            excerpt: answer.text ? answer.text.slice(0, 280) : null,
-            // Competitors JSON [{ name }] — CompetitorDetail[] formatına yakın
-            competitors:
-              answer.mentionedCompetitors.length > 0
-                ? (answer.mentionedCompetitors.map((name) => ({
-                    name,
-                  })) as unknown as object)
-                : undefined,
-          },
-        });
-        resultCount++;
-      }
-    }
-
-    console.log(
-      `[finalize] ${promptCount} prompts + ${resultCount} results kaydedildi`,
-    );
-
-    // ═══ 5. Competitors (seçilen 3, isPrimary: true) ═══
-    // Önce bu Brand'ın eski primary'lerini kaldır — yeni seçim üste yazar
-    await prisma.competitor.updateMany({
-      where: { brandId: brand.id, isPrimary: true },
-      data: { isPrimary: false },
-    });
-
-    for (const comp of selectedCompetitors) {
-      const compDomain = comp.url
-        ? normalizeDomainInput(comp.url)
-        : slugifyForDomain(comp.name);
-
-      // Aynı Brand için aynı domain'li rakip varsa update, yoksa create
-      const existingComp = await prisma.competitor.findFirst({
-        where: { brandId: brand.id, domain: compDomain },
-      });
-
-      if (existingComp) {
-        await prisma.competitor.update({
-          where: { id: existingComp.id },
-          data: {
-            name: comp.name,
-            isPrimary: true,
-            source: comp.isNew ? "manual" : "free_audit",
-          },
-        });
-      } else {
-        await prisma.competitor.create({
+        const scan = await tx.scan.create({
           data: {
             brandId: brand.id,
-            name: comp.name,
-            domain: compDomain,
-            source: comp.isNew ? "manual" : "free_audit",
-            isPrimary: true,
-            relevance: "direct",
-            discoveredAt: new Date(),
+            type: "free_test",
+            status: "running",
+            score,
+            scoreTotal,
+            totalMentions: score,
+            totalQueries,
+            commentary: analyzeResult.commentary || null,
+            healingAttempted: analyzeResult.healingAttempted || false,
+            startedAt: new Date(analyzeResult.generatedAt),
           },
         });
-      }
-    }
 
-    console.log(
-      `[finalize] ${selectedCompetitors.length} primary competitor kaydedildi`,
+        // ─── 3. Prompts + 4. PromptResults ───
+        let promptCount = 0;
+        let resultCount = 0;
+        for (const query of analyzeResult.queries) {
+          const prompt = await tx.prompt.create({
+            data: {
+              brandId: brand.id,
+              text: query.text,
+              tags: query.generation === 2 ? ["second_pass"] : [],
+              source: "ai_generated",
+              isActive: true,
+              lastScanAt: new Date(),
+            },
+          });
+          promptCount++;
+
+          for (const answer of query.answers) {
+            await tx.promptResult.create({
+              data: {
+                scanId: scan.id,
+                promptId: prompt.id,
+                platform: answer.provider,
+                mentioned: answer.mentionedYou,
+                fullResponse: answer.text || "",
+                excerpt: answer.text ? answer.text.slice(0, 280) : null,
+                competitors:
+                  answer.mentionedCompetitors.length > 0
+                    ? (answer.mentionedCompetitors.map((name) => ({
+                        name,
+                      })) as unknown as object)
+                    : undefined,
+              },
+            });
+            resultCount++;
+          }
+        }
+
+        // ─── 5. Competitors (seçilen 3, isPrimary: true) ───
+        // Önce bu Brand'ın eski primary'lerini kaldır
+        await tx.competitor.updateMany({
+          where: { brandId: brand.id, isPrimary: true },
+          data: { isPrimary: false },
+        });
+
+        for (const comp of selectedCompetitors) {
+          const compDomain = comp.url
+            ? normalizeDomainInput(comp.url)
+            : slugifyForDomain(comp.name);
+
+          const existingComp = await tx.competitor.findFirst({
+            where: { brandId: brand.id, domain: compDomain },
+          });
+
+          if (existingComp) {
+            await tx.competitor.update({
+              where: { id: existingComp.id },
+              data: {
+                name: comp.name,
+                isPrimary: true,
+                source: comp.isNew ? "manual" : "free_audit",
+              },
+            });
+          } else {
+            await tx.competitor.create({
+              data: {
+                brandId: brand.id,
+                name: comp.name,
+                domain: compDomain,
+                source: comp.isNew ? "manual" : "free_audit",
+                isPrimary: true,
+                relevance: "direct",
+                discoveredAt: new Date(),
+              },
+            });
+          }
+        }
+
+        // ─── 6. Scan completed ───
+        await tx.scan.update({
+          where: { id: scan.id },
+          data: {
+            status: "completed",
+            completedAt: new Date(),
+          },
+        });
+
+        return {
+          brandId: brand.id,
+          scanId: scan.id,
+          brandAction: existingBrand ? "updated" : "created",
+          promptCount,
+          resultCount,
+        };
+      },
+      {
+        maxWait: 10_000, // 10s acquire lock wait
+        timeout: 45_000, // 45s tx total (5N prompt results dahil)
+      },
     );
 
-    // ═══ 6. Scan completed ═══
-    await prisma.scan.update({
-      where: { id: scan.id },
-      data: {
-        status: "completed",
-        completedAt: new Date(),
-      },
-    });
-
-    console.log(`[finalize] Scan completed: ${scan.id}`);
+    console.log(
+      `[finalize] tx ok — brand ${txResult.brandAction}=${txResult.brandId}, scan=${txResult.scanId}, ${txResult.promptCount} prompts + ${txResult.resultCount} results + ${selectedCompetitors.length} competitors`,
+    );
 
     return NextResponse.json({
       ok: true,
-      brandId: brand.id,
-      scanId: scan.id,
+      brandId: txResult.brandId,
+      scanId: txResult.scanId,
       redirect: "/dashboard",
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[finalize] error:", msg);
+    console.error("[finalize] tx rollback, error:", msg);
     return NextResponse.json(
       { ok: false, error: "Finalize hatası: " + msg },
       { status: 500 },

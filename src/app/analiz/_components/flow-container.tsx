@@ -72,7 +72,8 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
   const onFinalize = useCallback(
     async (selected: SelectedCompetitor[]) => {
       if (!profileId || !currentInput || !result) {
-        alert("Bir hata oluştu, sayfayı yenile.");
+        setError("Oturum bilgileri eksik. Sayfayı yenileyin.");
+        setPhase("error");
         return;
       }
 
@@ -91,7 +92,8 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
         const data = await res.json();
 
         if (!res.ok || !data.ok) {
-          alert(data.error || "Kayıt başarısız. Tekrar dene.");
+          setError(data.error || "Kayıt başarısız.");
+          setPhase("error");
           return;
         }
 
@@ -99,7 +101,8 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
         window.location.href = data.redirect || "/dashboard";
       } catch (err) {
         console.error("[finalize] failed:", err);
-        alert("Bağlantı hatası. Lütfen tekrar dene.");
+        setError("Bağlantı hatası. İnternet bağlantınızı kontrol edin.");
+        setPhase("error");
       }
     },
     [profileId, currentInput, result],
