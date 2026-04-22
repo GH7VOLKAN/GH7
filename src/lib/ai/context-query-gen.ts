@@ -62,45 +62,77 @@ BU BİR YENİDEN DENEMEDİR.
       : "";
 
   if (input.door === "firma" || input.door === "eticaret") {
+    const coreProducts = profile.products.slice(0, 3);
+    const coreProductsLabel = coreProducts.length > 0
+      ? coreProducts.join(" veya ")
+      : profile.sector || "firma";
+
     return `Sen bir Türk tüketicisin. AI asistanlarından firma önerisi ararken GERÇEKÇİ, SAMİMİ, doğal Türkçeyle soru soruyorsun.${modeHint}
 
 FİRMA HAKKINDA (Perplexity analizi):
 - İsim: ${profile.name}
 - Sektör: ${profile.sector}
 - Konum: ${[profile.location.district, profile.location.city].filter(Boolean).join(", ") || "belirtilmedi"}
-- Ürünler/Hizmetler: ${profile.products.join(", ") || "belirtilmedi"}
-- Ayırt edici özellikler: ${profile.distinctives.join(", ") || "belirtilmedi"}
+- ÇEKİRDEK ÜRÜNLER/HİZMETLER: ${coreProducts.join(", ") || "belirtilmedi"}
+- Ayırt edici özellikler (opsiyonel zenginleştirici): ${profile.distinctives.join(", ") || "yok"}
 
 PERPLEXITY HAM ANALİZİ:
 ${profile.rawContext.slice(0, 4000)}
 
-GÖREV: Yukarıdaki firmanın ürün/hizmetlerinden birini arayan bir müşterinin AI'a soracağı 5 GERÇEKÇİ sorgu üret.
+GÖREV: Yukarıdaki firmanın ÇEKİRDEK ÜRÜN/HİZMETLERİNDEN birini (${coreProductsLabel}) arayan bir müşterinin AI'a soracağı 5 GERÇEKÇİ sorgu üret.
 
-SORU KALIBIMIZ:
-  İHTİYAÇ (ürün/hizmet adı, sorunun kendisi) + (opsiyonel LOKASYON) + AKSIYON (öner, tavsiye et, listele, hangisi, karşılaştır)
+═══════════════════════════════════════════════════════
+MUTLAK KURAL — ÇEKİRDEK ÜRÜN HER SORGUDA OLMALI
+═══════════════════════════════════════════════════════
 
-İYİ ÖRNEKLER (bu tarzda düşün):
-  "Elektrikli yerden ısıtma yaptıracağım, İstanbul'da en iyi firma hangisi"
-  "Spa ve hamam mermer altı ısıtmada hangi firma ile çalışmamı önerirsin"
-  "Türkiye'de öne çıkan yerden ısıtma firmalarını listeler misin"
-  "Sera ısıtma sistemleri için hangi firmaya güvenebilirim"
-  "Evcil hayvan dostu bungalov tatil köyü arıyorum, Ege'de nereleri önerirsin"
-  "Endüstriyel ısıtma için Türkiye'den güvenilir firmalar hangileri, karşılaştır"
+Her sorgunun konusu bu ürün/hizmetlerden BİRİ olmalı:
+${coreProducts.map((p, i) => `  ${i + 1}. ${p}`).join("\n")}
 
-KÖTÜ ÖRNEKLER (yapmaktan KAÇIN):
-  "30 yıldan fazla deneyimi olan X firmasını öner" — müşteri bunu sormaz
-  "Güney Kore malzemesi kullanan yerli firmalar" — teknik detay, müşteri kafası değil
-  "180'den fazla proje yapan firmalar" — pazarlama cümlesi, soru değil
-  "ATEX sertifikalı endüstriyel firmalar" — çok spesifik teknik filter
+5 sorgunun HEPSİ bu listeden bir ürün/hizmet içerecek. Asla BAŞKA bir ürün/hizmet hakkında sorgu üretme.
+
+Ayırt edici özellikler (distinctives) SADECE çekirdek ürünü ZENGİNLEŞTİRMEK için. Tek başına sorgu konusu olamaz.
+
+─── DOĞRU ÖRNEKLER (idavilla / bungalov konaklama) ───
+
+✓ "Balıkesir'de doğa içinde bungalov konaklama yapabileceğim yerleri önerir misin"
+  (çekirdek: bungalov konaklama ✓, zenginleştirici: doğa içinde)
+
+✓ "Edremit körfezinde ailecek kalabileceğim bungalov tesisleri hangisi daha iyi"
+  (çekirdek: bungalov tesisleri ✓, zenginleştirici: Edremit + ailecek)
+
+✓ "Kazdağları çevresinde huzurlu bungalov tatil köyleri arıyorum, nereleri tavsiye edersin"
+  (çekirdek: bungalov tatil köyleri ✓, zenginleştirici: Kazdağları + huzurlu)
+
+─── YANLIŞ ÖRNEKLER (YAPMA) ───
+
+✗ "Türkiye'de mitoloji temalı konseptli oteller var mı, listeler misin"
+  (çekirdek ürün BUNGALOV konaklama EKSİK — "mitoloji" distinctives'ten uydurulmuş)
+
+✗ "Mandalina bahçesi içinde konaklama imkanı olan yerler arıyorum"
+  (çekirdek ürün BUNGALOV eksik — "mandalina bahçesi" zenginleştiriciyi ana konu yapmış)
+
+✗ "Pet-friendly seçenek hangileri"
+  (çekirdek ürün eksik, sadece distinctive)
+
+─── KULLANIM KALIBI ───
+
+SORGU = ÇEKİRDEK ÜRÜN + (opsiyonel: lokasyon) + (opsiyonel: 1 distinctive) + AKSIYON
+
+Aksiyon kelimesi zorunlu: öner, tavsiye et, listele, hangisi, karşılaştır, nereleri
+
+─── 5 SORGUNUN DAĞILIMI ───
+
+1-2 sorgu: çekirdek ürün + lokasyon (ör. "Balıkesir'de X")
+1-2 sorgu: çekirdek ürün + 1 distinctive (ör. "pet-friendly X")
+1 sorgu: çekirdek ürün + karşılaştırma (ör. "X'in en iyisi hangi")
 
 KURALLAR:
 - Firma adı ASLA geçmesin
+- Her sorguda çekirdek ürünün adı veya çok yakın bir varyasyonu geçmeli
+- "Bungalov" yazıyorsa bungalov sorusu olmalı — "otel", "tatil köyü", "konaklama" kabul (aynı kategori varyantları)
+- Konu geçişi YASAK: bungalov sorusunda "spa", "restoran", "mitoloji" ana konu olamaz
 - İnsan gibi konuş — "ihtiyacım var", "yaptıracağım", "bakmak istiyorum", "arıyorum"
-- Ürün ismini müşteri ağzıyla kısalt — "Elektrikli yerden ısıtma kablosu ve aksesuarları" değil "elektrikli yerden ısıtma"
-- Ayırt edici özellikleri DOLAYLI kullan — firma Balıkesir'deyse sorularda Ege/İstanbul/Balıkesir geçebilir, ama "30 yıl deneyim" geçmesin
-- Büyük harfle başla, Türkçe dilbilgisi
-- 5 sorgu farklı açılardan: bazısı ürün odaklı, bazısı niş, bazısı lokasyon
-- 2-3 sorguda lokasyon geçsin, 2-3'ünde Türkiye geneli olsun
+- Büyük harfle başla, Türkçe dilbilgisi düzgün
 
 SADECE JSON array dön, başka hiçbir şey yazma:
 ["sorgu 1", "sorgu 2", "sorgu 3", "sorgu 4", "sorgu 5"]`;
