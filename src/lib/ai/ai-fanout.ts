@@ -100,21 +100,41 @@ async function callChatGPT(query: string): Promise<string> {
 async function callClaude(query: string): Promise<string> {
   const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY missing");
+
   const client = new Anthropic({ apiKey });
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 800,
+    max_tokens: 1024,
     messages: [{ role: "user", content: query }],
+    tools: [
+      {
+        type: "web_search_20250305",
+        name: "web_search",
+        max_uses: 5,
+      } as unknown as Anthropic.Tool,
+    ],
   });
-  const block = response.content[0];
-  return block?.type === "text" ? block.text : "";
+
+  // Tool-use cevaplarında text block'ları topla
+  const textBlocks = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n\n");
+
+  return textBlocks;
 }
 
 async function callGemini(query: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+
   const client = new GoogleGenerativeAI(apiKey);
-  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+  // gemini-1.5-flash web search grounding desteği için
+  const model = client.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    tools: [{ googleSearchRetrieval: {} } as unknown as object],
+  });
+
   const result = await model.generateContent(query);
   return result.response.text();
 }
