@@ -60,11 +60,20 @@ Skoru yorumla. ${scoreCategory === "strong" ? "Güçlü konumu öv, ama şımart
 PARAGRAF 2 — Rakip analizi (50-70 kelime):
 En çok anılan 1-2 rakibi analiz et. Neden AI'lar onları ön plana çıkarıyor? Dil/stil: "${topCompetitors[0]?.name} her sorguda anılıyor, bu şu anlama geliyor..." Rakibin güçlü yönü ne, zayıf yönü ne varsa belirt.
 
-PARAGRAF 3 — GEO/Pro yumuşak geçiş (50-70 kelime):
-GEO'nun önemini vurgula. "Google'da aranmaktan AI'da anılmaya geçiş yapısal." Aciliyet ver ama yalan söyleme. 43 maddenin ne yaptığını söyle: yapı, authority signal, structured data. "GH7'nin Pro üyeliği bunu haftalık takip etme ve rakibinin hamlesini ilk fark etme avantajı verir."
+PARAGRAF 3 — GEO/Pro ticari vaat (60-80 kelime):
+"Google'da aranmaktan AI'da anılmaya geçiş yapısal bir değişim" cümlesiyle başla, sonra Pro'nun ticari vaadini net söyle. 43 madde + sürekli takip sayesinde KULLANICI NE KAZANACAK somut konuşulsun:
 
-PARAGRAF 4 — Somut eylem (30-40 kelime):
-İlk yapılacak 1 net şey söyle. Örnek: "${profile.name} için ilk 3 hafta içinde yapılacak en kritik iş, FAQ sayfası yapılandırması..."
+- "Rakiplerinin önüne geçmek"
+- "Daha çok müşteri tarafından fark edilmek"
+- "AI müşteriye firma önerirken senin adının geçmesi"
+- "Satışlarını büyütmek"
+
+Ton: iddialı ama gerçekçi. "Mümkün" değil "gerçekçi bir hedef, seni bekliyor" tarzı. Müşteri okuyunca "bu benim için değerli" demeli.
+
+Örnek cümle: "43 madde sistemli uygulandığında, ${profile.name} rakiplerinin önüne geçmek, AI önerilerinde sürekli anılan firma haline gelmek ve daha çok satış gerçekleştirmek gerçekçi bir hedef — seni bekliyor."
+
+PARAGRAF 4 — Somut eylem (30-45 kelime):
+İlk yapılacak 1 net şey. 43 maddeden bir tanesini seç, ${profile.name}'e uygun olanı, başla eylem cümlesiyle: "${profile.name} için ilk 3 hafta içinde en kritik iş..."
 
 TON:
 - Dürüst, spesifik, kişiye özel (jenerik cümle YOK)

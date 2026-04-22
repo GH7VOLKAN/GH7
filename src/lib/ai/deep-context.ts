@@ -29,27 +29,43 @@ export async function fetchDeepContext(
   return profile;
 }
 
+function strictPreamble(domain: string): string {
+  return `KESİN KURALLAR — İHLAL ETME:
+
+1. SADECE "${domain}" alan adındaki sitenin İÇERİĞİNDEN bilgi topla.
+2. Benzer isimli farklı işletmelerle KARIŞTIRMA. Örneğin "idavilla.com.tr" için İda Natura, Jippe İda, Ida Bungalov gibi benzer isimli ayrı işletmelerin özelliklerini ASLA bu firmaya atfetme.
+3. Bölgedeki diğer işletmelerin özelliklerini bu firmaya KOPYALAMA. "Kazdağları'nda genelde üçgen evler var" gibi genelleme yapıp bu firmaya yükleme.
+4. Spekülasyon yapma. "Muhtemelen şu özelliği vardır", "genelde bu firmalar şunu yapar" tarzı çıkarımlarda bulunma.
+5. Sitede geçmeyen, site içeriğinde doğrulanamayan bilgileri RAPOR ETME.
+6. Eğer sitede net bilgi yoksa, boş bırak. "Bilgi bulunamadı" yaz.
+
+KAYNAK ZORUNLULUĞU: Raporunda geçen her özelliğin hangi site sayfasında/metin bloğunda geçtiğini belirt. Siteden doğrulanamayan özellikleri DAHİL ETME.`;
+}
+
 function buildContextQueries(input: AnalyzeInput): string[] {
   if (input.door === "firma") {
+    const p = strictPreamble(input.domain ?? "");
     return [
-      `${input.domain} web sitesini analiz et. Firma adı, faaliyet alanları, ürün/hizmet kategorileri, hizmet bölgeleri, sektör, hedef kitle — detaylı anlat.`,
-      `${input.domain} benzer firmalardan ne ile ayrılıyor? Ayırt edici özellikleri, nişleri, öne çıkardığı konular neler? En az 5 madde.`,
+      `${p}\n\nARAŞTIR — ${input.domain}:\n- Firma adı: Sitenin title/header/footer'ında gerçekten nasıl yazılıyor?\n- Sektör: Sitede kendilerini nasıl tanımlıyorlar?\n- Konum: Sitede geçen şehir/ilçe/adres.\n- Ürünler/hizmetler: Sitede SATTIKLARI veya SUNDUKLARI somut şeyler. Navigasyon menüsünde, ürün sayfalarında, hizmet listelerinde geçenler.\n- Hedef kitle: Sitede kendi tanımladıkları müşteri profili.`,
+      `${p}\n\nAYIRT EDİCİ ÖZELLİKLER — ${input.domain}:\nSadece sitenin KENDİSİNİN vurguladığı özellikleri listele. Site "biz üçgen ev yapıyoruz" demiyorsa, bu özelliği YAZMA. Başka işletmelerden çıkarım yapma. En fazla 5 madde, her biri için hangi sayfada/metinde geçtiğini belirt.`,
     ];
   }
   if (input.door === "kisi") {
-    const q = `${input.fullName} ${input.city ? input.city + "'de" : ""} kim? Uzmanlık alanı, çalıştığı klinik/ofis, eğitimi, öne çıktığı konular neler? Detaylı anlat.`;
+    const q = `${input.fullName} ${input.city ? input.city + "'de" : ""} kim? Uzmanlık alanı, çalıştığı klinik/ofis, eğitimi, öne çıktığı konular neler? Sadece doğrulanmış kaynaklar. Spekülasyon yapma.`;
     return [q];
   }
   if (input.door === "eticaret") {
+    const p = strictPreamble(input.domain ?? "");
     return [
-      `${input.domain} web sitesini analiz et. Hangi ürün kategorilerini satıyor, hangi fiyat segmentinde, hangi marketplace'lerde aktif, marka pozisyonu ne? Detaylı anlat.`,
-      `${input.domain} benzer e-ticaret markalarından ne ile ayrılıyor? Ürün yelpazesi, hedef kitle, fiyat, marka değeri açısından öne çıkan yönleri neler?`,
+      `${p}\n\nARAŞTIR — ${input.domain}:\nHangi ürün kategorilerini satıyor, hangi fiyat segmentinde, hangi marketplace'lerde aktif, marka pozisyonu ne?`,
+      `${p}\n\nAYIRT EDİCİ ÖZELLİKLER — ${input.domain}:\nSadece sitenin kendisinin vurguladığı öne çıkan yönler. Ürün yelpazesi, hedef kitle, fiyat pozisyonu. Kaynak zorunlu.`,
     ];
   }
   // yurtdisi
+  const p = strictPreamble(input.domain ?? "");
   return [
-    `${input.domain} web sitesini analiz et. Hangi ürünleri üretiyor, hangi pazarlara ihraç ediyor, ne ile öne çıkıyor? Detaylı anlat.`,
-    `${input.domain} ${input.targetMarket ?? "hedef pazar"} pazarına nasıl konumlanıyor? Rekabet ortamında ayırt edici özellikleri neler?`,
+    `${p}\n\nARAŞTIR — ${input.domain}:\nHangi ürünleri üretiyor, hangi pazarlara ihraç ediyor, ne ile öne çıkıyor?`,
+    `${p}\n\n${input.domain} ${input.targetMarket ?? "hedef pazar"} pazarına nasıl konumlanıyor? Sadece sitenin kendi söylediği bilgileri al.`,
   ];
 }
 
@@ -82,7 +98,26 @@ GÖREV: Aşağıdaki JSON şemasına göre yanıt ver. SADECE JSON dön, başka 
 
 KRİTİK:
 - products listesinde özel isim (markaya ait restoran adı, ürün modeli) YASAK
-- distinctives asla jenerik olmasın ("kaliteli hizmet" YASAK, "deniz kenarı konum" OK)`;
+- distinctives asla jenerik olmasın ("kaliteli hizmet" YASAK, "deniz kenarı konum" OK)
+
+═══════════════════════════════════════════════════════
+KESIN GUARD — HALLUCINATION ÖNLEME
+═══════════════════════════════════════════════════════
+
+Aşağıdakileri profile EKLEME:
+- Perplexity metninde "muhtemelen", "genelde", "büyük ihtimalle", "olabilir" gibi spekülasyon işareti olan özellikler
+- Sitede doğrudan doğrulanmayan, başka işletmelerle benzetme yoluyla çıkarılmış özellikler
+- Coğrafi bölgeye atfedilen ama spesifik olarak bu firmaya bağlanmamış özellikler (örneğin "Kazdağları'nda çoğu yer doğa temalı" → bu firma için "doğa temalı" yazma, net doğrulanmadıkça)
+- Tematik yorum gerektiren özellikler (örneğin firma adında "İda" varsa → "Yunan mitolojisi temalı" çıkarımında bulunma, sitede açıkça belirtilmedikçe)
+
+Şunları profile EKLE:
+- Site içeriğinde doğrudan geçen firma adı, sektör, konum, ürün/hizmet isimleri
+- Sitenin kendisinin öne çıkardığı özellikler (hakkımızda sayfasındaki iddialar, başlıklar)
+- Sayısal bilgiler (kuruluş yılı, çalışan sayısı, proje sayısı) net verilmişse
+
+ŞÜPHEDE KALDIYSAN: Özelliği profile EKLEME. Boş kalmak, yanlış olmaktan iyidir.
+
+distinctives dizisine 0-5 arası özellik konabilir. 0 da kabul.`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
