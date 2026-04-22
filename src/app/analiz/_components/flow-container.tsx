@@ -18,6 +18,7 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
   const [result, setResult] = useState<AnalyzeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentInput, setCurrentInput] = useState<AnalyzeInput | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
 
   const runAnalyze = useCallback(
     async (input: AnalyzeInput, profileId: string) => {
@@ -56,9 +57,10 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
   }, []);
 
   const onVerified = useCallback(
-    (profileId: string) => {
+    (verifiedProfileId: string) => {
       if (!currentInput) return;
-      void runAnalyze(currentInput, profileId);
+      setProfileId(verifiedProfileId);
+      void runAnalyze(currentInput, verifiedProfileId);
     },
     [currentInput, runAnalyze],
   );
@@ -67,11 +69,41 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
     setPhase("input");
   }, []);
 
-  const onFinalize = useCallback((selected: SelectedCompetitor[]) => {
-    // TODO: POST to /api/analiz/finalize veya dashboard'a yönlendir
-    console.log("Selected competitors:", selected);
-    alert(`${selected.length} rakip kaydedildi. Dashboard entegrasyonu sonraki iş.`);
-  }, []);
+  const onFinalize = useCallback(
+    async (selected: SelectedCompetitor[]) => {
+      if (!profileId || !currentInput || !result) {
+        alert("Bir hata oluştu, sayfayı yenile.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/analiz/finalize", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            profileId,
+            analyzeInput: currentInput,
+            analyzeResult: result,
+            selectedCompetitors: selected,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          alert(data.error || "Kayıt başarısız. Tekrar dene.");
+          return;
+        }
+
+        // Başarılı — dashboard'a yönlendir
+        window.location.href = data.redirect || "/dashboard";
+      } catch (err) {
+        console.error("[finalize] failed:", err);
+        alert("Bağlantı hatası. Lütfen tekrar dene.");
+      }
+    },
+    [profileId, currentInput, result],
+  );
 
   if (phase === "error") {
     return (
