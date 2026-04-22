@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import s from "../analiz.module.css";
+
+// Lottie SSR'da çalışmaz — dynamic import
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+
+import aiLoadingAnimation from "../../../../public/animations/ai-loading.json";
 
 const STAGES = [
   { label: "Site okunuyor", duration: 8000 },
@@ -12,9 +18,21 @@ const STAGES = [
   { label: "Rakipler tespit ediliyor", duration: 6000 },
 ];
 
+// Lottie bekleme sırasında rotasyon yapılacak teaser mesajları
+const TEASER_ROTATION = [
+  "ChatGPT search ile canlı veriye bakılıyor",
+  "Claude web search aktif, gerçek cevaplar toplanıyor",
+  "Gemini grounding ile kaynaklardan okuma yapılıyor",
+  "Perplexity Sonar sektörü tarıyor",
+  "Google AI Overview paralelde analiz ediyor",
+  "Opus cevapları birleştiriyor",
+  "Rakipler frekansa göre sıralanıyor",
+  "Sonuç raporu hazırlanıyor",
+];
+
 export function AnalyzingStage({ firmDomain }: { firmDomain?: string }) {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [pulseIdx, setPulseIdx] = useState(0);
+  const [teaserIdx, setTeaserIdx] = useState(0);
 
   // Stage progress
   useEffect(() => {
@@ -35,52 +53,40 @@ export function AnalyzingStage({ firmDomain }: { firmDomain?: string }) {
     };
   }, []);
 
-  // Pulse animation — dokuz nokta, bir dalga gibi
+  // Teaser rotation
   useEffect(() => {
     const interval = setInterval(() => {
-      setPulseIdx((p) => (p + 1) % 9);
-    }, 200);
+      setTeaserIdx((p) => (p + 1) % TEASER_ROTATION.length);
+    }, 3500);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <section className={s.analyzing}>
-      {/* Hero — GH7 + slogan */}
       <div className={s.analyzingHero}>
         <div className={s.analyzingLogo}>GH7</div>
         <div className={s.analyzingSlogan}>GEO is the new SEO.</div>
       </div>
 
-      {/* Pulse animasyonu — 9 nokta, dalga gibi */}
-      <div className={s.pulseContainer}>
-        {Array.from({ length: 9 }).map((_, i) => {
-          const distance = Math.abs(i - pulseIdx);
-          const opacity = Math.max(0.15, 1 - distance * 0.2);
-          const scale = distance === 0 ? 1.4 : 1;
-          return (
-            <div
-              key={i}
-              className={s.pulseDot}
-              style={{
-                opacity,
-                transform: `scale(${scale})`,
-              }}
-            />
-          );
-        })}
+      <div className={s.lottieWrap}>
+        <Lottie
+          animationData={aiLoadingAnimation}
+          loop
+          autoplay
+          style={{ width: "100%", maxWidth: 280, height: "auto" }}
+        />
       </div>
 
-      {/* Status */}
       <div className={s.analyzingStatus}>
-        {firmDomain && (
-          <div className={s.analyzingDomain}>{firmDomain}</div>
-        )}
+        {firmDomain && <div className={s.analyzingDomain}>{firmDomain}</div>}
         <div className={s.analyzingCurrent}>
           {STAGES[currentIdx]?.label ?? "Tamamlandı"}
         </div>
+        <div className={s.analyzingTeaser}>
+          {TEASER_ROTATION[teaserIdx]}
+        </div>
       </div>
 
-      {/* Stage timeline */}
       <ul className={s.stageList}>
         {STAGES.map((stage, i) => {
           const status = i < currentIdx ? "done" : i === currentIdx ? "running" : "pending";

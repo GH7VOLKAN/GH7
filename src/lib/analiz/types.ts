@@ -113,6 +113,7 @@ export interface AnalyzeResult {
   userMentions: UserBrandMention;
   candidateCompetitors: CandidateCompetitor[];
   healingAttempted: boolean;
+  commentary: string; // Opus özet analizi, markdown
   generatedAt: string;
   cached: boolean;
 }

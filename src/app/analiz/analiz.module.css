@@ -1696,3 +1696,303 @@
     padding: 16px 20px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════ */
+/* Analyzing stage — Lottie + teaser                        */
+/* ═══════════════════════════════════════════════════════ */
+
+.lottieWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.analyzingTeaser {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--g400);
+  font-style: italic;
+  animation: teaserFade 0.6s ease;
+  min-height: 20px;
+}
+
+@keyframes teaserFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulse animasyonunu kaldır — Lottie aldı yerini */
+.pulseContainer { display: none; }
+
+/* ═══════════════════════════════════════════════════════ */
+/* Commentary (Claude'un Analizi)                           */
+/* ═══════════════════════════════════════════════════════ */
+
+.commentarySection {
+  margin: 64px 0;
+  padding: 48px 40px;
+  background: var(--black);
+  color: var(--white);
+  border-radius: 12px;
+}
+
+.commentaryHeadline {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 8px 0 32px;
+  color: var(--white);
+}
+
+.commentaryBody {
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.commentaryBody p {
+  margin: 0 0 20px;
+}
+
+.commentaryBody p:last-child {
+  margin-bottom: 0;
+}
+
+.commentaryBody strong {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.commentaryBody a {
+  color: var(--white);
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Pro Gate — fear stats + 43 madde + dynamic CTA           */
+/* ═══════════════════════════════════════════════════════ */
+
+.proFearSection {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--g200);
+}
+
+.proFearHeadline {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--black);
+  margin: 16px 0 20px;
+}
+
+.proFearSub {
+  font-size: 17px;
+  color: var(--g700);
+  line-height: 1.6;
+  margin: 0 0 40px;
+  max-width: 640px;
+}
+
+.auditWrap {
+  margin-bottom: 64px;
+}
+
+.auditHeaderSection {
+  margin-bottom: 32px;
+}
+
+.auditSectionHeadline {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 8px 0 16px;
+  color: var(--black);
+}
+
+.auditSectionSub {
+  font-size: 15px;
+  color: var(--g600);
+  line-height: 1.6;
+  max-width: 640px;
+  margin: 0;
+}
+
+.auditList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: audit;
+  border: 1px solid var(--g200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.auditItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--g100);
+  background: var(--white);
+  transition: background 0.12s ease;
+}
+
+.auditItem:last-child {
+  border-bottom: none;
+}
+
+.auditItem:hover {
+  background: var(--g50);
+}
+
+.auditNum {
+  font-variant-numeric: tabular-nums;
+  color: var(--g400);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.auditBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.auditTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--black);
+  line-height: 1.35;
+}
+
+.auditHint {
+  font-size: 13px;
+  color: var(--g500);
+  line-height: 1.45;
+}
+
+.auditLock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--g50);
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.auditLockIcon {
+  font-size: 12px;
+  color: var(--g500);
+}
+
+.auditLockLabel {
+  font-size: 11px;
+  color: var(--g500);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+/* Main CTA — new dynamic structure */
+
+.proCTAHero {
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.proCTALabel {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.proCTAHeadline {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 20px;
+  color: var(--white);
+}
+
+.proCTASubMsg {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 560px;
+}
+
+.proCTAPriceSub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 32px;
+  letter-spacing: 0.04em;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Mobile                                                   */
+/* ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .commentarySection {
+    padding: 32px 24px;
+    margin: 40px 0;
+  }
+
+  .commentaryHeadline {
+    font-size: 28px;
+  }
+
+  .commentaryBody {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .proFearHeadline {
+    font-size: 36px;
+  }
+
+  .proFearSub {
+    font-size: 15px;
+  }
+
+  .auditSectionHeadline {
+    font-size: 26px;
+  }
+
+  .auditItem {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .auditNum {
+    grid-row: 1;
+  }
+
+  .auditBody {
+    grid-row: 1;
+  }
+
+  .auditLock {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+    padding: 4px 8px;
+  }
+
+  .proCTAHeadline {
+    font-size: 30px;
+  }
+}

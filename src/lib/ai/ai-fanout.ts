@@ -88,35 +88,114 @@ async function callProvider(
 async function callChatGPT(query: string): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY missing");
+
   const client = new OpenAI({ apiKey });
-  const response = await client.chat.completions.create({
-    model: "gpt-4o-search-preview",
-    messages: [{ role: "user", content: query }],
-    max_tokens: 800,
+
+  // Responses API — yeni nesil OpenAI endpoint'i, built-in web_search tool destekli.
+  // Eski chat.completions + gpt-4o-search-preview modeli deprecated yolu;
+  // chatgpt.com'daki search kalitesine ulaşmak için bu gerekli.
+  const response = await client.responses.create({
+    model: "gpt-4.1",
+    input: query,
+    tools: [{ type: "web_search_preview" } as unknown as OpenAI.Responses.Tool],
   });
-  return response.choices[0]?.message?.content ?? "";
+
+  // Responses API çıktısı: output_text kısayolu veya output[] dizisi.
+  if (typeof response.output_text === "string" && response.output_text.length > 0) {
+    return response.output_text;
+  }
+
+  const debugShape = {
+    hasOutput: Array.isArray((response as unknown as { output?: unknown[] }).output),
+    outputTextType: typeof response.output_text,
+    outputTextLen: typeof response.output_text === "string" ? response.output_text.length : 0,
+    status: (response as unknown as { status?: string }).status,
+    incomplete: (response as unknown as { incomplete_details?: unknown }).incomplete_details,
+  };
+  console.warn("[fanout] ChatGPT output_text empty:", JSON.stringify(debugShape));
+
+  // Fallback: output dizisinden text block'ları topla
+  const output = (response as unknown as { output?: Array<unknown> }).output;
+  if (Array.isArray(output)) {
+    const texts: string[] = [];
+    for (const item of output) {
+      if (!item || typeof item !== "object") continue;
+      const obj = item as Record<string, unknown>;
+      if (obj.type === "message" && Array.isArray(obj.content)) {
+        for (const c of obj.content) {
+          if (c && typeof c === "object" && (c as { type?: string }).type === "output_text") {
+            const txt = (c as { text?: string }).text;
+            if (typeof txt === "string") texts.push(txt);
+          }
+        }
+      }
+    }
+    return texts.join("\n\n");
+  }
+
+  return "";
 }
 
 async function callClaude(query: string): Promise<string> {
   const apiKey = process.env.GH7_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY missing");
+
   const client = new Anthropic({ apiKey });
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 800,
+    max_tokens: 1024,
     messages: [{ role: "user", content: query }],
+    tools: [
+      {
+        type: "web_search_20250305",
+        name: "web_search",
+        max_uses: 5,
+      } as unknown as Anthropic.Tool,
+    ],
   });
-  const block = response.content[0];
-  return block?.type === "text" ? block.text : "";
+
+  // Tool-use cevaplarında text block'ları topla
+  const textBlocks = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n\n");
+
+  return textBlocks;
 }
 
 async function callGemini(query: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+
   const client = new GoogleGenerativeAI(apiKey);
-  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
-  const result = await model.generateContent(query);
-  return result.response.text();
+
+  // gemini-1.5+ için yeni grounding spec: googleSearch (retrieval DEĞİL).
+  // Önce yeni spec'i dene; başarısız olursa eski googleSearchRetrieval'a düş.
+  try {
+    const model = client.getGenerativeModel({
+      model: "gemini-flash-latest",
+      tools: [{ googleSearch: {} } as unknown as object],
+    });
+    const result = await model.generateContent(query);
+    return result.response.text();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[fanout] Gemini googleSearch failed, trying googleSearchRetrieval:", msg.slice(0, 150));
+
+    try {
+      const fallbackModel = client.getGenerativeModel({
+        model: "gemini-flash-latest",
+        tools: [{ googleSearchRetrieval: {} } as unknown as object],
+      });
+      const result = await fallbackModel.generateContent(query);
+      return result.response.text();
+    } catch {
+      console.warn("[fanout] Gemini grounding tamamen başarısız, plain call yapılıyor");
+      const plainModel = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await plainModel.generateContent(query);
+      return result.response.text();
+    }
+  }
 }
 
 async function callGoogleAIO(query: string): Promise<string> {
