@@ -6,6 +6,7 @@ import type { AnalyzeInput, AnalyzeResult, Door, FlowPhase, SelectedCompetitor }
 import { InputStage } from "./input-stage";
 import { AnalyzingStage } from "./analyzing-stage";
 import { ResultStage } from "./result-stage";
+import { PhoneVerifyModal } from "./phone-verify-modal";
 
 type Props = {
   initialDoor: Door;
@@ -18,30 +19,52 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [currentInput, setCurrentInput] = useState<AnalyzeInput | null>(null);
 
-  const onSubmit = useCallback(async (input: AnalyzeInput) => {
-    setCurrentInput(input);
-    setPhase("analyzing");
-    setError(null);
+  const runAnalyze = useCallback(
+    async (input: AnalyzeInput, profileId: string) => {
+      setPhase("analyzing");
+      setError(null);
 
-    try {
-      const res = await fetch("/api/analiz/analyze", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
-      });
+      try {
+        const res = await fetch("/api/analiz/analyze", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ...input, profileId }),
+        });
 
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({ error: "Bilinmeyen hata" }));
-        throw new Error(errBody.error || `Sunucu hatası (${res.status})`);
+        if (!res.ok) {
+          const errBody = await res
+            .json()
+            .catch(() => ({ error: "Bilinmeyen hata" }));
+          throw new Error(errBody.error || `Sunucu hatası (${res.status})`);
+        }
+
+        const data = (await res.json()) as AnalyzeResult;
+        setResult(data);
+        setPhase("result");
+      } catch (e) {
+        setError((e as Error).message);
+        setPhase("error");
       }
+    },
+    [],
+  );
 
-      const data = (await res.json()) as AnalyzeResult;
-      setResult(data);
-      setPhase("result");
-    } catch (e) {
-      setError((e as Error).message);
-      setPhase("error");
-    }
+  const onSubmit = useCallback((input: AnalyzeInput) => {
+    setCurrentInput(input);
+    setPhase("verifying");
+    setError(null);
+  }, []);
+
+  const onVerified = useCallback(
+    (profileId: string) => {
+      if (!currentInput) return;
+      void runAnalyze(currentInput, profileId);
+    },
+    [currentInput, runAnalyze],
+  );
+
+  const onVerifyCancel = useCallback(() => {
+    setPhase("input");
   }, []);
 
   const onFinalize = useCallback((selected: SelectedCompetitor[]) => {
@@ -62,11 +85,19 @@ export function FlowContainer({ initialDoor, initialDomain }: Props) {
 
   return (
     <>
-      {phase === "input" && (
+      {(phase === "input" || phase === "verifying") && (
         <InputStage
           door={initialDoor}
           initialDomain={initialDomain}
           onSubmit={onSubmit}
+        />
+      )}
+
+      {phase === "verifying" && currentInput && (
+        <PhoneVerifyModal
+          domain={currentInput.domain || ""}
+          onVerified={onVerified}
+          onCancel={onVerifyCancel}
         />
       )}
 

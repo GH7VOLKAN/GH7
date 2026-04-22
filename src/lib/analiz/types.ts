@@ -122,7 +122,7 @@ export interface AnalyzeResult {
 // Flow state
 // ═══════════════════════════════════════════════════════════
 
-export type FlowPhase = "input" | "analyzing" | "result" | "error";
+export type FlowPhase = "input" | "verifying" | "analyzing" | "result" | "error";
 
 export type SelectedCompetitor = {
   name: string;
