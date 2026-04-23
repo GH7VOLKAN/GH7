@@ -460,3 +460,169 @@ export async function generateAuditInstructionsForBatch(
     provider: PROVIDER,
   };
 }
+
+// ───────────────────────────────────────────────────────
+// Single-item API (SSE streaming için — per item Qwen call)
+// ───────────────────────────────────────────────────────
+
+export type SingleItemResult = {
+  item: OpusInstructionItem;
+  usage: OpusUsage;
+  costUsd: number;
+  provider: ProviderName;
+};
+
+function buildSingleItemMessage(
+  req: OpusRequest,
+  item: OpusRequest["masterItems"][number],
+): string {
+  return [
+    `Marka: ${req.brandName}`,
+    `Domain: ${req.domain}`,
+    `Sektör: ${req.sector || "belirtilmemiş"}`,
+    `Lokasyon: ${req.city || "belirtilmemiş"}`,
+    "",
+    "DataForSEO (özet):",
+    JSON.stringify(req.dataForSeoSummary, null, 2).slice(0, 3000),
+    "",
+    "Perplexity AI mention:",
+    JSON.stringify(req.perplexityMentions, null, 2).slice(0, 1500),
+    "",
+    "MADDE:",
+    `Kod: ${item.code}`,
+    `Başlık: ${item.title}`,
+    `Durum (evaluator): ${item.currentStatus}`,
+    `Açıklama: ${item.descriptionStatic.slice(0, 300)}`,
+    `Raw metric: ${JSON.stringify(item.rawMetrics).slice(0, 300)}`,
+    "",
+    "Sadece tek madde için JSON döndür:",
+    `{"item":{"code":"${item.code}","currentState":"...","instructions":[...],"impactText":"...","expectedGain":"..."}}`,
+  ].join("\n");
+}
+
+const SINGLE_ITEM_SYSTEM_PROMPT = `Sen bir Türk SEO/AEO uzmanısın. Tüm yanıtların akıcı, doğal ve profesyonel Türkçe olmalı. Çeviri hissi vermeyen doğal Türkçe kullan. Teknik terimler için gerektiğinde İngilizce orijinalini parantez içinde belirt.
+
+Görevin: Sana verilen TEK bir denetim maddesi için marka-özel, kapsamlı ve uygulanabilir talimat yaz.
+
+Çıktı formatı strict JSON. Sadece JSON, başka metin YASAK:
+
+{
+  "item": {
+    "code": "madde-kodu",
+    "currentState": "Senin sitende mevcut durum — 2-3 cümle, spesifik bulgular",
+    "instructions": [
+      { "step": 1, "text": "İlk adım (50-100 kelime)", "code": "opsiyonel kod bloğu" }
+    ],
+    "impactText": "Beklenen etki — 1-2 cümle",
+    "expectedGain": "+1-2 puan"
+  }
+}
+
+Kurallar:
+- Status "passed" ise currentState="Bu madde siteniz için optimum durumda.", instructions=[], impactText="Geçildi, işlem gerekmez.", expectedGain="+0"
+- Status "warning" veya "critical" için 3-5 adımlı marka-özel detaylı talimat
+- Kod örnekleri eksiksiz, copy-paste edilebilir
+- Türkçe doğal, İngilizce jargonu parantezle`;
+
+async function generateSingleItemQwen(
+  req: OpusRequest,
+  item: OpusRequest["masterItems"][number],
+  retryCount = 0,
+): Promise<{ item: OpusInstructionItem; usage: OpusUsage }> {
+  const userMessage = buildSingleItemMessage(req, item);
+  const response = await qwenClient().chat.completions.create({
+    model: QWEN_MODEL,
+    max_tokens: 1500, // tek madde ~500-800 token yeter
+    temperature: 0.3,
+    messages: [
+      { role: "system", content: SINGLE_ITEM_SYSTEM_PROMPT },
+      { role: "user", content: userMessage },
+    ],
+    response_format: { type: "json_object" },
+  });
+
+  const text = response.choices?.[0]?.message?.content ?? "";
+  if (!text) throw new Error(`Qwen ${item.code} — empty response`);
+
+  if (containsCJK(text) && retryCount === 0) {
+    return generateSingleItemQwen(req, item, retryCount + 1);
+  }
+
+  const cleaned = cleanJsonFences(text);
+  let parsed: { item?: OpusInstructionItem };
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    throw new Error(
+      `Qwen ${item.code} JSON parse failed: ${err instanceof Error ? err.message : String(err)}. First 200: ${cleaned.slice(0, 200)}`,
+    );
+  }
+  if (!parsed.item) throw new Error(`Qwen ${item.code} — item missing`);
+
+  return {
+    item: parsed.item,
+    usage: {
+      input_tokens: response.usage?.prompt_tokens ?? 0,
+      output_tokens: response.usage?.completion_tokens ?? 0,
+    },
+  };
+}
+
+async function generateSingleItemOpus(
+  req: OpusRequest,
+  item: OpusRequest["masterItems"][number],
+): Promise<{ item: OpusInstructionItem; usage: OpusUsage }> {
+  const userMessage = buildSingleItemMessage(req, item);
+  const stream = opusClient().messages.stream({
+    model: OPUS_MODEL,
+    max_tokens: 2000,
+    system: [
+      {
+        type: "text",
+        text: SINGLE_ITEM_SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const response = await stream.finalMessage();
+  const textBlock = response.content.find(
+    (b): b is Anthropic.TextBlock => b.type === "text",
+  );
+  if (!textBlock) throw new Error(`Opus ${item.code} — empty text`);
+  const cleaned = cleanJsonFences(textBlock.text);
+  const parsed = JSON.parse(cleaned) as { item?: OpusInstructionItem };
+  if (!parsed.item) throw new Error(`Opus ${item.code} — item missing`);
+
+  const usageRaw = response.usage as {
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+  };
+  return {
+    item: parsed.item,
+    usage: {
+      input_tokens: usageRaw.input_tokens,
+      output_tokens: usageRaw.output_tokens,
+      cache_creation_input_tokens: usageRaw.cache_creation_input_tokens ?? 0,
+      cache_read_input_tokens: usageRaw.cache_read_input_tokens ?? 0,
+    },
+  };
+}
+
+export async function generateInstructionsForItem(
+  req: OpusRequest,
+  item: OpusRequest["masterItems"][number],
+): Promise<SingleItemResult> {
+  const result =
+    PROVIDER === "opus"
+      ? await generateSingleItemOpus(req, item)
+      : await generateSingleItemQwen(req, item);
+  return {
+    item: result.item,
+    usage: result.usage,
+    costUsd: calculateCost(result.usage, PROVIDER),
+    provider: PROVIDER,
+  };
+}

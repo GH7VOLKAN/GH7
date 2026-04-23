@@ -450,9 +450,9 @@ function CompletedList({
         </div>
       </motion.section>
 
-      {/* BATCH RUNNER — awaiting-opus + generating + completed */}
+      {/* STREAM RUNNER — awaiting-opus + generating + completed */}
       <motion.section variants={pageItem} className="mb-16">
-        <BatchRunner audit={audit} />
+        <StreamRunner audit={audit} />
       </motion.section>
 
       {/* FILTRE */}
@@ -585,170 +585,231 @@ function ItemRow({ item }: { item: AuditItem }) {
 }
 
 // ═══════════════════════════════════════════════════════
-// BATCH RUNNER — 3 batch'i manuel tetikle
+// STREAM RUNNER — SSE ile per-item live generation
 // ═══════════════════════════════════════════════════════
 
-type BatchUiSummary = {
-  index: number;
-  label: string;
-  indexFrom: number;
-  indexTo: number;
-  doneCount: number;
-  itemCount: number;
-  state: "pending" | "running" | "done";
-};
+type StreamPhase = "idle" | "connecting" | "streaming" | "done" | "error";
 
-function computeBatchesForUi(
-  audit: AuditWithItems,
-): BatchUiSummary[] {
-  // Hardcoded — provider.ts'deki AUDIT_BATCHES ile senkron.
-  const batches = [
-    { index: 0, label: "AI Crawler + Entity", indexFrom: 1, indexTo: 14 },
-    {
-      index: 1,
-      label: "Structured Data + Content-AI",
-      indexFrom: 15,
-      indexTo: 28,
-    },
-    {
-      index: 2,
-      label: "Query-Match + Authority + AI Platform",
-      indexFrom: 29,
-      indexTo: 43,
-    },
-  ];
-  return batches.map((b) => {
-    const items = audit.items.filter(
-      (i) => i.itemIndex >= b.indexFrom && i.itemIndex <= b.indexTo,
-    );
-    const doneCount = items.filter(
-      (i) =>
-        i.currentState &&
-        i.currentState !== "Tarama devam ediyor...",
-    ).length;
-    return {
-      ...b,
-      doneCount,
-      itemCount: items.length,
-      state:
-        doneCount === items.length
-          ? ("done" as const)
-          : doneCount > 0
-            ? ("running" as const)
-            : ("pending" as const),
-    };
-  });
-}
+type CompletedEvent = { totalCost: number; failedCount: number; totalItems: number };
 
-function BatchRunner({ audit }: { audit: AuditWithItems }) {
+function StreamRunner({ audit }: { audit: AuditWithItems }) {
   const router = useRouter();
-  const [runningIdx, setRunningIdx] = useState<number | null>(null);
+  const [phase, setPhase] = useState<StreamPhase>("idle");
+  const [completedCodes, setCompletedCodes] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+  const [failedCodes, setFailedCodes] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+  const [stats, setStats] = useState<CompletedEvent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const batches = computeBatchesForUi(audit);
-  const allDone = batches.every((b) => b.state === "done");
-  const isBusy = audit.status === "generating" || runningIdx !== null;
 
-  const runBatch = async (index: number) => {
-    setRunningIdx(index);
+  const pendingItems = audit.items.filter(
+    (i) => i.currentState === "Tarama devam ediyor...",
+  );
+  const alreadyDone = audit.items.length - pendingItems.length;
+  const totalItems = audit.items.length;
+  const progressCount = alreadyDone + completedCodes.size;
+  const progressPercent = Math.round((progressCount / totalItems) * 100);
+
+  // Mevcut audit completed ve tüm item'lar hazır ise başlat butonu
+  // gösterme, sadece özet göster.
+  const allAlreadyDone = pendingItems.length === 0;
+
+  const start = () => {
+    setPhase("connecting");
     setError(null);
-    try {
-      const res = await fetch("/api/audit/run-batch", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ auditId: audit.id, batchIndex: index }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        message?: string;
-        error?: string;
-      };
-      if (!res.ok || !data.ok) {
-        setError(data.error ?? data.message ?? "Beklenmeyen hata");
-      } else {
-        router.refresh();
+    setCompletedCodes(new Set());
+    setFailedCodes(new Set());
+    setStats(null);
+
+    const source = new EventSource(
+      `/api/audit/stream?auditId=${encodeURIComponent(audit.id)}`,
+    );
+
+    source.addEventListener("start", () => {
+      setPhase("streaming");
+    });
+
+    source.addEventListener("item", (ev: MessageEvent) => {
+      try {
+        const data = JSON.parse(ev.data) as { itemCode: string };
+        setCompletedCodes((prev) => {
+          const next = new Set(prev);
+          next.add(data.itemCode);
+          return next;
+        });
+      } catch {
+        // ignore malformed
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setRunningIdx(null);
-    }
+    });
+
+    source.addEventListener("item-failed", (ev: MessageEvent) => {
+      try {
+        const data = JSON.parse(ev.data) as { itemCode: string };
+        setFailedCodes((prev) => {
+          const next = new Set(prev);
+          next.add(data.itemCode);
+          return next;
+        });
+      } catch {
+        // ignore
+      }
+    });
+
+    source.addEventListener("complete", (ev: MessageEvent) => {
+      try {
+        const data = JSON.parse(ev.data) as CompletedEvent;
+        setStats(data);
+      } catch {
+        // ignore
+      }
+      setPhase("done");
+      source.close();
+      // Yeni item verilerini göstermek için sayfayı refresh
+      router.refresh();
+    });
+
+    source.addEventListener("error", (ev: Event) => {
+      // SSE native error event (data yok genelde) veya server error event
+      if (ev instanceof MessageEvent && ev.data) {
+        try {
+          const data = JSON.parse(ev.data) as { message?: string };
+          setError(data.message ?? "Stream hatası");
+        } catch {
+          setError("Stream hatası");
+        }
+      } else {
+        setError("Bağlantı kesildi");
+      }
+      setPhase("error");
+      source.close();
+    });
   };
+
+  if (allAlreadyDone && phase === "idle") {
+    return null; // Hiçbir şey gösterme, liste zaten dolu
+  }
 
   return (
     <div>
       <div className="mb-6 flex items-center gap-4">
         <div className="text-label text-muted-foreground">
-          {allDone ? "Marka-özel Talimatlar" : "Talimat Batch'leri"}
+          {phase === "streaming"
+            ? "Marka-Özel Talimat Üretiliyor"
+            : phase === "done"
+              ? "Üretim Tamamlandı"
+              : phase === "error"
+                ? "Üretim Hatası"
+                : "Marka-Özel Talimat Üretimi"}
         </div>
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      {!allDone && (
-        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          43 madde için marka-özel Qwen talimatlarını 3 batch halinde üret.
-          Her batch yaklaşık 2-3 dakika sürer. Başlatınca sayfa kitlenir,
-          tamamlanınca otomatik yenilenir.
-        </p>
+      {phase === "idle" && (
+        <>
+          <p className="mb-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            43 madde için marka-özel Qwen talimatlarını canlı üret. Her madde
+            ayrı ayrı işlenir, sonuçlar geldikçe liste canlı güncellenir.
+            Toplam süre ortalama 3-5 dakika, 5'li paralel gruplarla.
+          </p>
+          <button
+            type="button"
+            onClick={start}
+            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          >
+            Canlı Üretimi Başlat →
+          </button>
+          {alreadyDone > 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              <span className="tabular-nums">{alreadyDone}</span> madde zaten
+              hazır — kalan{" "}
+              <span className="tabular-nums">{pendingItems.length}</span> madde
+              için çalıştırılacak.
+            </p>
+          )}
+        </>
       )}
 
-      <div className="space-y-0">
-        {batches.map((b) => {
-          const isRunning = runningIdx === b.index;
-          return (
-            <div
-              key={b.index}
-              className="flex items-baseline gap-6 border-b border-border py-5 last:border-b-0"
-            >
-              <span className="text-label tabular-nums text-muted-foreground">
-                {String(b.index + 1).padStart(2, "0")}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-base font-medium tracking-tight">
-                  {b.label}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Madde {b.indexFrom}-{b.indexTo} ·{" "}
-                  <span className="tabular-nums">
-                    {b.doneCount}/{b.itemCount}
+      {(phase === "streaming" || phase === "connecting") && (
+        <>
+          <div className="mb-3 flex items-baseline justify-between gap-4">
+            <div className="text-label text-muted-foreground">
+              İlerleme ·{" "}
+              <span className="tabular-nums text-foreground">
+                {progressCount} / {totalItems}
+              </span>{" "}
+              hazır
+              {failedCodes.size > 0 && (
+                <>
+                  {" · "}
+                  <span className="text-destructive tabular-nums">
+                    {failedCodes.size}
                   </span>{" "}
-                  hazır
-                </p>
-              </div>
-              <div className="shrink-0">
-                {b.state === "done" ? (
-                  <span className="inline-flex items-center gap-1.5 rounded border border-border bg-muted px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                    ✓ Hazır
-                  </span>
-                ) : isRunning ? (
-                  <span className="inline-flex items-center gap-1.5 rounded border border-border bg-background px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-foreground">
-                    Çalışıyor…
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => runBatch(b.index)}
-                    disabled={isBusy}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-40"
-                  >
-                    {b.state === "running" ? "Devam Et →" : "Çalıştır →"}
-                  </button>
-                )}
-              </div>
+                  hata
+                </>
+              )}
             </div>
-          );
-        })}
-      </div>
-
-      {error && (
-        <p className="mt-4 text-xs text-destructive">
-          Hata: {error}
-        </p>
+            <span className="text-label tabular-nums text-muted-foreground">
+              {progressPercent}%
+            </span>
+          </div>
+          <div className="h-1 overflow-hidden rounded-full bg-border">
+            <motion.div
+              className="h-full bg-foreground"
+              initial={{ width: `${progressPercent}%` }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {phase === "connecting"
+              ? "Bağlanılıyor..."
+              : "Streaming aktif — sayfayı kapatma."}
+          </p>
+        </>
       )}
 
-      {isBusy && runningIdx !== null && (
-        <p className="mt-4 text-xs text-muted-foreground">
-          Batch {runningIdx + 1} çalışıyor… sayfayı kapatma, 2-3 dakika sürer.
-        </p>
+      {phase === "done" && stats && (
+        <div>
+          <p className="mb-2 text-sm">
+            <span className="font-medium text-foreground">
+              ✓ {stats.totalItems - stats.failedCount} / {stats.totalItems}
+            </span>{" "}
+            madde detayı üretildi.
+            {stats.failedCount > 0 && (
+              <span className="text-destructive">
+                {" "}
+                · {stats.failedCount} hata
+              </span>
+            )}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Bu oturum maliyeti: ${stats.totalCost.toFixed(4)}
+          </p>
+          {stats.failedCount > 0 && (
+            <button
+              type="button"
+              onClick={start}
+              className="mt-4 inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium tracking-tight transition-colors hover:border-foreground/30"
+            >
+              Eksikleri Tekrar Dene →
+            </button>
+          )}
+        </div>
+      )}
+
+      {phase === "error" && (
+        <div>
+          <p className="mb-4 text-sm text-destructive">Hata: {error}</p>
+          <button
+            type="button"
+            onClick={start}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium tracking-tight transition-colors hover:border-foreground/30"
+          >
+            Tekrar Dene →
+          </button>
+        </div>
       )}
     </div>
   );
