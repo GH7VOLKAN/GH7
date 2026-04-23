@@ -7,6 +7,7 @@
  */
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
 import { BrandCardGrid } from "./_components/brand-card-grid";
@@ -16,12 +17,25 @@ import s from "./dashboard.module.css";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const allCookieNames = cookieStore.getAll().map((c) => c.name);
+  const sbCookies = allCookieNames.filter((n) => n.startsWith("sb-"));
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log("[dashboard]", {
+    hasUser: !!user,
+    userId: user?.id ?? null,
+    sbCookies,
+    allCookieCount: allCookieNames.length,
+    allCookieNames: allCookieNames.slice(0, 20),
+  });
+
   if (!user) {
+    console.log("[dashboard] REDIRECT /analiz — no user (session cookie missing or invalid)");
     redirect("/analiz");
   }
 
@@ -35,7 +49,15 @@ export default async function DashboardPage() {
     },
   });
 
+  console.log("[dashboard]", {
+    hasProfile: !!profile,
+    profileId: profile?.id,
+    profilePhone: profile?.phone,
+    profilePlan: profile?.plan,
+  });
+
   if (!profile) {
+    console.log("[dashboard] REDIRECT /analiz — no profile for user.id =", user.id);
     redirect("/analiz");
   }
 
@@ -51,13 +73,24 @@ export default async function DashboardPage() {
     },
   });
 
+  console.log("[dashboard]", {
+    hasBrand: !!brand,
+    brandId: brand?.id,
+    brandDomain: brand?.domain,
+    brandName: brand?.name,
+    scanCount: brand?.scans.length ?? 0,
+  });
+
   // Henüz analiz yapılmamış — analize yönlendir
   if (!brand) {
+    console.log("[dashboard] REDIRECT /analiz — no Brand for profileId =", profile.id);
     redirect("/analiz");
   }
 
   const latestScan = brand.scans[0];
   const isPro = profile.plan !== "free";
+
+  console.log("[dashboard] RENDER — brand:", brand.name, "score:", latestScan?.score);
 
   return (
     <div className={s.shell}>
