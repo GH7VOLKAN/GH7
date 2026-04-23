@@ -17,10 +17,9 @@ import { AUDIT_MASTER_ITEMS } from "@/lib/audit/master-items";
 import { runAuditPipeline } from "@/lib/audit/pipeline";
 
 export const runtime = "nodejs";
-// Vercel Pro/Enterprise fluid compute'da max 800s (~13 dk). Hobby'de
-// 60s, Pro classic'te 300s. Qwen pipeline ortalama 6-8 dk sürebiliyor;
-// fluid compute gerekli. Plan yetersizse fallback queue (gelecek sprint).
-export const maxDuration = 800;
+// Phase 1 (DataForSEO + Perplexity + evaluator) — Opus yok, ~60-90s.
+// Opus batch'leri /api/audit/run-batch'ten manuel tetiklenir.
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {

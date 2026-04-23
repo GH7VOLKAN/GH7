@@ -41,13 +41,19 @@ const OPUS_MODEL = "claude-opus-4-20250514";
 const MAX_TOKENS_QWEN = 8000;
 const MAX_TOKENS_OPUS = 12000;
 
-// 43 maddeyi 4 batch (~10-12 madde/batch). Her batch 8K output limit altında.
-const BATCHES = [
-  { label: "AI Crawler + Entity (başlangıç)", indexFrom: 1, indexTo: 11 },
-  { label: "Entity (devam) + Structured Data", indexFrom: 12, indexTo: 20 },
-  { label: "Content-AI + Query-Match", indexFrom: 21, indexTo: 35 },
-  { label: "Authority + AI Platform", indexFrom: 36, indexTo: 43 },
+// 43 madde 3 batch — kullanıcı manuel tetikler (Vercel timeout önleme).
+// Her batch ~14-15 madde, Qwen 8K token altı, ~2-3 dk sürer.
+export const AUDIT_BATCHES = [
+  { label: "AI Crawler + Entity", indexFrom: 1, indexTo: 14 },
+  { label: "Structured Data + Content-AI", indexFrom: 15, indexTo: 28 },
+  { label: "Query-Match + Authority + AI Platform", indexFrom: 29, indexTo: 43 },
 ] as const;
+
+export const AUDIT_BATCH_COUNT = AUDIT_BATCHES.length;
+
+// Backward compat: var olan kod `BATCHES`'i Promise.allSettled'da kullanıyor.
+// Yeni batch-by-index API'si aşağıda.
+const BATCHES = AUDIT_BATCHES;
 
 // ───────────────────────────────────────────────────────
 // Shared types
@@ -399,4 +405,58 @@ export async function generateAuditInstructions(
 
 export function currentProvider(): ProviderName {
   return PROVIDER;
+}
+
+// ───────────────────────────────────────────────────────
+// Single-batch API (manuel tetikli UX için)
+// ───────────────────────────────────────────────────────
+
+export type SingleBatchResult = {
+  batchIndex: number;
+  batchLabel: string;
+  items: OpusInstructionItem[];
+  usage: OpusUsage;
+  costUsd: number;
+  provider: ProviderName;
+};
+
+/**
+ * Tek bir batch'i çalıştırır (0-based index).
+ * Kullanıcı manuel tetikler — Vercel timeout altında güvenli.
+ */
+export async function generateAuditInstructionsForBatch(
+  req: OpusRequest,
+  batchIndex: number,
+): Promise<SingleBatchResult> {
+  const batch = AUDIT_BATCHES[batchIndex];
+  if (!batch) {
+    throw new Error(
+      `Geçersiz batchIndex: ${batchIndex}. 0-${AUDIT_BATCHES.length - 1} arası.`,
+    );
+  }
+
+  const items = req.masterItems.filter(
+    (m) => m.itemIndex >= batch.indexFrom && m.itemIndex <= batch.indexTo,
+  );
+  if (items.length === 0) {
+    return {
+      batchIndex,
+      batchLabel: batch.label,
+      items: [],
+      usage: { input_tokens: 0, output_tokens: 0 },
+      costUsd: 0,
+      provider: PROVIDER,
+    };
+  }
+
+  const result = await generateBatch(req, items, batch.label);
+
+  return {
+    batchIndex,
+    batchLabel: batch.label,
+    items: result.items,
+    usage: result.usage,
+    costUsd: calculateCost(result.usage, PROVIDER),
+    provider: PROVIDER,
+  };
 }
