@@ -21,7 +21,10 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log("[dashboard] user:", user?.id ?? "NULL");
+
   if (!user) {
+    console.log("[dashboard] REDIRECT /analiz — no user (session cookie missing or invalid)");
     redirect("/analiz");
   }
 
@@ -35,7 +38,10 @@ export default async function DashboardPage() {
     },
   });
 
+  console.log("[dashboard] profile:", profile?.id ?? "NULL", "plan:", profile?.plan);
+
   if (!profile) {
+    console.log("[dashboard] REDIRECT /analiz — Profile not found for user.id =", user.id);
     redirect("/analiz");
   }
 
@@ -51,8 +57,11 @@ export default async function DashboardPage() {
     },
   });
 
+  console.log("[dashboard] brand:", brand?.id ?? "NULL", "name:", brand?.name);
+
   // Henüz analiz yapılmamış — analize yönlendir
   if (!brand) {
+    console.log("[dashboard] REDIRECT /analiz — no Brand for profileId =", profile.id);
     redirect("/analiz");
   }
 
