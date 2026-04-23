@@ -303,6 +303,8 @@ function CompletedList({
   brand: BrandLite;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [reAuditing, setReAuditing] = useState(false);
+  const router = useRouter();
 
   const counts = useMemo(() => {
     const done = audit.items.filter((i) => i.completedAt).length;
@@ -314,6 +316,29 @@ function CompletedList({
       done,
     };
   }, [audit.items]);
+
+  const donePercent = Math.round((counts.done / counts.all) * 100);
+
+  const startReAudit = async () => {
+    if (
+      !confirm(
+        "Yeni bir denetim başlatılsın mı? Mevcut sonuçlar arşivde kalır, yeni denetim 60-90 saniye sürer.",
+      )
+    )
+      return;
+    setReAuditing(true);
+    try {
+      const res = await fetch("/api/audit/run", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ brandId: brand.id }),
+      });
+      if (res.ok) router.refresh();
+      else setReAuditing(false);
+    } catch {
+      setReAuditing(false);
+    }
+  };
 
   const filteredItems = useMemo(() => {
     if (filter === "all") return audit.items;
@@ -337,20 +362,57 @@ function CompletedList({
       className="mx-auto max-w-4xl px-6 py-12 lg:py-20"
     >
       {/* HEADER */}
-      <motion.div variants={pageItem} className="mb-16">
-        <div className="text-label text-muted-foreground mb-6">GH7 Audit</div>
-        <h1 className="text-display mb-8">
-          43 Maddelik
-          <br />
-          Denetim
-        </h1>
-        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-          {brand.name} · {formattedDate} · Skor{" "}
-          <span className="font-medium text-foreground tabular-nums">
-            {audit.totalScore ?? 0}/100
-          </span>
-        </p>
+      <motion.div
+        variants={pageItem}
+        className="mb-16 flex flex-wrap items-end justify-between gap-6"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="text-label text-muted-foreground mb-6">GH7 Audit</div>
+          <h1 className="text-display mb-8">
+            43 Maddelik
+            <br />
+            Denetim
+          </h1>
+          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+            {brand.name} · {formattedDate} · Skor{" "}
+            <span className="font-medium text-foreground tabular-nums">
+              {audit.totalScore ?? 0}/100
+            </span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={startReAudit}
+          disabled={reAuditing}
+          className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium tracking-tight transition-colors hover:border-foreground/30 disabled:opacity-50"
+        >
+          {reAuditing ? "Başlatılıyor..." : "Tekrar Denetle →"}
+        </button>
       </motion.div>
+
+      {/* İLERLEME: X / 43 yapıldı */}
+      <motion.section variants={pageItem} className="mb-16">
+        <div className="mb-3 flex items-baseline justify-between gap-4">
+          <div className="text-label text-muted-foreground">
+            İlerleme ·{" "}
+            <span className="tabular-nums text-foreground">
+              {counts.done} / {counts.all}
+            </span>{" "}
+            yapıldı
+          </div>
+          <span className="text-label tabular-nums text-muted-foreground">
+            {donePercent}%
+          </span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-border">
+          <motion.div
+            className="h-full bg-foreground"
+            initial={{ width: 0 }}
+            animate={{ width: `${donePercent}%` }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </div>
+      </motion.section>
 
       {/* SCORE METRIC */}
       <motion.section variants={pageItem} className="mb-16">
