@@ -22,7 +22,7 @@ import {
 import { checkBrandMention } from "./perplexity";
 import { evaluateItem, type EvalInput } from "./evaluators";
 import { AUDIT_MASTER_ITEMS } from "./master-items";
-import { generateAuditInstructions } from "./opus";
+import { generateAuditInstructions } from "./provider";
 
 async function updateProgress(
   auditId: string,
@@ -175,6 +175,7 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
       orderBy: { itemIndex: "asc" },
       select: {
         itemCode: true,
+        itemIndex: true,
         title: true,
         descriptionStatic: true,
         status: true,
@@ -182,7 +183,11 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
       },
     });
 
+    // 4 batch paralel Opus çağrısı. Her batch bağımsız — birinin fail
+    // olması diğerlerini etkilemez. Partial output yine DB'ye yazılır.
     let opusCostUsd = 0;
+    let opusErrorMessage: string | null = null;
+    let opusWrittenCount = 0;
     try {
       const opusResult = await generateAuditInstructions({
         brandName: audit.brand.name,
@@ -203,12 +208,13 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
           descriptionStatic: item.descriptionStatic,
           currentStatus: item.status,
           rawMetrics: item.rawMetrics,
+          itemIndex: item.itemIndex,
         })),
       });
 
       opusCostUsd = opusResult.costUsd;
 
-      // Her AuditItem'a Opus çıktısını yaz
+      // Her AuditItem'a Opus çıktısını yaz (başarılı batch'ler)
       for (const opusItem of opusResult.items) {
         await prisma.auditItem.updateMany({
           where: { auditId, itemCode: opusItem.code },
@@ -219,6 +225,7 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
             expectedGain: opusItem.expectedGain ?? null,
           },
         });
+        opusWrittenCount++;
       }
 
       await prisma.audit.update({
@@ -227,26 +234,65 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
           opusRaw: JSON.parse(JSON.stringify(opusResult.items)),
         },
       });
+
+      // Bazı batch'ler fail ettiyse errorMessage'e yaz
+      if (opusResult.failedBatches.length > 0) {
+        const summary = opusResult.failedBatches
+          .map((f) => `${f.label}: ${f.error}`)
+          .join(" | ");
+        opusErrorMessage = `${opusResult.failedBatches.length}/${AUDIT_MASTER_ITEMS.length > 0 ? 4 : 0} batch başarısız — ${summary}`.slice(0, 1000);
+      }
     } catch (opusErr) {
-      // Opus başarısız olursa pipeline yarıda kalmasın — evaluator sonuçları
-      // zaten DB'de. Sadece logla, audit yine completed olarak kapat.
-      console.error("[audit-pipeline] Opus failed (continuing):", opusErr);
+      // Tüm batch'ler için fatal hata (env, network vs.)
+      const msg =
+        opusErr instanceof Error ? opusErr.message : String(opusErr);
+      opusErrorMessage = `Opus talimat üretimi başarısız: ${msg}`.slice(0, 1000);
+      console.error("[audit-pipeline] Opus fatal:", opusErr);
     }
 
-    await prisma.audit.update({
-      where: { id: auditId },
-      data: {
-        status: "completed",
-        progress: 100,
-        currentStep: "Tamamlandı",
-        completedAt: new Date(),
-        totalScore,
-        passedCount,
-        warningCount,
-        criticalCount,
-        costUsd: opusCostUsd,
-      },
-    });
+    // Batch mantığı:
+    // - Hiç item yazılamadıysa (0 batch success) → "failed"
+    // - Bazı batch'ler fail ettiyse (partial) → "completed" + errorMessage
+    //   (UI 'tamamlandı ama X madde eksik' gösterir, user manuel re-audit edebilir)
+    // - Her şey OK → "completed"
+    const allOpusFailed = opusWrittenCount === 0;
+
+    if (allOpusFailed) {
+      await prisma.audit.update({
+        where: { id: auditId },
+        data: {
+          status: "failed",
+          progress: 100,
+          currentStep: "Opus talimatları üretilemedi",
+          failedAt: new Date(),
+          totalScore,
+          passedCount,
+          warningCount,
+          criticalCount,
+          costUsd: opusCostUsd,
+          errorMessage:
+            opusErrorMessage ?? "Opus hiçbir batch için çıktı üretmedi.",
+        },
+      });
+    } else {
+      await prisma.audit.update({
+        where: { id: auditId },
+        data: {
+          status: "completed",
+          progress: 100,
+          currentStep: opusErrorMessage
+            ? `Tamamlandı (${opusWrittenCount}/${AUDIT_MASTER_ITEMS.length} madde detayı Opus'tan geldi)`
+            : "Tamamlandı",
+          completedAt: new Date(),
+          totalScore,
+          passedCount,
+          warningCount,
+          criticalCount,
+          costUsd: opusCostUsd,
+          errorMessage: opusErrorMessage,
+        },
+      });
+    }
   } catch (err) {
     console.error("[audit-pipeline] failed:", err);
     await prisma.audit.update({
