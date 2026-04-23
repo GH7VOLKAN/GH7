@@ -61,19 +61,13 @@ export function StudioView({
   };
 
   return (
-    <div className={s.shell}>
-      <main className={s.main}>
-        <div className={s.banner}>
-          <span className={s.bannerBrand}>GH7 STUDIO</span>
-          <span className={s.bannerSub}>· Ayarlar ve kontrol</span>
-        </div>
-
-        <div className={s.headerRow}>
-          <Link href="/dashboard" className={s.backLink}>
-            ← Dashboard
-          </Link>
-          <h1 className={s.title}>Ayarlar</h1>
-        </div>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Ayarlar</h1>
+        <p className="text-muted-foreground">
+          Hesap, bültenler ve marka tercihleri.
+        </p>
+      </div>
 
         {/* Profile bilgileri */}
         <section className={s.section}>
@@ -188,8 +182,7 @@ export function StudioView({
               </a>
             </div>
           )}
-        </section>
-      </main>
+      </section>
     </div>
   );
 }
