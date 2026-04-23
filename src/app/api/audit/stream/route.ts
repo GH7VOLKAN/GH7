@@ -126,6 +126,15 @@ export async function GET(req: NextRequest) {
 
       let totalCost = 0;
       let failedCount = 0;
+      let skippedPassedCount = 0;
+
+      // Passed maddeler için statik template (Qwen çağrısı atla, token tasarrufu)
+      const PASSED_TEMPLATE = {
+        currentState: "Bu madde siteniz için optimum durumda.",
+        instructions: [] as Array<{ step: number; text: string; code?: string }>,
+        impactText: "Geçildi, işlem gerekmez.",
+        expectedGain: "+0",
+      };
 
       // 5'li gruplar halinde paralel işle
       for (let i = 0; i < pendingItems.length; i += GROUP_SIZE) {
@@ -133,6 +142,31 @@ export async function GET(req: NextRequest) {
 
         await Promise.all(
           group.map(async (item) => {
+            // ═══ Passed şortcut: Qwen çağrısı atla ═══
+            if (item.status === "passed") {
+              await prisma.auditItem.update({
+                where: { id: item.id },
+                data: {
+                  currentState: PASSED_TEMPLATE.currentState,
+                  instructions: PASSED_TEMPLATE.instructions,
+                  impactText: PASSED_TEMPLATE.impactText,
+                  expectedGain: PASSED_TEMPLATE.expectedGain,
+                },
+              });
+              skippedPassedCount++;
+              sse.send("item", {
+                itemCode: item.itemCode,
+                itemIndex: item.itemIndex,
+                currentState: PASSED_TEMPLATE.currentState,
+                instructions: PASSED_TEMPLATE.instructions,
+                impactText: PASSED_TEMPLATE.impactText,
+                expectedGain: PASSED_TEMPLATE.expectedGain,
+                skipped: true,
+              });
+              return;
+            }
+
+            // ═══ Warning/critical için Qwen çağrısı ═══
             const masterItem = req.masterItems.find(
               (m) => m.code === item.itemCode,
             );
@@ -145,7 +179,6 @@ export async function GET(req: NextRequest) {
               );
               totalCost += result.costUsd;
 
-              // DB güncelle
               await prisma.auditItem.update({
                 where: { id: item.id },
                 data: {
@@ -165,6 +198,7 @@ export async function GET(req: NextRequest) {
                 instructions: result.item.instructions,
                 impactText: result.item.impactText,
                 expectedGain: result.item.expectedGain,
+                skipped: false,
               });
             } catch (err) {
               failedCount++;
@@ -210,6 +244,7 @@ export async function GET(req: NextRequest) {
       sse.send("complete", {
         totalCost,
         failedCount,
+        skippedPassedCount,
         totalItems: audit.items.length,
       });
     } catch (err) {
