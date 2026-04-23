@@ -48,6 +48,7 @@ model Profile {
 
   brands   Brand[]
   payments Payment[]
+  audits   Audit[]
 
   @@map("profiles")
 }
@@ -90,6 +91,7 @@ model Brand {
   scoreHistory    ScoreHistory[]
   notifications   Notification[]
   checklistItems  ChecklistItem[]
+  audits          Audit[]
 
   @@map("brands")
 }
@@ -646,4 +648,81 @@ model WeeklyAuditSnapshot {
   @@unique([userId, url, weekStart])
   @@index([userId, weekStart])
   @@map("weekly_audit_snapshots")
+}
+
+// ─── GH7 Audit (Brief G) ───────────────────────────────
+// Marka-özel 43 madde AI görünürlük denetimi.
+// DataForSEO + Perplexity + Opus pipeline.
+
+model Audit {
+  id        String @id @default(cuid())
+  brandId   String @map("brand_id")
+  profileId String @map("profile_id")
+
+  status      String  @default("pending")
+  // "pending" | "crawling" | "analyzing" | "generating" | "completed" | "failed"
+  progress    Int     @default(0) // 0-100
+  currentStep String? @map("current_step")
+
+  startedAt    DateTime  @default(now()) @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  failedAt     DateTime? @map("failed_at")
+  errorMessage String?   @map("error_message") @db.Text
+
+  totalScore    Int? @map("total_score")
+  passedCount   Int? @default(0) @map("passed_count")
+  warningCount  Int? @default(0) @map("warning_count")
+  criticalCount Int? @default(0) @map("critical_count")
+
+  dataForSeoRaw Json? @map("dataforseo_raw")
+  perplexityRaw Json? @map("perplexity_raw")
+  opusRaw       Json? @map("opus_raw")
+
+  costUsd Decimal? @map("cost_usd") @db.Decimal(10, 4)
+
+  items   AuditItem[]
+  brand   Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  profile Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@index([profileId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("audits")
+}
+
+model AuditItem {
+  id      String @id @default(cuid())
+  auditId String @map("audit_id")
+
+  itemCode  String @map("item_code") // "ai-crawler-robots"
+  category  String // "ai-crawler" | "entity" | ...
+  itemIndex Int    @map("item_index") // 1-43
+
+  title             String
+  descriptionStatic String @map("description_static") @db.Text // "neden önemli" metni
+
+  difficulty     String // "easy" | "medium" | "hard"
+  estimatedHours Int    @map("estimated_hours")
+
+  status String // "passed" | "warning" | "critical" | "not-applicable"
+
+  currentState String @map("current_state") @db.Text // Opus: mevcut durum
+  instructions Json   @default("[]") // Opus: [{ step, text, code? }]
+  impactText   String @map("impact_text") @db.Text // Opus: etki açıklaması
+  expectedGain String? @map("expected_gain") // "+1-2 puan"
+
+  rawMetrics Json? @map("raw_metrics") // DataForSEO / Perplexity ham ölçüm
+
+  completedAt DateTime? @map("completed_at")
+  completedBy String?   @map("completed_by")
+  userNotes   String?   @map("user_notes") @db.Text
+
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([itemCode])
+  @@index([status])
+  @@index([completedAt])
+  @@map("audit_items")
 }
