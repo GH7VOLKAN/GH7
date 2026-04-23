@@ -47,9 +47,16 @@ export default async function AuditItemPage({
   const activeBrand =
     (brandIdParam && brands.find((b) => b.id === brandIdParam)) || brands[0];
 
+  // En son audit'i al — status "completed" veya "awaiting-opus" (partial).
+  // awaiting-opus'ta 34/43 item zaten dolu olabilir; user detayı görmek
+  // istiyor. Status filter'ı kaldırıldı (sadece failed'ı ele).
   const audit = await prisma.audit.findFirst({
-    where: { brandId: activeBrand.id, profileId: profile.id, status: "completed" },
-    orderBy: { completedAt: "desc" },
+    where: {
+      brandId: activeBrand.id,
+      profileId: profile.id,
+      status: { in: ["completed", "awaiting-opus", "generating"] },
+    },
+    orderBy: { startedAt: "desc" },
     include: { items: { orderBy: { itemIndex: "asc" } } },
   });
 
