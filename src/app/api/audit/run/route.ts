@@ -10,10 +10,11 @@
  *   - Audit + 43 AuditItem kaydı yaratımı (pending status)
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
 import { AUDIT_MASTER_ITEMS } from "@/lib/audit/master-items";
+import { runAuditPipeline } from "@/lib/audit/pipeline";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5dk Vercel timeout (Aşama 2-3 pipeline için)
@@ -84,14 +85,22 @@ export async function POST(req: NextRequest) {
       select: { id: true, status: true },
     });
 
-    // TODO AŞAMA 2: runAuditPipeline(audit.id) (fire-and-forget).
-    // Şimdilik audit "pending" state'te kalıyor — pipeline yazıldıktan
-    // sonra buradan tetiklenecek.
+    // AŞAMA 2 — Pipeline tetikleme (Next.js `after` primitive).
+    // Response hemen dönüyor; pipeline function return sonrası
+    // arkaplanda maxDuration 300s içinde koşar. Frontend /audit/status
+    // endpoint'ini polling eder.
+    after(async () => {
+      try {
+        await runAuditPipeline(audit.id);
+      } catch (err) {
+        console.error("[audit/run] pipeline failed:", err);
+      }
+    });
 
     return NextResponse.json({
       auditId: audit.id,
       status: audit.status,
-      message: "Audit kaydı oluşturuldu. Pipeline Aşama 2-3'te eklenecek.",
+      message: "Audit başlatıldı — pipeline arkaplanda çalışıyor.",
     });
   } catch (err) {
     console.error("[audit/run] error:", err);
