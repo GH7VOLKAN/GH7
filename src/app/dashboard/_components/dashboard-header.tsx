@@ -1,60 +1,84 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { getPlanLabel } from "@/lib/constants/plan";
-import s from "../dashboard.module.css";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { BrandSwitcher } from "./brand-switcher";
+
+type Brand = {
+  id: string;
+  name: string;
+  domain: string;
+};
 
 type Props = {
   profile: {
-    phone: string | null;
     email: string | null;
+    phone: string | null;
     plan: string;
   };
-  brandName: string;
-  brandCount: number;
+  brands: Brand[];
+  activeBrand: Brand;
 };
 
-function formatPhone(raw: string): string {
-  // 905326629792 → +90 532 662 97 92
-  if (!raw) return "";
-  const digits = raw.replace(/\D/g, "");
-  if (digits.startsWith("90") && digits.length === 12) {
-    return `+90 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10, 12)}`;
-  }
-  return raw;
-}
+const PATH_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  insight: "GH7 Insight",
+  audit: "GH7 Audit",
+  tracker: "GH7 Tracker",
+  radar: "GH7 Radar",
+  advisor: "GH7 Advisor",
+  studio: "GH7 Studio",
+  pro: "Pro",
+};
 
-export function DashboardHeader({ profile, brandName, brandCount }: Props) {
-  const planLabel = getPlanLabel(profile.plan);
+export function DashboardHeader({ brands, activeBrand }: Props) {
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
 
-  // Email varsa ve synthetic değilse göster, yoksa formatted phone
-  const isSyntheticEmail =
-    !!profile.email &&
-    profile.email.startsWith("phone_") &&
-    profile.email.endsWith("@gh7.ai");
-  const displayName =
-    profile.email && !isSyntheticEmail
-      ? profile.email
-      : profile.phone
-        ? formatPhone(profile.phone)
-        : "Kullanıcı";
-
-  const planClass = s[`plan_${profile.plan}`] ?? s.plan_free;
+  // Breadcrumb: Dashboard > [current] ...
+  const crumbs = segments.map((seg, idx) => {
+    const href = "/" + segments.slice(0, idx + 1).join("/");
+    const label = PATH_LABELS[seg] || seg;
+    const isLast = idx === segments.length - 1;
+    return { href, label, isLast };
+  });
 
   return (
-    <header className={s.header}>
-      <div className={s.headerInner}>
-        <Link href="/dashboard" className={s.logo}>
-          <span className={s.logoText}>GH7</span>
-        </Link>
+    <header className="flex h-14 shrink-0 items-center gap-2 px-4 md:px-6">
+      <SidebarTrigger className="-ml-1" />
+      <Separator orientation="vertical" className="mr-2 h-4" />
 
-        <div className={s.headerRight}>
-          <span className={s.brandTag}>{brandName}</span>
-          {brandCount > 1 && (
-            <span className={s.brandCount}>+{brandCount - 1} marka</span>
-          )}
-          <span className={s.divider}>•</span>
-          <span className={s.user}>{displayName}</span>
-          <span className={`${s.plan} ${planClass}`}>{planLabel}</span>
-        </div>
+      <Breadcrumb>
+        <BreadcrumbList>
+          {crumbs.map((crumb) => (
+            <div key={crumb.href} className="flex items-center gap-2">
+              <BreadcrumbItem>
+                {crumb.isLast ? (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+              {!crumb.isLast && <BreadcrumbSeparator />}
+            </div>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="ml-auto flex items-center gap-3">
+        <BrandSwitcher brands={brands} activeBrand={activeBrand} />
       </div>
     </header>
   );
