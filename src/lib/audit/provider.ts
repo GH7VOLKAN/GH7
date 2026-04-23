@@ -25,8 +25,9 @@ const PROVIDER: ProviderName =
 
 // Qwen — QWEN_* env'leri öncelikli (GH7 Audit için ayrı).
 // DASHSCOPE_* legacy fallback (diğer sistemler hâlâ kullanıyor).
+// Default qwen3.6-max-preview — daha yüksek kalite, hız, Türkçe.
 const QWEN_MODEL =
-  process.env.QWEN_MODEL ?? process.env.DASHSCOPE_MODEL ?? "qwen3.6-plus";
+  process.env.QWEN_MODEL ?? process.env.DASHSCOPE_MODEL ?? "qwen3.6-max-preview";
 const QWEN_BASE_URL =
   process.env.QWEN_BASE_URL ??
   process.env.DASHSCOPE_BASE_URL ??
@@ -196,7 +197,7 @@ const QWEN_PRICING: Record<string, { input: number; output: number }> = {
 
 function calculateCost(usage: OpusUsage, provider: ProviderName): number {
   if (provider === "qwen") {
-    const p = QWEN_PRICING[QWEN_MODEL] ?? QWEN_PRICING["qwen3.6-plus"];
+    const p = QWEN_PRICING[QWEN_MODEL] ?? QWEN_PRICING["qwen3.6-max-preview"];
     return (usage.input_tokens / 1e6) * p.input + (usage.output_tokens / 1e6) * p.output;
   }
   // Opus
