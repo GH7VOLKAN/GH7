@@ -40,13 +40,14 @@ export function AuditListView({ brand, audit }: Props) {
   if (
     audit.status === "pending" ||
     audit.status === "crawling" ||
-    audit.status === "analyzing" ||
-    audit.status === "generating"
+    audit.status === "analyzing"
   ) {
     return <LoadingState audit={audit} />;
   }
 
-  // completed
+  // "generating" (batch çalışıyor) + "awaiting-opus" (batch bekliyor) +
+  // "completed" hepsi aynı ekran: batch runner + 43 madde. Status'e göre
+  // UI detayları farklılaşır.
   return <CompletedList audit={audit} brand={brand} />;
 }
 
@@ -132,7 +133,12 @@ function LoadingState({ audit }: { audit: AuditWithItems }) {
         setProgress(data.progress);
         setStep(data.currentStep);
         setStatus(data.status);
-        if (data.status === "completed" || data.status === "failed") {
+        // Phase 1 bitti (awaiting-opus) veya son durum — refresh
+        if (
+          data.status === "awaiting-opus" ||
+          data.status === "completed" ||
+          data.status === "failed"
+        ) {
           router.refresh();
         }
       } catch {
@@ -149,7 +155,7 @@ function LoadingState({ audit }: { audit: AuditWithItems }) {
     { label: "Backlink verisi toplanıyor", threshold: 40 },
     { label: "AI platformlarda görünürlük ölçülüyor", threshold: 60 },
     { label: "43 madde değerlendiriliyor", threshold: 75 },
-    { label: "Opus marka-özel talimatlar yazıyor", threshold: 85 },
+    { label: "Marka-özel talimatlar yazılıyor", threshold: 85 },
   ];
 
   return (
@@ -444,6 +450,11 @@ function CompletedList({
         </div>
       </motion.section>
 
+      {/* BATCH RUNNER — awaiting-opus + generating + completed */}
+      <motion.section variants={pageItem} className="mb-16">
+        <BatchRunner audit={audit} />
+      </motion.section>
+
       {/* FILTRE */}
       <motion.section variants={pageItem} className="mb-12">
         <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
@@ -570,5 +581,175 @@ function ItemRow({ item }: { item: AuditItem }) {
         →
       </span>
     </Link>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// BATCH RUNNER — 3 batch'i manuel tetikle
+// ═══════════════════════════════════════════════════════
+
+type BatchUiSummary = {
+  index: number;
+  label: string;
+  indexFrom: number;
+  indexTo: number;
+  doneCount: number;
+  itemCount: number;
+  state: "pending" | "running" | "done";
+};
+
+function computeBatchesForUi(
+  audit: AuditWithItems,
+): BatchUiSummary[] {
+  // Hardcoded — provider.ts'deki AUDIT_BATCHES ile senkron.
+  const batches = [
+    { index: 0, label: "AI Crawler + Entity", indexFrom: 1, indexTo: 14 },
+    {
+      index: 1,
+      label: "Structured Data + Content-AI",
+      indexFrom: 15,
+      indexTo: 28,
+    },
+    {
+      index: 2,
+      label: "Query-Match + Authority + AI Platform",
+      indexFrom: 29,
+      indexTo: 43,
+    },
+  ];
+  return batches.map((b) => {
+    const items = audit.items.filter(
+      (i) => i.itemIndex >= b.indexFrom && i.itemIndex <= b.indexTo,
+    );
+    const doneCount = items.filter(
+      (i) =>
+        i.currentState &&
+        i.currentState !== "Tarama devam ediyor...",
+    ).length;
+    return {
+      ...b,
+      doneCount,
+      itemCount: items.length,
+      state:
+        doneCount === items.length
+          ? ("done" as const)
+          : doneCount > 0
+            ? ("running" as const)
+            : ("pending" as const),
+    };
+  });
+}
+
+function BatchRunner({ audit }: { audit: AuditWithItems }) {
+  const router = useRouter();
+  const [runningIdx, setRunningIdx] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const batches = computeBatchesForUi(audit);
+  const allDone = batches.every((b) => b.state === "done");
+  const isBusy = audit.status === "generating" || runningIdx !== null;
+
+  const runBatch = async (index: number) => {
+    setRunningIdx(index);
+    setError(null);
+    try {
+      const res = await fetch("/api/audit/run-batch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ auditId: audit.id, batchIndex: index }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? data.message ?? "Beklenmeyen hata");
+      } else {
+        router.refresh();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRunningIdx(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-6 flex items-center gap-4">
+        <div className="text-label text-muted-foreground">
+          {allDone ? "Marka-özel Talimatlar" : "Talimat Batch'leri"}
+        </div>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      {!allDone && (
+        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          43 madde için marka-özel Qwen talimatlarını 3 batch halinde üret.
+          Her batch yaklaşık 2-3 dakika sürer. Başlatınca sayfa kitlenir,
+          tamamlanınca otomatik yenilenir.
+        </p>
+      )}
+
+      <div className="space-y-0">
+        {batches.map((b) => {
+          const isRunning = runningIdx === b.index;
+          return (
+            <div
+              key={b.index}
+              className="flex items-baseline gap-6 border-b border-border py-5 last:border-b-0"
+            >
+              <span className="text-label tabular-nums text-muted-foreground">
+                {String(b.index + 1).padStart(2, "0")}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-medium tracking-tight">
+                  {b.label}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Madde {b.indexFrom}-{b.indexTo} ·{" "}
+                  <span className="tabular-nums">
+                    {b.doneCount}/{b.itemCount}
+                  </span>{" "}
+                  hazır
+                </p>
+              </div>
+              <div className="shrink-0">
+                {b.state === "done" ? (
+                  <span className="inline-flex items-center gap-1.5 rounded border border-border bg-muted px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                    ✓ Hazır
+                  </span>
+                ) : isRunning ? (
+                  <span className="inline-flex items-center gap-1.5 rounded border border-border bg-background px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-foreground">
+                    Çalışıyor…
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => runBatch(b.index)}
+                    disabled={isBusy}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-40"
+                  >
+                    {b.state === "running" ? "Devam Et →" : "Çalıştır →"}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {error && (
+        <p className="mt-4 text-xs text-destructive">
+          Hata: {error}
+        </p>
+      )}
+
+      {isBusy && runningIdx !== null && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Batch {runningIdx + 1} çalışıyor… sayfayı kapatma, 2-3 dakika sürer.
+        </p>
+      )}
+    </div>
   );
 }

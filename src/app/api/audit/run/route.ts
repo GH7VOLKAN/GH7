@@ -17,7 +17,9 @@ import { AUDIT_MASTER_ITEMS } from "@/lib/audit/master-items";
 import { runAuditPipeline } from "@/lib/audit/pipeline";
 
 export const runtime = "nodejs";
-export const maxDuration = 300; // 5dk Vercel timeout (Aşama 2-3 pipeline için)
+// Phase 1 (DataForSEO + Perplexity + evaluator) — Opus yok, ~60-90s.
+// Opus batch'leri /api/audit/run-batch'ten manuel tetiklenir.
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
