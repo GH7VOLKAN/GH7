@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         canStart: false,
         reason: "pro_user",
-        redirectTo: "/dashboard/genel",
+        redirectTo: "/dashboard",
         message:
           "Pro üyesiniz. Dashboard'dan yeni analiz başlatabilirsiniz.",
       });

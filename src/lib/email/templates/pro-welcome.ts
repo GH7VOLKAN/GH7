@@ -72,7 +72,7 @@ export function proWelcomeTemplate(name?: string): string {
       Yapay zekaların sizi ne kadar tanıdığını keşfedin.
     </p>
 
-    <a href="${APP_URL}/dashboard/genel" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">
+    <a href="${APP_URL}/dashboard" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">
       Tarama Başlat →
     </a>
   `;

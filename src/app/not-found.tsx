@@ -9,7 +9,7 @@ export default function NotFound() {
         Aradığınız sayfa mevcut değil veya taşınmış olabilir.
       </p>
       <Link
-        href="/dashboard/genel"
+        href="/dashboard"
         className="rounded-lg bg-foreground px-6 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.02]"
       >
         Ana Sayfaya Dön

@@ -96,7 +96,7 @@ const TEMPLATES: Record<string, () => string> = {
       message:
         "Merhaba,<br><br>Yapay zekaların sizi daha iyi tanıması için kullanabileceğiniz hazır soru şablonlarını yayınladık. Soru Kütüphanesi ile ChatGPT, Gemini, Claude ve Perplexity'de kullanabileceğiniz onlarca hazır soru sizi bekliyor.<br><br>GH7 Ekibi",
       ctaText: "Soru Kütüphanesini Keşfet",
-      ctaUrl: `${APP_URL}/dashboard/promptlar`,
+      ctaUrl: `${APP_URL}/dashboard`,
     }),
   "agency-package": () =>
     agencyPackageTemplate({ contactName: "Volkan", brandCount: 3 }),

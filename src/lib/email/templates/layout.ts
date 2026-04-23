@@ -42,7 +42,7 @@ export function emailLayout(title: string, body: string): string {
                 GH7.ai — Yapay zekalarda görünür olmanızı sağlıyoruz.
               </p>
               <p style="margin:8px 0 0;font-size:11px;color:#d4d4d8;">
-                <a href="${APP_URL}/dashboard/ayarlar" style="color:#a1a1aa;text-decoration:underline;">Bildirim Ayarları</a>
+                <a href="${APP_URL}/dashboard/studio" style="color:#a1a1aa;text-decoration:underline;">Bildirim Ayarları</a>
                 &nbsp;·&nbsp;
                 <a href="${APP_URL}" style="color:#a1a1aa;text-decoration:underline;">GH7.ai</a>
               </p>

@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
     if (!token) {
       console.error("[payment/callback] Token bulunamadı");
-      return NextResponse.redirect(`${appUrl}/dashboard/ayarlar?payment=failed`);
+      return NextResponse.redirect(`${appUrl}/dashboard/studio?payment=failed`);
     }
 
     // İyzico'dan ödeme sonucunu doğrula
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
     if (!payment) {
       console.error("[payment/callback] Payment kaydı bulunamadı, token:", token);
-      return NextResponse.redirect(`${appUrl}/dashboard/ayarlar?payment=failed`);
+      return NextResponse.redirect(`${appUrl}/dashboard/studio?payment=failed`);
     }
 
     if (result.status === "success" && result.paymentStatus === "SUCCESS") {
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         }
       }
 
-      return NextResponse.redirect(`${appUrl}/dashboard/ayarlar?payment=success`);
+      return NextResponse.redirect(`${appUrl}/dashboard/studio?payment=success`);
     } else {
       // Ödeme başarısız
       await prisma.payment.update({
@@ -112,10 +112,10 @@ export async function POST(request: Request) {
       });
 
       console.error("[payment/callback] Ödeme başarısız:", result.status, result.paymentStatus);
-      return NextResponse.redirect(`${appUrl}/dashboard/ayarlar?payment=failed`);
+      return NextResponse.redirect(`${appUrl}/dashboard/studio?payment=failed`);
     }
   } catch (err) {
     console.error("[payment/callback] Error:", err);
-    return NextResponse.redirect(`${appUrl}/dashboard/ayarlar?payment=failed`);
+    return NextResponse.redirect(`${appUrl}/dashboard/studio?payment=failed`);
   }
 }

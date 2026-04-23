@@ -29,7 +29,7 @@ export default async function AdminLayout({
           <p className="text-neutral-500">Bu sayfaya erişim yetkiniz yok.</p>
           <p className="text-sm text-neutral-400">Giriş yapılan email: {user.email}</p>
           <p className="text-xs text-neutral-300">İzin verilen: {ADMIN_EMAILS.join(", ")}</p>
-          <a href="/dashboard/genel" className="inline-block mt-4 px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm">
+          <a href="/dashboard" className="inline-block mt-4 px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm">
             Dashboard'a Dön
           </a>
         </div>
