@@ -121,6 +121,15 @@ function getDisplayName(profile: Props["profile"]): string {
   return "Kullanıcı";
 }
 
+async function handleSignOut() {
+  try {
+    await fetch("/api/auth/signout", { method: "POST" });
+  } catch {
+    // ignore — redirect anyway
+  }
+  window.location.href = "/";
+}
+
 export function AppSidebar({ profile, brands, activeBrandId }: Props) {
   const pathname = usePathname();
   const planLabel = getPlanLabel(profile.plan);
@@ -166,14 +175,12 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
-                      asChild
                       isActive={isActive}
                       tooltip={item.label}
+                      render={<Link href={item.href} />}
                     >
-                      <Link href={item.href}>
-                        <Icon className="size-4" />
-                        <span>{item.label}</span>
-                      </Link>
+                      <Icon className="size-4" />
+                      <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -190,16 +197,14 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
                 {brands.map((brand) => (
                   <SidebarMenuItem key={brand.id}>
                     <SidebarMenuButton
-                      asChild
                       isActive={brand.id === activeBrandId}
                       tooltip={brand.name}
+                      render={<Link href={`/dashboard?brand=${brand.id}`} />}
                     >
-                      <Link href={`/dashboard?brand=${brand.id}`}>
-                        <div className="flex aspect-square size-5 items-center justify-center rounded bg-muted text-[10px] font-semibold">
-                          {brand.name[0]?.toUpperCase() || "B"}
-                        </div>
-                        <span className="truncate">{brand.name}</span>
-                      </Link>
+                      <div className="flex aspect-square size-5 items-center justify-center rounded bg-muted text-[10px] font-semibold">
+                        {brand.name[0]?.toUpperCase() || "B"}
+                      </div>
+                      <span className="truncate">{brand.name}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -213,50 +218,44 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent"
-                >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white text-sm font-semibold">
-                    {initials}
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {displayName}
-                    </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {planLabel} üyelik
-                    </span>
-                  </div>
-                  <ChevronsUpDown className="ml-auto size-4" />
-                </SidebarMenuButton>
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent"
+                  />
+                }
+              >
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white text-sm font-semibold">
+                  {initials}
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{displayName}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {planLabel} üyelik
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
                 align="start"
                 className="w-[240px]"
               >
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/dashboard/studio"
-                    className="flex items-center gap-2"
-                  >
-                    <User className="size-4" />
-                    Hesap ayarları
-                  </Link>
+                <DropdownMenuItem
+                  render={<Link href="/dashboard/studio" />}
+                  className="flex items-center gap-2"
+                >
+                  <User className="size-4" />
+                  Hesap ayarları
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <form action="/api/auth/signout" method="POST">
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2"
-                    >
-                      <LogOut className="size-4" />
-                      Çıkış
-                    </button>
-                  </form>
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="size-4" />
+                  Çıkış
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

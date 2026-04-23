@@ -66,8 +66,8 @@ export function DashboardHeader({ brands, activeBrand }: Props) {
                 {crumb.isLast ? (
                   <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink asChild>
-                    <Link href={crumb.href}>{crumb.label}</Link>
+                  <BreadcrumbLink render={<Link href={crumb.href} />}>
+                    {crumb.label}
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
