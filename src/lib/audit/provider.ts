@@ -25,8 +25,9 @@ const PROVIDER: ProviderName =
 
 // Qwen — QWEN_* env'leri öncelikli (GH7 Audit için ayrı).
 // DASHSCOPE_* legacy fallback (diğer sistemler hâlâ kullanıyor).
+// Default qwen3.6-max-preview — daha yüksek kalite, hız, Türkçe.
 const QWEN_MODEL =
-  process.env.QWEN_MODEL ?? process.env.DASHSCOPE_MODEL ?? "qwen3.6-plus";
+  process.env.QWEN_MODEL ?? process.env.DASHSCOPE_MODEL ?? "qwen3.6-max-preview";
 const QWEN_BASE_URL =
   process.env.QWEN_BASE_URL ??
   process.env.DASHSCOPE_BASE_URL ??
@@ -40,13 +41,19 @@ const OPUS_MODEL = "claude-opus-4-20250514";
 const MAX_TOKENS_QWEN = 8000;
 const MAX_TOKENS_OPUS = 12000;
 
-// 43 maddeyi 4 batch (~10-12 madde/batch). Her batch 8K output limit altında.
-const BATCHES = [
-  { label: "AI Crawler + Entity (başlangıç)", indexFrom: 1, indexTo: 11 },
-  { label: "Entity (devam) + Structured Data", indexFrom: 12, indexTo: 20 },
-  { label: "Content-AI + Query-Match", indexFrom: 21, indexTo: 35 },
-  { label: "Authority + AI Platform", indexFrom: 36, indexTo: 43 },
+// 43 madde 3 batch — kullanıcı manuel tetikler (Vercel timeout önleme).
+// Her batch ~14-15 madde, Qwen 8K token altı, ~2-3 dk sürer.
+export const AUDIT_BATCHES = [
+  { label: "AI Crawler + Entity", indexFrom: 1, indexTo: 14 },
+  { label: "Structured Data + Content-AI", indexFrom: 15, indexTo: 28 },
+  { label: "Query-Match + Authority + AI Platform", indexFrom: 29, indexTo: 43 },
 ] as const;
+
+export const AUDIT_BATCH_COUNT = AUDIT_BATCHES.length;
+
+// Backward compat: var olan kod `BATCHES`'i Promise.allSettled'da kullanıyor.
+// Yeni batch-by-index API'si aşağıda.
+const BATCHES = AUDIT_BATCHES;
 
 // ───────────────────────────────────────────────────────
 // Shared types
@@ -149,17 +156,17 @@ function buildUserMessage(
     `Lokasyon: ${req.city || "belirtilmemiş"}`,
     "",
     "DataForSEO (özet):",
-    JSON.stringify(req.dataForSeoSummary, null, 2).slice(0, 8000),
+    JSON.stringify(req.dataForSeoSummary, null, 2).slice(0, 3000),
     "",
     "Perplexity AI mention sonuçları:",
-    JSON.stringify(req.perplexityMentions, null, 2).slice(0, 3000),
+    JSON.stringify(req.perplexityMentions, null, 2).slice(0, 1500),
     "",
     `BU BATCH: ${batchLabel} — ${batchItems.length} madde.`,
     "",
     "MADDELER:",
     ...batchItems.map(
       (m, i) =>
-        `\n${String(i + 1).padStart(2, "0")}. ${m.code} — ${m.title}\n   Durum: ${m.currentStatus}\n   Açıklama: ${m.descriptionStatic.slice(0, 200)}...\n   Raw: ${JSON.stringify(m.rawMetrics).slice(0, 250)}`,
+        `\n${String(i + 1).padStart(2, "0")}. ${m.code} — ${m.title}\n   Durum: ${m.currentStatus}\n   Açıklama: ${m.descriptionStatic.slice(0, 120)}\n   Raw: ${JSON.stringify(m.rawMetrics).slice(0, 150)}`,
     ),
     "",
     "Sadece JSON döndür, Türkçe yaz.",
@@ -196,7 +203,7 @@ const QWEN_PRICING: Record<string, { input: number; output: number }> = {
 
 function calculateCost(usage: OpusUsage, provider: ProviderName): number {
   if (provider === "qwen") {
-    const p = QWEN_PRICING[QWEN_MODEL] ?? QWEN_PRICING["qwen3.6-plus"];
+    const p = QWEN_PRICING[QWEN_MODEL] ?? QWEN_PRICING["qwen3.6-max-preview"];
     return (usage.input_tokens / 1e6) * p.input + (usage.output_tokens / 1e6) * p.output;
   }
   // Opus
@@ -398,4 +405,58 @@ export async function generateAuditInstructions(
 
 export function currentProvider(): ProviderName {
   return PROVIDER;
+}
+
+// ───────────────────────────────────────────────────────
+// Single-batch API (manuel tetikli UX için)
+// ───────────────────────────────────────────────────────
+
+export type SingleBatchResult = {
+  batchIndex: number;
+  batchLabel: string;
+  items: OpusInstructionItem[];
+  usage: OpusUsage;
+  costUsd: number;
+  provider: ProviderName;
+};
+
+/**
+ * Tek bir batch'i çalıştırır (0-based index).
+ * Kullanıcı manuel tetikler — Vercel timeout altında güvenli.
+ */
+export async function generateAuditInstructionsForBatch(
+  req: OpusRequest,
+  batchIndex: number,
+): Promise<SingleBatchResult> {
+  const batch = AUDIT_BATCHES[batchIndex];
+  if (!batch) {
+    throw new Error(
+      `Geçersiz batchIndex: ${batchIndex}. 0-${AUDIT_BATCHES.length - 1} arası.`,
+    );
+  }
+
+  const items = req.masterItems.filter(
+    (m) => m.itemIndex >= batch.indexFrom && m.itemIndex <= batch.indexTo,
+  );
+  if (items.length === 0) {
+    return {
+      batchIndex,
+      batchLabel: batch.label,
+      items: [],
+      usage: { input_tokens: 0, output_tokens: 0 },
+      costUsd: 0,
+      provider: PROVIDER,
+    };
+  }
+
+  const result = await generateBatch(req, items, batch.label);
+
+  return {
+    batchIndex,
+    batchLabel: batch.label,
+    items: result.items,
+    usage: result.usage,
+    costUsd: calculateCost(result.usage, PROVIDER),
+    provider: PROVIDER,
+  };
 }
