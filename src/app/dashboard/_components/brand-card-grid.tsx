@@ -1,13 +1,16 @@
 import { BrandCard } from "./brand-card";
+import { PLANS, isPaidPlan } from "@/lib/constants/plan";
 import s from "../dashboard.module.css";
 
 type Props = {
   score: number;
   scoreTotal: number;
-  isPro: boolean;
+  plan: string;
 };
 
-export function BrandCardGrid({ score, scoreTotal, isPro }: Props) {
+export function BrandCardGrid({ score, scoreTotal, plan }: Props) {
+  const unlocked = isPaidPlan(plan);
+
   const cards = [
     {
       slug: "insight",
@@ -27,9 +30,9 @@ export function BrandCardGrid({ score, scoreTotal, isPro }: Props) {
       subtitle: "43 maddelik görünürlük denetimi",
       description:
         "Sitenin AI tarafından okunabilirliği, schema, içerik, hız — her madde için spesifik iyileştirme talimatı.",
-      href: isPro ? "/dashboard/audit" : "/dashboard/pro/audit",
-      locked: !isPro,
-      buttonLabel: isPro ? "Denetimi Gör →" : "Pro ile Aç →",
+      href: unlocked ? "/dashboard/audit" : "/dashboard/pro/audit",
+      locked: !unlocked,
+      buttonLabel: unlocked ? "Denetimi Gör →" : "Pro ile Aç →",
     },
     {
       slug: "tracker",
@@ -37,9 +40,9 @@ export function BrandCardGrid({ score, scoreTotal, isPro }: Props) {
       subtitle: "Haftalık otomatik takip",
       description:
         "Her Pazartesi sabah skorun yeniden ölçülür, değişim ve trend çizgin güncellenir.",
-      href: isPro ? "/dashboard/tracker" : "/dashboard/pro/tracker",
-      locked: !isPro,
-      buttonLabel: isPro ? "Takibi Aç →" : "Pro ile Aç →",
+      href: unlocked ? "/dashboard/tracker" : "/dashboard/pro/tracker",
+      locked: !unlocked,
+      buttonLabel: unlocked ? "Takibi Aç →" : "Pro ile Aç →",
     },
     {
       slug: "radar",
@@ -47,9 +50,9 @@ export function BrandCardGrid({ score, scoreTotal, isPro }: Props) {
       subtitle: "Rakip takip ve karşılaştırma",
       description:
         "Seçtiğin 3 rakibin skoru senin skorunla yan yana. Onlar seni geçtiğinde bildirim gelir.",
-      href: isPro ? "/dashboard/radar" : "/dashboard/pro/radar",
-      locked: !isPro,
-      buttonLabel: isPro ? "Rakipleri Gör →" : "Pro ile Aç →",
+      href: unlocked ? "/dashboard/radar" : "/dashboard/pro/radar",
+      locked: !unlocked,
+      buttonLabel: unlocked ? "Rakipleri Gör →" : "Pro ile Aç →",
     },
     {
       slug: "advisor",
@@ -57,17 +60,20 @@ export function BrandCardGrid({ score, scoreTotal, isPro }: Props) {
       subtitle: "Haftalık trend ve aksiyon raporu",
       description:
         "AI arama davranışı değişiyor. Senin sektöründe öne çıkan fırsatları ve önceki adımları Opus yorumluyor.",
-      href: isPro ? "/dashboard/advisor" : "/dashboard/pro/advisor",
-      locked: !isPro,
-      buttonLabel: isPro ? "Raporu Oku →" : "Pro ile Aç →",
+      href: unlocked ? "/dashboard/advisor" : "/dashboard/pro/advisor",
+      locked: !unlocked,
+      buttonLabel: unlocked ? "Raporu Oku →" : "Pro ile Aç →",
     },
     {
       slug: "studio",
       brand: "STUDIO",
       subtitle: "Ayarlar ve kontrol",
-      description: isPro
-        ? "Ürün, sektör, şehir, sorgu listesi, rakip listesi — tam kontrol."
-        : "Profil bilgilerini, e-posta aboneliğini ve rakip listeni düzenle.",
+      description:
+        plan === PLANS.FREE
+          ? "Profil bilgilerini ve e-posta aboneliğini yönet."
+          : plan === PLANS.PRO
+            ? "Profil, newsletter ve aynı marka için yeni analiz başlat."
+            : "Profil, newsletter, 5 markaya kadar yeni analiz ve yönetim.",
       href: "/dashboard/studio",
       locked: false,
       buttonLabel: "Ayarlar →",

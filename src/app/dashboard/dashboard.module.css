@@ -71,14 +71,29 @@
   text-transform: uppercase;
 }
 
-.planFree {
+.plan_free {
   background: var(--g100, #f3f4f6);
   color: var(--g700, #374151);
 }
 
-.planPro {
+.plan_pro {
   background: var(--black, #000);
   color: var(--white, #fff);
+}
+
+.plan_pro_plus {
+  background: linear-gradient(135deg, #000 0%, #1a1a2e 100%);
+  color: var(--white, #fff);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.brandCount {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--g100, #f3f4f6);
+  border-radius: 999px;
+  color: var(--g700, #374151);
+  font-weight: 500;
 }
 
 /* ═══════════════════════════════════════════════════════ */
