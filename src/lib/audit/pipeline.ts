@@ -183,6 +183,7 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
     });
 
     let opusCostUsd = 0;
+    let opusErrorMessage: string | null = null;
     try {
       const opusResult = await generateAuditInstructions({
         brandName: audit.brand.name,
@@ -229,7 +230,11 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
       });
     } catch (opusErr) {
       // Opus başarısız olursa pipeline yarıda kalmasın — evaluator sonuçları
-      // zaten DB'de. Sadece logla, audit yine completed olarak kapat.
+      // zaten DB'de. Hatayı DB'ye kaydet (sessiz yutulma yok), audit yine
+      // completed olarak kapat.
+      const msg =
+        opusErr instanceof Error ? opusErr.message : String(opusErr);
+      opusErrorMessage = `Opus talimat üretimi başarısız: ${msg}`.slice(0, 1000);
       console.error("[audit-pipeline] Opus failed (continuing):", opusErr);
     }
 
@@ -238,13 +243,16 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
       data: {
         status: "completed",
         progress: 100,
-        currentStep: "Tamamlandı",
+        currentStep: opusErrorMessage
+          ? "Tamamlandı (Opus talimatları eksik)"
+          : "Tamamlandı",
         completedAt: new Date(),
         totalScore,
         passedCount,
         warningCount,
         criticalCount,
         costUsd: opusCostUsd,
+        errorMessage: opusErrorMessage,
       },
     });
   } catch (err) {

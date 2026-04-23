@@ -142,7 +142,9 @@ export async function generateAuditInstructions(
     "Sadece JSON döndür. Başka metin, açıklama, ön söz YASAK.",
   ].join("\n");
 
-  const response = await client().messages.create({
+  // Anthropic SDK >10dk sürebilecek non-streaming istekleri reddeder.
+  // 43 madde × ~500 token = ~20K output → streaming zorunlu.
+  const stream = client().messages.stream({
     model: MODEL,
     max_tokens: 16_000,
     system: [
@@ -154,6 +156,7 @@ export async function generateAuditInstructions(
     ],
     messages: [{ role: "user", content: userMessage }],
   });
+  const response = await stream.finalMessage();
 
   const textBlock = response.content.find(
     (b): b is Anthropic.TextBlock => b.type === "text",
