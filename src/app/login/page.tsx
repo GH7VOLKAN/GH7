@@ -60,7 +60,7 @@ export default function LoginPage() {
         if (session.user.email) {
           localStorage.setItem("gh7_email", session.user.email);
         }
-        router.push("/panel/genel");
+        router.push("/dashboard");
         return;
       }
     }
@@ -298,7 +298,7 @@ export default function LoginPage() {
         // Başarılı giriş — email'i kaydet ve yönlendir
         const userEmail = method === "email" ? email : `+90${phone.replace(/\D/g, "")}`;
         if (userEmail) localStorage.setItem("gh7_email", userEmail);
-        router.push("/panel/genel");
+        router.push("/dashboard");
         router.refresh();
       } catch {
         setError("Bağlantı hatası. Lütfen tekrar deneyin.");

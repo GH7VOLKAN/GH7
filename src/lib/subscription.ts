@@ -11,13 +11,11 @@ export function normaliseTier(plan: string): SubscriptionTier {
   return 'free';
 }
 
-export const PROTECTED_ROUTES: Record<string, SubscriptionTier> = {
-  '/panel/aksiyonlar': 'pro',
-  '/panel/icerik': 'pro',
-  '/panel/istihbarat': 'pro',
-  '/panel/korelasyon': 'pro',
-  '/panel/raporlar': 'pro',
-};
+// Eski /panel/* sayfaları silindi (Brief Final). Pro gate artık
+// /dashboard/pro/[slug] CTA ile yapılıyor — middleware seviyesinde
+// route koruması kalmadı. İleride /dashboard/audit vs. gerçek
+// sayfaları eklendiğinde buraya gate eklenecek.
+export const PROTECTED_ROUTES: Record<string, SubscriptionTier> = {};
 
 export const LIMITS = {
   free: { keywords: 10, cities: 1, projects: 1 },
