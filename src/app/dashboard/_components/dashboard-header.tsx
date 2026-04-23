@@ -1,17 +1,16 @@
 "use client";
 
+/**
+ * DashboardHeader — minimal editorial header (Brief F Adım 1.5)
+ *
+ * - Hamburger (SidebarTrigger)
+ * - Breadcrumb: "Dashboard / Insight" düz metin, slash separator
+ * - Sağda BrandSwitcher (subtle)
+ */
+
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { BrandSwitcher } from "./brand-switcher";
 
 type Brand = {
@@ -32,20 +31,18 @@ type Props = {
 
 const PATH_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
-  insight: "GH7 Insight",
-  audit: "GH7 Audit",
-  tracker: "GH7 Tracker",
-  radar: "GH7 Radar",
-  advisor: "GH7 Advisor",
-  studio: "GH7 Studio",
+  insight: "Insight",
+  audit: "Audit",
+  tracker: "Tracker",
+  radar: "Radar",
+  advisor: "Advisor",
+  studio: "Studio",
   pro: "Pro",
 };
 
 export function DashboardHeader({ brands, activeBrand }: Props) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-
-  // Breadcrumb: Dashboard > [current] ...
   const crumbs = segments.map((seg, idx) => {
     const href = "/" + segments.slice(0, idx + 1).join("/");
     const label = PATH_LABELS[seg] || seg;
@@ -54,28 +51,32 @@ export function DashboardHeader({ brands, activeBrand }: Props) {
   });
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 px-4 md:px-6">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4" />
+    <header className="flex h-14 shrink-0 items-center gap-3 px-4 md:px-6">
+      <SidebarTrigger className="-ml-1 size-8" />
 
-      <Breadcrumb>
-        <BreadcrumbList>
-          {crumbs.map((crumb) => (
-            <div key={crumb.href} className="flex items-center gap-2">
-              <BreadcrumbItem>
-                {crumb.isLast ? (
-                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink render={<Link href={crumb.href} />}>
-                    {crumb.label}
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-              {!crumb.isLast && <BreadcrumbSeparator />}
-            </div>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
+      <nav className="flex items-center gap-2 text-sm tracking-tight">
+        {crumbs.map((crumb, idx) => (
+          <span key={crumb.href} className="flex items-center gap-2">
+            {idx > 0 && (
+              <span aria-hidden className="text-muted-foreground/50">
+                /
+              </span>
+            )}
+            {crumb.isLast ? (
+              <span className="font-medium text-foreground">
+                {crumb.label}
+              </span>
+            ) : (
+              <Link
+                href={crumb.href}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {crumb.label}
+              </Link>
+            )}
+          </span>
+        ))}
+      </nav>
 
       <div className="ml-auto flex items-center gap-3">
         <BrandSwitcher brands={brands} activeBrand={activeBrand} />

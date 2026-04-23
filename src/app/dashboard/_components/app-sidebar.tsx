@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * AppSidebar — Kinde estetiği editorial sidebar (Brief F Adım 1.5)
+ *
+ * - Üstte GH7 text logosu + plan label (kutu yok)
+ * - Menü item'ler: ikon + metin düz satır, tracking-tight
+ * - Active state: font-semibold + solda 2px siyah bar
+ * - Hover: subtle zinc-100 bg, 120ms
+ * - Alt user: kutu yok, düz bilgi + Çıkış ikonu
+ */
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,13 +25,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   LayoutDashboard,
   Eye,
   ClipboardCheck,
@@ -30,8 +33,6 @@ import {
   Sparkles,
   Settings,
   LogOut,
-  ChevronsUpDown,
-  User,
 } from "lucide-react";
 import { getPlanLabel } from "@/lib/constants/plan";
 
@@ -58,52 +59,33 @@ const BRAND_MENU = [
     icon: LayoutDashboard,
     href: "/dashboard",
   },
-  {
-    key: "insight",
-    label: "GH7 Insight",
-    icon: Eye,
-    href: "/dashboard/insight",
-  },
+  { key: "insight", label: "Insight", icon: Eye, href: "/dashboard/insight" },
   {
     key: "audit",
-    label: "GH7 Audit",
+    label: "Audit",
     icon: ClipboardCheck,
     href: "/dashboard/audit",
   },
   {
     key: "tracker",
-    label: "GH7 Tracker",
+    label: "Tracker",
     icon: LineChart,
     href: "/dashboard/tracker",
   },
-  { key: "radar", label: "GH7 Radar", icon: Radar, href: "/dashboard/radar" },
+  { key: "radar", label: "Radar", icon: Radar, href: "/dashboard/radar" },
   {
     key: "advisor",
-    label: "GH7 Advisor",
+    label: "Advisor",
     icon: Sparkles,
     href: "/dashboard/advisor",
   },
   {
     key: "studio",
-    label: "GH7 Studio",
+    label: "Studio",
     icon: Settings,
     href: "/dashboard/studio",
   },
 ];
-
-function getInitial(profile: Props["profile"]): string {
-  const isSyntheticEmail =
-    !!profile.email &&
-    profile.email.startsWith("phone_") &&
-    profile.email.endsWith("@gh7.ai");
-  if (profile.email && !isSyntheticEmail) {
-    return profile.email[0]!.toUpperCase();
-  }
-  if (profile.phone) {
-    return profile.phone[profile.phone.length - 1] ?? "U";
-  }
-  return "U";
-}
 
 function getDisplayName(profile: Props["profile"]): string {
   const isSyntheticEmail =
@@ -125,7 +107,7 @@ async function handleSignOut() {
   try {
     await fetch("/api/auth/signout", { method: "POST" });
   } catch {
-    // ignore — redirect anyway
+    // ignore
   }
   window.location.href = "/";
 }
@@ -134,36 +116,29 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
   const pathname = usePathname();
   const planLabel = getPlanLabel(profile.plan);
   const displayName = getDisplayName(profile);
-  const initials = getInitial(profile);
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 px-2 py-1.5"
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white font-bold text-sm">
-                G7
-              </div>
-              <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="font-semibold text-sm tracking-tight">
-                  GH7
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {planLabel}
-                </span>
-              </div>
-            </Link>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      {/* Editorial logo: "GH7" text + tiny plan label */}
+      <SidebarHeader className="px-4 py-6">
+        <Link
+          href="/dashboard"
+          className="inline-block group-data-[collapsible=icon]:text-center"
+        >
+          <div className="text-2xl font-bold tracking-tight leading-none">
+            GH7
+          </div>
+          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground group-data-[collapsible=icon]:hidden">
+            {planLabel}
+          </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Araçlar</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] tracking-[0.14em]">
+            Araçlar
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {BRAND_MENU.map((item) => {
@@ -178,7 +153,17 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
                       isActive={isActive}
                       tooltip={item.label}
                       render={<Link href={item.href} />}
+                      className={`relative tracking-tight ${
+                        isActive ? "font-semibold" : "font-normal"
+                      }`}
                     >
+                      {/* 2px left bar (active indicator) */}
+                      {isActive && (
+                        <span
+                          aria-hidden
+                          className="absolute inset-y-1 left-0 w-[2px] rounded-r-full bg-foreground"
+                        />
+                      )}
                       <Icon className="size-4" />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
@@ -191,76 +176,62 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
 
         {brands.length > 1 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Markalar ({brands.length})</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[10px] tracking-[0.14em]">
+              Markalar · {brands.length}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {brands.map((brand) => (
-                  <SidebarMenuItem key={brand.id}>
-                    <SidebarMenuButton
-                      isActive={brand.id === activeBrandId}
-                      tooltip={brand.name}
-                      render={<Link href={`/dashboard?brand=${brand.id}`} />}
-                    >
-                      <div className="flex aspect-square size-5 items-center justify-center rounded bg-muted text-[10px] font-semibold">
-                        {brand.name[0]?.toUpperCase() || "B"}
-                      </div>
-                      <span className="truncate">{brand.name}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {brands.map((brand) => {
+                  const isActive = brand.id === activeBrandId;
+                  return (
+                    <SidebarMenuItem key={brand.id}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        tooltip={brand.name}
+                        render={<Link href={`/dashboard?brand=${brand.id}`} />}
+                        className={`relative tracking-tight ${
+                          isActive ? "font-semibold" : "font-normal"
+                        }`}
+                      >
+                        {isActive && (
+                          <span
+                            aria-hidden
+                            className="absolute inset-y-1 left-0 w-[2px] rounded-r-full bg-foreground"
+                          />
+                        )}
+                        <span className="inline-flex aspect-square size-4 items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                          {brand.name[0]?.toUpperCase() || "B"}
+                        </span>
+                        <span className="truncate">{brand.name}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent"
-                  />
-                }
-              >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white text-sm font-semibold">
-                  {initials}
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{displayName}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {planLabel} üyelik
-                  </span>
-                </div>
-                <ChevronsUpDown className="ml-auto size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                align="start"
-                className="w-[240px]"
-              >
-                <DropdownMenuItem
-                  render={<Link href="/dashboard/studio" />}
-                  className="flex items-center gap-2"
-                >
-                  <User className="size-4" />
-                  Hesap ayarları
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="size-4" />
-                  Çıkış
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="border-t border-border px-4 py-4">
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+            <div className="truncate text-sm font-medium tracking-tight">
+              {displayName}
+            </div>
+            <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground mt-0.5">
+              {planLabel}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            aria-label="Çıkış"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="size-4" />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
