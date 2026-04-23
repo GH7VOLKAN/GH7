@@ -1,7 +1,8 @@
 /**
- * /dashboard/insight — Analiz sonucunun kalıcı görünümü (readOnly)
+ * /dashboard/insight — Analiz sonucunun kalıcı görünümü (Brief F Adım 2.1)
  *
- * Free/Pro/Pro+ tüm tier'larda açık. Pro/Pro+ için "Yeni Analiz Başlat" butonu.
+ * Free/Pro/Pro+ tüm tier'larda açık. Pro/Pro+ için "Yeniden tara" linki.
+ * ?brand=X query param ile marka seçimi (brand switcher uyumlu).
  */
 
 import { redirect } from "next/navigation";
@@ -12,7 +13,9 @@ import { InsightView } from "./_components/insight-view";
 
 export const dynamic = "force-dynamic";
 
-async function getInsightData() {
+type SearchParams = Promise<{ brand?: string }>;
+
+async function getInsightData(brandIdParam?: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,18 +27,26 @@ async function getInsightData() {
   });
   if (!profile) return null;
 
-  const brand = await prisma.brand.findFirst({
+  const brands = await prisma.brand.findMany({
     where: { profileId: profile.id },
     orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  if (brands.length === 0) return null;
+
+  const targetBrandId =
+    (brandIdParam && brands.find((b) => b.id === brandIdParam)?.id) ||
+    brands[0].id;
+
+  const brand = await prisma.brand.findUnique({
+    where: { id: targetBrandId },
     include: {
       scans: {
         orderBy: { completedAt: "desc" },
         take: 1,
         include: {
           results: {
-            include: {
-              prompt: true,
-            },
+            include: { prompt: true },
           },
         },
       },
@@ -50,8 +61,13 @@ async function getInsightData() {
   return { profile, brand };
 }
 
-export default async function InsightPage() {
-  const data = await getInsightData();
+export default async function InsightPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const data = await getInsightData(params.brand);
   if (!data) redirect("/analiz");
 
   const { profile, brand } = data;

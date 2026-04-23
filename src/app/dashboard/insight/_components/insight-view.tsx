@@ -1,8 +1,26 @@
 "use client";
 
+/**
+ * InsightView — Kinde editorial analiz detayı (Brief F Adım 2.1)
+ *
+ * Yapı:
+ * - Label + H1 (2 satır)
+ * - Subtitle + "Yeniden tara" link (Pro+ için)
+ * - 01 Skor: text-metric + açıklama + Advisor commentary (siyah kart)
+ * - 02 Rakipler: numaralı liste, separator ile
+ * - 03 Sorgular: details/summary genişleme, per-query detay
+ */
+
 import Link from "next/link";
-import type { Brand, Scan, PromptResult, Prompt, Competitor } from "@prisma/client";
-import s from "../insight.module.css";
+import { motion } from "motion/react";
+import type {
+  Brand,
+  Scan,
+  PromptResult,
+  Prompt,
+  Competitor,
+} from "@prisma/client";
+import { pageContainer, pageItem } from "@/lib/motion/variants";
 
 type ScanWithResults = Scan & {
   results: (PromptResult & { prompt: Prompt })[];
@@ -24,10 +42,15 @@ export function InsightView({
 }: Props) {
   if (!scan) {
     return (
-      <div className={s.empty}>
-        <p>Henüz tamamlanmış tarama yok.</p>
+      <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+        <p className="mb-6 text-muted-foreground">
+          Henüz tamamlanmış tarama yok.
+        </p>
         {canStartNewAnalysis && (
-          <Link href="/analiz" className={s.primaryBtn}>
+          <Link
+            href="/analiz"
+            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          >
             Yeni Analiz Başlat →
           </Link>
         )}
@@ -35,7 +58,7 @@ export function InsightView({
     );
   }
 
-  // Sorguları gruplama: promptId → { prompt, results[] }
+  // promptId → { prompt, results[] }
   const promptsMap = new Map<
     string,
     { prompt: Prompt; results: PromptResult[] }
@@ -49,109 +72,205 @@ export function InsightView({
   }
   const prompts = Array.from(promptsMap.values());
 
+  const score = scan.score ?? 0;
+  const scoreTotal = scan.scoreTotal ?? 25;
+  const ratio = scoreTotal > 0 ? score / scoreTotal : 0;
+  const scoreText =
+    score === scoreTotal
+      ? "Tam eşleşme, tüm platformlarda bahsediliyorsun."
+      : ratio >= 0.6
+        ? "Güçlü performans, çoğu platformda bahsediliyorsun."
+        : ratio >= 0.4
+          ? "Orta düzey görünürlük, bazı platformlarda zayıfsın."
+          : "Geliştirme alanı var, çoğu platformda görünmüyorsun.";
+
+  const formattedDate = scan.completedAt
+    ? new Date(scan.completedAt).toLocaleDateString("tr-TR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "—";
+
   return (
-    <div className="space-y-8">
-      {/* Header: brand + Yeni analiz butonu */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{brand.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {brand.domain}
-            {brand.sector ? ` · ${brand.sector}` : " · Sektör belirsiz"}
-            {brand.city ? ` · ${brand.city}` : ""}
-          </p>
-        </div>
-        {canStartNewAnalysis && (
-          <Link href="/analiz?force=true" className={s.primaryBtn}>
-            Yeni Analiz Başlat →
-          </Link>
-        )}
-      </div>
+    <motion.div
+      variants={pageContainer}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-4xl px-6 py-12 lg:py-20"
+    >
+      {/* HEADER */}
+      <motion.div variants={pageItem} className="mb-16">
+        <div className="text-label text-muted-foreground mb-6">GH7 Insight</div>
+        <h1 className="text-h1 mb-6">
+          Görünürlük
+          <br />
+          Detayı
+        </h1>
+        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+          {brand.name} için {formattedDate} tarihinde yapılan tarama sonuçları.
+          {canStartNewAnalysis && (
+            <>
+              {" "}
+              <Link
+                href="/analiz?force=true"
+                className="text-foreground underline underline-offset-4 hover:no-underline"
+              >
+                Yeniden tara →
+              </Link>
+            </>
+          )}
+        </p>
+      </motion.div>
 
-        {/* Score card */}
-        <div className={s.scoreCard}>
-          <div className={s.scoreBig}>
-            {scan.score ?? 0}
-            <span className={s.scoreTotal}> / {scan.scoreTotal ?? 25}</span>
-          </div>
-          <div className={s.scoreLabel}>AI Görünürlük Skoru</div>
-          <div className={s.scoreMeta}>
-            {scan.totalQueries ?? prompts.length} sorgu · 5 AI platform
-            {scan.completedAt
-              ? ` · ${new Date(scan.completedAt).toLocaleDateString("tr-TR")}`
-              : ""}
-          </div>
+      {/* 01 · SKOR */}
+      <motion.section variants={pageItem} className="mb-20">
+        <div className="mb-8 flex items-center gap-4">
+          <div className="text-label text-muted-foreground">Skor</div>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
-        {/* Commentary (GH7 ADVISOR) */}
+        <div className="mb-4 flex items-baseline gap-4">
+          <span className="text-metric">{score}</span>
+          <span className="text-2xl tabular-nums text-muted-foreground">
+            / {scoreTotal}
+          </span>
+        </div>
+
+        <p className="max-w-xl text-base text-muted-foreground">{scoreText}</p>
+
         {scan.commentary && (
-          <div className={s.commentary}>
-            <div className={s.commentaryHeader}>
-              <span className={s.commentaryBrand}>GH7 ADVISOR</span>
-              <span className={s.commentarySub}>· Analiz Raporu</span>
+          <div className="mt-12 rounded-xl bg-foreground p-8 text-background">
+            <div className="text-label mb-4 text-background/60">
+              GH7 Advisor · Yorum
             </div>
-            <p className={s.commentaryText}>{scan.commentary}</p>
+            <p className="text-base leading-relaxed whitespace-pre-wrap">
+              {scan.commentary}
+            </p>
           </div>
         )}
+      </motion.section>
 
-        {/* Competitors */}
-        {competitors.length > 0 && (
-          <section className={s.section}>
-            <h2 className={s.sectionTitle}>İzlenen Rakipler</h2>
-            <div className={s.competitorList}>
-              {competitors.map((c) => (
-                <div key={c.id} className={s.competitorItem}>
-                  <span className={s.competitorName}>{c.name}</span>
-                  {c.domain && !c.domain.endsWith(".placeholder") && (
-                    <span className={s.competitorDomain}>{c.domain}</span>
-                  )}
-                </div>
-              ))}
+      {/* 02 · RAKİPLER */}
+      {competitors.length > 0 && (
+        <motion.section variants={pageItem} className="mb-20">
+          <div className="mb-8 flex items-center gap-4">
+            <div className="text-label text-muted-foreground">
+              İzlenen Rakipler
             </div>
-          </section>
-        )}
+            <div className="h-px flex-1 bg-border" />
+          </div>
 
-        {/* Prompts */}
-        <section className={s.section}>
-          <h2 className={s.sectionTitle}>Test Edilen Sorgular</h2>
-          <div className={s.promptList}>
-            {prompts.map(({ prompt, results }, idx) => (
-              <details key={prompt.id} className={s.promptItem}>
-                <summary className={s.promptHeader}>
-                  <span className={s.promptNum}>{idx + 1}</span>
-                  <span className={s.promptText}>{prompt.text}</span>
-                  <span className={s.promptScore}>
-                    {results.filter((r) => r.mentioned).length} / {results.length}
+          <div className="space-y-0">
+            {competitors.map((c, idx) => (
+              <div
+                key={c.id}
+                className="flex items-baseline justify-between border-b border-border py-4 last:border-b-0"
+              >
+                <div className="flex items-baseline gap-6">
+                  <span className="text-label tabular-nums text-muted-foreground">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-base font-medium tracking-tight">
+                    {c.name}
+                  </span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {c.domain && !c.domain.endsWith(".placeholder")
+                    ? c.domain
+                    : "URL yok"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
+      {/* 03 · SORGULAR */}
+      <motion.section variants={pageItem}>
+        <div className="mb-8 flex items-center gap-4">
+          <div className="text-label text-muted-foreground">
+            Test Edilen Sorgular · {prompts.length}
+          </div>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <div className="space-y-0">
+          {prompts.map(({ prompt, results }, idx) => {
+            const mentionedCount = results.filter((r) => r.mentioned).length;
+            const totalCount = results.length;
+            const percentage = totalCount
+              ? Math.round((mentionedCount / totalCount) * 100)
+              : 0;
+            const strength =
+              mentionedCount === totalCount
+                ? "Tam eşleşme"
+                : percentage >= 60
+                  ? "Güçlü"
+                  : percentage >= 40
+                    ? "Orta"
+                    : "Zayıf";
+
+            return (
+              <details
+                key={prompt.id}
+                className="group border-b border-border py-6 last:border-b-0"
+              >
+                <summary className="flex cursor-pointer list-none items-baseline gap-6">
+                  <span className="text-label tabular-nums text-muted-foreground">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <div className="flex-1">
+                    <p className="mb-2 text-base font-medium leading-snug tracking-tight">
+                      {prompt.text}
+                    </p>
+                    <div className="flex items-baseline gap-3 text-sm text-muted-foreground">
+                      <span className="tabular-nums">
+                        {mentionedCount} / {totalCount} AI
+                      </span>
+                      <span className="text-foreground/30">·</span>
+                      <span>{strength}</span>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground transition-transform group-open:rotate-90">
+                    →
                   </span>
                 </summary>
-                <div className={s.promptBody}>
+
+                <div className="mt-6 ml-12 space-y-4">
                   {results.map((r) => (
-                    <div key={r.id} className={s.resultItem}>
-                      <div className={s.resultHeader}>
-                        <span className={s.resultPlatform}>{r.platform}</span>
+                    <div
+                      key={r.id}
+                      className="rounded-lg border border-border bg-muted/40 p-5"
+                    >
+                      <div className="mb-3 flex items-center gap-3">
+                        <span className="text-label text-muted-foreground">
+                          {r.platform}
+                        </span>
                         <span
-                          className={
+                          className={`text-xs font-medium uppercase tracking-widest ${
                             r.mentioned
-                              ? s.mentionedBadge
-                              : s.notMentionedBadge
-                          }
+                              ? "text-foreground"
+                              : "text-muted-foreground"
+                          }`}
                         >
-                          {r.mentioned ? "✓ Bahsedildi" : "✗ Bahsedilmedi"}
+                          {r.mentioned ? "✓ Bahsedildi" : "Bahsedilmedi"}
                         </span>
                       </div>
                       {r.fullResponse && (
-                        <p className={s.resultText}>
-                          {r.fullResponse.slice(0, 400)}
-                          {r.fullResponse.length > 400 ? "..." : ""}
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {r.fullResponse.slice(0, 300)}
+                          {r.fullResponse.length > 300 ? "…" : ""}
                         </p>
                       )}
                     </div>
                   ))}
                 </div>
               </details>
-            ))}
-          </div>
-        </section>
-    </div>
+            );
+          })}
+        </div>
+      </motion.section>
+    </motion.div>
   );
 }
