@@ -41,7 +41,7 @@ export function smartAlertTemplate(
 
     <!-- CTA Button -->
     <div style="text-align:center;margin-bottom:24px;">
-      <a href="${APP_URL}/panel/genel" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;">
+      <a href="${APP_URL}/dashboard" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;">
         Paneli Kontrol Et &rarr;
       </a>
     </div>

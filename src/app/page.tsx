@@ -242,12 +242,9 @@ export default function HomePage() {
 
             {/* Pro */}
             <div className="pricing-card pricing-card-pro">
-              <div className="pricing-badge-wrap">
-                <span className="pricing-badge">En Popüler</span>
-              </div>
               <div className="pricing-card-head">
                 <div className="pricing-plan-name">Pro</div>
-                <p className="pricing-plan-desc">Tam izleme + rekabet yönetimi</p>
+                <p className="pricing-plan-desc">1 marka · Tam izleme ve rekabet yönetimi</p>
                 <div className="pricing-price-row">
                   <span className="pricing-price">₺699</span>
                   <span className="pricing-period">/ay</span>
@@ -258,8 +255,15 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <a href="/login" className="pricing-cta pricing-cta-filled">{isYearly ? "Yıllık Planla Başla" : "7 Gün Ücretsiz Dene"}</a>
-              <p className="pricing-cta-note">{isYearly ? "Yıllık ödemede 2 ay hediye" : "7 gün boyunca ücret yok"}</p>
+              <a
+                href="https://wa.me/905326629792?text=GH7%20Pro%20üyelik%20istiyorum"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pricing-cta pricing-cta-filled"
+              >
+                Pro&apos;ya Geç →
+              </a>
+              <p className="pricing-cta-note">WhatsApp ile ödeme · 30 gün iade garantisi</p>
 
               <div className="pricing-divider" />
 
@@ -276,6 +280,60 @@ export default function HomePage() {
                   { text: "AI içerik taslakları", bold: "AI içerik" },
                   { text: "Korelasyon motoru (aksiyon→sonuç)" },
                   { text: "E-posta + WhatsApp bildirimleri" },
+                ].map((f, i) => (
+                  <li key={i}><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>{f.bold ? <><strong>{f.bold}</strong> {f.text.replace(f.bold, "").trim()}</> : f.text}</span></li>
+                ))}
+              </ul>
+
+              <div className="pricing-platforms-row">
+                <span className="pricing-platforms-label">Dahil:</span>
+                <div className="pricing-platforms-icons">
+                  {(["chatgpt", "gemini", "perplexity", "claude", "google_aio"] as AIPlatform[]).map((p) => (
+                    <AIPlatformIcon key={p} platform={p} size={18} colored />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Pro+ */}
+            <div className="pricing-card pricing-card-proplus">
+              <div className="pricing-badge-wrap">
+                <span className="pricing-badge">ÖNERİLEN</span>
+              </div>
+              <div className="pricing-card-head">
+                <div className="pricing-plan-name">Pro+</div>
+                <p className="pricing-plan-desc">5 marka · Ajans ve çoklu marka yönetimi</p>
+                <div className="pricing-price-row">
+                  <span className="pricing-price">₺1.699</span>
+                  <span className="pricing-period">/ay</span>
+                </div>
+                <p className="pricing-annual">
+                  Yıllık tek ödeme: <strong>₺20.388</strong>
+                </p>
+              </div>
+
+              <a
+                href="https://wa.me/905326629792?text=GH7%20Pro%2B%20üyelik%20istiyorum"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pricing-cta pricing-cta-filled"
+              >
+                Pro+&apos;a Geç →
+              </a>
+              <p className="pricing-cta-note">WhatsApp ile ödeme · 30 gün iade garantisi</p>
+
+              <div className="pricing-divider" />
+
+              <p className="pricing-includes">Pro&apos;daki her şey, artı:</p>
+              <ul className="pricing-features">
+                {[
+                  { text: "5 marka izleme (firma + kişi + ürün + ...)", bold: "5 marka" },
+                  { text: "4 kapı tipi (firma / kişi / e-ticaret / yurtdışı)", bold: "4 kapı tipi" },
+                  { text: "Sınırsız analiz (her marka için)", bold: "Sınırsız" },
+                  { text: "10 rakip takibi (Pro'da 3)", bold: "10 rakip" },
+                  { text: "Çoklu marka karşılaştırma raporu" },
+                  { text: "Ajans / holding kullanım hakkı" },
+                  { text: "Öncelikli destek (WhatsApp)" },
                 ].map((f, i) => (
                   <li key={i}><svg className="pricing-check pricing-check-pro" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg><span>{f.bold ? <><strong>{f.bold}</strong> {f.text.replace(f.bold, "").trim()}</> : f.text}</span></li>
                 ))}

@@ -245,7 +245,7 @@ export default function OnboardPage() {
         });
 
         // Step 3: Redirect IMMEDIATELY to dashboard — AnalysisBanner shows progress
-        router.push("/dashboard/genel");
+        router.push("/dashboard");
         router.refresh();
       } catch (err) {
         console.error("[onboard] Brand creation failed:", err);
@@ -278,13 +278,13 @@ export default function OnboardPage() {
           setAnalysisProgress(100);
           setPhaseLabel("Her şey hazır!");
           setTimeout(() => {
-            router.push("/dashboard/genel");
+            router.push("/dashboard");
             router.refresh();
           }, 1500);
         }, 5000);
       } else if (data.status === "failed") {
         // Still redirect — partial data is better than nothing
-        router.push("/dashboard/genel");
+        router.push("/dashboard");
         router.refresh();
       } else {
         // Running

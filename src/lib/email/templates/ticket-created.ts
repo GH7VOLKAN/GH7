@@ -41,7 +41,7 @@ export function ticketCreatedTemplate(data: {
       Ortalama yanıt süremiz <strong style="color:#09090b;">24 saat</strong> içindedir.
     </p>
 
-    <a href="${APP_URL}/dashboard/ayarlar" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">
+    <a href="${APP_URL}/dashboard/studio" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">
       Talebi Takip Et →
     </a>
 

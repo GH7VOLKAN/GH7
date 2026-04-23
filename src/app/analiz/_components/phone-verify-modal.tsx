@@ -165,7 +165,7 @@ export function PhoneVerifyModal({ domain, onVerified, onCancel }: Props) {
 
       if (canStartData.canStart === false) {
         if (canStartData.reason === "pro_user") {
-          window.location.href = canStartData.redirectTo || "/dashboard/genel";
+          window.location.href = canStartData.redirectTo || "/dashboard";
           return;
         }
         if (canStartData.reason === "already_used") {

@@ -359,7 +359,28 @@ h2.sec-h2 .muted{color:var(--g300)}
 .pricing-toggle-btn.active{background:var(--black);color:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .pricing-toggle-badge{font-size:12px;font-weight:700;color:var(--green);background:var(--green-bg);padding:4px 12px;border-radius:20px;white-space:nowrap}
 .pricing-toggle-badge-active{animation:pulse-green .6s ease}
-.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+@media (max-width:1024px){.pricing-grid{grid-template-columns:1fr}}
+
+/* Pro+ card — gradient featured */
+.pricing-card-proplus{background:linear-gradient(180deg,#000 0%,#1a1a2e 100%);color:#fff;border-color:transparent;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+.pricing-card-proplus:hover{box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.pricing-card-proplus .pricing-plan-name{color:#fff}
+.pricing-card-proplus .pricing-plan-desc{color:rgba(255,255,255,.7)}
+.pricing-card-proplus .pricing-price{color:#fff}
+.pricing-card-proplus .pricing-period{color:rgba(255,255,255,.6)}
+.pricing-card-proplus .pricing-annual{color:rgba(255,255,255,.7)}
+.pricing-card-proplus .pricing-save{color:rgba(255,255,255,.85)}
+.pricing-card-proplus .pricing-includes{color:rgba(255,255,255,.85)}
+.pricing-card-proplus .pricing-features li{color:rgba(255,255,255,.9)}
+.pricing-card-proplus .pricing-features strong{color:#fff}
+.pricing-card-proplus .pricing-check-pro{color:#fff}
+.pricing-card-proplus .pricing-divider{background:rgba(255,255,255,.12)}
+.pricing-card-proplus .pricing-platforms-label{color:rgba(255,255,255,.7)}
+.pricing-card-proplus .pricing-cta-note{color:rgba(255,255,255,.6)}
+.pricing-card-proplus .pricing-badge{background:#fff;color:#000}
+.pricing-card-proplus .pricing-cta-filled{background:#fff;color:#000}
+.pricing-card-proplus .pricing-cta-filled:hover{background:#f5f5f5}
 
 /* Card base */
 .pricing-card{background:var(--white);border:1.5px solid var(--g200);border-radius:16px;padding:36px 32px 32px;position:relative;transition:box-shadow .2s}

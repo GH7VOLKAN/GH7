@@ -8,7 +8,7 @@ export function proFeatureTemplate(data: {
   ctaText?: string;
   ctaUrl?: string;
 }): string {
-  const ctaUrl = data.ctaUrl || `${APP_URL}/dashboard/genel`;
+  const ctaUrl = data.ctaUrl || `${APP_URL}/dashboard`;
   const ctaText = data.ctaText || "Hemen Deneyin";
 
   const body = `

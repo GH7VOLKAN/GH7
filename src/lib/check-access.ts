@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 
 /**
  * Check if the current user has access to a page requiring `requiredTier`.
- * Redirects to /panel/upgrade if not.
+ * Redirects to /dashboard if not.
  * Returns the active brand data on success.
  */
 export async function checkPageAccess(
@@ -26,7 +26,7 @@ export async function checkPageAccess(
 
   if (!hasAccess(userPlan, requiredTier)) {
     redirect(
-      `/panel/upgrade?from=${encodeURIComponent(pathname)}&required=${requiredTier}`,
+      `/dashboard?from=${encodeURIComponent(pathname)}&required=${requiredTier}`,
     );
   }
 

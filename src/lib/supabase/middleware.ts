@@ -31,7 +31,6 @@ export async function updateSession(request: NextRequest) {
 
   // Public route ise Supabase'e hiç gitme
   const isProtectedOrAuth =
-    request.nextUrl.pathname.startsWith("/panel") ||
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/onboard") ||
     request.nextUrl.pathname === "/login";
@@ -68,7 +67,6 @@ export async function updateSession(request: NextRequest) {
 
   // Korumalı rota + kullanıcı yok → login'e yönlendir
   const isProtected =
-    request.nextUrl.pathname.startsWith("/panel") ||
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/onboard");
 
@@ -88,11 +86,11 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // NOT: /dashboard → /panel redirect'i KALDIRILDI (Brief D1).
-  // Yeni dashboard (/dashboard) artık 6 marka kartı grid gösteriyor;
-  // eski /panel/* sayfaları Brief C3'te silinecek.
+  // NOT: Eski /panel/* sayfaları silindi (Brief Final).
+  // /dashboard artık ana panel — 6 marka kartı grid + insight/studio/pro.
 
-  // RBAC: Plan kontrolü
+  // RBAC: Plan kontrolü (PROTECTED_ROUTES şu an boş; Pro sayfaları
+  // /dashboard/pro/[slug] CTA ile — middleware gate yok).
   if (user) {
     const pathname = request.nextUrl.pathname;
     const requiredTier = Object.entries(PROTECTED_ROUTES).find(
@@ -103,9 +101,8 @@ export async function updateSession(request: NextRequest) {
       const userPlan = (user.user_metadata?.plan as string) ?? "free";
       if (!hasAccess(userPlan, requiredTier)) {
         const url = request.nextUrl.clone();
-        url.pathname = "/panel/upgrade";
-        url.searchParams.set("from", pathname);
-        url.searchParams.set("required", requiredTier);
+        url.pathname = "/dashboard";
+        url.searchParams.set("upgrade", requiredTier);
         return NextResponse.redirect(url);
       }
     }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getPlanLabel } from "@/lib/constants/plan";
 import s from "../dashboard.module.css";
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
     plan: string;
   };
   brandName: string;
+  brandCount: number;
 };
 
 function formatPhone(raw: string): string {
@@ -20,8 +22,8 @@ function formatPhone(raw: string): string {
   return raw;
 }
 
-export function DashboardHeader({ profile, brandName }: Props) {
-  const planLabel = profile.plan === "free" ? "Free" : "Pro";
+export function DashboardHeader({ profile, brandName, brandCount }: Props) {
+  const planLabel = getPlanLabel(profile.plan);
 
   // Email varsa ve synthetic değilse göster, yoksa formatted phone
   const isSyntheticEmail =
@@ -35,6 +37,8 @@ export function DashboardHeader({ profile, brandName }: Props) {
         ? formatPhone(profile.phone)
         : "Kullanıcı";
 
+  const planClass = s[`plan_${profile.plan}`] ?? s.plan_free;
+
   return (
     <header className={s.header}>
       <div className={s.headerInner}>
@@ -44,13 +48,12 @@ export function DashboardHeader({ profile, brandName }: Props) {
 
         <div className={s.headerRight}>
           <span className={s.brandTag}>{brandName}</span>
+          {brandCount > 1 && (
+            <span className={s.brandCount}>+{brandCount - 1} marka</span>
+          )}
           <span className={s.divider}>•</span>
           <span className={s.user}>{displayName}</span>
-          <span
-            className={`${s.plan} ${profile.plan === "free" ? s.planFree : s.planPro}`}
-          >
-            {planLabel}
-          </span>
+          <span className={`${s.plan} ${planClass}`}>{planLabel}</span>
         </div>
       </div>
     </header>
