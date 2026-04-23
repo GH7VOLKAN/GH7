@@ -22,7 +22,7 @@ import {
 import { checkBrandMention } from "./perplexity";
 import { evaluateItem, type EvalInput } from "./evaluators";
 import { AUDIT_MASTER_ITEMS } from "./master-items";
-import { generateAuditInstructions } from "./opus";
+import { generateAuditInstructions } from "./provider";
 
 async function updateProgress(
   auditId: string,
