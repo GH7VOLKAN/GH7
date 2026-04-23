@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * BrandSwitcher — subtle border'suz dropdown (Brief F Adım 1.5)
+ *
+ * - 1 marka: düz metin (brand.name)
+ * - Çoklu: dropdown, border-none, hover'da bg-muted
+ */
+
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -23,10 +30,9 @@ type Props = {
 };
 
 export function BrandSwitcher({ brands, activeBrand }: Props) {
-  // Tek marka varsa dropdown yok, sadece bilgi göster
   if (brands.length <= 1) {
     return (
-      <div className="hidden items-center gap-2 text-sm sm:flex">
+      <div className="hidden items-center gap-2 text-sm tracking-tight sm:flex">
         <span className="font-medium">{activeBrand.name}</span>
         <span className="text-xs text-muted-foreground">
           {activeBrand.domain}
@@ -37,20 +43,17 @@ export function BrandSwitcher({ brands, activeBrand }: Props) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <div className="flex aspect-square size-6 items-center justify-center rounded bg-black text-[10px] font-semibold text-white">
-          {activeBrand.name[0]?.toUpperCase() || "B"}
-        </div>
-        <div className="hidden flex-col items-start leading-tight sm:flex">
-          <span className="text-sm font-medium">{activeBrand.name}</span>
-          <span className="text-[10px] text-muted-foreground">
-            {activeBrand.domain}
-          </span>
-        </div>
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm tracking-tight transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <span className="font-medium">{activeBrand.name}</span>
+        <span className="hidden text-xs text-muted-foreground sm:inline">
+          {activeBrand.domain}
+        </span>
         <ChevronDown className="size-3 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[280px]">
-        <DropdownMenuLabel>Markalar ({brands.length})</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-[10px] tracking-[0.14em] uppercase text-muted-foreground">
+          Markalar · {brands.length}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {brands.map((brand) => {
           const isActive = brand.id === activeBrand.id;
@@ -58,14 +61,13 @@ export function BrandSwitcher({ brands, activeBrand }: Props) {
             <DropdownMenuItem
               key={brand.id}
               render={<Link href={`/dashboard?brand=${brand.id}`} />}
-              className="flex cursor-pointer items-center gap-2"
+              className="flex cursor-pointer items-center gap-3 py-2"
             >
-              <div className="flex aspect-square size-7 items-center justify-center rounded bg-muted text-xs font-semibold">
-                {brand.name[0]?.toUpperCase() || "B"}
-              </div>
-              <div className="flex flex-1 flex-col">
-                <span className="text-sm font-medium">{brand.name}</span>
-                <span className="text-[10px] text-muted-foreground">
+              <div className="flex flex-1 flex-col leading-tight">
+                <span className="text-sm font-medium tracking-tight">
+                  {brand.name}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
                   {brand.domain}
                 </span>
               </div>
@@ -76,10 +78,10 @@ export function BrandSwitcher({ brands, activeBrand }: Props) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           render={<Link href="/analiz" />}
-          className="flex cursor-pointer items-center gap-2"
+          className="flex cursor-pointer items-center gap-2 py-2"
         >
           <Plus className="size-4" />
-          <span>Yeni Marka Ekle</span>
+          <span className="text-sm tracking-tight">Yeni Marka Ekle</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

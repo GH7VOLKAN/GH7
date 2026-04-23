@@ -57,28 +57,31 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar
-        profile={{
-          email: profile.email,
-          phone: profile.phone,
-          plan: profile.plan,
-        }}
-        brands={brands}
-        activeBrandId={activeBrand.id}
-      />
-      <SidebarInset>
-        <DashboardHeader
+      <div className="font-geist flex min-h-svh w-full">
+        <AppSidebar
           profile={{
             email: profile.email,
             phone: profile.phone,
             plan: profile.plan,
           }}
           brands={brands}
-          activeBrand={activeBrand}
+          activeBrandId={activeBrand.id}
         />
-        <Separator />
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
-      </SidebarInset>
+        <SidebarInset>
+          <DashboardHeader
+            profile={{
+              email: profile.email,
+              phone: profile.phone,
+              plan: profile.plan,
+            }}
+            brands={brands}
+            activeBrand={activeBrand}
+          />
+          <Separator />
+          {/* Padding sayfada (Brief F — editorial max-w-*). */}
+          <main className="flex-1">{children}</main>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }

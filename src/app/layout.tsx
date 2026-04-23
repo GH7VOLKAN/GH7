@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, DM_Sans } from "next/font/google";
+import { GeistSans, GeistMono } from "./fonts";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
+// Legacy fonts — landing + analiz sayfaları hâlâ kullanıyor.
+// Dashboard ise Geist Sans (Brief F — design system).
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin", "latin-ext"],
@@ -71,8 +74,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" suppressHydrationWarning>
-      <body className={`${plusJakarta.variable} ${dmSans.variable} font-sans antialiased`}>
+    <html
+      lang="tr"
+      suppressHydrationWarning
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+    >
+      <body
+        className={`${plusJakarta.variable} ${dmSans.variable} font-sans antialiased`}
+      >
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
