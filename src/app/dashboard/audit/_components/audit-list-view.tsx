@@ -149,7 +149,7 @@ function LoadingState({ audit }: { audit: AuditWithItems }) {
     { label: "Backlink verisi toplanıyor", threshold: 40 },
     { label: "AI platformlarda görünürlük ölçülüyor", threshold: 60 },
     { label: "43 madde değerlendiriliyor", threshold: 75 },
-    { label: "Opus marka-özel talimatlar yazıyor", threshold: 85 },
+    { label: "Marka-özel talimatlar yazılıyor", threshold: 85 },
   ];
 
   return (

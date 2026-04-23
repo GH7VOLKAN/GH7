@@ -17,7 +17,10 @@ import { AUDIT_MASTER_ITEMS } from "@/lib/audit/master-items";
 import { runAuditPipeline } from "@/lib/audit/pipeline";
 
 export const runtime = "nodejs";
-export const maxDuration = 300; // 5dk Vercel timeout (Aşama 2-3 pipeline için)
+// Vercel Pro/Enterprise fluid compute'da max 800s (~13 dk). Hobby'de
+// 60s, Pro classic'te 300s. Qwen pipeline ortalama 6-8 dk sürebiliyor;
+// fluid compute gerekli. Plan yetersizse fallback queue (gelecek sprint).
+export const maxDuration = 800;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {

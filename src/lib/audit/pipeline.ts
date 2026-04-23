@@ -167,7 +167,7 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
     await updateProgress(auditId, {
       status: "generating",
       progress: 85,
-      currentStep: "Opus marka-özel talimatlar yazıyor...",
+      currentStep: "Marka-özel talimatlar yazılıyor...",
     });
 
     const auditItems = await prisma.auditItem.findMany({
