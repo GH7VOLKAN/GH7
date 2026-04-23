@@ -6,7 +6,6 @@
  */
 
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import s from "./pro.module.css";
 
 type Props = {
@@ -87,20 +86,15 @@ export default async function ProBrandPage({ params }: Props) {
   )}%20Pro%20üyelik%20istiyorum`;
 
   return (
-    <div className={s.shell}>
-      <main className={s.main}>
-        <Link href="/dashboard" className={s.backLink}>
-          ← Dashboard
-        </Link>
-
-        <div className={s.header}>
-          <div className={s.brandTag}>
-            <span className={s.brandName}>{info.brand}</span>
-            <span className={s.proBadge}>Pro</span>
-          </div>
-          <h1 className={s.title}>{info.title}</h1>
-          <p className={s.subtitle}>{info.subtitle}</p>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <div className={s.brandTag}>
+          <span className={s.brandName}>{info.brand}</span>
+          <span className={s.proBadge}>Pro</span>
         </div>
+        <h1 className="text-3xl font-bold tracking-tight">{info.title}</h1>
+        <p className="text-muted-foreground">{info.subtitle}</p>
+      </div>
 
         <div className={s.descriptionCard}>
           <p className={s.description}>{info.description}</p>
@@ -155,8 +149,7 @@ export default async function ProBrandPage({ params }: Props) {
           >
             WhatsApp ile Pro&apos;ya Geç →
           </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
