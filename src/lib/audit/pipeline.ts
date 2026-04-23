@@ -22,6 +22,7 @@ import {
 import { checkBrandMention } from "./perplexity";
 import { evaluateItem, type EvalInput } from "./evaluators";
 import { AUDIT_MASTER_ITEMS } from "./master-items";
+import { generateAuditInstructions } from "./opus";
 
 async function updateProgress(
   auditId: string,
@@ -162,20 +163,88 @@ export async function runAuditPipeline(auditId: string): Promise<void> {
       (passedCount / AUDIT_MASTER_ITEMS.length) * 100,
     );
 
-    // ═══ ADIM 4: Opus (Aşama 3'te eklenecek) ═══
-    // TODO: await generateOpusInstructions(auditId, evalInput, items);
+    // ═══ ADIM 4: Opus — marka-özel talimat üretimi ═══
+    await updateProgress(auditId, {
+      status: "generating",
+      progress: 85,
+      currentStep: "Opus marka-özel talimatlar yazıyor...",
+    });
+
+    const auditItems = await prisma.auditItem.findMany({
+      where: { auditId },
+      orderBy: { itemIndex: "asc" },
+      select: {
+        itemCode: true,
+        title: true,
+        descriptionStatic: true,
+        status: true,
+        rawMetrics: true,
+      },
+    });
+
+    let opusCostUsd = 0;
+    try {
+      const opusResult = await generateAuditInstructions({
+        brandName: audit.brand.name,
+        domain,
+        sector: audit.brand.sector,
+        city: audit.brand.city,
+        dataForSeoSummary: {
+          robotsTxt,
+          llmsTxt,
+          llmsFullTxt,
+          onPageSummary: onPage.summary,
+          backlinks,
+        },
+        perplexityMentions: perplexityResults,
+        masterItems: auditItems.map((item) => ({
+          code: item.itemCode,
+          title: item.title,
+          descriptionStatic: item.descriptionStatic,
+          currentStatus: item.status,
+          rawMetrics: item.rawMetrics,
+        })),
+      });
+
+      opusCostUsd = opusResult.costUsd;
+
+      // Her AuditItem'a Opus çıktısını yaz
+      for (const opusItem of opusResult.items) {
+        await prisma.auditItem.updateMany({
+          where: { auditId, itemCode: opusItem.code },
+          data: {
+            currentState: opusItem.currentState,
+            instructions: JSON.parse(JSON.stringify(opusItem.instructions)),
+            impactText: opusItem.impactText,
+            expectedGain: opusItem.expectedGain ?? null,
+          },
+        });
+      }
+
+      await prisma.audit.update({
+        where: { id: auditId },
+        data: {
+          opusRaw: JSON.parse(JSON.stringify(opusResult.items)),
+        },
+      });
+    } catch (opusErr) {
+      // Opus başarısız olursa pipeline yarıda kalmasın — evaluator sonuçları
+      // zaten DB'de. Sadece logla, audit yine completed olarak kapat.
+      console.error("[audit-pipeline] Opus failed (continuing):", opusErr);
+    }
 
     await prisma.audit.update({
       where: { id: auditId },
       data: {
         status: "completed",
         progress: 100,
-        currentStep: "Tamamlandı (Opus Aşama 3'te)",
+        currentStep: "Tamamlandı",
         completedAt: new Date(),
         totalScore,
         passedCount,
         warningCount,
         criticalCount,
+        costUsd: opusCostUsd,
       },
     });
   } catch (err) {
