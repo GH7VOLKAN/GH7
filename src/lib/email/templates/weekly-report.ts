@@ -85,7 +85,7 @@ export function weeklyReportTemplate(
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td align="center">
-          <a href="${APP_URL}/panel/genel-bakis" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;">
+          <a href="${APP_URL}/dashboard" style="display:inline-block;background-color:#09090b;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;">
             Dashboard'a Git &rarr;
           </a>
         </td>
@@ -95,7 +95,7 @@ export function weeklyReportTemplate(
     <!-- Unsubscribe -->
     <p style="margin:24px 0 0;font-size:12px;color:#a1a1aa;text-align:center;line-height:1.5;">
       Haftalik raporlari almak istemiyorsaniz
-      <a href="${APP_URL}/panel/ayarlar?tab=bildirimler" style="color:#71717a;text-decoration:underline;">bildirim ayarlarindan</a>
+      <a href="${APP_URL}/dashboard/studio?tab=bildirimler" style="color:#71717a;text-decoration:underline;">bildirim ayarlarindan</a>
       kapatabilirsiniz.
     </p>
   `;
