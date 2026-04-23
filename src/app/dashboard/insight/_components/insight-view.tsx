@@ -24,17 +24,13 @@ export function InsightView({
 }: Props) {
   if (!scan) {
     return (
-      <div className={s.shell}>
-        <main className={s.main}>
-          <div className={s.empty}>
-            <p>Henüz tamamlanmış tarama yok.</p>
-            {canStartNewAnalysis && (
-              <Link href="/analiz" className={s.primaryBtn}>
-                Yeni Analiz Başlat →
-              </Link>
-            )}
-          </div>
-        </main>
+      <div className={s.empty}>
+        <p>Henüz tamamlanmış tarama yok.</p>
+        {canStartNewAnalysis && (
+          <Link href="/analiz" className={s.primaryBtn}>
+            Yeni Analiz Başlat →
+          </Link>
+        )}
       </div>
     );
   }
@@ -54,33 +50,23 @@ export function InsightView({
   const prompts = Array.from(promptsMap.values());
 
   return (
-    <div className={s.shell}>
-      <main className={s.main}>
-        {/* Banner: GH7 INSIGHT */}
-        <div className={s.banner}>
-          <span className={s.bannerBrand}>GH7 INSIGHT</span>
-          <span className={s.bannerSub}>· Canlı AI görünürlük analizi</span>
+    <div className="space-y-8">
+      {/* Header: brand + Yeni analiz butonu */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">{brand.name}</h1>
+          <p className="text-sm text-muted-foreground">
+            {brand.domain}
+            {brand.sector ? ` · ${brand.sector}` : " · Sektör belirsiz"}
+            {brand.city ? ` · ${brand.city}` : ""}
+          </p>
         </div>
-
-        {/* Header: brand + Yeni analiz butonu */}
-        <div className={s.header}>
-          <div>
-            <Link href="/dashboard" className={s.backLink}>
-              ← Dashboard
-            </Link>
-            <h1 className={s.title}>{brand.name}</h1>
-            <p className={s.subtitle}>
-              {brand.domain}
-              {brand.sector ? ` · ${brand.sector}` : " · Sektör belirsiz"}
-              {brand.city ? ` · ${brand.city}` : ""}
-            </p>
-          </div>
-          {canStartNewAnalysis && (
-            <Link href="/analiz?force=true" className={s.primaryBtn}>
-              Yeni Analiz Başlat →
-            </Link>
-          )}
-        </div>
+        {canStartNewAnalysis && (
+          <Link href="/analiz?force=true" className={s.primaryBtn}>
+            Yeni Analiz Başlat →
+          </Link>
+        )}
+      </div>
 
         {/* Score card */}
         <div className={s.scoreCard}>
@@ -166,7 +152,6 @@ export function InsightView({
             ))}
           </div>
         </section>
-      </main>
     </div>
   );
 }
