@@ -93,6 +93,12 @@ model Brand {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
+  // Brief N v4 — Marka Sağlık Skoru v4
+  healthScore      Int       @default(0) @map("health_score") // curved 0-100
+  healthRaw        Int       @default(0) @map("health_raw") // ham 0-100
+  healthComponents Json?     @map("health_components") // { siteInternalAudit, authoritySignalsAudit, externalSourceAudit, nicheVisibility, categoryDominance, sourceDominance, trend, competitor }
+  healthUpdatedAt  DateTime? @map("health_updated_at")
+
   prompts         Prompt[]
   competitors     Competitor[]
   scans           Scan[]
@@ -104,6 +110,9 @@ model Brand {
   checklistItems  ChecklistItem[]
   audits          Audit[]
   advisorReports  AdvisorReport[]
+  trackedQueries  TrackedQuery[]
+  sourceAnalyses  SourceAnalysis[]
+  scoreSnapshots  BrandScoreSnapshot[]
 
   @@unique([profileId, slug])
   @@index([gate])
@@ -709,9 +718,15 @@ model AuditItem {
   id      String @id @default(cuid())
   auditId String @map("audit_id")
 
-  itemCode  String @map("item_code") // "ai-crawler-robots"
-  category  String // "ai-crawler" | "entity" | ...
+  itemCode  String @map("item_code") // "ai-crawler-robots" (legacy) veya "A1.1" (Brief N v4)
+  category  String // "ai-crawler" | "entity" | ... (legacy — Brief N sonrası soldu)
   itemIndex Int    @map("item_index") // 1-43
+
+  // Brief N v4 taksonomisi (Aşama 2) — mevcut kayıtlar için nullable, yeni
+  // kayıtlar zorunlu doldurur. Aşama 3 scoring engine bu alanları kullanır.
+  boyut       AuditBoyut?  @map("boyut") // SITE_INTERNAL | AUTHORITY_SIGNALS | EXTERNAL_SOURCES
+  subBoyut    String?      @map("sub_boyut") // "A1", "A2", ..., "C5"
+  servesLayer ServesLayer? @map("serves_layer") // NICHE | CATEGORY | SOURCE
 
   title             String
   descriptionStatic String @map("description_static") @db.Text // "neden önemli" metni
@@ -721,9 +736,9 @@ model AuditItem {
 
   status String // "passed" | "warning" | "critical" | "not-applicable"
 
-  currentState String @map("current_state") @db.Text // Opus: mevcut durum
-  instructions Json   @default("[]") // Opus: [{ step, text, code? }]
-  impactText   String @map("impact_text") @db.Text // Opus: etki açıklaması
+  currentState String  @map("current_state") @db.Text // Opus: mevcut durum
+  instructions Json    @default("[]") // Opus: [{ step, text, code? }]
+  impactText   String  @map("impact_text") @db.Text // Opus: etki açıklaması
   expectedGain String? @map("expected_gain") // "+1-2 puan"
 
   rawMetrics Json? @map("raw_metrics") // DataForSEO / Perplexity ham ölçüm
@@ -738,6 +753,7 @@ model AuditItem {
   @@index([itemCode])
   @@index([status])
   @@index([completedAt])
+  @@index([boyut])
   @@map("audit_items")
 }
 
@@ -754,24 +770,181 @@ enum AdvisorReportType {
 }
 
 model AdvisorReport {
-  id          String            @id @default(cuid())
-  brandId     String            @map("brand_id")
-  brand       Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  reportType  AdvisorReportType @default(first) @map("report_type")
+  id            String            @id @default(cuid())
+  brandId       String            @map("brand_id")
+  brand         Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  reportType    AdvisorReportType @default(first) @map("report_type")
   // Markdown ya da düz metin rapor içeriği (Qwen çıktısı)
-  content     String            @db.Text
+  content       String            @db.Text
   // Opsiyonel: Qwen input snapshot (tekrar üretim için)
-  inputSnapshot Json?           @map("input_snapshot")
+  inputSnapshot Json?             @map("input_snapshot")
   // Qwen maliyet + token usage
-  costUsd     Decimal?          @map("cost_usd") @db.Decimal(10, 4)
-  tokensInput Int?              @map("tokens_input")
-  tokensOutput Int?             @map("tokens_output")
+  costUsd       Decimal?          @map("cost_usd") @db.Decimal(10, 4)
+  tokensInput   Int?              @map("tokens_input")
+  tokensOutput  Int?              @map("tokens_output")
 
-  generatedAt DateTime          @default(now()) @map("generated_at")
+  generatedAt DateTime  @default(now()) @map("generated_at")
   // monthly için hangi ayı kapsar (YYYY-MM-01)
-  periodStart DateTime?         @map("period_start")
+  periodStart DateTime? @map("period_start")
 
   @@index([brandId, generatedAt])
   @@index([reportType])
   @@map("advisor_reports")
+}
+
+// ─── Brief N v4 — 3 Katmanlı AI Görünürlük Sistemi ─────
+// Aşama 2: DB schema. TrackedQuery (niş + kategori sorgu funnel),
+// TrackingResult (sorgu × platform sonucu), SourceAnalysis (AI'ın
+// referans aldığı URL'lerde marka/rakip varlığı), BrandScoreSnapshot
+// (haftalık skor snapshot'ı). Enums: AuditBoyut, ServesLayer,
+// QueryCategory, QueryDifficulty.
+
+enum AuditBoyut {
+  SITE_INTERNAL
+  AUTHORITY_SIGNALS
+  EXTERNAL_SOURCES
+
+  @@map("audit_boyut")
+}
+
+enum ServesLayer {
+  NICHE
+  CATEGORY
+  SOURCE
+
+  @@map("serves_layer")
+}
+
+enum QueryCategory {
+  NICHE
+  CATEGORY
+
+  @@map("query_category")
+}
+
+enum QueryDifficulty {
+  EASY
+  MEDIUM
+  HARD
+
+  @@map("query_difficulty")
+}
+
+model TrackedQuery {
+  id      String @id @default(cuid())
+  brandId String @map("brand_id")
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  category   QueryCategory
+  difficulty QueryDifficulty?
+  orderIndex Int              @map("order_index") // 1-10
+
+  // NICHE için tek query
+  query String?
+
+  // CATEGORY için 3-adım funnel
+  step1Query String? @map("step1_query")
+  step2Query String? @map("step2_query")
+  step3Query String? @map("step3_query")
+
+  // Eşik sistemi (kategori sorgular) — null = kilitli
+  unlockedAt DateTime? @map("unlocked_at")
+  approvedAt DateTime  @default(now()) @map("approved_at")
+  archivedAt DateTime? @map("archived_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  trackingResults TrackingResult[]
+
+  @@unique([brandId, category, orderIndex])
+  @@index([brandId, category])
+  @@index([unlockedAt])
+  @@map("tracked_queries")
+}
+
+model TrackingResult {
+  id             String       @id @default(cuid())
+  trackedQueryId String       @map("tracked_query_id")
+  trackedQuery   TrackedQuery @relation(fields: [trackedQueryId], references: [id], onDelete: Cascade)
+
+  platform  String // "chatgpt" | "claude" | "gemini" | "perplexity" | "google-aio"
+  checkedAt DateTime @default(now()) @map("checked_at")
+
+  // NICHE sonucu (binary)
+  mentioned      Boolean?
+  mentionContext String?  @map("mention_context")
+
+  // CATEGORY funnel sonucu
+  foundAtStep Int? @map("found_at_step") // 1 | 2 | 3 | null
+  rank        Int?
+  listLength  Int? @map("list_length")
+  points      Int? // Hesaplanmış puan (calculateCategoryPoints)
+
+  competitors  Json? // [{ name, rank, step }]
+  sources      Json? // [{ url, title, domain, platform }]
+  conversation Json? // Tam sohbet (kategori funnel için multi-turn)
+
+  @@index([trackedQueryId, checkedAt])
+  @@index([platform])
+  @@map("tracking_results")
+}
+
+model SourceAnalysis {
+  id      String @id @default(cuid())
+  brandId String @map("brand_id")
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  url    String
+  domain String
+  title  String?
+
+  // Hangi sorgu + adımdan geldi
+  discoveredVia    String? @map("discovered_via") // TrackedQuery.id
+  discoveredAtStep Int?    @map("discovered_at_step") // 1 | 2 | 3
+
+  // Analiz sonucu
+  mentionsBrand        Boolean @default(false) @map("mentions_brand")
+  mentionedCompetitors Json?   @map("mentioned_competitors") // string[]
+  qualitySignals       Json?   @map("quality_signals") // { hasImages, hasReviews, hasRating, textLength }
+
+  status      String    @default("pending") // "analyzed" | "unreachable" | "pending"
+  analyzedAt  DateTime? @map("analyzed_at")
+  cachedUntil DateTime? @map("cached_until")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([brandId, url])
+  @@index([brandId, status])
+  @@index([domain])
+  @@map("source_analyses")
+}
+
+model BrandScoreSnapshot {
+  id      String @id @default(cuid())
+  brandId String @map("brand_id")
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  rawScore    Int @map("raw_score") // 0-100
+  curvedScore Int @map("curved_score") // 0-100 (ham^1.2 * 100)
+
+  // 3 audit boyutu (max 20 / 20 / 15)
+  siteInternalAudit     Int @map("site_internal_audit")
+  authoritySignalsAudit Int @map("authority_signals_audit")
+  externalSourceAudit   Int @map("external_source_audit")
+
+  // 3 görünürlük katmanı (max 10 / 15 / 10)
+  nicheVisibility   Int @map("niche_visibility")
+  categoryDominance Int @map("category_dominance")
+  sourceDominance   Int @map("source_dominance")
+
+  // Ek metrikler (max 5 / 5)
+  trend      Int
+  competitor Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([brandId, createdAt])
+  @@map("brand_score_snapshots")
 }
