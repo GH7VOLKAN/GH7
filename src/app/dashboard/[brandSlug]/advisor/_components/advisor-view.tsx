@@ -158,23 +158,30 @@ export function AdvisorView({ brand, hasScan, latestReport }: Props) {
         <MarkdownRender text={latestReport.content} />
       </motion.article>
 
-      {/* REGENERATE */}
+      {/* REGENERATE — rapor dışı UI footer */}
       <motion.div
         variants={pageItem}
-        className="mt-12 flex flex-wrap items-center gap-3 border-t border-border pt-6"
+        className="mt-16 border-t border-border pt-8"
       >
-        <button
-          onClick={() => handleGenerate(true)}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium tracking-tight transition-colors hover:border-foreground/30 disabled:opacity-60"
-        >
-          {loading ? "Üretiliyor…" : "Raporu Yenile"}
-        </button>
-        <span className="text-xs text-muted-foreground">
-          Yeni Qwen çağrısı yapılır, mevcut rapor korunur ama son rapor burada
-          görünür.
-        </span>
-        {error && <span className="text-sm text-destructive">Hata: {error}</span>}
+        <div className="text-label text-muted-foreground mb-4">
+          Rapor Kontrolleri
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => handleGenerate(true)}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium tracking-tight transition-colors hover:border-foreground/30 disabled:opacity-60"
+          >
+            {loading ? "Üretiliyor…" : "Raporu Yenile"}
+          </button>
+          {error && (
+            <span className="text-sm text-destructive">Hata: {error}</span>
+          )}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Yeni Qwen çağrısı yapılır ve bu alanda en son rapor görünür.
+          Önceki raporlar veritabanında saklanır.
+        </p>
       </motion.div>
     </motion.div>
   );
