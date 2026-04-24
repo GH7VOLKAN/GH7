@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db";
 import { getPlanLabel } from "@/lib/constants/plan";
 import { getDashboardToolStatuses } from "@/lib/dashboard/get-tool-statuses";
 import { getTopPriorities } from "@/lib/advisor/get-top-priorities";
+import { getBrandHealthSnapshot } from "@/lib/dal/brand-health-v4";
 import { DashboardHome } from "../_components/dashboard-home";
 
 export const dynamic = "force-dynamic";
@@ -48,13 +49,14 @@ export default async function BrandDashboardPage({
   const activeBrand = brands.find((b) => b.slug === brandSlug);
   if (!activeBrand) redirect(`/dashboard/${brands[0].slug}`);
 
-  const [toolStatuses, priorities] = await Promise.all([
+  const [toolStatuses, priorities, healthSnapshot] = await Promise.all([
     getDashboardToolStatuses(
       activeBrand.id,
       brands.length,
       getPlanLabel(profile.plan),
     ),
     getTopPriorities(activeBrand.id, 3),
+    getBrandHealthSnapshot(activeBrand.id),
   ]);
 
   return (
@@ -64,6 +66,7 @@ export default async function BrandDashboardPage({
       brands={brands}
       toolStatuses={toolStatuses}
       priorities={priorities}
+      healthSnapshot={healthSnapshot}
     />
   );
 }

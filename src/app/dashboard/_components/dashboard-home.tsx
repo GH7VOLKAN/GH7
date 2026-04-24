@@ -23,6 +23,7 @@ import type {
   ToolStatusIcon,
 } from "@/lib/dashboard/get-tool-statuses";
 import type { AdvisorPriority } from "@/lib/advisor/get-top-priorities";
+import type { BrandHealthSnapshot } from "@/lib/dal/brand-health-v4";
 
 type BrandWithScans = Brand & { scans: Scan[] };
 
@@ -32,6 +33,7 @@ type Props = {
   brands: BrandWithScans[];
   toolStatuses: DashboardToolStatuses;
   priorities: AdvisorPriority[];
+  healthSnapshot: BrandHealthSnapshot;
 };
 
 export function DashboardHome({
@@ -40,6 +42,7 @@ export function DashboardHome({
   brands,
   toolStatuses,
   priorities,
+  healthSnapshot,
 }: Props) {
   const latestScan = brand.scans[0];
   const previousScan = brand.scans[1];
@@ -122,6 +125,100 @@ export function DashboardHome({
               ChatGPT, Claude, Gemini, Perplexity, Google AIO
             </p>
           </div>
+        </div>
+      </motion.section>
+
+      {/* MARKA SAĞLIK SKORU v4 (Brief N v4) */}
+      <motion.section variants={pageItem} className="mb-20">
+        <SectionHeading label="Marka Sağlık Skoru" />
+        <div className="mb-10">
+          <div className="mb-3 flex items-baseline gap-4">
+            <span className="text-metric">{healthSnapshot.score.curved}</span>
+            <span className="text-2xl tabular-nums text-muted-foreground">
+              / 100
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-border">
+            <motion.div
+              className="h-full bg-foreground"
+              initial={{ width: 0 }}
+              animate={{ width: `${healthSnapshot.score.curved}%` }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+          {healthSnapshot.nextThreshold && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Sonraki eşik:{" "}
+              <span className="font-medium text-foreground">
+                %{healthSnapshot.nextThreshold.score}
+              </span>{" "}
+              — {healthSnapshot.nextThreshold.pointsAway} puan uzakta · +1
+              kategori sorgu
+            </p>
+          )}
+          {!healthSnapshot.nextThreshold && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Tüm eşikler aşıldı — 10 kategori sorgu aktif
+            </p>
+          )}
+        </div>
+
+        {/* 3 KATMAN GÖRÜNÜRLÜK */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <LayerCard
+            emoji="🎯"
+            label="Niş Bilinirlik"
+            score={healthSnapshot.score.components.nicheVisibility}
+            max={10}
+            href={`/dashboard/${brand.slug}/tracker`}
+            hint="AI seni buluyor mu?"
+            detail={`${healthSnapshot.visibility.nicheMentions}/${Math.max(healthSnapshot.visibility.nicheChecks, 1)} mention`}
+          />
+          <LayerCard
+            emoji="🏆"
+            label="Kategori Hakimiyeti"
+            score={healthSnapshot.score.components.categoryDominance}
+            max={15}
+            href={`/dashboard/${brand.slug}/category`}
+            hint="Kategorinin otoritesi misin?"
+            detail={
+              healthSnapshot.visibility.categoryMaxPossible > 0
+                ? `${healthSnapshot.visibility.categoryPoints}/${healthSnapshot.visibility.categoryMaxPossible} puan`
+                : "Sorgu bekleniyor"
+            }
+          />
+          <LayerCard
+            emoji="📚"
+            label="Kaynak Hakimiyeti"
+            score={healthSnapshot.score.components.sourceDominance}
+            max={10}
+            href={`/dashboard/${brand.slug}/sources`}
+            hint="Referans kaynaklarda varsın?"
+            detail={
+              healthSnapshot.visibility.sourceAnalyzedCount > 0
+                ? `${healthSnapshot.visibility.sourceMentionedCount}/${healthSnapshot.visibility.sourceAnalyzedCount} kaynakta`
+                : "Analiz bekleniyor"
+            }
+          />
+        </div>
+
+        {/* AUDIT DAĞILIMI */}
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <AuditBoyutChip
+            label="Site-İçi"
+            passed={healthSnapshot.audit.siteInternalPassed}
+            total={Math.max(healthSnapshot.audit.siteInternalTotal, 15)}
+          />
+          <AuditBoyutChip
+            label="Otorite Sinyalleri"
+            passed={healthSnapshot.audit.authoritySignalsPassed}
+            total={Math.max(healthSnapshot.audit.authoritySignalsTotal, 13)}
+          />
+          <AuditBoyutChip
+            label="Dış Kaynak"
+            passed={healthSnapshot.audit.externalSourcePassed}
+            total={Math.max(healthSnapshot.audit.externalSourceTotal, 15)}
+          />
         </div>
       </motion.section>
 
@@ -316,5 +413,82 @@ function ToolCard({
         </div>
       </Link>
     </motion.div>
+  );
+}
+
+function LayerCard({
+  emoji,
+  label,
+  score,
+  max,
+  href,
+  hint,
+  detail,
+}: {
+  emoji: string;
+  label: string;
+  score: number;
+  max: number;
+  href: string;
+  hint: string;
+  detail: string;
+}) {
+  const percent = max > 0 ? (score / max) * 100 : 0;
+  return (
+    <Link
+      href={href}
+      className="group block rounded-xl border border-border bg-card p-6 transition-colors hover:border-zinc-400"
+    >
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-lg" aria-hidden>
+          {emoji}
+        </span>
+        <span className="text-label text-muted-foreground">{label}</span>
+      </div>
+      <div className="mb-3 flex items-baseline gap-2">
+        <span className="text-h3 tabular-nums">{score}</span>
+        <span className="text-sm tabular-nums text-muted-foreground">
+          / {max}
+        </span>
+      </div>
+      <div className="mb-3 h-1 overflow-hidden rounded-full bg-border">
+        <motion.div
+          className="h-full bg-foreground"
+          initial={{ width: 0 }}
+          animate={{ width: `${percent}%` }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">{hint}</p>
+      <p className="mt-1 text-xs font-medium tracking-tight">{detail}</p>
+      <div className="mt-3 flex items-center gap-1 text-xs font-medium">
+        <span>Detay</span>
+        <span className="transition-transform group-hover:translate-x-0.5">
+          →
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function AuditBoyutChip({
+  label,
+  passed,
+  total,
+}: {
+  label: string;
+  passed: number;
+  total: number;
+}) {
+  return (
+    <div className="rounded-lg border border-border p-4">
+      <div className="text-label text-muted-foreground mb-2">{label}</div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-base font-medium tabular-nums">
+          {passed}/{total}
+        </span>
+        <span className="text-xs text-muted-foreground">geçti</span>
+      </div>
+    </div>
   );
 }
