@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { GH7Logo } from "@/components/gh7-logo";
 import { FlowContainer } from "./_components/flow-container";
+import { GateComingSoonScreen } from "./_components/gate-coming-soon-screen";
 import { normalizeDomain } from "@/lib/analiz/domain";
+import { isGateActive } from "@/lib/gates/config";
 import type { Door } from "@/lib/analiz/types";
 import s from "./analiz.module.css";
 
@@ -41,6 +43,25 @@ export default async function AnalizPage({
 
   const rawInput = sp.domain ?? sp.name ?? sp.input ?? "";
   const initialDomain = rawInput ? normalizeDomain(rawInput) : undefined;
+
+  // Brief H-ext Aşama 2: Non-FIRMA kapıları henüz aktif değil —
+  // coming-soon ekranı göster.
+  if (!isGateActive(door)) {
+    return (
+      <main className={s.page}>
+        <div className={s.topbar}>
+          <Link
+            href="/"
+            style={{ color: "var(--black)", textDecoration: "none" }}
+          >
+            <GH7Logo size="sm" />
+          </Link>
+          <span className={s.topbarStep}>yakında · {door}</span>
+        </div>
+        <GateComingSoonScreen gate={door as "kisi" | "eticaret" | "yurtdisi"} />
+      </main>
+    );
+  }
 
   return (
     <main className={s.page}>

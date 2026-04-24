@@ -23,15 +23,15 @@ export function FooterSection() {
           <a href="/analiz?type=firma" className="block text-[12px] text-[#6B7280] no-underline py-[3px] hover:text-[#09090B]">
             Firma Analizi
           </a>
-          <a href="/analiz?type=kisi" className="block text-[12px] text-[#6B7280] no-underline py-[3px] hover:text-[#09090B]">
-            Kişi Analizi
-          </a>
-          <a href="/analiz?type=eticaret" className="block text-[12px] text-[#6B7280] no-underline py-[3px] hover:text-[#09090B]">
-            E-Ticaret Analizi
-          </a>
-          <a href="/analiz?type=export" className="block text-[12px] text-[#6B7280] no-underline py-[3px] hover:text-[#09090B]">
-            Export Analizi
-          </a>
+          <span className="block text-[12px] text-[#9CA3AF]/60 py-[3px] cursor-not-allowed">
+            Kişi Analizi <span className="text-[9px] uppercase tracking-widest">· Q3 2026</span>
+          </span>
+          <span className="block text-[12px] text-[#9CA3AF]/60 py-[3px] cursor-not-allowed">
+            E-Ticaret Analizi <span className="text-[9px] uppercase tracking-widest">· Q4 2026</span>
+          </span>
+          <span className="block text-[12px] text-[#9CA3AF]/60 py-[3px] cursor-not-allowed">
+            Yurtdışı Analizi <span className="text-[9px] uppercase tracking-widest">· Q1 2027</span>
+          </span>
           <a href="#pricing" className="block text-[12px] text-[#6B7280] no-underline py-[3px] hover:text-[#09090B]">
             Fiyatlandırma
           </a>
