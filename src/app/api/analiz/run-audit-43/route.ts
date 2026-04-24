@@ -327,9 +327,23 @@ export async function POST(req: NextRequest) {
             .map((c) => c.url)
             .filter((u): u is string => !!u);
 
+          // Brief H-ext Aşama 1: slug + gate
+          const { generateUniqueBrandSlug } = await import("@/lib/brand/slug");
+          const { Gate } = await import("@prisma/client");
+          const brandSlugNew = await generateUniqueBrandSlug(userId, brandName);
+          const gateVal =
+            userType === "kisi"
+              ? Gate.KISI
+              : userType === "eticaret"
+                ? Gate.ETICARET
+                : userType === "yurtdisi"
+                  ? Gate.YURTDISI
+                  : Gate.FIRMA;
           brand = await prisma.brand.create({
             data: {
               profileId: userId,
+              slug: brandSlugNew,
+              gate: gateVal,
               name: brandName,
               domain: normalizedDomain,
               sector: discoverySector,

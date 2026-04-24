@@ -1,13 +1,10 @@
 "use client";
 
 /**
- * AppSidebar — Kinde estetiği editorial sidebar (Brief F Adım 1.5)
+ * AppSidebar — Kinde editorial sidebar (Brief F + H-ext Aşama 1).
  *
- * - Üstte GH7 text logosu + plan label (kutu yok)
- * - Menü item'ler: ikon + metin düz satır, tracking-tight
- * - Active state: font-semibold + solda 2px siyah bar
- * - Hover: subtle zinc-100 bg, 120ms
- * - Alt user: kutu yok, düz bilgi + Çıkış ikonu
+ * URL yapısı: /dashboard/[brandSlug]/insight, /audit, /tracker, /radar, /advisor
+ * activeBrandSlug pathname'den derive edilir; yoksa defaultBrandSlug kullanılır.
  */
 
 import Link from "next/link";
@@ -38,8 +35,10 @@ import { getPlanLabel } from "@/lib/constants/plan";
 
 type Brand = {
   id: string;
+  slug: string;
   name: string;
   domain: string;
+  gate: string;
 };
 
 type Props = {
@@ -49,43 +48,34 @@ type Props = {
     plan: string;
   };
   brands: Brand[];
-  activeBrandId: string;
+  defaultBrandSlug: string;
 };
 
-const BRAND_MENU = [
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
-  },
-  { key: "insight", label: "Insight", icon: Eye, href: "/dashboard/insight" },
+const BRAND_SUB_MENU = [
+  { key: "home", label: "Dashboard", icon: LayoutDashboard, sub: "" },
+  { key: "insight", label: "Insight", icon: Eye, sub: "/insight" },
   {
     key: "audit",
     label: "Audit",
     icon: ClipboardCheck,
-    href: "/dashboard/audit",
+    sub: "/audit",
   },
   {
     key: "tracker",
     label: "Tracker",
     icon: LineChart,
-    href: "/dashboard/tracker",
+    sub: "/tracker",
   },
-  { key: "radar", label: "Radar", icon: Radar, href: "/dashboard/radar" },
+  { key: "radar", label: "Radar", icon: Radar, sub: "/radar" },
   {
     key: "advisor",
     label: "Advisor",
     icon: Sparkles,
-    href: "/dashboard/advisor",
-  },
-  {
-    key: "studio",
-    label: "Studio",
-    icon: Settings,
-    href: "/dashboard/studio",
+    sub: "/advisor",
   },
 ];
+
+const STUDIO_HREF = "/dashboard/studio";
 
 function getDisplayName(profile: Props["profile"]): string {
   const isSyntheticEmail =
@@ -112,17 +102,35 @@ async function handleSignOut() {
   window.location.href = "/";
 }
 
-export function AppSidebar({ profile, brands, activeBrandId }: Props) {
+// URL'den aktif brand slug'ı çıkar: /dashboard/idavilla-bungalov/... → "idavilla-bungalov"
+// /dashboard/studio → null (brand scope değil)
+// /dashboard (root) → null → caller default kullanır
+function extractActiveBrandSlug(
+  pathname: string,
+  brandSlugs: string[],
+): string | null {
+  const match = pathname.match(/^\/dashboard\/([^/]+)/);
+  if (!match) return null;
+  const maybeSlug = match[1];
+  if (maybeSlug === "studio" || maybeSlug === "pro") return null;
+  // Guard: yalnızca bilinen brand slug'ı kabul et
+  return brandSlugs.includes(maybeSlug) ? maybeSlug : null;
+}
+
+export function AppSidebar({ profile, brands, defaultBrandSlug }: Props) {
   const pathname = usePathname();
   const planLabel = getPlanLabel(profile.plan);
   const displayName = getDisplayName(profile);
 
+  const brandSlugs = brands.map((b) => b.slug);
+  const activeBrandSlug =
+    extractActiveBrandSlug(pathname, brandSlugs) ?? defaultBrandSlug;
+
   return (
     <Sidebar collapsible="icon">
-      {/* Editorial logo: "GH7" text + tiny plan label */}
       <SidebarHeader className="px-4 py-6">
         <Link
-          href="/dashboard"
+          href={`/dashboard/${activeBrandSlug}`}
           className="inline-block group-data-[collapsible=icon]:text-center"
         >
           <div className="text-2xl font-bold tracking-tight leading-none">
@@ -135,29 +143,32 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* Araçlar — aktif brand scope'unda */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] tracking-[0.14em]">
             Araçlar
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {BRAND_MENU.map((item) => {
+              {BRAND_SUB_MENU.map((item) => {
                 const Icon = item.icon;
+                const href = `/dashboard/${activeBrandSlug}${item.sub}`;
                 const isActive =
-                  item.href === "/dashboard"
-                    ? pathname === "/dashboard"
-                    : pathname.startsWith(item.href);
+                  item.sub === ""
+                    ? pathname === `/dashboard/${activeBrandSlug}`
+                    : pathname.startsWith(
+                        `/dashboard/${activeBrandSlug}${item.sub}`,
+                      );
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.label}
-                      render={<Link href={item.href} />}
+                      render={<Link href={href} />}
                       className={`relative tracking-tight ${
                         isActive ? "font-semibold" : "font-normal"
                       }`}
                     >
-                      {/* 2px left bar (active indicator) */}
                       {isActive && (
                         <span
                           aria-hidden
@@ -170,10 +181,34 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
                   </SidebarMenuItem>
                 );
               })}
+
+              {/* Studio — brand-agnostik, ayrı grup değil ama farklı prefix */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname.startsWith(STUDIO_HREF)}
+                  tooltip="Studio"
+                  render={<Link href={STUDIO_HREF} />}
+                  className={`relative tracking-tight ${
+                    pathname.startsWith(STUDIO_HREF)
+                      ? "font-semibold"
+                      : "font-normal"
+                  }`}
+                >
+                  {pathname.startsWith(STUDIO_HREF) && (
+                    <span
+                      aria-hidden
+                      className="absolute inset-y-1 left-0 w-[2px] rounded-r-full bg-foreground"
+                    />
+                  )}
+                  <Settings className="size-4" />
+                  <span>Studio</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Markalar listesi */}
         {brands.length > 1 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[10px] tracking-[0.14em]">
@@ -182,13 +217,14 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {brands.map((brand) => {
-                  const isActive = brand.id === activeBrandId;
+                  const isActive = brand.slug === activeBrandSlug;
+                  const href = `/dashboard/${brand.slug}`;
                   return (
                     <SidebarMenuItem key={brand.id}>
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={brand.name}
-                        render={<Link href={`/dashboard?brand=${brand.id}`} />}
+                        render={<Link href={href} />}
                         className={`relative tracking-tight ${
                           isActive ? "font-semibold" : "font-normal"
                         }`}
@@ -203,6 +239,11 @@ export function AppSidebar({ profile, brands, activeBrandId }: Props) {
                           {brand.name[0]?.toUpperCase() || "B"}
                         </span>
                         <span className="truncate">{brand.name}</span>
+                        {brand.gate !== "FIRMA" && (
+                          <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">
+                            Yakında
+                          </span>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );

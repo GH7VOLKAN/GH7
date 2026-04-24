@@ -76,6 +76,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Brief H-ext Aşama 1: Legacy URL redirect'leri
+  // /dashboard/insight → /dashboard/[defaultBrandSlug]/insight
+  // /dashboard/audit   → /dashboard/[defaultBrandSlug]/audit
+  // Query param ?brand=X varsa oraya git (brandId'yi middleware'den
+  // çeviremiyoruz; page.tsx /dashboard handler'ı zaten yakalıyor).
+  if (user) {
+    const legacyPath = request.nextUrl.pathname.match(
+      /^\/dashboard\/(insight|audit|tracker|radar|advisor)(\/.*)?$/,
+    );
+    if (legacyPath) {
+      const section = legacyPath[1];
+      const tail = legacyPath[2] ?? "";
+      // brand slug çözümlemesi için root /dashboard'a git; orada brand
+      // lookup yapıp doğru /dashboard/[slug]/section'a yönlendirir.
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.searchParams.set("legacy", `${section}${tail}`);
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   // Giriş yapmış kullanıcı /login'e gelirse → dashboard'a yönlendir (Brief D1)
   if (user && request.nextUrl.pathname === "/login") {
     const wantsLogout = request.nextUrl.searchParams.get("logout") === "true";

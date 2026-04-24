@@ -1,8 +1,6 @@
 /**
- * /dashboard/audit/[itemCode] — Madde detay sayfası (Brief G Aşama 4).
- *
- * En son tamamlanmış audit'i bul → itemCode'u eşleştir → detay render.
- * Önceki/sonraki navigation için itemIndex kullanılır.
+ * /dashboard/[brandSlug]/audit/[itemCode] — Madde detay sayfası
+ * (Brief G Aşama 4 + Brief H-ext Aşama 1).
  */
 
 import { redirect, notFound } from "next/navigation";
@@ -12,18 +10,14 @@ import { AuditItemView } from "./_components/audit-item-view";
 
 export const dynamic = "force-dynamic";
 
-type Params = Promise<{ itemCode: string }>;
-type SearchParams = Promise<{ brand?: string }>;
+type Params = Promise<{ brandSlug: string; itemCode: string }>;
 
 export default async function AuditItemPage({
   params,
-  searchParams,
 }: {
   params: Params;
-  searchParams: SearchParams;
 }) {
-  const { itemCode } = await params;
-  const { brand: brandIdParam } = await searchParams;
+  const { brandSlug, itemCode } = await params;
 
   const supabase = await createClient();
   const {
@@ -31,36 +25,24 @@ export default async function AuditItemPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/analiz");
 
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-    select: { id: true },
+  const brand = await prisma.brand.findFirst({
+    where: { profileId: user.id, slug: brandSlug },
+    select: { id: true, slug: true },
   });
-  if (!profile) redirect("/analiz");
+  if (!brand) redirect("/dashboard");
 
-  const brands = await prisma.brand.findMany({
-    where: { profileId: profile.id },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, name: true },
-  });
-  if (brands.length === 0) redirect("/analiz");
-
-  const activeBrand =
-    (brandIdParam && brands.find((b) => b.id === brandIdParam)) || brands[0];
-
-  // En son audit'i al — status "completed" veya "awaiting-opus" (partial).
-  // awaiting-opus'ta 34/43 item zaten dolu olabilir; user detayı görmek
-  // istiyor. Status filter'ı kaldırıldı (sadece failed'ı ele).
+  // En son audit (completed / awaiting-opus / generating — partial detayda görünsün)
   const audit = await prisma.audit.findFirst({
     where: {
-      brandId: activeBrand.id,
-      profileId: profile.id,
+      brandId: brand.id,
+      profileId: user.id,
       status: { in: ["completed", "awaiting-opus", "generating"] },
     },
     orderBy: { startedAt: "desc" },
     include: { items: { orderBy: { itemIndex: "asc" } } },
   });
 
-  if (!audit) redirect("/dashboard/audit");
+  if (!audit) redirect(`/dashboard/${brandSlug}/audit`);
 
   const currentItem = audit.items.find((i) => i.itemCode === itemCode);
   if (!currentItem) notFound();
@@ -73,6 +55,7 @@ export default async function AuditItemPage({
   return (
     <AuditItemView
       auditId={audit.id}
+      brandSlug={brand.slug}
       item={currentItem}
       prevCode={prevItem?.itemCode ?? null}
       nextCode={nextItem?.itemCode ?? null}

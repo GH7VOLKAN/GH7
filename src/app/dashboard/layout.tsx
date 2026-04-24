@@ -1,8 +1,11 @@
 /**
- * /dashboard — shadcn SidebarProvider layout (Brief E)
+ * /dashboard — shadcn SidebarProvider layout (Brief E + H-ext Aşama 1).
  *
- * Profile + Brands tek seferlik server-side fetch; AppSidebar + header
- * tüm alt sayfalarda (insight, studio, pro) ortak kullanılır.
+ * Profile + Brands tek seferlik server-side fetch; sidebar + header
+ * tüm alt sayfalarda (/dashboard/[brandSlug]/*, /dashboard/studio) ortak.
+ *
+ * activeBrandSlug pathname'den client-side derive edilir (AppSidebar).
+ * Burada sadece brands listesi + default slug sağlıyoruz.
  */
 
 import { redirect } from "next/navigation";
@@ -33,6 +36,8 @@ async function getSessionAndData() {
     select: {
       id: true,
       name: true,
+      slug: true,
+      gate: true,
       domain: true,
       createdAt: true,
     },
@@ -52,8 +57,7 @@ export default async function DashboardLayout({
   const { profile, brands } = data;
   if (brands.length === 0) redirect("/analiz");
 
-  // Default active brand: en yeni (query param ?brand=X sayfada okunacak)
-  const activeBrand = brands[0];
+  const defaultBrand = brands[0];
 
   return (
     <SidebarProvider>
@@ -65,7 +69,7 @@ export default async function DashboardLayout({
             plan: profile.plan,
           }}
           brands={brands}
-          activeBrandId={activeBrand.id}
+          defaultBrandSlug={defaultBrand.slug}
         />
         <SidebarInset>
           <DashboardHeader
@@ -75,10 +79,9 @@ export default async function DashboardLayout({
               plan: profile.plan,
             }}
             brands={brands}
-            activeBrand={activeBrand}
+            defaultBrand={defaultBrand}
           />
           <Separator />
-          {/* Padding sayfada (Brief F — editorial max-w-*). */}
           <main className="flex-1">{children}</main>
         </SidebarInset>
       </div>

@@ -1,17 +1,20 @@
 /**
- * /dashboard — Kinde estetiği editorial home (Brief F Adım 1.4)
+ * /dashboard — Default brand'a redirect (Brief H-ext Aşama 1).
  *
- * Server component: fetch + render DashboardHome (client, motion).
+ * Yeni URL mimarisi: /dashboard/[brandSlug] marka-spesifik dashboard.
+ * Root /dashboard kullanıcıyı en son brand'a yönlendirir.
+ *
+ * Eski ?brand=X query param'ı backward-compat olarak yakalanır,
+ * brandId → slug çevirisi yapılır.
  */
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
-import { DashboardHome } from "./_components/dashboard-home";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ brand?: string }>;
+type SearchParams = Promise<{ brand?: string; legacy?: string }>;
 
 export default async function DashboardPage({
   searchParams,
@@ -26,28 +29,22 @@ export default async function DashboardPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/analiz");
 
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-  });
-  if (!profile) redirect("/analiz");
-
   const brands = await prisma.brand.findMany({
-    where: { profileId: profile.id },
+    where: { profileId: user.id },
     orderBy: { createdAt: "desc" },
-    include: {
-      scans: {
-        orderBy: { completedAt: "desc" },
-        take: 2, // trend için
-      },
-    },
+    select: { id: true, slug: true },
   });
-
   if (brands.length === 0) redirect("/analiz");
 
-  const activeBrand =
-    brands.find((b) => b.id === params.brand) || brands[0];
+  // ?brand=X legacy param → slug'a çevir
+  const legacyBrand = params.brand
+    ? brands.find((b) => b.id === params.brand)
+    : null;
+  const target = legacyBrand ?? brands[0];
 
-  return (
-    <DashboardHome profile={profile} brand={activeBrand} brands={brands} />
-  );
+  // Middleware'den gelen legacy path: /dashboard?legacy=audit/cmo...
+  const legacySection = params.legacy ?? "";
+  const sectionTail = legacySection ? `/${legacySection}` : "";
+
+  redirect(`/dashboard/${target.slug}${sectionTail}`);
 }

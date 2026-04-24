@@ -2,6 +2,7 @@
 
 import { useFadeIn } from "@/hooks/use-fade-in";
 import Link from "next/link";
+import { GATES, GATE_CONFIG } from "@/lib/gates/config";
 
 export function FinalCtaSection() {
   const ref = useFadeIn<HTMLElement>();
@@ -24,30 +25,35 @@ export function FinalCtaSection() {
       </h2>
 
       <div className="flex gap-2 max-w-[520px] mx-auto flex-wrap justify-center mb-6">
-        <Link
-          href="/analiz?type=firma"
-          className="flex-1 min-w-[110px] py-3.5 bg-white text-[#09090B] rounded-[10px] text-[13px] font-semibold no-underline text-center"
-        >
-          Firma
-        </Link>
-        <Link
-          href="/analiz?type=kisi"
-          className="flex-1 min-w-[110px] py-3.5 bg-white/[0.08] text-white border border-zinc-700 rounded-[10px] text-[13px] font-semibold no-underline text-center"
-        >
-          Kişi
-        </Link>
-        <Link
-          href="/analiz?type=eticaret"
-          className="flex-1 min-w-[110px] py-3.5 bg-white/[0.08] text-white border border-zinc-700 rounded-[10px] text-[13px] font-semibold no-underline text-center"
-        >
-          E-Ticaret
-        </Link>
-        <Link
-          href="/analiz?type=export"
-          className="flex-1 min-w-[110px] py-3.5 bg-white/[0.08] text-white border border-zinc-700 rounded-[10px] text-[13px] font-semibold no-underline text-center"
-        >
-          Export
-        </Link>
+        {GATES.map((code) => {
+          const info = GATE_CONFIG[code];
+          const isActive = info.status === "active";
+
+          if (isActive) {
+            return (
+              <Link
+                key={code}
+                href={`/analiz?type=${code}`}
+                className="relative flex-1 min-w-[110px] py-3.5 bg-white text-[#09090B] rounded-[10px] text-[13px] font-semibold no-underline text-center"
+              >
+                {info.label}
+              </Link>
+            );
+          }
+          return (
+            <span
+              key={code}
+              aria-disabled
+              title={`${info.label} — ${info.launchDate ?? "yakında"}`}
+              className="relative flex-1 min-w-[110px] py-3.5 bg-white/[0.04] text-white/60 border border-zinc-800 rounded-[10px] text-[13px] font-semibold text-center cursor-not-allowed"
+            >
+              <span>{info.label}</span>
+              <span className="absolute -top-2 right-1 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-300">
+                Yakında
+              </span>
+            </span>
+          );
+        })}
       </div>
 
       <p className="text-[11px] text-zinc-600">

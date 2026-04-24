@@ -112,9 +112,15 @@ export async function createBrand(data: {
     }
   }
 
+  // Brief H-ext Aşama 1: slug + gate
+  const { generateUniqueBrandSlug } = await import("@/lib/brand/slug");
+  const { Gate } = await import("@prisma/client");
+  const brandSlug = await generateUniqueBrandSlug(user.id, brandName);
   const brand = await prisma.brand.create({
     data: {
       profileId: user.id,
+      slug: brandSlug,
+      gate: data.type === "kisisel" ? Gate.KISI : Gate.FIRMA,
       name: brandName,
       domain: cleanDomain,
       sector: finalSector,
