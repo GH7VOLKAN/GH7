@@ -162,7 +162,7 @@ export function StudioView({
                 </div>
               </div>
               <Link
-                href={`/dashboard/${brand.slug}/insight`}
+                href={`/dashboard/studio/brands/${brand.slug}`}
                 className="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 Detay →
