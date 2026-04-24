@@ -130,7 +130,7 @@ export function DashboardHome({ profile, brand, brands }: Props) {
             title="Görünürlük detayı"
             description="Her AI platformunda kaç kere anıldığını, hangi sorguların kazandığını gör."
             cta="Detayları Gör"
-            href="/dashboard/insight"
+            href={`/dashboard/${brand.slug}/insight`}
           />
           <ActiveCard
             label="GH7 Studio"

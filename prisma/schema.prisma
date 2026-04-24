@@ -53,10 +53,21 @@ model Profile {
   @@map("profiles")
 }
 
+enum Gate {
+  FIRMA
+  KISI
+  ETICARET
+  YURTDISI
+
+  @@map("gate")
+}
+
 model Brand {
   id                 String   @id @default(cuid())
   profileId          String   @map("profile_id")
   profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  slug               String   @default("")
+  gate               Gate     @default(FIRMA)
   name               String
   domain             String
   sector             String?
@@ -93,6 +104,8 @@ model Brand {
   checklistItems  ChecklistItem[]
   audits          Audit[]
 
+  @@unique([profileId, slug])
+  @@index([gate])
   @@map("brands")
 }
 

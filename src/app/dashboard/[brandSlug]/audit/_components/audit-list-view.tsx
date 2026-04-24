@@ -20,7 +20,7 @@ import type { Audit, AuditItem } from "@prisma/client";
 import { pageContainer, pageItem } from "@/lib/motion/variants";
 import { AUDIT_CATEGORIES } from "@/lib/audit/master-items";
 
-type BrandLite = { id: string; name: string; domain: string };
+type BrandLite = { id: string; slug: string; name: string; domain: string };
 type AuditWithItems = Audit & { items: AuditItem[] };
 
 type Props = {
@@ -489,7 +489,7 @@ function CompletedList({
             </p>
           )}
           {filteredItems.map((item) => (
-            <ItemRow key={item.id} item={item} />
+            <ItemRow key={item.id} item={item} brandSlug={brand.slug} />
           ))}
         </div>
       </motion.section>
@@ -554,7 +554,7 @@ function StatusBadge({
   );
 }
 
-function ItemRow({ item }: { item: AuditItem }) {
+function ItemRow({ item, brandSlug }: { item: AuditItem; brandSlug: string }) {
   const catLabel =
     AUDIT_CATEGORIES[item.category as keyof typeof AUDIT_CATEGORIES]?.label ||
     item.category;
@@ -562,7 +562,7 @@ function ItemRow({ item }: { item: AuditItem }) {
 
   return (
     <Link
-      href={`/dashboard/audit/${item.itemCode}`}
+      href={`/dashboard/${brandSlug}/audit/${item.itemCode}`}
       className="group flex items-baseline gap-6 border-b border-border py-5 last:border-b-0 hover:bg-muted/40"
     >
       <span className="text-label tabular-nums text-muted-foreground">

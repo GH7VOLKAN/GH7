@@ -28,6 +28,7 @@ type InstructionStep = {
 
 type Props = {
   auditId: string;
+  brandSlug: string;
   item: AuditItem;
   prevCode: string | null;
   nextCode: string | null;
@@ -42,11 +43,13 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 
 export function AuditItemView({
   auditId,
+  brandSlug,
   item,
   prevCode,
   nextCode,
   totalItems,
 }: Props) {
+  const auditRoot = `/dashboard/${brandSlug}/audit`;
   const router = useRouter();
   const [completed, setCompleted] = useState(!!item.completedAt);
   const [saving, setSaving] = useState(false);
@@ -73,9 +76,9 @@ export function AuditItemView({
         // 400ms sonra sonraki maddeye geç
         setTimeout(() => {
           if (nextCode) {
-            router.push(`/dashboard/audit/${nextCode}`);
+            router.push(`${auditRoot}/${nextCode}`);
           } else {
-            router.push("/dashboard/audit");
+            router.push(auditRoot);
           }
         }, 400);
       }
@@ -183,14 +186,14 @@ export function AuditItemView({
       >
         {prevCode ? (
           <Link
-            href={`/dashboard/audit/${prevCode}`}
+            href={`${auditRoot}/${prevCode}`}
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             ← Önceki Madde
           </Link>
         ) : (
           <Link
-            href="/dashboard/audit"
+            href={auditRoot}
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             ← Liste
@@ -212,14 +215,14 @@ export function AuditItemView({
 
         {nextCode ? (
           <Link
-            href={`/dashboard/audit/${nextCode}`}
+            href={`${auditRoot}/${nextCode}`}
             className="text-sm font-medium text-foreground transition-colors hover:text-muted-foreground"
           >
             Sonraki Madde →
           </Link>
         ) : (
           <Link
-            href="/dashboard/audit"
+            href={auditRoot}
             className="text-sm font-medium text-foreground transition-colors hover:text-muted-foreground"
           >
             Liste →

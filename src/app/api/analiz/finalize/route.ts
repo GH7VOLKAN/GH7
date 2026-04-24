@@ -111,6 +111,20 @@ export async function POST(req: Request) {
 
   const brandName = fp.name || analyzeInput?.fullName || brandDomain;
 
+  // Brief H-ext Aşama 1: URL slug + gate. Brand yarat/güncelle sırasında
+  // profileId içinde unique slug lazım.
+  const { generateUniqueBrandSlug } = await import("@/lib/brand/slug");
+  const { Gate } = await import("@prisma/client");
+  const brandSlug = await generateUniqueBrandSlug(profileId, brandName);
+  const gate: (typeof Gate)[keyof typeof Gate] =
+    door === "kisi"
+      ? Gate.KISI
+      : door === "eticaret"
+        ? Gate.ETICARET
+        : door === "yurtdisi"
+          ? Gate.YURTDISI
+          : Gate.FIRMA;
+
   try {
     // ═══ Atomic transaction — hata olursa hepsi rollback ═══
     const txResult = await prisma.$transaction(
@@ -122,6 +136,8 @@ export async function POST(req: Request) {
 
         const brandData = {
           name: brandName,
+          slug: existingBrand?.slug || brandSlug,
+          gate,
           sector: fp.sector || null,
           city: fp.location?.city || analyzeInput?.city || null,
           type: door === "kisi" ? "kisisel" : "firma",

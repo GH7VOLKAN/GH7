@@ -1,13 +1,15 @@
 "use client";
 
 /**
- * BrandSwitcher — subtle border'suz dropdown (Brief F Adım 1.5)
+ * BrandSwitcher — header dropdown (Brief F + H-ext Aşama 1).
  *
- * - 1 marka: düz metin (brand.name)
- * - Çoklu: dropdown, border-none, hover'da bg-muted
+ * Yeni URL yapısı: seçilen marka /dashboard/[brandSlug]'a redirect eder.
+ * Aynı sayfada kalmak için mevcut section'ı prefix olarak korur
+ * (örn: /dashboard/idavilla/insight → /dashboard/isitmax/insight).
  */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +22,10 @@ import { ChevronDown, Plus, Check } from "lucide-react";
 
 type Brand = {
   id: string;
+  slug: string;
   name: string;
   domain: string;
+  gate: string;
 };
 
 type Props = {
@@ -29,7 +33,35 @@ type Props = {
   activeBrand: Brand;
 };
 
+/**
+ * Mevcut pathname'den section tail'ını çıkar:
+ *   /dashboard/idavilla/insight → "/insight"
+ *   /dashboard/idavilla → ""
+ *   /dashboard/studio → null (brand-agnostik, prefix'siz kalır)
+ */
+function extractSectionTail(
+  pathname: string,
+  brandSlugs: string[],
+): string | null {
+  const match = pathname.match(/^\/dashboard\/([^/]+)(\/.*)?$/);
+  if (!match) return null;
+  const firstSeg = match[1];
+  if (!brandSlugs.includes(firstSeg)) return null;
+  return match[2] ?? "";
+}
+
 export function BrandSwitcher({ brands, activeBrand }: Props) {
+  const pathname = usePathname();
+  const brandSlugs = brands.map((b) => b.slug);
+  const sectionTail = extractSectionTail(pathname, brandSlugs);
+
+  function brandHref(brand: Brand): string {
+    if (sectionTail === null) {
+      return `/dashboard/${brand.slug}`;
+    }
+    return `/dashboard/${brand.slug}${sectionTail}`;
+  }
+
   if (brands.length <= 1) {
     return (
       <div className="hidden items-center gap-2 text-sm tracking-tight sm:flex">
@@ -60,7 +92,7 @@ export function BrandSwitcher({ brands, activeBrand }: Props) {
           return (
             <DropdownMenuItem
               key={brand.id}
-              render={<Link href={`/dashboard?brand=${brand.id}`} />}
+              render={<Link href={brandHref(brand)} />}
               className="flex cursor-pointer items-center gap-3 py-2"
             >
               <div className="flex flex-1 flex-col leading-tight">
@@ -71,6 +103,11 @@ export function BrandSwitcher({ brands, activeBrand }: Props) {
                   {brand.domain}
                 </span>
               </div>
+              {brand.gate !== "FIRMA" && (
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">
+                  Yakında
+                </span>
+              )}
               {isActive && <Check className="size-4" />}
             </DropdownMenuItem>
           );
