@@ -21,6 +21,8 @@ import type {
   Competitor,
 } from "@prisma/client";
 import { pageContainer, pageItem } from "@/lib/motion/variants";
+import { generateInsightCommentary } from "@/lib/templates/insight/commentary";
+import { formatPlatform } from "@/lib/templates/common/formatters";
 
 type ScanWithResults = Scan & {
   results: (PromptResult & { prompt: Prompt })[];
@@ -139,16 +141,65 @@ export function InsightView({
 
         <p className="max-w-xl text-base text-muted-foreground">{scoreText}</p>
 
-        {scan.commentary && (
-          <div className="mt-12 rounded-xl bg-foreground p-8 text-background">
-            <div className="text-label mb-4 text-background/60">
-              GH7 Advisor · Yorum
+        {(() => {
+          // Commentary: AI (scan.commentary) varsa onu göster, yoksa
+          // statik template fallback (Brief H Aşama 2). Template Qwen/Claude
+          // çağrısı yapmaz, 15 varyanttan birini deterministic seçer.
+          const aiCommentary = scan.commentary?.trim();
+          if (aiCommentary) {
+            return (
+              <div className="mt-12 rounded-xl bg-foreground p-8 text-background">
+                <div className="text-label mb-4 text-background/60">
+                  GH7 Advisor · Yorum
+                </div>
+                <p className="text-base leading-relaxed whitespace-pre-wrap">
+                  {aiCommentary}
+                </p>
+              </div>
+            );
+          }
+
+          // Fallback — template üret
+          const platformMentions = new Map<string, number>();
+          for (const r of scan.results) {
+            if (!r.mentioned) continue;
+            const p = r.platform;
+            platformMentions.set(p, (platformMentions.get(p) ?? 0) + 1);
+          }
+          const sortedPlatforms = [...platformMentions.entries()].sort(
+            (a, b) => b[1] - a[1],
+          );
+          const enGuclu = sortedPlatforms[0]?.[0]
+            ? formatPlatform(sortedPlatforms[0][0])
+            : "ChatGPT";
+          const enZayif = sortedPlatforms[sortedPlatforms.length - 1]?.[0]
+            ? formatPlatform(
+                sortedPlatforms[sortedPlatforms.length - 1][0],
+              )
+            : "Gemini";
+
+          const templateCommentary = generateInsightCommentary({
+            markaAdi: brand.name,
+            skor: score,
+            maksimumSkor: scoreTotal,
+            platformSayisi: 5,
+            mentionSayisi: scan.totalMentions ?? sortedPlatforms.length,
+            enGuclu,
+            enZayif,
+            sektor: brand.sector ?? "işletme",
+          });
+
+          return (
+            <div className="mt-12 rounded-xl bg-foreground p-8 text-background">
+              <div className="text-label mb-4 text-background/60">
+                GH7 Advisor · Yorum
+              </div>
+              <p className="text-base leading-relaxed whitespace-pre-wrap">
+                {templateCommentary}
+              </p>
             </div>
-            <p className="text-base leading-relaxed whitespace-pre-wrap">
-              {scan.commentary}
-            </p>
-          </div>
-        )}
+          );
+        })()}
       </motion.section>
 
       {/* 02 · RAKİPLER */}
