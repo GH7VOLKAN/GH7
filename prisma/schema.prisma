@@ -103,6 +103,7 @@ model Brand {
   notifications   Notification[]
   checklistItems  ChecklistItem[]
   audits          Audit[]
+  advisorReports  AdvisorReport[]
 
   @@unique([profileId, slug])
   @@index([gate])
@@ -738,4 +739,39 @@ model AuditItem {
   @@index([status])
   @@index([completedAt])
   @@map("audit_items")
+}
+
+// ─── GH7 Advisor (Brief H-ext Aşama 5) ─────────────────
+// Qwen ile üretilen aylık/ilk tespit raporları. İlk rapor onboarding
+// sonrası on-demand üretilir, aylık raporlar cron ile (Brief J).
+
+enum AdvisorReportType {
+  first
+  monthly
+  failed_stub
+
+  @@map("advisor_report_type")
+}
+
+model AdvisorReport {
+  id          String            @id @default(cuid())
+  brandId     String            @map("brand_id")
+  brand       Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  reportType  AdvisorReportType @default(first) @map("report_type")
+  // Markdown ya da düz metin rapor içeriği (Qwen çıktısı)
+  content     String            @db.Text
+  // Opsiyonel: Qwen input snapshot (tekrar üretim için)
+  inputSnapshot Json?           @map("input_snapshot")
+  // Qwen maliyet + token usage
+  costUsd     Decimal?          @map("cost_usd") @db.Decimal(10, 4)
+  tokensInput Int?              @map("tokens_input")
+  tokensOutput Int?             @map("tokens_output")
+
+  generatedAt DateTime          @default(now()) @map("generated_at")
+  // monthly için hangi ayı kapsar (YYYY-MM-01)
+  periodStart DateTime?         @map("period_start")
+
+  @@index([brandId, generatedAt])
+  @@index([reportType])
+  @@map("advisor_reports")
 }
