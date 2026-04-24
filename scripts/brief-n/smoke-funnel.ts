@@ -13,6 +13,7 @@
  * veya arg olarak geç (3 arg: step1, step2, step3).
  */
 
+import "./_load-env";
 import { PrismaClient } from "@prisma/client";
 import { runCategoryFunnel } from "../../src/lib/tracked-queries/category-funnel";
 import { extractSourcesFromResponse } from "../../src/lib/source-analysis/source-extractor";

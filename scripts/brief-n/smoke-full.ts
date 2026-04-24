@@ -13,6 +13,7 @@
  *   npx tsx scripts/brief-n/smoke-full.ts <brandSlug>
  */
 
+import "./_load-env";
 import { PrismaClient } from "@prisma/client";
 import { generateNicheQueries } from "../../src/lib/tracked-queries/niche-generator";
 import { generateCategoryQueries } from "../../src/lib/tracked-queries/category-generator";
