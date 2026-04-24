@@ -10,6 +10,7 @@
  * Gerekli env: QWEN_API_KEY (veya DASHSCOPE_API_KEY), DATABASE_URL
  */
 
+import "./_load-env";
 import { PrismaClient } from "@prisma/client";
 import { generateNicheQueries } from "../../src/lib/tracked-queries/niche-generator";
 import { generateCategoryQueries } from "../../src/lib/tracked-queries/category-generator";

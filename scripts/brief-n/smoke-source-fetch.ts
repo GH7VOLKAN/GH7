@@ -10,6 +10,7 @@
  *   npx tsx scripts/brief-n/smoke-source-fetch.ts
  */
 
+import "./_load-env";
 import { fetchSource } from "../../src/lib/source-analysis/url-fetcher";
 
 const TEST_URLS = [
