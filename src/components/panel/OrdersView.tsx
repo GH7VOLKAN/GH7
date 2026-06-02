@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { STATUS_META, MARKETPLACE_META, type OrderRow, type OrderStatus } from "@/lib/operator-data";
+import { STATUS_META, MARKETPLACE_META, type OrderRow, type OrderStatus } from "@/lib/panel-meta";
 import { runOrder } from "@/app/panel/(app)/actions";
 
 const PIPELINE: { key: string; label: string; statuses: OrderStatus[] }[] = [

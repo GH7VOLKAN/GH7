@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatedNumber } from "@/components/kinde/animations";
-import type { PanelData } from "@/lib/operator-data";
+import type { PanelData } from "@/lib/panel-meta";
 
 export function StatCards({ stats }: { stats: PanelData["stats"] }) {
   const cards: { label: string; value: number; color: string }[] = [

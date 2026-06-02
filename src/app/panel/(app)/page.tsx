@@ -1,4 +1,5 @@
-import { getPanelData, type Marketplace } from "@/lib/operator-data";
+import { getPanelData } from "@/lib/operator-data";
+import type { Marketplace } from "@/lib/panel-meta";
 import { StatCards } from "@/components/panel/StatCards";
 import { OrdersView } from "@/components/panel/OrdersView";
 

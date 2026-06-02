@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { GH7Logo } from "@/components/gh7-logo";
-import { MARKETPLACE_META, type Marketplace } from "@/lib/operator-data";
+import { MARKETPLACE_META, type Marketplace } from "@/lib/panel-meta";
 
 const MARKETPLACES: Marketplace[] = ["bionluk", "fiverr", "upwork", "own"];
 
