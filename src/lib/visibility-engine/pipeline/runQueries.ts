@@ -34,9 +34,13 @@ export async function runQueries(qs: QuerySet): Promise<EngineResult[]> {
 
   for (const query of qs.queries) {
     for (let run = 1; run <= config.runsPerQuery; run++) {
-      for (const engine of engines) {
-        const r = await registry[engine](query, run, qs);
-        results.push(r);
+      // Run all engines for this (query, run) in parallel to keep wall-clock
+      // time within the serverless function budget.
+      const batch = await Promise.all(
+        engines.map((engine) => registry[engine](query, run, qs)),
+      );
+      results.push(...batch);
+      for (const r of batch) {
         console.log(
           `[${r.engine.padEnd(12)}] "${query}" run ${run} → ` +
             `appears=${r.brandAppears} pos=${r.position ?? '-'} ` +

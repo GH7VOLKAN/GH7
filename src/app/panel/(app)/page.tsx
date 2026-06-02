@@ -4,9 +4,10 @@ import { StatCards } from "@/components/panel/StatCards";
 import { OrdersView } from "@/components/panel/OrdersView";
 
 export const dynamic = "force-dynamic";
-// Server action "Çalıştır" runs the engine; give it the max Hobby duration.
-// NOTE: a full run still exceeds this — production needs a background job.
-export const maxDuration = 60;
+// Server action "Çalıştır" runs the engine synchronously. Vercel Pro allows
+// up to 300s; collectors run in parallel to stay within it. Large tiers still
+// want a background job.
+export const maxDuration = 300;
 
 const MARKETPLACES = ["bionluk", "fiverr", "upwork", "own"];
 

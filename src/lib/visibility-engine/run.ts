@@ -68,24 +68,21 @@ export async function runVisibility(
     .filter((v) => v.severity > 0)
     .slice(0, maxGaps);
 
-  const gaps: GapItem[] = [];
-  for (const v of verdicts) {
-    const g = await analyzeQueryGap({
-      brand: input.brand,
-      brandDomain: input.domain,
-      verdict: v,
-    });
-    if (g) {
-      gaps.push({
-        query: g.query,
-        diagnosis: g.diagnosis,
-        contentGap: g.contentGap,
-        faq: g.faq,
-        jsonLd: g.jsonLd,
-        actions: g.pageActions,
-      });
-    }
-  }
+  const gapResults = await Promise.all(
+    verdicts.map((v) =>
+      analyzeQueryGap({ brand: input.brand, brandDomain: input.domain, verdict: v }),
+    ),
+  );
+  const gaps: GapItem[] = gapResults
+    .filter((g): g is NonNullable<typeof g> => g != null)
+    .map((g) => ({
+      query: g.query,
+      diagnosis: g.diagnosis,
+      contentGap: g.contentGap,
+      faq: g.faq,
+      jsonLd: g.jsonLd,
+      actions: g.pageActions,
+    }));
 
   // 5. Assemble the generic Report.
   const sections: Section[] = [];
