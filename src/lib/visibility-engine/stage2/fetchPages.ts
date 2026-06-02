@@ -17,7 +17,7 @@ export interface FetchedPage {
 export async function fetchPage(url: string, maxChars = 6000): Promise<FetchedPage> {
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityBot/0.1)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' },
       redirect: 'follow',
     });
     if (!res.ok) return { url, text: '' };

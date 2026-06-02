@@ -39,7 +39,7 @@ function pickInternalLinks(html: string, baseUrl: string): string[] {
 
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityBot/0.1)' },
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' },
     redirect: 'follow',
   });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
@@ -61,7 +61,7 @@ export async function fetchSite(input: string, maxChars = 12000): Promise<SiteCo
   const host = new URL(url).host;
 
   const homeRes = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VisibilityBot/0.1)' },
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' },
     redirect: 'follow',
   });
   if (!homeRes.ok) throw new Error(`Homepage fetch failed: ${homeRes.status}`);
