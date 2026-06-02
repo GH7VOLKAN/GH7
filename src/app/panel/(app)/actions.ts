@@ -24,9 +24,14 @@ export async function runOrder(orderId: string): Promise<{ ok: true } | { error:
     .single();
   if (error || !order) return { error: "Sipariş bulunamadı." };
 
-  // Mark as accepted, then enqueue the durable run.
+  // Enqueue first; only mark accepted if the event was actually delivered,
+  // so a misconfigured Inngest doesn't leave the order silently stuck.
+  try {
+    await inngest.send({ name: "order/run.requested", data: { orderId } });
+  } catch (e) {
+    return { error: "Kuyruğa atılamadı (Inngest yapılandırması?). " + (e instanceof Error ? e.message : String(e)) };
+  }
   await supabase.from("orders").update({ status: "intake" }).eq("id", orderId);
-  await inngest.send({ name: "order/run.requested", data: { orderId } });
 
   revalidatePath("/panel");
   return { ok: true };
