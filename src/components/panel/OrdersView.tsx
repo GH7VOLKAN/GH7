@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { STATUS_META, MARKETPLACE_META, type OrderRow, type OrderStatus } from "@/lib/panel-meta";
 import { runOrder } from "@/app/panel/(app)/actions";
+
+const IN_PROGRESS: OrderStatus[] = ["intake", "running", "analyzing"];
 
 const PIPELINE: { key: string; label: string; statuses: OrderStatus[] }[] = [
   { key: "intake", label: "Intake", statuses: ["intake"] },
@@ -15,8 +18,16 @@ const PIPELINE: { key: string; label: string; statuses: OrderStatus[] }[] = [
 const STATUS_ORDER: OrderStatus[] = ["new", "intake", "running", "analyzing", "report", "delivered"];
 
 export function OrdersView({ orders }: { orders: OrderRow[] }) {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = orders.find((o) => o.id === selectedId) ?? null;
+
+  // While any order is mid-run, poll for status so the pipeline animates live.
+  useEffect(() => {
+    if (!orders.some((o) => IN_PROGRESS.includes(o.status))) return;
+    const t = setInterval(() => router.refresh(), 5000);
+    return () => clearInterval(t);
+  }, [orders, router]);
 
   if (orders.length === 0) {
     return (
@@ -70,20 +81,18 @@ export function OrdersView({ orders }: { orders: OrderRow[] }) {
 
 function OrderDrawer({ order, onClose }: { order: OrderRow; onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
-  const [resultToken, setResultToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const currentIdx = STATUS_ORDER.indexOf(order.status);
+  const inProgress = IN_PROGRESS.includes(order.status);
+  const token = order.reportToken;
 
   function onRun() {
     setError(null);
     startTransition(async () => {
       const res = await runOrder(order.id);
-      if ("token" in res) setResultToken(res.token);
-      else setError(res.error);
+      if ("error" in res) setError(res.error);
     });
   }
-
-  const token = resultToken ?? order.reportToken;
   const competitors = Array.isArray(order.intake?.competitors)
     ? (order.intake!.competitors as unknown[]).map(String)
     : [];
@@ -152,17 +161,27 @@ function OrderDrawer({ order, onClose }: { order: OrderRow; onClose: () => void 
             <button
               type="button"
               onClick={onRun}
-              disabled={isPending}
+              disabled={isPending || inProgress}
               style={{
                 ...(token ? secondaryBtn : primaryBtn),
-                opacity: isPending ? 0.6 : 1,
-                cursor: isPending ? "default" : "pointer",
+                opacity: isPending || inProgress ? 0.6 : 1,
+                cursor: isPending || inProgress ? "default" : "pointer",
               }}
             >
-              {isPending ? "Çalışıyor… (birkaç dakika)" : "Çalıştır"}
+              {inProgress
+                ? "Çalışıyor…"
+                : isPending
+                  ? "Kuyruğa alınıyor…"
+                  : token
+                    ? "Yeniden çalıştır"
+                    : "Çalıştır"}
             </button>
           )}
-          {resultToken && <div style={{ fontSize: 12, color: "#22c55e" }}>Rapor üretildi.</div>}
+          {inProgress && (
+            <div style={{ fontSize: 12, color: "#888" }}>
+              Arka planda çalışıyor — sekmeyi kapatabilirsin, durum otomatik güncellenir.
+            </div>
+          )}
           {error && <div style={{ fontSize: 12, color: "#ef4444" }}>{error}</div>}
         </div>
       </div>

@@ -1,12 +1,18 @@
 import { runStage0 } from "./stage0";
-import { runQueries } from "./pipeline/runQueries";
+import { collectGoogleSerp } from "./collectors/dataforseo";
+import { collectOpenAI } from "./collectors/openai";
+import { collectAnthropic } from "./collectors/anthropic";
+import { collectGemini } from "./collectors/gemini";
+import { collectPerplexity } from "./collectors/perplexity";
+import { activeEngines } from "./pipeline/runQueries";
 import { aggregateSources } from "./pipeline/aggregateSources";
 import { classifySources } from "./stage2/classifySources";
 import { queryVerdicts } from "./stage2/queryVerdicts";
 import { analyzeOverview, analyzeQueryGap } from "./stage2/analyze";
 import { config } from "./config";
 import { trNorm } from "./util/match";
-import type { EngineResult, QuerySet } from "./schema/types";
+import type { Engine, EngineResult, QuerySet } from "./schema/types";
+import type { ClassifiedSource, Stage2Overview } from "./schema/stage2";
 import type { Lang, Report, Section, Source, GapItem } from "@/lib/report/types";
 
 export interface RunInput {
@@ -16,7 +22,6 @@ export interface RunInput {
   competitorDomains: string[];
   promptCount: number;
   logoUrl?: string;
-  /** How many top-severity queries get full gap analysis. */
   maxGaps?: number;
 }
 
@@ -29,62 +34,68 @@ const ENGINE_LABEL: Record<string, string> = {
 };
 const labelFor = (e: string) => ENGINE_LABEL[e] ?? e;
 
-/**
- * Run the full visibility pipeline for one order and assemble the
- * product-agnostic Report. Stage 0 (intake+queries) -> Stage 1 (collect) ->
- * Stage 1.5 (sources) -> Stage 2 (overview + gaps).
- */
-export async function runVisibility(
-  input: RunInput,
-): Promise<{ report: Report; results: EngineResult[] }> {
-  // 1. Stage 0 — derive a scoped query set from the site, capped to the tier.
-  const stage0 = await runStage0(input.domain);
-  const queries = stage0.querySet.queries.slice(0, Math.max(1, input.promptCount));
-  const qs: QuerySet = {
-    business: stage0.querySet.business,
-    brand: input.brand,
-    brandDomain: input.domain,
-    competitors: input.competitorDomains,
-    queries,
-  };
+type Collector = (query: string, runId: number, qs: QuerySet) => Promise<EngineResult>;
+const REGISTRY: Record<Engine, Collector> = {
+  google_serp: collectGoogleSerp,
+  openai: collectOpenAI,
+  anthropic: collectAnthropic,
+  gemini: collectGemini,
+  perplexity: collectPerplexity,
+};
 
-  // 2. Stage 1 — collect across enabled engines × runs.
-  const results = await runQueries(qs);
+/** Stage 0 — derive a scoped query set from the site, capped to the tier. */
+export async function deriveQueries(
+  domain: string,
+  promptCount: number,
+): Promise<{ business: string; queries: string[] }> {
+  const stage0 = await runStage0(domain);
+  const queries = stage0.querySet.queries.slice(0, Math.max(1, promptCount));
+  return { business: stage0.querySet.business, queries };
+}
 
-  // 3. Stage 1.5 — ranked source map, Gemini proxies resolved.
-  const sources = await aggregateSources(results, input.domain);
-  const classified = classifySources(sources, input.domain, input.competitorDomains);
+/** Collect all enabled engines for ONE query (parallel), runsPerQuery times. */
+export async function collectForQuery(query: string, qs: QuerySet): Promise<EngineResult[]> {
+  const engines = activeEngines();
+  const out: EngineResult[] = [];
+  for (let run = 1; run <= config.runsPerQuery; run++) {
+    const batch = await Promise.all(engines.map((e) => REGISTRY[e](query, run, qs)));
+    out.push(...batch);
+  }
+  return out;
+}
 
-  // 4. Stage 2 — overview + per-query gaps.
-  const visibilityText = buildVisibilityText(results);
-  const overview = await analyzeOverview({
-    brand: input.brand,
-    visibility: visibilityText,
-    classified,
-  });
+/** Stage 1.5 — ranked source map (proxies resolved) + own/comp/neutral. */
+export async function classifyAllSources(
+  results: EngineResult[],
+  domain: string,
+  competitorDomains: string[],
+): Promise<ClassifiedSource[]> {
+  const sources = await aggregateSources(results, domain);
+  return classifySources(sources, domain, competitorDomains);
+}
 
-  const maxGaps = input.maxGaps ?? config.stage2.maxQueries;
-  const verdicts = queryVerdicts(results, input.competitorDomains)
-    .filter((v) => v.severity > 0)
-    .slice(0, maxGaps);
+/** Build the human-readable per-engine visibility line (for the Stage 2 overview prompt). */
+export function buildVisibilityText(results: EngineResult[]): string {
+  const by = perEngine(results);
+  return Object.entries(by)
+    .map(([e, s]) => {
+      const pct = s.total ? Math.round((s.appears / s.total) * 100) : 0;
+      const avg = s.pos.length ? (s.pos.reduce((a, b) => a + b, 0) / s.pos.length).toFixed(1) : "-";
+      return `${labelFor(e)}: ${pct}% (ort. pozisyon ${avg})`;
+    })
+    .join("\n");
+}
 
-  const gapResults = await Promise.all(
-    verdicts.map((v) =>
-      analyzeQueryGap({ brand: input.brand, brandDomain: input.domain, verdict: v }),
-    ),
-  );
-  const gaps: GapItem[] = gapResults
-    .filter((g): g is NonNullable<typeof g> => g != null)
-    .map((g) => ({
-      query: g.query,
-      diagnosis: g.diagnosis,
-      contentGap: g.contentGap,
-      faq: g.faq,
-      jsonLd: g.jsonLd,
-      actions: g.pageActions,
-    }));
+export interface AssembleParts {
+  results: EngineResult[];
+  classified: ClassifiedSource[];
+  overview: Stage2Overview | null;
+  gaps: GapItem[];
+}
 
-  // 5. Assemble the generic Report.
+/** Pure assembly of the product-agnostic Report from already-computed parts. */
+export function assembleReport(input: RunInput, parts: AssembleParts): Report {
+  const { results, classified, overview, gaps } = parts;
   const sections: Section[] = [];
 
   if (overview) {
@@ -115,7 +126,7 @@ export async function runVisibility(
     sections.push({ type: "gaps", title: "Sorgu-bazlı içerik açıkları", items: gaps });
   }
 
-  const report: Report = {
+  return {
     brand: input.brand,
     logoUrl: input.logoUrl,
     product: "AI Görünürlük",
@@ -123,7 +134,58 @@ export async function runVisibility(
     lang: input.lang,
     sections,
   };
+}
 
+/**
+ * Single-shot run (used locally / non-durable). The durable Inngest function
+ * composes the same exported pieces as memoized steps.
+ */
+export async function runVisibility(
+  input: RunInput,
+): Promise<{ report: Report; results: EngineResult[] }> {
+  const { queries, business } = await deriveQueries(input.domain, input.promptCount);
+  const qs: QuerySet = {
+    business,
+    brand: input.brand,
+    brandDomain: input.domain,
+    competitors: input.competitorDomains,
+    queries,
+  };
+
+  const results: EngineResult[] = [];
+  for (const query of queries) {
+    results.push(...(await collectForQuery(query, qs)));
+  }
+
+  const classified = await classifyAllSources(results, input.domain, input.competitorDomains);
+
+  const overview = await analyzeOverview({
+    brand: input.brand,
+    visibility: buildVisibilityText(results),
+    classified,
+  });
+
+  const maxGaps = input.maxGaps ?? config.stage2.maxQueries;
+  const verdicts = queryVerdicts(results, input.competitorDomains)
+    .filter((v) => v.severity > 0)
+    .slice(0, maxGaps);
+  const gapResults = await Promise.all(
+    verdicts.map((v) =>
+      analyzeQueryGap({ brand: input.brand, brandDomain: input.domain, verdict: v }),
+    ),
+  );
+  const gaps = gapResults
+    .filter((g): g is NonNullable<typeof g> => g != null)
+    .map((g) => ({
+      query: g.query,
+      diagnosis: g.diagnosis,
+      contentGap: g.contentGap,
+      faq: g.faq,
+      jsonLd: g.jsonLd,
+      actions: g.pageActions,
+    }));
+
+  const report = assembleReport(input, { results, classified, overview, gaps });
   return { report, results };
 }
 
@@ -139,17 +201,6 @@ function perEngine(results: EngineResult[]) {
     }
   }
   return by;
-}
-
-function buildVisibilityText(results: EngineResult[]): string {
-  const by = perEngine(results);
-  return Object.entries(by)
-    .map(([e, s]) => {
-      const pct = s.total ? Math.round((s.appears / s.total) * 100) : 0;
-      const avg = s.pos.length ? (s.pos.reduce((a, b) => a + b, 0) / s.pos.length).toFixed(1) : "-";
-      return `${labelFor(e)}: ${pct}% (ort. pozisyon ${avg})`;
-    })
-    .join("\n");
 }
 
 function buildVisibilitySection(results: EngineResult[]): Section {
@@ -180,7 +231,6 @@ function buildCompetitorRows(results: EngineResult[], brand: string) {
       map.set(key, entry);
     }
   }
-  // Keep a display name (first seen original casing) per key.
   const display = new Map<string, string>();
   for (const r of results) {
     for (const name of r.competitors ?? []) {
