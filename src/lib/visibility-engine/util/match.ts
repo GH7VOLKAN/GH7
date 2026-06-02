@@ -15,19 +15,42 @@ export function trNorm(s: string): string {
     .toLowerCase();
 }
 
+const LEGAL_TOKENS = new Set([
+  "as", "ltd", "sti", "san", "tic", "ve", "inc", "llc", "co", "gmbh",
+  "anonim", "sirketi", "limited", "sirket",
+]);
+
+/**
+ * Reduce a brand to its distinctive core for matching: strip parentheticals
+ * ("ISITMAX (demo)" -> "isitmax"), legal-form tokens ("A.Ş.", "Ltd. Şti.")
+ * and single characters. Without this, a brand stored as "ISITMAX (demo)"
+ * never matched an AI answer that just says "ISITMAX".
+ */
+export function brandCore(brand: string): string {
+  const norm = trNorm(brand).replace(/\([^)]*\)/g, " ");
+  return norm
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 2 && !LEGAL_TOKENS.has(t))
+    .join(" ")
+    .trim();
+}
+
+function matchesBrand(name: string, core: string): boolean {
+  if (!core || !name) return false;
+  return trNorm(name).includes(core);
+}
+
 /** Returns the rank at which the brand appears, or null if absent. */
 export function findPosition(ranked: RankedItem[], brand: string): number | null {
-  const b = trNorm(brand);
+  const core = brandCore(brand);
   for (const item of ranked) {
-    if (item.name && trNorm(item.name).includes(b)) return item.rank;
+    if (item.name && matchesBrand(item.name, core)) return item.rank;
   }
   return null;
 }
 
 /** Everyone in the ranking who is NOT the brand. */
 export function competitorsOf(ranked: RankedItem[], brand: string): string[] {
-  const b = trNorm(brand);
-  return ranked
-    .filter((i) => i.name && !trNorm(i.name).includes(b))
-    .map((i) => i.name);
+  const core = brandCore(brand);
+  return ranked.filter((i) => i.name && !matchesBrand(i.name, core)).map((i) => i.name);
 }

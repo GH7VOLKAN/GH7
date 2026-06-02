@@ -8,12 +8,19 @@
  * understand what makes them citable; NEVER copy their text.
  */
 
+/** Map a language code to a full language name for the prompt instruction. */
+function langName(lang: string): string {
+  const m: Record<string, string> = { tr: "Turkish", en: "English" };
+  return m[lang] ?? "Turkish";
+}
+
 export const OVERVIEW_SYSTEM = `You are an AEO/GEO strategist. You give honest, specific, actionable reads — never generic platitudes. You distinguish being CITED as a source from being RECOMMENDED as a vendor, classify sources correctly, and name the realistic main lever even when it is not flattering. Output ONLY a JSON object.`;
 
 export function buildOverviewPrompt(input: {
   brand: string;
   visibility: string; // per-engine appear% + avg position
   classifiedSources: string; // own/competitor/neutral with counts
+  lang: string;
 }): string {
   return [
     `Brand: ${input.brand}`,
@@ -37,6 +44,7 @@ export function buildOverviewPrompt(input: {
     '  "neutralSourcePlan": ["only genuinely winnable neutral placements: marketplaces, manufacturer dealer/partner pages, directories, comparison/editorial. Do NOT list competitor domains here."]',
     '}',
     '',
+    `LANGUAGE: write EVERY natural-language value (summary, citedVsRecommended, sourceReading.*, mainLever, neutralSourcePlan items) entirely in ${langName(input.lang)}. Do NOT mix languages. Keep brand/domain names and numbers as-is.`,
     'Output ONLY the JSON object.',
   ].join('\n');
 }
@@ -48,6 +56,7 @@ export function buildGapPrompt(input: {
   brandDomain: string;
   query: string;
   competitorPages: { url: string; text: string }[];
+  lang: string;
 }): string {
   const pages = input.competitorPages
     .map((p, i) => `--- COMPETITOR PAGE ${i + 1} (${p.url}) ---\n${p.text}`)
@@ -69,6 +78,7 @@ export function buildGapPrompt(input: {
     '  "pageActions": ["concrete, ordered actions to publish on the brand\'s own domain to out-rank the competitor pages for this query"]',
     '}',
     '',
+    `LANGUAGE: write EVERY natural-language value (diagnosis, contentGap items, faq q/a, pageActions) entirely in ${langName(input.lang)}. Do NOT mix languages. The "jsonLd" value stays as code (schema.org), and URLs/brand names stay as-is.`,
     'RULES: be specific to this query and these competitor pages. "How much better" = match or exceed them on the extractable signals AI uses (completeness, specificity, structure, authority). ORIGINAL content only — never copy competitor text. Output ONLY the JSON object.',
   ].join('\n');
 }

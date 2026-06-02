@@ -13,6 +13,7 @@ export async function analyzeOverview(input: {
   brand: string;
   visibility: string;
   classified: ClassifiedSource[];
+  lang: string;
 }): Promise<Stage2Overview | null> {
   const classifiedSources = input.classified
     .map((s) => `${String(s.count).padStart(3)} ${s.domain} [${s.klass}]`)
@@ -24,6 +25,7 @@ export async function analyzeOverview(input: {
       brand: input.brand,
       visibility: input.visibility,
       classifiedSources,
+      lang: input.lang,
     }),
   );
   return extractJson<Stage2Overview>(text);
@@ -33,6 +35,7 @@ export async function analyzeQueryGap(input: {
   brand: string;
   brandDomain: string;
   verdict: QueryVerdict;
+  lang: string;
 }): Promise<QueryGap | null> {
   const competitorPages = await fetchCompetitorPages(input.verdict.citedCompetitorUrls);
   const text = await reason(
@@ -42,6 +45,7 @@ export async function analyzeQueryGap(input: {
       brandDomain: input.brandDomain,
       query: input.verdict.query,
       competitorPages,
+      lang: input.lang,
     }),
     5000,
   );

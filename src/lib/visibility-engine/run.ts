@@ -64,14 +64,18 @@ export async function collectForQuery(query: string, qs: QuerySet): Promise<Engi
   return out;
 }
 
-/** Stage 1.5 — ranked source map (proxies resolved) + own/comp/neutral. */
+/** Stage 1.5 — ranked source map (proxies resolved) + own/comp/neutral.
+ * Competitor names that emerged from the run are passed in so their cited
+ * domains get flagged even when no competitor domains were entered. */
 export async function classifyAllSources(
   results: EngineResult[],
   domain: string,
+  brand: string,
   competitorDomains: string[],
 ): Promise<ClassifiedSource[]> {
   const sources = await aggregateSources(results, domain);
-  return classifySources(sources, domain, competitorDomains);
+  const competitorNames = buildCompetitorRows(results, brand).map((r) => r.name);
+  return classifySources(sources, domain, competitorDomains, competitorNames);
 }
 
 /** Build the human-readable per-engine visibility line (for the Stage 2 overview prompt). */
@@ -157,12 +161,13 @@ export async function runVisibility(
     results.push(...(await collectForQuery(query, qs)));
   }
 
-  const classified = await classifyAllSources(results, input.domain, input.competitorDomains);
+  const classified = await classifyAllSources(results, input.domain, input.brand, input.competitorDomains);
 
   const overview = await analyzeOverview({
     brand: input.brand,
     visibility: buildVisibilityText(results),
     classified,
+    lang: input.lang,
   });
 
   const maxGaps = input.maxGaps ?? config.stage2.maxQueries;
@@ -171,7 +176,7 @@ export async function runVisibility(
     .slice(0, maxGaps);
   const gapResults = await Promise.all(
     verdicts.map((v) =>
-      analyzeQueryGap({ brand: input.brand, brandDomain: input.domain, verdict: v }),
+      analyzeQueryGap({ brand: input.brand, brandDomain: input.domain, verdict: v, lang: input.lang }),
     ),
   );
   const gaps = gapResults
@@ -204,14 +209,33 @@ function perEngine(results: EngineResult[]) {
 }
 
 function buildVisibilitySection(results: EngineResult[]): Section {
-  const by = perEngine(results);
+  // Track ok/error per engine so a fully-errored engine (e.g. ChatGPT with no
+  // quota) is shown as "ölçülemedi" rather than silently dropped.
+  const stat: Record<string, { ok: number; err: number; appears: number; pos: number[] }> = {};
+  for (const r of results) {
+    stat[r.engine] ??= { ok: 0, err: 0, appears: 0, pos: [] };
+    if (r.error) {
+      stat[r.engine].err++;
+    } else {
+      stat[r.engine].ok++;
+      if (r.brandAppears) {
+        stat[r.engine].appears++;
+        if (r.position != null) stat[r.engine].pos.push(r.position);
+      }
+    }
+  }
   const order = ["openai", "anthropic", "gemini", "perplexity", "google_serp"];
   const engines = order
-    .filter((e) => by[e])
+    .filter((e) => stat[e])
     .map((e) => {
-      const s = by[e];
-      const pct = s.total ? Math.round((s.appears / s.total) * 100) : 0;
-      const avgPos = s.pos.length ? Math.round((s.pos.reduce((a, b) => a + b, 0) / s.pos.length) * 10) / 10 : null;
+      const s = stat[e];
+      if (s.ok === 0 && s.err > 0) {
+        return { name: labelFor(e), pct: 0, avgPos: null, note: "ölçülemedi (hata/kota)" };
+      }
+      const pct = s.ok ? Math.round((s.appears / s.ok) * 100) : 0;
+      const avgPos = s.pos.length
+        ? Math.round((s.pos.reduce((a, b) => a + b, 0) / s.pos.length) * 10) / 10
+        : null;
       return { name: labelFor(e), pct, avgPos };
     });
   return { type: "visibility", title: "Motor bazında görünürlük", engines };

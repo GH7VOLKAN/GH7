@@ -100,10 +100,10 @@ export const orderRun = inngest.createFunction(
 
     // 4. Stage 1.5 + Stage 2
     const classified = await step.run("sources", () =>
-      classifyAllSources(results, domain, competitorDomains),
+      classifyAllSources(results, domain, brand, competitorDomains),
     );
     const overview = await step.run("overview", () =>
-      analyzeOverview({ brand, visibility: buildVisibilityText(results), classified }),
+      analyzeOverview({ brand, visibility: buildVisibilityText(results), classified, lang }),
     );
 
     const verdicts = queryVerdicts(results, competitorDomains)
@@ -113,7 +113,7 @@ export const orderRun = inngest.createFunction(
     const gaps: GapItem[] = [];
     for (let i = 0; i < verdicts.length; i++) {
       const g = await step.run(`gap-${i}`, () =>
-        analyzeQueryGap({ brand, brandDomain: domain, verdict: verdicts[i] }),
+        analyzeQueryGap({ brand, brandDomain: domain, verdict: verdicts[i], lang }),
       );
       if (g) {
         gaps.push({

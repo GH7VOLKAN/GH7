@@ -13,6 +13,7 @@ export interface Stage2Input {
   brand: string;
   brandDomain: string;
   competitorDomains: string[];
+  lang?: string;
 }
 
 function visibilitySummary(results: EngineResult[]): string {
@@ -45,6 +46,7 @@ export async function runStage2(input: Stage2Input): Promise<string> {
     brand: input.brand,
     visibility: visibilitySummary(input.results),
     classified,
+    lang: input.lang ?? 'tr',
   });
 
   const verdicts = queryVerdicts(input.results, input.competitorDomains)
@@ -58,6 +60,7 @@ export async function runStage2(input: Stage2Input): Promise<string> {
       brand: input.brand,
       brandDomain: input.brandDomain,
       verdict: v,
+      lang: input.lang ?? 'tr',
     });
     if (g) gaps.push(g);
   }

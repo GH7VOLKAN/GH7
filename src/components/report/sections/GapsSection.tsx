@@ -18,7 +18,7 @@ export function GapsSection({
       <SectionTitle title={section.title} />
       <div className="flex flex-col gap-3">
         {section.items.map((item, i) => (
-          <GapCard key={i} item={item} t={t} defaultOpen={i === 0} />
+          <GapCard key={i} item={item} t={t} priority={i + 1} defaultOpen={i === 0} />
         ))}
       </div>
     </section>
@@ -37,10 +37,12 @@ const LABEL_STYLE: React.CSSProperties = {
 function GapCard({
   item,
   t,
+  priority,
   defaultOpen,
 }: {
   item: GapItem;
   t: ReportLabels;
+  priority: number;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(!!defaultOpen);
@@ -62,6 +64,20 @@ function GapCard({
           cursor: "pointer",
         }}
       >
+        <span
+          style={{
+            flexShrink: 0,
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#fff",
+            background: "#111",
+            borderRadius: 9999,
+            padding: "3px 9px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Öncelik {priority}
+        </span>
         <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: "#111", lineHeight: 1.4 }}>
           {item.query}
         </span>
